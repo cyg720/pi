@@ -28,6 +28,21 @@ let _kittyProtocolActive = false;
  * Set the global Kitty keyboard protocol state.
  * Called by ProcessTerminal after detecting protocol support.
  */
+/**
+ * 【文件职责】键盘输入解析核心：把终端原始字节序列解码为标准化的按键标识（KeyId），
+ *              同时支持 Kitty 键盘协议、modifyOtherKeys、传统转义序列三条路径。
+ * 【技术维度】类型级键名联合（Letter/Digit/SymbolKey/SpecialKey + 修饰符组合）；
+ *              正则解析 Kitty CSI-u 与 modifyOtherKeys 序列；传统序列查表匹配；
+ *              Windows Terminal 的退格特判。
+ * 【产品维度】让上层快捷键系统用统一的 KeyId 字符串（如 "ctrl+a"）描述按键，
+ *              屏蔽不同终端/协议的编码差异。
+ * 【逻辑维度】类型与常量定义 → 传统序列表 → Kitty/modifyOtherKeys 解析 → matchesKey 匹配入口 →
+ *              parseKey 解析为可读名称 → decodeKittyPrintable/decodePrintableKey 提取可打印字符。
+ * 【关键边界】Kitty 协议需终端启用（setKittyProtocolActive 切换）；Caps Lock/Num Lock 位被忽略；
+ *              未知序列静默返回 undefined 而非抛错。
+ * 【新手阅读建议】先看 Key 常量与 KeyId 类型了解按键标识模型 → 再读 matchesKey 主入口 →
+ *              最后按需深入各 parse/matches 私有函数。
+ */
 export function setKittyProtocolActive(active: boolean): void {
 	_kittyProtocolActive = active;
 }
@@ -35,6 +50,7 @@ export function setKittyProtocolActive(active: boolean): void {
 /**
  * Query whether Kitty keyboard protocol is currently active.
  */
+// 查询 Kitty 键盘协议是否已激活
 export function isKittyProtocolActive(): boolean {
 	return _kittyProtocolActive;
 }
@@ -43,6 +59,7 @@ export function isKittyProtocolActive(): boolean {
 // Type-Safe Key Identifiers
 // =============================================================================
 
+// 字母键联合（a-z）
 type Letter =
 	| "a"
 	| "b"
@@ -71,8 +88,10 @@ type Letter =
 	| "y"
 	| "z";
 
+// 数字键联合（0-9）
 type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
+// 符号键联合（标点等）
 type SymbolKey =
 	| "`"
 	| "-"
@@ -106,6 +125,7 @@ type SymbolKey =
 	| ">"
 	| "?";
 
+// 特殊键联合（方向键/F键/Home/End 等）
 type SpecialKey =
 	| "escape"
 	| "esc"
@@ -149,6 +169,7 @@ type ModifiedKeyId<Key extends string, RemainingModifiers extends ModifierName =
  * Union type of all valid key identifiers.
  * Provides autocomplete and catches typos at compile time.
  */
+/** 按键标识类型（中文说明）：裸键名或带修饰符的组合（如 "ctrl+a"、"alt+shift+f1"）。 */
 export type KeyId = BaseKey | ModifiedKeyId<BaseKey>;
 
 /**
@@ -160,6 +181,7 @@ export type KeyId = BaseKey | ModifiedKeyId<BaseKey>;
  * - Key.ctrl("c"), Key.alt("x"), Key.super("k") for single modifiers
  * - Key.ctrlShift("p"), Key.ctrlAlt("x"), Key.ctrlSuper("k") for combined modifiers
  */
+/** 按键常量对象（中文说明）：提供常用 KeyId 的便捷引用，供快捷键默认表中使用。 */
 export const Key = {
 	// Special keys
 	escape: "escape" as const,
@@ -255,6 +277,7 @@ export const Key = {
 // Constants
 // =============================================================================
 
+// 符号键集合：用于判断某字符串是否是纯符号键
 const SYMBOL_KEYS = new Set([
 	"`",
 	"-",
@@ -289,6 +312,7 @@ const SYMBOL_KEYS = new Set([
 	"?",
 ]);
 
+// Kitty 协议修饰符位掩码：shift=1, alt=2, ctrl=4, super=8
 const MODIFIERS = {
 	shift: 1,
 	alt: 2,
@@ -297,7 +321,9 @@ const MODIFIERS = {
 } as const;
 
 const LOCK_MASK = 64 + 128; // Caps Lock + Num Lock
+// 锁定键位掩码（Caps Lock + Num Lock）：匹配时忽略
 
+// 常用控制字符的码点常量
 const CODEPOINTS = {
 	escape: 27,
 	tab: 9,
@@ -307,6 +333,7 @@ const CODEPOINTS = {
 	kpEnter: 57414, // Numpad Enter (Kitty protocol)
 } as const;
 
+// 方向键的 Kitty 码点映射
 const ARROW_CODEPOINTS = {
 	up: -1,
 	down: -2,
@@ -314,6 +341,7 @@ const ARROW_CODEPOINTS = {
 	left: -4,
 } as const;
 
+// 功能键（Home/End/PageUp 等）的 Kitty 码点映射
 const FUNCTIONAL_CODEPOINTS = {
 	delete: -10,
 	insert: -11,
@@ -353,10 +381,12 @@ const KITTY_FUNCTIONAL_KEY_EQUIVALENTS = new Map<number, number>([
 	[57426, FUNCTIONAL_CODEPOINTS.delete],
 ]);
 
+// 把功能键码点归一化为内部表示（私有）
 function normalizeKittyFunctionalCodepoint(codepoint: number): number {
 	return KITTY_FUNCTIONAL_KEY_EQUIVALENTS.get(codepoint) ?? codepoint;
 }
 
+// 归一化 shift+字母的码点身份（私有）：使大小写字母在修饰符匹配时一致
 function normalizeShiftedLetterIdentityCodepoint(codepoint: number, modifier: number): number {
 	const effectiveModifier = modifier & ~LOCK_MASK;
 	if ((effectiveModifier & MODIFIERS.shift) !== 0 && codepoint >= 65 && codepoint <= 90) {
@@ -365,6 +395,7 @@ function normalizeShiftedLetterIdentityCodepoint(codepoint: number, modifier: nu
 	return codepoint;
 }
 
+// 传统转义序列 → 键名映射（方向键/功能键等，无修饰符）
 const LEGACY_KEY_SEQUENCES = {
 	up: ["\x1b[A", "\x1bOA"],
 	down: ["\x1b[B", "\x1bOB"],
@@ -391,6 +422,7 @@ const LEGACY_KEY_SEQUENCES = {
 	f12: ["\x1b[24~"],
 } as const;
 
+// 传统 shift+键转义序列映射
 const LEGACY_SHIFT_SEQUENCES = {
 	up: ["\x1b[a"],
 	down: ["\x1b[b"],
@@ -405,6 +437,7 @@ const LEGACY_SHIFT_SEQUENCES = {
 	end: ["\x1b[8$"],
 } as const;
 
+// 传统 ctrl+键控制字符映射
 const LEGACY_CTRL_SEQUENCES = {
 	up: ["\x1bOa"],
 	down: ["\x1bOb"],
@@ -419,6 +452,7 @@ const LEGACY_CTRL_SEQUENCES = {
 	end: ["\x1b[8^"],
 } as const;
 
+// 全部传统序列到 KeyId 的扁平查找表（合并上面三张表的键）
 const LEGACY_SEQUENCE_KEY_IDS: Record<string, KeyId> = {
 	"\x1bOA": "up",
 	"\x1bOB": "down",
@@ -482,8 +516,10 @@ const LEGACY_SEQUENCE_KEY_IDS: Record<string, KeyId> = {
 
 type LegacyModifierKey = keyof typeof LEGACY_SHIFT_SEQUENCES;
 
+// 判断输入是否精确命中某个传统序列（私有箭头函数）
 const matchesLegacySequence = (data: string, sequences: readonly string[]): boolean => sequences.includes(data);
 
+// 匹配传统修饰键序列（私有）：检查输入是否为指定前缀加控制字符
 const matchesLegacyModifierSequence = (data: string, key: LegacyModifierKey, modifier: number): boolean => {
 	if (modifier === MODIFIERS.shift) {
 		return matchesLegacySequence(data, LEGACY_SHIFT_SEQUENCES[key]);
@@ -502,8 +538,10 @@ const matchesLegacyModifierSequence = (data: string, key: LegacyModifierKey, mod
  * Event types from Kitty keyboard protocol (flag 2)
  * 1 = key press, 2 = key repeat, 3 = key release
  */
+// Kitty 协议按键事件类型：按下/重复/释放
 export type KeyEventType = "press" | "repeat" | "release";
 
+// Kitty CSI-u 序列解析结果（私有）：码点、修饰符、事件类型与可选的替代布局码点
 interface ParsedKittySequence {
 	codepoint: number;
 	shiftedKey?: number; // Shifted version of the key (when shift is pressed)
@@ -512,6 +550,7 @@ interface ParsedKittySequence {
 	eventType: KeyEventType;
 }
 
+// modifyOtherKeys 序列解析结果（私有）：键码与修饰符
 interface ParsedModifyOtherKeysSequence {
 	codepoint: number;
 	modifier: number;
@@ -524,6 +563,7 @@ let _lastEventType: KeyEventType = "press";
  * Check if the last parsed key event was a key release.
  * Only meaningful when Kitty keyboard protocol with flag 2 is active.
  */
+// 判断是否为按键释放事件（公开，仅 Kitty 协议）
 export function isKeyRelease(data: string): boolean {
 	// Don't treat bracketed paste content as key release, even if it contains
 	// patterns like ":3F" (e.g., bluetooth MAC addresses like "90:62:3F:A5").
@@ -554,6 +594,7 @@ export function isKeyRelease(data: string): boolean {
  * Check if the last parsed key event was a key repeat.
  * Only meaningful when Kitty keyboard protocol with flag 2 is active.
  */
+// 判断是否为按键重复事件（公开，仅 Kitty 协议）
 export function isKeyRepeat(data: string): boolean {
 	// Don't treat bracketed paste content as key repeat, even if it contains
 	// patterns like ":2F". See isKeyRelease() for details.
@@ -576,6 +617,7 @@ export function isKeyRepeat(data: string): boolean {
 	return false;
 }
 
+// 解析事件类型字段（私有）：1=press 2=repeat 3=release；缺省 press
 function parseEventType(eventTypeStr: string | undefined): KeyEventType {
 	if (!eventTypeStr) return "press";
 	const eventType = parseInt(eventTypeStr, 10);
@@ -584,6 +626,8 @@ function parseEventType(eventTypeStr: string | undefined): KeyEventType {
 	return "press";
 }
 
+// 解析 Kitty CSI-u 序列（私有）：格式 ESC [ codepoint:alt:base;modifier:event u；
+ // 非该格式返回 null
 function parseKittySequence(data: string): ParsedKittySequence | null {
 	// CSI u format with alternate keys (flag 4):
 	// \x1b[<codepoint>u
@@ -650,6 +694,7 @@ function parseKittySequence(data: string): ParsedKittySequence | null {
 	return null;
 }
 
+// 匹配 Kitty 序列（私有）：比较码点与有效修饰符位（忽略锁定键）
 function matchesKittySequence(data: string, expectedCodepoint: number, expectedModifier: number): boolean {
 	const parsed = parseKittySequence(data);
 	if (!parsed) return false;
@@ -693,6 +738,7 @@ function matchesKittySequence(data: string, expectedCodepoint: number, expectedM
 	return false;
 }
 
+// 解析 modifyOtherKeys 序列（私有）：格式 ESC [ 27;modifier;keycode ~
 function parseModifyOtherKeysSequence(data: string): ParsedModifyOtherKeysSequence | null {
 	const match = data.match(/^\x1b\[27;(\d+);(\d+)~$/);
 	if (!match) return null;
@@ -706,12 +752,14 @@ function parseModifyOtherKeysSequence(data: string): ParsedModifyOtherKeysSequen
  * This is used by terminals when Kitty protocol is not enabled.
  * Modifier values are 1-indexed: 2=shift, 3=alt, 5=ctrl, etc.
  */
+// 匹配 modifyOtherKeys 序列（私有）
 function matchesModifyOtherKeys(data: string, expectedKeycode: number, expectedModifier: number): boolean {
 	const parsed = parseModifyOtherKeysSequence(data);
 	if (!parsed) return false;
 	return parsed.codepoint === expectedKeycode && parsed.modifier === expectedModifier;
 }
 
+// 检测当前是否运行在 Windows Terminal 中（私有）：通过环境变量 WT_SESSION 判断
 function isWindowsTerminalSession(): boolean {
 	return (
 		Boolean(process.env.WT_SESSION) && !process.env.SSH_CONNECTION && !process.env.SSH_CLIENT && !process.env.SSH_TTY
@@ -727,6 +775,7 @@ function isWindowsTerminalSession(): boolean {
  * Prefer explicit Kitty / CSI-u / modifyOtherKeys sequences whenever they are
  * available. Fall back to a Windows Terminal heuristic only for raw BS bytes.
  */
+// 匹配原始退格字符（私有）：Windows Terminal 下 0x7f 视为无修饰退格
 function matchesRawBackspace(data: string, expectedModifier: number): boolean {
 	if (data === "\x7f") return expectedModifier === 0;
 	if (data !== "\x08") return false;
@@ -746,6 +795,7 @@ function matchesRawBackspace(data: string, expectedModifier: number): boolean {
  * - Symbols [\]_ → 27, 28, 29, 31
  * - Also maps - to same as _ (same physical key on US keyboards)
  */
+// 计算 ctrl+字母对应的原始控制字符（私有）：a→0x01 … z→0x1A
 function rawCtrlChar(key: string): string | null {
 	const char = key.toLowerCase();
 	const code = char.charCodeAt(0);
@@ -759,10 +809,12 @@ function rawCtrlChar(key: string): string | null {
 	return null;
 }
 
+// 判断是否数字键（私有）
 function isDigitKey(key: string): boolean {
 	return key >= "0" && key <= "9";
 }
 
+// 匹配 modifyOtherKeys 的可打印字符场景（私有）
 function matchesPrintableModifyOtherKeys(data: string, expectedKeycode: number, expectedModifier: number): boolean {
 	if (expectedModifier === 0) return false;
 	const parsed = parseModifyOtherKeysSequence(data);
@@ -773,6 +825,7 @@ function matchesPrintableModifyOtherKeys(data: string, expectedKeycode: number, 
 	);
 }
 
+// 用修饰符位格式化键名为 "ctrl+alt+key" 形式（私有）；无有效修饰返回 undefined
 function formatKeyNameWithModifiers(keyName: string, modifier: number): string | undefined {
 	const mods: string[] = [];
 	const effectiveMod = modifier & ~LOCK_MASK;
@@ -785,6 +838,7 @@ function formatKeyNameWithModifiers(keyName: string, modifier: number): string |
 	return mods.length > 0 ? `${mods.join("+")}+${keyName}` : keyName;
 }
 
+// 从解析结果组装最终 KeyId 字符串（私有）：修饰符按 ctrl/alt/shift/super 固定顺序排列
 function parseKeyId(
 	keyId: string,
 ): { key: string; ctrl: boolean; shift: boolean; alt: boolean; super: boolean } | null {
@@ -816,6 +870,11 @@ function parseKeyId(
  *
  * @param data - Raw input data from terminal
  * @param keyId - Key identifier (e.g., "ctrl+c", "escape", Key.ctrl("c"))
+ */
+/**
+ * 快捷键匹配主入口（公开）：
+ * 把原始输入与目标 KeyId 进行比对。依次尝试传统序列、Kitty 协议与 modifyOtherKeys 三条路径。
+ * 参数 data —— 终端原始字节串；keyId —— 目标按键标识。
  */
 export function matchesKey(data: string, keyId: KeyId): boolean {
 	const parsed = parseKeyId(keyId);
@@ -1209,6 +1268,7 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
  * @param data - Raw input data from terminal
  * @returns Key identifier string (e.g., "ctrl+c") or undefined
  */
+// 把解析出的码点+修饰符转为可读键名字符串（私有）；无法识别返回 undefined
 function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: number): string | undefined {
 	const normalizedCodepoint = normalizeKittyFunctionalCodepoint(codepoint);
 	const identityCodepoint = normalizeShiftedLetterIdentityCodepoint(normalizedCodepoint, modifier);
@@ -1248,6 +1308,7 @@ function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: nu
 	return formatKeyNameWithModifiers(keyName, modifier);
 }
 
+// 把原始输入解析为可读的按键名称（公开）：供 UI 显示用户按了什么键；无法识别返回 undefined
 export function parseKey(data: string): string | undefined {
 	const kitty = parseKittySequence(data);
 	if (kitty) {
@@ -1347,6 +1408,8 @@ const KITTY_PRINTABLE_ALLOWED_MODIFIERS = MODIFIERS.shift | LOCK_MASK;
  * @param data - Raw input data from terminal
  * @returns The printable character, or undefined if not a printable CSI-u sequence
  */
+// 解码 Kitty CSI-u 可打印字符（公开）：仅允许无 ctrl/alt 修饰的可打印字符；
+ // 返回对应的明文字符或 undefined
 export function decodeKittyPrintable(data: string): string | undefined {
 	const match = data.match(KITTY_CSI_U_REGEX);
 	if (!match) return undefined;
@@ -1382,6 +1445,7 @@ export function decodeKittyPrintable(data: string): string | undefined {
 	}
 }
 
+// 解码 modifyOtherKeys 的可打印字符（私有）
 function decodeModifyOtherKeysPrintable(data: string): string | undefined {
 	const parsed = parseModifyOtherKeysSequence(data);
 	if (!parsed) return undefined;
@@ -1396,6 +1460,7 @@ function decodeModifyOtherKeysPrintable(data: string): string | undefined {
 	}
 }
 
+// 综合解码可打印按键（公开）：先尝试 Kitty 再尝试 modifyOtherKeys；均失败返回 undefined
 export function decodePrintableKey(data: string): string | undefined {
 	return decodeKittyPrintable(data) ?? decodeModifyOtherKeysPrintable(data);
 }

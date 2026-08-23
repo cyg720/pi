@@ -1,12 +1,28 @@
+/**
+ * 【文件职责】终端文本工具集：可见宽度计算（含 CJK/emoji/ANSI）、ANSI 序列解析、
+ *              带样式的自动换行、按列截断/切片、终端输出归一化与背景着色等，
+ *              是整个 TUI 正确渲染宽字符与彩色文本的基石。
+ * 【技术维度】Intl.Segmenter 字素/词切分；get-east-asian-width 判定东亚宽度；
+ *              RGI_Emoji 正则（带快速预筛）；SGR/OSC8 状态跟踪实现跨行样式续接；FIFO 宽度缓存。
+ * 【产品维度】保证中文、emoji、彩色代码块在终端里不错位、不串色——中文用户终端体验的关键。
+ * 【逻辑维度】底层 extractAnsiCode/graphemeWidth/visibleWidth；中层 AnsiCodeTracker 与词元切分；
+ *              高层 wrapTextWithAnsi/truncateToWidth/sliceByColumn/extractSegments 等公开 API。
+ * 【关键边界】制表符固定按 3 列计宽；零宽字素计 0；emoji 与区域指示符保守计 2 防止换行漂移；
+ *              换行时仅复位下划线并重开超链接，保留背景等其他属性。
+ * 【新手阅读建议】先读 graphemeWidth/visibleWidth 理解可见宽度概念，再读 extractAnsiCode 认识三类转义序列，
+ *              最后挑 wrapTextWithAnsi 或 truncateToWidth 一个主流程精读。
+ */
 import { eastAsianWidth } from "get-east-asian-width";
 
 // segmenters (shared instance)
+// 共享的分词器实例（避免重复创建开销）
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 const wordSegmenter = new Intl.Segmenter(undefined, { granularity: "word" });
 
 /**
  * Get the shared grapheme segmenter instance.
  */
+// 获取共享的字素（grapheme）分词器：把字符串按“用户感知字符”切分
 export function getGraphemeSegmenter(): Intl.Segmenter {
 	return graphemeSegmenter;
 }
@@ -14,6 +30,7 @@ export function getGraphemeSegmenter(): Intl.Segmenter {
 /**
  * Get the shared word segmenter instance.
  */
+// 获取共享的单词分词器
 export function getWordSegmenter(): Intl.Segmenter {
 	return wordSegmenter;
 }
@@ -24,6 +41,8 @@ export function getWordSegmenter(): Intl.Segmenter {
  * The tested Unicode blocks are deliberately broad to account for future
  * Unicode additions.
  */
+// 快速预判某字素是否“可能”是 emoji（私有）：先过便宜的码位区间筛选，
+// 避免对每个字符都跑昂贵的 RGI_Emoji 正则
 function couldBeEmoji(segment: string): boolean {
 	const cp = segment.codePointAt(0)!;
 	return (
@@ -37,17 +56,22 @@ function couldBeEmoji(segment: string): boolean {
 }
 
 // Regexes for character classification (same as string-width library)
+// 字符分类正则（与 string-width 库一致）：零宽/前导不可打印/RGI emoji
 const zeroWidthRegex = /^(?:\p{Default_Ignorable_Code_Point}|\p{Control}|\p{Mark}|\p{Surrogate})+$/v;
 const leadingNonPrintingRegex = /^[\p{Default_Ignorable_Code_Point}\p{Control}\p{Format}\p{Mark}\p{Surrogate}]+/v;
 const rgiEmojiRegex = /^\p{RGI_Emoji}$/v;
 
 // Cache for non-ASCII strings
+// 非 ASCII 字符串的宽度缓存容量上限（简单 FIFO 淘汰）
 const WIDTH_CACHE_SIZE = 512;
+// 宽度缓存：键为原始字符串，值为计算出的可见列宽
 const widthCache = new Map<string, number>();
 
+// CJK 断行正则：中日韩/假名/谚文/注音字符允许在任意字符间断行
 export const cjkBreakRegex =
 	/[\p{Script_Extensions=Han}\p{Script_Extensions=Hiragana}\p{Script_Extensions=Katakana}\p{Script_Extensions=Hangul}\p{Script_Extensions=Bopomofo}]/u;
 
+// 是否全为可打印 ASCII（私有）：快速路径判定
 function isPrintableAscii(str: string): boolean {
 	for (let i = 0; i < str.length; i++) {
 		const code = str.charCodeAt(i);
@@ -58,6 +82,7 @@ function isPrintableAscii(str: string): boolean {
 	return true;
 }
 
+// 把片段截到最大宽度内（私有）：区分纯 ASCII/无 ANSI 制表/含 ANSI 制表三条路径逐字素装箱
 function truncateFragmentToWidth(text: string, maxWidth: number): { text: string; width: number } {
 	if (maxWidth <= 0 || text.length === 0) {
 		return { text: "", width: 0 };
@@ -138,6 +163,7 @@ function truncateFragmentToWidth(text: string, maxWidth: number): { text: string
 	return { text: result, width };
 }
 
+// 组装最终截断结果（私有）：前缀加复位加省略号再加复位，可选补空格到目标宽
 function finalizeTruncatedResult(
 	prefix: string,
 	prefixWidth: number,
@@ -164,6 +190,8 @@ function finalizeTruncatedResult(
  * Based on code from the string-width library, but includes a possible-emoji
  * check to avoid running the RGI_Emoji regex unnecessarily.
  */
+// 单个字素的终端宽度计算（私有）：tab 为 3 列；零宽为 0；emoji 计 2；
+// 区域指示符保守取 2；其余按东亚宽度表；尾随半全角形式与泰老 AM 元音额外累加
 function graphemeWidth(segment: string): number {
 	if (segment === "\t") {
 		return 3;
@@ -213,6 +241,8 @@ function graphemeWidth(segment: string): number {
 /**
  * Calculate the visible width of a string in terminal columns.
  */
+// 计算字符串在终端中的可见列宽：ASCII 快路径，然后查缓存，
+// tab 展开为 3 空格并剥离 ANSI 后逐字素累加，结果写回缓存
 export function visibleWidth(str: string): number {
 	if (str.length === 0) {
 		return 0;
@@ -278,9 +308,12 @@ export function visibleWidth(str: string): number {
  * expanded to the fixed width used by layout so terminal tab stops cannot wrap
  * a logical line, while tabs inside terminal string sequences stay untouched.
  */
+// 泰/老文 AM 元音匹配正则（单次与全局两个版本）
 const THAI_LAO_AM_REGEX = /[\u0e33\u0eb3]/;
 const THAI_LAO_AM_GLOBAL_REGEX = /[\u0e33\u0eb3]/g;
 
+// 终端输出归一化：AM 元音替换为兼容分解形式避免脏单元伪影；
+// 可见 tab 展开为 3 空格（转义序列内的 tab 保持原样）
 export function normalizeTerminalOutput(str: string): string {
 	let normalized = str;
 	if (THAI_LAO_AM_REGEX.test(normalized)) {
@@ -308,6 +341,7 @@ export function normalizeTerminalOutput(str: string): string {
 /**
  * Extract ANSI escape sequences from a string at the given position.
  */
+// 从指定位置提取 ANSI 转义序列：支持 CSI（样式/光标）、OSC（超链接/标题）、APC（应用私有）三类
 export function extractAnsiCode(str: string, pos: number): { code: string; length: number } | null {
 	if (pos >= str.length || str[pos] !== "\x1b") return null;
 
@@ -348,14 +382,18 @@ export function extractAnsiCode(str: string, pos: number): { code: string; lengt
 	return null;
 }
 
+// OSC8 终结符类型：BEL 或 ST（ESC 反斜杠）
 type Osc8Terminator = "\x07" | "\x1b\\";
 
+// 活动超链接状态（私有）：参数、URL 与终结方式
 interface ActiveHyperlink {
 	params: string;
 	url: string;
 	terminator: Osc8Terminator;
 }
 
+// 解析 OSC8 超链接序列（私有）：非 OSC8 返回 undefined 表示不是本类序列；
+// 缺 URL 返回 null 表示无效；否则返回参数、URL 与终结符
 function parseOsc8Hyperlink(ansiCode: string): ActiveHyperlink | null | undefined {
 	if (!ansiCode.startsWith("\x1b]8;")) {
 		return undefined;
@@ -376,16 +414,22 @@ function parseOsc8Hyperlink(ansiCode: string): ActiveHyperlink | null | undefine
 	return { params, url, terminator };
 }
 
+// 格式化一个打开超链接的完整序列（私有）
 function formatOsc8Hyperlink(hyperlink: ActiveHyperlink): string {
 	return `\x1b]8;${hyperlink.params};${hyperlink.url}${hyperlink.terminator}`;
 }
 
+// 格式化关闭超链接的序列（私有）
 function formatOsc8Close(terminator: Osc8Terminator): string {
 	return `\x1b]8;;${terminator}`;
 }
 
 /**
  * Track active ANSI SGR codes to preserve styling across line breaks.
+ */
+/**
+ * SGR 样式跟踪器（私有）：逐个处理 ANSI 序列维护当前生效属性集合（粗体/斜体/下划线/颜色等），
+ * 用于跨行换行时重建样式与在行尾精确关闭特定属性。
  */
 class AnsiCodeTracker {
 	// Track individual attributes separately so we can reset them specifically
@@ -401,6 +445,7 @@ class AnsiCodeTracker {
 	private bgColor: string | null = null; // Stores the full code like "41" or "48;5;240"
 	private activeHyperlink: ActiveHyperlink | null = null;
 
+	// 处理一条 ANSI 序列：OSC8 优先，其次仅关心以 m 结尾的 SGR 序列
 	process(ansiCode: string): void {
 		// OSC 8 hyperlink: \x1b]8;;<url>\x1b\\ (open) or \x1b]8;;\x1b\\ (close).
 		// Preserve the original terminator because some terminals only make BEL-terminated
@@ -535,6 +580,7 @@ class AnsiCodeTracker {
 		}
 	}
 
+	// 复位全部 SGR 属性（不影响超链接状态）
 	private reset(): void {
 		this.bold = false;
 		this.dim = false;
@@ -550,11 +596,13 @@ class AnsiCodeTracker {
 	}
 
 	/** Clear all state for reuse. */
+	// 清空包括超链接在内的全部状态（实例复用前调用）
 	clear(): void {
 		this.reset();
 		this.activeHyperlink = null;
 	}
 
+	// 生效属性的重建序列（新行开头使用）：SGR 参数串加重开超链接
 	getActiveCodes(): string {
 		const codes: string[] = [];
 		if (this.bold) codes.push("1");
@@ -575,6 +623,7 @@ class AnsiCodeTracker {
 		return result;
 	}
 
+	// 是否有任何生效属性或超链接
 	hasActiveCodes(): boolean {
 		return (
 			this.bold ||
@@ -597,6 +646,8 @@ class AnsiCodeTracker {
 	 * Active OSC 8 hyperlinks must be closed and re-opened on the next line.
 	 * Returns empty string if no attributes need closing.
 	 */
+	// 行尾需要单独关闭的属性序列：下划线必须关防止渗入填充区；
+	// 活动超链接需关闭并在下一行经 getActiveCodes 重开
 	getLineEndReset(): string {
 		let result = "";
 		if (this.underline) {
@@ -609,6 +660,7 @@ class AnsiCodeTracker {
 	}
 }
 
+// 从一段文本中提取全部 ANSI 序列喂给跟踪器（私有）
 function updateTrackerFromText(text: string, tracker: AnsiCodeTracker): void {
 	let i = 0;
 	while (i < text.length) {
@@ -625,6 +677,8 @@ function updateTrackerFromText(text: string, tracker: AnsiCodeTracker): void {
 /**
  * Split text into words while keeping ANSI codes attached.
  */
+// 把文本切成词元（私有）：空格段/单词段分开，CJK 字符逐字成词便于任意断行；
+// ANSI 码挂靠到下一个可见内容上，避免样式丢失或落错位置
 function splitIntoTokensWithAnsi(text: string): string[] {
 	const tokens: string[] = [];
 	let current = "";
@@ -712,6 +766,8 @@ function splitIntoTokensWithAnsi(text: string): string[] {
  * @param width - Maximum visible width per line
  * @returns Array of wrapped lines (NOT padded to width)
  */
+// 带样式的自动换行（公开）：只做折行不做填充/背景；
+// 显式换行符分段处理且样式跨行续接。返回每行不超过 width 可见列的行数组。
 export function wrapTextWithAnsi(text: string, width: number): string[] {
 	if (!text) {
 		return [""];
@@ -737,6 +793,8 @@ export function wrapTextWithAnsi(text: string, width: number): string[] {
 	return result.length > 0 ? result : [""];
 }
 
+// 单行折行核心（私有）：整体放得下直接返回；否则按词元装箱，
+// 超长词元逐字素硬折，行尾只关下划线/关超链接以保留背景等属性
 function wrapSingleLine(line: string, width: number): string[] {
 	if (!line) {
 		return [""];
@@ -818,11 +876,13 @@ function wrapSingleLine(line: string, width: number): string[] {
 	return wrapped.length > 0 ? wrapped.map((line) => line.trimEnd()) : [""];
 }
 
+// 标点字符正则（导出供其他模块做断词判断）
 export const PUNCTUATION_REGEX = /[(){}[\]<>.,;:'"!?+\-=*/\\|&%^$#@~`]/;
 
 /**
  * Check if a character is whitespace.
  */
+// 是否空白字符
 export function isWhitespaceChar(char: string): boolean {
 	return /\s/.test(char);
 }
@@ -830,10 +890,13 @@ export function isWhitespaceChar(char: string): boolean {
 /**
  * Check if a character is punctuation.
  */
+// 是否标点字符
 export function isPunctuationChar(char: string): boolean {
 	return PUNCTUATION_REGEX.test(char);
 }
 
+// 超长单词硬折行（私有）：先把内容拆成 ansi/grapheme 片段序列，
+// 再逐字素装箱；每行结尾只关下划线并重开继承样式
 function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): string[] {
 	const lines: string[] = [];
 	let currentLine = tracker.getActiveCodes();
@@ -911,6 +974,7 @@ function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): s
  * @param bgFn - Background color function
  * @returns Line with background applied and padded to width
  */
+// 给一行应用背景色并补空格到整行宽（公开）：背景覆盖内容与填充整体
 export function applyBackgroundToLine(line: string, width: number, bgFn: (text: string) => string): string {
 	// Calculate padding needed
 	const visibleLen = visibleWidth(line);
@@ -933,6 +997,8 @@ export function applyBackgroundToLine(line: string, width: number, bgFn: (text: 
  * @param pad - If true, pad result with spaces to exactly maxWidth (default: false)
  * @returns Truncated text, optionally padded to exactly maxWidth
  */
+// 截断文本到指定可见宽（公开）：需要省略号时保留连续前缀，
+// ANSI 不计宽、tab 按 3 列；未溢出且读完输入则原样返回（可补齐）。
 export function truncateToWidth(
 	text: string,
 	maxWidth: number,
@@ -1075,11 +1141,13 @@ export function truncateToWidth(
  * Extract a range of visible columns from a line. Handles ANSI codes and wide chars.
  * @param strict - If true, exclude wide chars at boundary that would extend past the range
  */
+// 按可见列区间切片（公开）：strict 时跨界宽字符会被排除
 export function sliceByColumn(line: string, startCol: number, length: number, strict = false): string {
 	return sliceWithWidth(line, startCol, length, strict).text;
 }
 
 /** Like sliceByColumn but also returns the actual visible width of the result. */
+// 同 sliceByColumn 但同时返回结果的实际可见宽度
 export function sliceWithWidth(
 	line: string,
 	startCol: number,
@@ -1129,12 +1197,15 @@ export function sliceWithWidth(
 
 // Pooled tracker instance for extractSegments (avoids allocation per call)
 const pooledStyleTracker = new AnsiCodeTracker();
+// 池化实例：extractSegments 复用同一跟踪器避免每次调用分配新对象
 
 /**
  * Extract "before" and "after" segments from a line in a single pass.
  * Used for overlay compositing where we need content before and after the overlay region.
  * Preserves styling from before the overlay that should affect content after it.
  */
+// 单趟提取覆盖层之前/之后两段内容（公开）：用于覆盖层合成；
+// after 段开头会前置 before 区间结束时仍生效的样式，保证视觉连续。
 export function extractSegments(
 	line: string,
 	beforeEnd: number,

@@ -19,12 +19,19 @@
 
 import { EventEmitter } from "events";
 
+// ESC 控制字符（0x1B）
 const ESC = "\x1b";
+// 括号粘贴模式的开始/结束标记序列
 const BRACKETED_PASTE_START = "\x1b[200~";
 const BRACKETED_PASTE_END = "\x1b[201~";
 
 /**
  * Check if a string is a complete escape sequence or needs more data
+ */
+/**
+ * 判断一段输入是否为完整的转义序列（私有）：
+ * 返回 complete（可发出）、incomplete（还需更多数据）或 not-escape（根本不是转义序列）。
+ * 按 CSI / OSC / DCS / APC / SS3 / Meta 单字符 六类分别判定。
  */
 function isCompleteSequence(data: string): "complete" | "incomplete" | "not-escape" {
 	if (!data.startsWith(ESC)) {
@@ -38,6 +45,7 @@ function isCompleteSequence(data: string): "complete" | "incomplete" | "not-esca
 	const afterEsc = data.slice(1);
 
 	// CSI sequences: ESC [
+		// CSI 序列：以 ESC [ 开头
 	if (afterEsc.startsWith("[")) {
 		// Check for old-style mouse sequence: ESC[M + 3 bytes
 		if (afterEsc.startsWith("[M")) {
@@ -48,16 +56,19 @@ function isCompleteSequence(data: string): "complete" | "incomplete" | "not-esca
 	}
 
 	// OSC sequences: ESC ]
+		// OSC 序列：以 ESC ] 开头
 	if (afterEsc.startsWith("]")) {
 		return isCompleteOscSequence(data);
 	}
 
 	// DCS sequences: ESC P ... ESC \ (includes XTVersion responses)
+		// DCS 序列：ESC P … ESC \（含终端版本响应）
 	if (afterEsc.startsWith("P")) {
 		return isCompleteDcsSequence(data);
 	}
 
 	// APC sequences: ESC _ ... ESC \ (includes Kitty graphics responses)
+		// APC 序列：ESC _ … ESC \（含 Kitty 图形协议响应）
 	if (afterEsc.startsWith("_")) {
 		return isCompleteApcSequence(data);
 	}
@@ -80,6 +91,10 @@ function isCompleteSequence(data: string): "complete" | "incomplete" | "not-esca
 /**
  * Check if CSI sequence is complete
  * CSI sequences: ESC [ ... followed by a final byte (0x40-0x7E)
+ */
+/**
+ * 判断 CSI 序列是否完整（私有）：以 0x40-0x7E 范围内的终止字节结尾即完整；
+ * 对 SGR 鼠标序列（ESC[<b;x;ym/M）做专门的结构校验，防止把不完整鼠标事件误判为按键。
  */
 function isCompleteCsiSequence(data: string): "complete" | "incomplete" {
 	if (!data.startsWith(`${ESC}[`)) {
@@ -129,6 +144,7 @@ function isCompleteCsiSequence(data: string): "complete" | "incomplete" {
  * Check if OSC sequence is complete
  * OSC sequences: ESC ] ... ST (where ST is ESC \ or BEL)
  */
+/** 判断 OSC 序列是否完整（私有）：以 BEL 或 ST（ESC 反斜杠）结尾即完整。 */
 function isCompleteOscSequence(data: string): "complete" | "incomplete" {
 	if (!data.startsWith(`${ESC}]`)) {
 		return "complete";
@@ -147,6 +163,7 @@ function isCompleteOscSequence(data: string): "complete" | "incomplete" {
  * DCS sequences: ESC P ... ST (where ST is ESC \)
  * Used for XTVersion responses like ESC P >| ... ESC \
  */
+/** 判断 DCS 序列是否完整（私有）：以 ST 结尾即完整。 */
 function isCompleteDcsSequence(data: string): "complete" | "incomplete" {
 	if (!data.startsWith(`${ESC}P`)) {
 		return "complete";
@@ -165,6 +182,7 @@ function isCompleteDcsSequence(data: string): "complete" | "incomplete" {
  * APC sequences: ESC _ ... ST (where ST is ESC \)
  * Used for Kitty graphics responses like ESC _ G ... ESC \
  */
+/** 判断 APC 序列是否完整（私有）：以 ST 结尾即完整。 */
 function isCompleteApcSequence(data: string): "complete" | "incomplete" {
 	if (!data.startsWith(`${ESC}_`)) {
 		return "complete";
@@ -189,6 +207,8 @@ function parseUnmodifiedKittyPrintableCodepoint(sequence: string): number | unde
 	return codepoint >= 32 ? codepoint : undefined;
 }
 
+// 从累积缓冲中切分出全部完整序列（私有）：逐位置尝试匹配；
+// 返回 { sequences 完整序列数组, remainder 无法判定需继续缓冲的尾部 }。
 function extractCompleteSequences(buffer: string): { sequences: string[]; remainder: string } {
 	const sequences: string[] = [];
 	let pos = 0;
@@ -254,6 +274,7 @@ function extractCompleteSequences(buffer: string): { sequences: string[]; remain
 	return { sequences, remainder: "" };
 }
 
+/** 缓冲选项（中文说明）：timeout 为等待序列补齐的最长时间，超时强制冲刷。 */
 export type StdinBufferOptions = {
 	/**
 	 * Maximum time to wait for sequence completion (default: 10ms)
@@ -262,6 +283,7 @@ export type StdinBufferOptions = {
 	timeout?: number;
 };
 
+/** 事件表（中文说明）：data 发出完整按键序列；paste 发出一次粘贴的完整内容。 */
 export type StdinBufferEventMap = {
 	data: [string];
 	paste: [string];
@@ -271,12 +293,23 @@ export type StdinBufferEventMap = {
  * Buffers stdin input and emits complete sequences via the 'data' event.
  * Handles partial escape sequences that arrive across multiple chunks.
  */
+/**
+ * StdinBuffer（中文说明）：stdin 输入缓冲器。
+ * stdin 的 data 事件可能把一个转义序列拆成多个小块送达；本类负责累积并在识别出完整序列后
+ * 以 data 事件发出，括号粘贴内容则以 paste 事件整体发出。
+ */
 export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
+	// 待续累积的未完成序列片段
 	private buffer: string = "";
+	// 不完整序列的超时冲刷定时器
 	private timeout: ReturnType<typeof setTimeout> | null = null;
+	// 超时阈值毫秒数（默认 10ms）
 	private readonly timeoutMs: number;
+	// 是否正处于括号粘贴接收状态
 	private pasteMode: boolean = false;
+	// 粘贴内容的累积缓冲
 	private pasteBuffer: string = "";
+	// 上一个 Kitty CSI-u 可打印码点：用于过滤其产生的重复回显字符
 	private pendingKittyPrintableCodepoint: number | undefined;
 
 	constructor(options: StdinBufferOptions = {}) {
@@ -284,6 +317,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		this.timeoutMs = options.timeout ?? 10;
 	}
 
+	// 喂入新的输入数据（公开）：处理单字节高位转义 → 括号粘贴状态机 → 常规序列切分与超时冲刷。
 	public process(data: string | Buffer): void {
 		// Clear any pending timeout
 		if (this.timeout) {
@@ -386,6 +420,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		}
 	}
 
+	// 发出一条序列（私有）：若与待定的 Kitty 码点相同则吞掉（去重），否则记录并发出 data 事件
 	private emitDataSequence(sequence: string): void {
 		const rawCodepoint = sequence.length === 1 ? sequence.codePointAt(0) : undefined;
 		if (rawCodepoint !== undefined && rawCodepoint === this.pendingKittyPrintableCodepoint) {
@@ -397,6 +432,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		this.emit("data", sequence);
 	}
 
+	// 强制冲刷（公开）：清定时器并把当前残余缓冲作为一条序列返回；空则空数组
 	flush(): string[] {
 		if (this.timeout) {
 			clearTimeout(this.timeout);
@@ -413,6 +449,7 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		return sequences;
 	}
 
+	// 清空全部状态（公开）：定时器、缓冲、粘贴状态与待定码点
 	clear(): void {
 		if (this.timeout) {
 			clearTimeout(this.timeout);
@@ -424,10 +461,12 @@ export class StdinBuffer extends EventEmitter<StdinBufferEventMap> {
 		this.pendingKittyPrintableCodepoint = undefined;
 	}
 
+	// 读取当前残余缓冲（调试用）
 	getBuffer(): string {
 		return this.buffer;
 	}
 
+	// 销毁：等价于 clear
 	destroy(): void {
 		this.clear();
 	}
