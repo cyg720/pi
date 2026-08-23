@@ -44,6 +44,10 @@ async function resolveCloudflareEnv(
 	};
 }
 
+/**
+ * 【文件职责】Cloudflare 认证：账号/网关 ID 解析与 API 密钥认证。
+ * 【新手阅读建议】看凭据解析。
+ */
 export function cloudflareWorkersAIAuth(): ApiKeyAuth {
 	return {
 		name: "Cloudflare API key",

@@ -113,6 +113,16 @@ import { addUsageToTotals, createUsageTotals } from "./usage-totals.ts";
 // ============================================================================
 
 /** Parsed skill block from a user message */
+/**
+ * 【文件职责】AgentSession：会话核心——提示/续跑/转向/追问/中止/重置、技能解析、
+ *              模型切换、会话统计与事件广播，是 coding-agent 智能体会话的主体。
+ * 【技术维度】基于 pi-agent 的 Agent 封装；事件类型联合；扩展绑定。
+ * 【产品维度】是用户与模型交互的会话对象：多轮、工具、分支恢复都经它。
+ * 【逻辑维度】技能块解析 → 事件/配置/绑定类型 → AgentSession 类（prompt/steer/followUp/
+ *              switchModel 等）→ 统计。
+ * 【关键边界】同一时刻单活动运行；模型切换会重建底层 Agent；扩展经绑定接入。
+ * 【新手阅读建议】先读 AgentSessionEvent 与 AgentSessionConfig，再看类主要方法。
+ */
 export interface ParsedSkillBlock {
 	name: string;
 	location: string;

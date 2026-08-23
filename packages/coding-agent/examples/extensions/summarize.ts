@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：摘要命令。
+ * 【新手阅读建议】看压缩/摘要 API。
+ */
 import { uuidv7 } from "@earendil-works/pi-ai";
 import { complete, getModel } from "@earendil-works/pi-ai/compat";
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";

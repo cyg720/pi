@@ -8,6 +8,10 @@
  * - Windows toast: Windows Terminal (WSL)
  */
 
+/**
+ * 【文件职责】扩展示例：桌面通知。
+ * 【新手阅读建议】看通知能力。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 function windowsToastScript(title: string, body: string): string {

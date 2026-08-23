@@ -5,6 +5,11 @@ import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME } from "../config.ts";
 import { canonicalizePath, resolvePath } from "../utils/paths.ts";
 
+/**
+ * 【文件职责】信任管理器：项目/命令信任状态的管理（提示、持久化、检查）。
+ * 【产品维度】决定高风险命令是否需要用户确认。
+ * 【新手阅读建议】看信任判定与持久化。
+ */
 export type ProjectTrustDecision = boolean | null;
 
 export interface ProjectTrustStoreEntry {

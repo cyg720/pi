@@ -8,6 +8,10 @@ import { keyText } from "./keybinding-hints.ts";
  * Uses same background color as custom messages for visual consistency.
  * Only renders the skill block itself - user message is rendered separately.
  */
+/**
+ * 【文件职责】UI 组件：技能调用消息渲染。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class SkillInvocationMessageComponent extends Box {
 	private expanded = false;
 	private skillBlock: ParsedSkillBlock;

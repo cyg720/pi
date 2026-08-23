@@ -18,6 +18,10 @@ import { truncateToVisualLines } from "./visual-truncate.ts";
 // Preview line limit when not expanded (matches tool execution behavior)
 const PREVIEW_LINES = 20;
 
+/**
+ * 【文件职责】UI 组件：bash 执行消息展示（命令/输出/状态）。
+ * 【新手阅读建议】看命令块渲染。
+ */
 export class BashExecutionComponent extends Container {
 	private command: string;
 	private outputLines: string[] = [];

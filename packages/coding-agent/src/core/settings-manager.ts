@@ -8,6 +8,11 @@ import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
 import { normalizePath, resolvePath } from "../utils/paths.ts";
 import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "./http-dispatcher.ts";
 
+/**
+ * 【文件职责】设置管理器：settings.json 的读写、校验与订阅（含迁移与宽松解析）。
+ * 【产品维度】是全部用户配置的单一事实源。
+ * 【新手阅读建议】先看配置结构类型，再看读写/校验。
+ */
 export interface CompactionSettings {
 	enabled?: boolean; // default: true
 	reserveTokens?: number; // default: 16384

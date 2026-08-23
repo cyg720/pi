@@ -3,6 +3,10 @@ import { delimiter } from "node:path";
 import { spawn, spawnSync } from "child_process";
 import { getBinDir } from "../config.ts";
 
+/**
+ * 【文件职责】Shell 工具：检测当前 shell/运行命令（含用户 shell 交互）。
+ * 【新手阅读建议】看 shell 探测。
+ */
 export interface ShellConfig {
 	shell: string;
 	args: string[];

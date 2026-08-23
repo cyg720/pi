@@ -9,6 +9,10 @@ import { getMarkdownTheme, theme } from "../theme/theme.ts";
  * Component that renders a custom message entry from extensions.
  * Uses distinct styling to differentiate from user messages.
  */
+/**
+ * 【文件职责】UI 组件：自定义消息渲染。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class CustomMessageComponent extends Container {
 	private message: CustomMessage<unknown>;
 	private customRenderer?: MessageRenderer;

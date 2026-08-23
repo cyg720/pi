@@ -60,6 +60,10 @@ function isGetStateSuccess(
 	return response.success === true && response.command === "get_state" && "data" in response;
 }
 
+/**
+ * 【文件职责】进程监督器：管理服务器进程的启停/健康检查/重启。
+ * 【新手阅读建议】看生命周期管理。
+ */
 export class ServerSupervisor {
 	private readonly liveInstances = new Map<string, LiveInstance>();
 

@@ -4,6 +4,10 @@ import { type TerminalTheme, theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint, rawKeyHint } from "./keybinding-hints.ts";
 
+/**
+ * 【文件职责】UI 组件：首次启动引导（欢迎/模型选择/信任说明）。
+ * 【新手阅读建议】看引导步骤。
+ */
 export interface FirstTimeSetupResult {
 	theme: TerminalTheme;
 	shareAnalytics: boolean;

@@ -9,6 +9,10 @@ const OSC133_ZONE_FINAL = "\x1b]133;C\x07";
 /**
  * Component that renders a complete assistant message
  */
+/**
+ * 【文件职责】UI 组件：助手消息渲染（文本/思考/工具调用的展示）。
+ * 【新手阅读建议】看内容块渲染。
+ */
 export class AssistantMessageComponent extends Container {
 	private contentContainer: Container;
 	private hideThinkingBlock: boolean;

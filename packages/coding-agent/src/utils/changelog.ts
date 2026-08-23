@@ -1,6 +1,10 @@
 import path from "node:path";
 import { existsSync, readFileSync } from "fs";
 
+/**
+ * 【文件职责】变更日志工具：解析/渲染 CHANGELOG（用于更新提示等）。
+ * 【新手阅读建议】看解析与格式化。
+ */
 export interface ChangelogEntry {
 	major: number;
 	minor: number;

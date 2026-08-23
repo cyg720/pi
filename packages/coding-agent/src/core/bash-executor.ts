@@ -19,6 +19,13 @@ import { DEFAULT_MAX_BYTES, truncateTail } from "./tools/truncate.ts";
 // Types
 // ============================================================================
 
+/**
+ * 【文件职责】bash 执行器：以"操作"模型执行命令（读写/编辑文件操作计数），
+ *              返回命令结果与操作统计。
+ * 【产品维度】驱动工具行为审计与项目信任决策。
+ * 【逻辑维度】executeBashWithOperations 执行命令并汇总文件操作。
+ * 【新手阅读建议】先看 BashResult 结构，再读执行函数。
+ */
 export interface BashExecutorOptions {
 	/** Callback for streaming output chunks (already sanitized) */
 	onChunk?: (chunk: string) => void;

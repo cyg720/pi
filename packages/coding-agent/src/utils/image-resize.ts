@@ -1,6 +1,10 @@
 import { Worker } from "node:worker_threads";
 import { type ImageResizeOptions, type ResizedImage, resizeImageInProcess } from "./image-resize-core.ts";
 
+/**
+ * 【文件职责】图片缩放：Worker/内联实现的调度入口。
+ * 【新手阅读建议】看实现选择。
+ */
 export type { ImageResizeOptions, ResizedImage } from "./image-resize-core.ts";
 
 interface ResizeImageWorkerResponse {

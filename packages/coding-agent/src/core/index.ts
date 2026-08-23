@@ -2,6 +2,10 @@
  * Core modules shared between all run modes.
  */
 
+/**
+ * 【文件职责】core 模块出口：集中转发核心能力（会话/模型/认证/存储等）。
+ * 【新手阅读建议】作为目录索引使用。
+ */
 export {
 	AgentSession,
 	type AgentSessionConfig,

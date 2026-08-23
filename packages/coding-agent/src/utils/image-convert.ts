@@ -1,6 +1,11 @@
 import { applyExifOrientation } from "./exif-orientation.ts";
 import { loadPhoton } from "./photon.ts";
 
+/**
+ * 【文件职责】图片转换：格式转换/缩放（sharp 等依赖，可用时启用）。
+ * 【产品维度】把不支持的图片转为模型可读格式。
+ * 【新手阅读建议】看转换入口与降级。
+ */
 export async function convertImageBytesToPng(bytes: Uint8Array): Promise<Uint8Array | null> {
 	const photon = await loadPhoton();
 	if (!photon) {

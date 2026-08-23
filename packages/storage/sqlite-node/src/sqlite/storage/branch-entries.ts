@@ -3,6 +3,10 @@ import type { SqliteDatabase } from "../types.ts";
 import { decodeEntry, type SessionEntryRow } from "./session-entries.ts";
 import { invalidSession } from "./shared.ts";
 
+/**
+ * 【文件职责】分支条目存储：分支/摘要条目的 SQLite 读写。
+ * 【新手阅读建议】看表结构与读写。
+ */
 export interface BranchEntryRow {
 	entry_id: string;
 	entry_seq: number;

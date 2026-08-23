@@ -30,6 +30,11 @@ import {
 	quarantineWindowsNativeDependencies,
 } from "./utils/windows-self-update.ts";
 
+/**
+ * 【文件职责】包管理器 CLI：安装/卸载扩展等命令行子命令。
+ * 【产品维度】让用户命令行管理扩展。
+ * 【新手阅读建议】看命令分派。
+ */
 export type PackageCommand = "install" | "remove" | "update" | "list";
 
 type UpdateTarget = { type: "all" } | { type: "self" } | { type: "extensions"; source?: string } | { type: "models" };

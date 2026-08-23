@@ -47,6 +47,10 @@ function getLoadedSharedObjectsInPackageDir(packageDir: string): string[] {
 	return loadedFiles;
 }
 
+/**
+ * 【文件职责】Windows 自更新：替换自身可执行文件的更新流程。
+ * 【新手阅读建议】看原子替换与回滚。
+ */
 export function cleanupWindowsSelfUpdateQuarantine(packageDir: string): void {
 	const quarantineRoot = getQuarantineRoot(packageDir);
 	if (!quarantineRoot) {

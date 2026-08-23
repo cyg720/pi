@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { VERCEL_AI_GATEWAY_MODELS } from "./vercel-ai-gateway.models.ts";
 
+/**
+ * 【文件职责】Vercel AI Gateway 供应商工厂（路由偏好支持）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function vercelAIGatewayProvider(): Provider<"anthropic-messages"> {
 	return createProvider({
 		id: "vercel-ai-gateway",

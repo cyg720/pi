@@ -2,6 +2,11 @@
  * Extension system for lifecycle events and custom tools.
  */
 
+/**
+ * 【文件职责】扩展系统出口：转发扩展运行时/加载器/包装器等公共 API。
+ * 【产品维度】是扩展开发的对外契约面。
+ * 【新手阅读建议】索引文件，按需跳转。
+ */
 export type { SlashCommandInfo, SlashCommandSource } from "../slash-commands.ts";
 export type { SourceInfo } from "../source-info.ts";
 export {

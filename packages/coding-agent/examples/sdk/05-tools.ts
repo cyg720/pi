@@ -10,6 +10,10 @@
  * extensions system using pi.registerTool().
  */
 
+/**
+ * 【文件职责】SDK 示例：自定义工具。
+ * 【新手阅读建议】看工具注册。
+ */
 import { createAgentSession, SessionManager } from "@earendil-works/pi-coding-agent";
 
 // Read-only mode (no edit/write)

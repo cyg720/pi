@@ -1,6 +1,10 @@
 import type { SessionStats, SessionTreeEntry, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { invalidSession, isRecord } from "./shared.ts";
 
+/**
+ * 【文件职责】会话物化视图：会话快照/摘要的 SQLite 物化存储。
+ * 【新手阅读建议】看物化逻辑。
+ */
 export interface SessionMaterializedRow {
 	session_id: string;
 	payload: string;

@@ -1,5 +1,10 @@
 import { existsSync } from "node:fs";
 
+/**
+ * 【文件职责】会话工作目录：管理与会话关联的 cwd（含目录编码名解析）。
+ * 【产品维度】会话文件按 cwd 组织。
+ * 【新手阅读建议】看编码/解码函数。
+ */
 export interface SessionCwdIssue {
 	sessionFile?: string;
 	sessionCwd: string;

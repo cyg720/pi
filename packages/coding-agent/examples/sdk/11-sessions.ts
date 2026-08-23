@@ -4,6 +4,10 @@
  * Control session persistence: in-memory, new file, continue, or open specific.
  */
 
+/**
+ * 【文件职责】SDK 示例：会话管理。
+ * 【新手阅读建议】看会话 CRUD。
+ */
 import { createAgentSession, SessionManager } from "@earendil-works/pi-coding-agent";
 
 // In-memory (no persistence)

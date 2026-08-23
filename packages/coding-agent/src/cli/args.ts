@@ -7,6 +7,10 @@ import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR, ENV_SESSION_DIR } from "../config.ts";
 import type { ExtensionFlag } from "../core/extensions/types.ts";
 
+/**
+ * 【文件职责】CLI 参数：定义/解析全部命令行参数（含位置参数与模式）。
+ * 【新手阅读建议】看参数定义表与解析。
+ */
 export type Mode = "text" | "json" | "rpc";
 
 export interface Args {

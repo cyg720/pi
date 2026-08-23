@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：触发压缩。
+ * 【新手阅读建议】看压缩触发。
+ */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 const COMPACT_THRESHOLD_TOKENS = 100_000;

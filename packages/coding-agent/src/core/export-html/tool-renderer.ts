@@ -1,9 +1,13 @@
 /**
- * Tool HTML renderer for custom tools in HTML export.
- *
- * Renders custom tool calls and results to HTML by invoking their TUI renderers
- * and converting the ANSI output to HTML.
+ * 【文件职责】工具渲染器：把工具调用/结果渲染为 HTML 片段（供会话导出）。
+ * 【产品维度】让导出的 HTML 保留工具执行的视觉表达。
+ * 【新手阅读建议】看各工具类型的渲染分支。
  */
+// Tool HTML renderer for custom tools in HTML export.
+// 自定义工具的 HTML 渲染器（中文说明）：调用其 TUI 渲染器并把 ANSI 输出转为 HTML。
+//
+// Renders custom tool calls and results to HTML by invoking their TUI renderers
+// and converting the ANSI output to HTML.
 
 import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
 import type { Component } from "@earendil-works/pi-tui";

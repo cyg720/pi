@@ -8,6 +8,10 @@
  *   echo "Run the tests" > /tmp/agent-trigger.txt
  */
 
+/**
+ * 【文件职责】扩展示例：文件触发。
+ * 【新手阅读建议】看文件监视。
+ */
 import * as fs from "node:fs";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 

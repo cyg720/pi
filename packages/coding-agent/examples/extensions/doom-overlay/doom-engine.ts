@@ -2,6 +2,10 @@
  * DOOM Engine - WebAssembly wrapper for doomgeneric
  */
 
+/**
+ * 【文件职责】扩展示例：Doom 引擎（游戏逻辑）。
+ * 【新手阅读建议】看游戏引擎。
+ */
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

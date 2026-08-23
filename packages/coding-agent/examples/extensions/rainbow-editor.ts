@@ -4,6 +4,10 @@
  * Usage: pi --extension ./examples/extensions/rainbow-editor.ts
  */
 
+/**
+ * 【文件职责】扩展示例：彩虹编辑器（外观演示）。
+ * 【新手阅读建议】趣味示例。
+ */
 import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // Base colors (coral → yellow → green → teal → blue → purple → pink)

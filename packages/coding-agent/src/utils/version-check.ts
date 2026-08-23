@@ -4,6 +4,10 @@ import { getPiUserAgent } from "./pi-user-agent.ts";
 const LATEST_VERSION_URL = "https://pi.dev/api/latest-version";
 const DEFAULT_VERSION_CHECK_TIMEOUT_MS = 10000;
 
+/**
+ * 【文件职责】版本检查：后台检查新版本并提示更新。
+ * 【新手阅读建议】看检查与缓存。
+ */
 export interface LatestPiRelease {
 	version: string;
 	packageName?: string;

@@ -1,6 +1,11 @@
 import type { Usage } from "@earendil-works/pi-ai/compat";
 import type { SessionEntry } from "./session-manager.ts";
 
+/**
+ * 【文件职责】用量汇总：跨会话聚合 token/成本统计。
+ * 【产品维度】让用户了解总体花费。
+ * 【新手阅读建议】看聚合逻辑。
+ */
 export interface UsageTotals {
 	input: number;
 	output: number;

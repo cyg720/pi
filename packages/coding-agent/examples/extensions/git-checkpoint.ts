@@ -5,6 +5,10 @@
  * When forking, offers to restore code to that point in history.
  */
 
+/**
+ * 【文件职责】扩展示例：Git 检查点。
+ * 【新手阅读建议】看提交检查点。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

@@ -1,6 +1,11 @@
 import hljs from "highlight.js/lib/index.js";
 import { decodeHtmlEntityAt } from "./html.ts";
 
+/**
+ * 【文件职责】语法高亮：把代码转为 ANSI 高亮（hljs 按需加载）。
+ * 【产品维度】终端里展示高亮代码块。
+ * 【新手阅读建议】看高亮入口。
+ */
 export type HighlightFormatter = (text: string) => string;
 export type HighlightTheme = Partial<Record<string, HighlightFormatter>>;
 

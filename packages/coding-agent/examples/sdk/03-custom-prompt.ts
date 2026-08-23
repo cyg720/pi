@@ -4,6 +4,10 @@
  * Shows how to replace or modify the default system prompt.
  */
 
+/**
+ * 【文件职责】SDK 示例：自定义提示词/系统提示。
+ * 【新手阅读建议】看提示定制。
+ */
 import {
 	createAgentSession,
 	DefaultResourceLoader,

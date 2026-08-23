@@ -27,6 +27,11 @@ import {
 	createCustomMessage,
 } from "./messages.ts";
 
+/**
+ * 【文件职责】会话管理器：会话仓库的打开/列表/删除/恢复与统计。
+ * 【产品维度】支撑 /sessions 与启动恢复。
+ * 【新手阅读建议】看会话 CRUD 与统计。
+ */
 export const CURRENT_SESSION_VERSION = 3;
 
 export interface SessionHeader {

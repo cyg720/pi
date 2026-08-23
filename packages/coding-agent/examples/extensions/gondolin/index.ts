@@ -19,6 +19,10 @@
  *   - QEMU installed (for example, `brew install qemu` on macOS)
  */
 
+/**
+ * 【文件职责】扩展示例：Gondolin（隐藏界面能力演示）。
+ * 【新手阅读建议】趣味示例。
+ */
 import path from "node:path";
 import { RealFSProvider, VM } from "@earendil-works/gondolin";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";

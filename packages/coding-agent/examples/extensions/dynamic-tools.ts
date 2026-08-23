@@ -7,6 +7,10 @@
  * - Registers additional tools at runtime via /add-echo-tool <name>
  */
 
+/**
+ * 【文件职责】扩展示例：动态工具。
+ * 【新手阅读建议】看工具动态注入。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 

@@ -35,6 +35,11 @@ import {
 // provider-agnostic and does not import pi-ai/compat itself.
 setDefaultStreamFn(streamSimple);
 
+/**
+ * 【文件职责】SDK 导出：面向扩展/第三方暴露的稳定 API 集合（事件、类型、工具注册等）。
+ * 【产品维度】是扩展开发的公共入口。
+ * 【新手阅读建议】浏览导出清单。
+ */
 export interface CreateAgentSessionOptions {
 	/** Working directory for project-local discovery. Default: process.cwd() */
 	cwd?: string;

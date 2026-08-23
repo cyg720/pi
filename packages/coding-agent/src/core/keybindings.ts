@@ -10,6 +10,12 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getAgentDir } from "../config.ts";
 
+/**
+ * 【文件职责】coding-agent 的快捷键配置：继承 TUI 键位并定义本应用的自定义键位。
+ * 【产品维度】让用户按习惯配置编辑/导航快捷键。
+ * 【逻辑维度】声明自定义 Keybindings 并装配全局管理器。
+ * 【新手阅读建议】浏览键位定义表即可。
+ */
 export interface AppKeybindings {
 	"app.interrupt": true;
 	"app.clear": true;

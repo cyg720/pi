@@ -1,6 +1,11 @@
 import { convertImageBytesToPng } from "./image-convert.ts";
 import { formatDimensionNote, type ImageResizeOptions, resizeImage } from "./image-resize.ts";
 
+/**
+ * 【文件职责】图片处理总入口：读取→旋转（EXIF）→缩放→转码（按需）。
+ * 【产品维度】图片附件的统一预处理管线。
+ * 【新手阅读建议】看管线顺序。
+ */
 export interface ProcessImageOptions {
 	/** Whether to resize images to inline provider limits. Default: true */
 	autoResizeImages?: boolean;

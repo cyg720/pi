@@ -1,6 +1,11 @@
 import type { Credential, CredentialInfo, CredentialStore } from "@earendil-works/pi-ai";
 
 /** Async credential store overlay for non-persistent runtime API keys. */
+/**
+ * 【文件职责】运行时凭据：解析运行时注入的密钥/凭据源（环境、存储）。
+ * 【产品维度】统一运行时密钥获取。
+ * 【新手阅读建议】看解析链。
+ */
 export class RuntimeCredentials implements CredentialStore {
 	private readonly store: CredentialStore;
 	private readonly overrides = new Map<string, string>();

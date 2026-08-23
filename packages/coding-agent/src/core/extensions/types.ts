@@ -82,6 +82,11 @@ import type {
 	WriteToolInput,
 } from "../tools/index.ts";
 
+/**
+ * 【文件职责】扩展类型定义：扩展注册的钩子/上下文/工具包装等契约类型。
+ * 【产品维度】是扩展开发者的类型字典。
+ * 【新手阅读建议】浏览各接口即可。
+ */
 export type { ExecOptions, ExecResult } from "../exec.ts";
 export type { BuildSystemPromptOptions } from "../system-prompt.ts";
 export type { AgentToolResult, AgentToolUpdateCallback, ToolExecutionMode };

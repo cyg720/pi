@@ -7,6 +7,16 @@ import type {
 	ResponseStreamEvent,
 } from "openai/resources/responses/responses.js";
 
+/**
+ * 【文件职责】OpenAI Codex Responses API：面向 Codex 端点的 OpenAI Responses 实现，
+ *              支持 WebSocket 传输（含压缩）与本地会话清理注册。
+ * 【技术维度】openai SDK；WebSocket 流（websocket-cached）；node:os 的受限加载
+ *              （getBuiltinModule 兼容浏览器打包）；会话资源清理注册。
+ * 【产品维度】为 Codex 订阅/网关用户提供专用流式对话与编码会话支持。
+ * 【逻辑维度】选项/传输选择 → 请求（SSE 或 WebSocket）→ 事件归约 → 清理注册。
+ * 【关键边界】node 专属模块用运行时加载避免浏览器打包失败；WebSocket 需连接超时保护。
+ * 【新手阅读建议】先了解与 openai-responses 的差异（Codex 特有选项与 WS 传输）。
+ */
 type ProcessWithOsBuiltinModule = typeof process & {
 	getBuiltinModule?: (id: "node:os") => typeof NodeOs;
 };

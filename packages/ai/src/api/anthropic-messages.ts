@@ -1,3 +1,15 @@
+/**
+ * 【文件职责】Anthropic Messages API 实现：pi 消息 → Anthropic 请求转换、流式响应归约、
+ *              思考块（含 redacted 签名）回放、提示缓存控制、工具定义与成本计算。
+ * 【技术维度】@anthropic-ai/sdk；缓存控制（cache_control + TTL）；工具引用与
+ *              延迟工具；自适应思考（adaptive thinking）；流式 JSON 修复解析。
+ * 【产品维度】Anthropic 系模型（含 Claude 系列）的完整接入，含多轮思考连续性。
+ * 【逻辑维度】选项/兼容探测 → 消息与工具转换（缓存标记）→ 流请求 →
+ *              事件归约（思考/文本/工具调用/用量）→ 成本与诊断。
+ * 【关键边界】redacted 思考需原样回传签名；工具缓存标记受供应商支持开关控制；
+ *              temperature 对拒绝非默认值的模型特殊处理。
+ * 【新手阅读建议】先读消息转换与思考块处理，再看缓存控制与工具流式部分。
+ */
 import Anthropic from "@anthropic-ai/sdk";
 import type {
 	CacheControlEphemeral,

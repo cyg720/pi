@@ -31,6 +31,10 @@ import {
 // Types
 // ============================================================================
 
+/**
+ * 【文件职责】分支摘要：切换会话分支前生成摘要（与 agent 包 branch-summarization 对齐）。
+ * 【新手阅读建议】与 agent 包同名模块对照阅读。
+ */
 export interface BranchSummaryResult {
 	summary?: string;
 	usage?: Usage;

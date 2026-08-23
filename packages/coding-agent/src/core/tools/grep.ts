@@ -35,6 +35,10 @@ const grepSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of matches to return (default: 100)" })),
 });
 
+/**
+ * 【文件职责】grep 工具：按正则/字面量搜索文件内容，输出带行号与截断的匹配。
+ * 【新手阅读建议】看匹配与输出截断。
+ */
 export type GrepToolInput = Static<typeof grepSchema>;
 const DEFAULT_LIMIT = 100;
 

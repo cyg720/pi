@@ -55,6 +55,11 @@ interface ModelRuntimeSnapshot {
 	auth: ReadonlyMap<string, AuthCheck | undefined>;
 }
 
+/**
+ * 【文件职责】模型运行时：创建/管理 pi-ai 的 Models 集合（含认证、动态目录、自定义供应商）。
+ * 【产品维度】是会话请求模型能力的运行时装配点。
+ * 【新手阅读建议】看 createModels 与认证接入。
+ */
 export interface CreateModelRuntimeOptions {
 	/** Credential storage. Defaults to the file at authPath. */
 	credentials?: CredentialStore;

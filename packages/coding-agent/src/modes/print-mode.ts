@@ -14,6 +14,10 @@ import { killTrackedDetachedChildren } from "../utils/shell.ts";
 /**
  * Options for print mode.
  */
+/**
+ * 【文件职责】打印模式：一次性输出完整回复后退出（非交互）。
+ * 【新手阅读建议】看单轮执行与输出。
+ */
 export interface PrintModeOptions {
 	/** Output mode: "text" for final response only, "json" for all events */
 	mode: "text" | "json";

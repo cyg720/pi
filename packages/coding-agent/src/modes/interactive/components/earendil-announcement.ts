@@ -24,6 +24,10 @@ function loadImageBase64(): string | undefined {
 	return cachedImageBase64;
 }
 
+/**
+ * 【文件职责】UI 组件：启动公告横幅。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class EarendilAnnouncementComponent extends Container {
 	constructor() {
 		super();

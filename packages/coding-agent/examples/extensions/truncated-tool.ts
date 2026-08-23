@@ -14,6 +14,10 @@
  * built-in `grep` tool in src/core/tools/grep.ts for a more complete implementation.
  */
 
+/**
+ * 【文件职责】扩展示例：截断工具。
+ * 【新手阅读建议】看输出截断。
+ */
 import { mkdtemp, writeFile } from "node:fs/promises";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {

@@ -5,6 +5,10 @@
  * Discover, filter, merge, or replace them.
  */
 
+/**
+ * 【文件职责】SDK 示例：使用技能。
+ * 【新手阅读建议】看技能加载与调用。
+ */
 import {
 	createAgentSession,
 	createSyntheticSourceInfo,

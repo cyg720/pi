@@ -34,6 +34,18 @@ import type { AssistantMessage } from "../types.ts";
  * - DashScope/Qwen: "Range of input length should be [1, X]" (HTTP 400 invalid_parameter_error)
  * - Ollama: Some deployments truncate silently, others return errors like "prompt too long; exceeded max context length by X tokens"
  */
+/**
+ * 【文件职责】上下文溢出检测：识别各供应商返回的"输入超长"错误，包括显式报错与
+ *              静默吞掉（z.ai）/截断（小米 MiMo）两种无报错溢出形态。
+ * 【技术维度】供应商错误模式正则表（附排除表防误判）；基于 usage 的启发式判断。
+ * 【产品维度】驱动上层"自动压缩历史"策略：只有准确识别溢出，才能及时触发上下文压缩而非报错退出。
+ * 【逻辑维度】OVERFLOW_PATTERNS 命中表 → NON_OVERFLOW_PATTERNS 排除表 →
+ *              isContextOverflow 三种情形：显式错误 / 静默溢出（input>窗口）/ 截断溢出
+ *              （length + output=0 + input 填满窗口）。
+ * 【关键边界】排除表优先（Bedrock 节流错误会误中 /too many tokens/）；
+ *              自定义供应商的溢出文案需自行向 OVERFLOW_PATTERNS 追加。
+ * 【新手阅读建议】先读文件头注释了解各供应商模式示例 → 再读 isContextOverflow 三情形。
+ */
 const OVERFLOW_PATTERNS = [
 	/prompt is too long/i, // Anthropic token overflow
 	/request_too_large/i, // Anthropic request byte-size overflow (HTTP 413)
@@ -71,6 +83,7 @@ const OVERFLOW_PATTERNS = [
  * please wait before trying again." which would match the /too many tokens/i overflow
  * pattern without this exclusion.
  */
+// 非溢出错误排除表：命中者即使同时命中溢出模式也不判溢出（如 Bedrock 节流文案）
 const NON_OVERFLOW_PATTERNS = [
 	/^(Throttling error|Service unavailable):/i, // AWS Bedrock non-overflow errors (human-readable prefixes from formatBedrockError)
 	/rate limit/i, // Generic rate limiting
@@ -129,8 +142,15 @@ const NON_OVERFLOW_PATTERNS = [
  * @param contextWindow - Optional context window size for detecting silent overflow (z.ai)
  * @returns true if the message indicates a context overflow
  */
+/**
+ * 判断助手消息是否表示上下文溢出（公开）：
+ * 情形1 显式错误：stopReason=error 且错误信息命中溢出模式（排除表除外）；
+ * 情形2 静默溢出（z.ai 风格）：成功返回但 input+cacheRead 超过窗口；
+ * 情形3 截断溢出（小米 MiMo 风格）：length 结束且 output=0、输入几乎填满窗口。
+ */
 export function isContextOverflow(message: AssistantMessage, contextWindow?: number): boolean {
 	// Case 1: Check error message patterns
+	// 情形1：检查错误信息模式
 	if (message.stopReason === "error" && message.errorMessage) {
 		// Skip messages matching known non-overflow patterns (e.g. throttling / rate-limit)
 		const isNonOverflow = NON_OVERFLOW_PATTERNS.some((p) => p.test(message.errorMessage!));
@@ -140,6 +160,7 @@ export function isContextOverflow(message: AssistantMessage, contextWindow?: num
 	}
 
 	// Case 2: Silent overflow (z.ai style) - successful but usage exceeds context
+	// 情形2：静默溢出（z.ai 风格）——请求成功但用量超过窗口
 	if (contextWindow && message.stopReason === "stop") {
 		const inputTokens = message.usage.input + message.usage.cacheRead;
 		if (inputTokens > contextWindow) {
@@ -148,6 +169,7 @@ export function isContextOverflow(message: AssistantMessage, contextWindow?: num
 	}
 
 	// Case 3: Length-stop overflow (Xiaomi MiMo style) - server truncates oversized input
+	// 情形3：截断溢出（小米 MiMo 风格）——服务器截断超长输入后无输出空间
 	// to fit the context window, leaving no room for output. Returns stopReason "length"
 	// with output=0 and input+cacheRead filling the context window.
 	if (contextWindow && message.stopReason === "length" && message.usage.output === 0) {
@@ -163,6 +185,7 @@ export function isContextOverflow(message: AssistantMessage, contextWindow?: num
 /**
  * Get the overflow patterns for testing purposes.
  */
+// 返回溢出模式列表（公开）：供测试与自定义扩展
 export function getOverflowPatterns(): RegExp[] {
 	return [...OVERFLOW_PATTERNS];
 }

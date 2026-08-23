@@ -13,6 +13,10 @@
  *   - bash on remote
  */
 
+/**
+ * 【文件职责】扩展示例：SSH 会话。
+ * 【新手阅读建议】看远程执行。
+ */
 import { spawn } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {

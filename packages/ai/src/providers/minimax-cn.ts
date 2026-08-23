@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { MINIMAX_CN_MODELS } from "./minimax-cn.models.ts";
 
+/**
+ * 【文件职责】MiniMax（中国站）供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function minimaxCnProvider(): Provider<"anthropic-messages"> {
 	return createProvider({
 		id: "minimax-cn",

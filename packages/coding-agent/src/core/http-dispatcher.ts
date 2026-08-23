@@ -1,6 +1,12 @@
 import { EventEmitter } from "node:events";
 import * as undici from "undici";
 
+/**
+ * 【文件职责】HTTP 调度器配置：全局 fetch/undici 的空闲超时与代理设置。
+ * 【产品维度】统一控制出站请求的超时与代理出口。
+ * 【逻辑维度】parseHttpIdleTimeoutMs/format → applyHttpProxySettings → configureHttpDispatcher。
+ * 【新手阅读建议】重点看 configureHttpDispatcher 的组装逻辑。
+ */
 export const DEFAULT_HTTP_IDLE_TIMEOUT_MS = 300_000;
 
 export const HTTP_IDLE_TIMEOUT_CHOICES = [

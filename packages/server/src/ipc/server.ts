@@ -22,6 +22,10 @@ import {
 	type StopResponse,
 } from "./protocol.ts";
 
+/**
+ * 【文件职责】IPC 服务器：接收并处理客户端 IPC 消息。
+ * 【新手阅读建议】看消息处理。
+ */
 export interface IpcRequestHandler {
 	(request: SpawnRequest): Promise<SpawnResponse | ErrorResponse> | SpawnResponse | ErrorResponse;
 	(request: ListRequest): Promise<ListResponse | ErrorResponse> | ListResponse | ErrorResponse;

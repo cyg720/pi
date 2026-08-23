@@ -9,6 +9,10 @@
  *   # Then /login gitlab-duo, or set GITLAB_TOKEN=glpat-...
  */
 
+/**
+ * 【文件职责】扩展示例：自定义 GitLab Duo 供应商。
+ * 【新手阅读建议】看自定义供应商注册。
+ */
 import {
 	type Api,
 	type AssistantMessageEventStream,

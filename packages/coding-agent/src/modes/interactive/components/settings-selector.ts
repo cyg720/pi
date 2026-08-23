@@ -49,6 +49,10 @@ const DEFAULT_PROJECT_TRUST_BY_LABEL = new Map(
 	Object.entries(DEFAULT_PROJECT_TRUST_LABELS).map(([value, label]) => [label, value as DefaultProjectTrust]),
 );
 
+/**
+ * 【文件职责】UI 组件：设置选择器（设置项浏览/修改）。
+ * 【新手阅读建议】看设置项渲染。
+ */
 export interface SettingsConfig {
 	autoCompact: boolean;
 	showImages: boolean;

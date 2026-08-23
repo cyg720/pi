@@ -4,6 +4,10 @@
  * Shows how to select a specific model and thinking level.
  */
 
+/**
+ * 【文件职责】SDK 示例：自定义模型接入。
+ * 【新手阅读建议】看模型配置方法。
+ */
 import { getModel } from "@earendil-works/pi-ai/compat";
 import { createAgentSession, ModelRuntime } from "@earendil-works/pi-coding-agent";
 

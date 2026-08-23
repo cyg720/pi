@@ -92,6 +92,10 @@ function renderHorizontalViewport(rows: HorizontalViewportRow[], width: number):
 }
 
 /** Filter mode for tree display */
+/**
+ * 【文件职责】UI 组件：会话树选择器（分支导航）。
+ * 【新手阅读建议】看树渲染与导航。
+ */
 export type FilterMode = "default" | "no-tools" | "user-only" | "labeled-only" | "all";
 
 /**

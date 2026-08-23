@@ -74,6 +74,10 @@ async function loadStartupThemes(settingsManager: SettingsManager): Promise<Them
 	return loadThemes(resolvedPaths.themes);
 }
 
+/**
+ * 【文件职责】启动 UI：首启引导（欢迎/模型选择/登录提示）。
+ * 【新手阅读建议】看引导流程。
+ */
 export async function createStartupTui(settingsManager: SettingsManager): Promise<TUI> {
 	setRegisteredThemes(await loadStartupThemes(settingsManager));
 	const terminalTheme = detectTerminalBackgroundFromEnv().theme;

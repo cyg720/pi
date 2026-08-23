@@ -1,6 +1,10 @@
 // Requires GitHub CLI (`gh`) and a GitHub repository checkout.
 // Preloads the latest open issues once per session, then filters them locally for fast `#...` completion.
 
+/**
+ * 【文件职责】扩展示例：GitHub Issue 自动补全。
+ * 【新手阅读建议】看补全提供器。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	type AutocompleteItem,

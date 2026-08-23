@@ -5,6 +5,10 @@
  * Useful for preventing accidental modifications to sensitive files.
  */
 
+/**
+ * 【文件职责】扩展示例：受保护路径。
+ * 【新手阅读建议】看文件保护。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

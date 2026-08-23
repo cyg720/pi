@@ -42,6 +42,10 @@ const bashSchema = Type.Object({
 	timeout: Type.Optional(Type.Number({ description: "Timeout in seconds (optional, no default timeout)" })),
 });
 
+/**
+ * 【文件职责】bash 工具：执行命令并流式捕获输出（与 agent 包 createBashTool 对齐的实现）。
+ * 【新手阅读建议】与 agent 包同名文件对照阅读。
+ */
 export type BashToolInput = Static<typeof bashSchema>;
 
 export interface BashToolDetails {

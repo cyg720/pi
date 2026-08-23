@@ -1,3 +1,13 @@
+/**
+ * 【文件职责】Google Vertex AI API 实现：在 Gemini 逻辑基础上接入 Vertex 的认证
+ *              （ADC/API key）与资源作用域（project/location）。
+ * 【技术维度】@google/genai SDK（vertex 模式）；ResourceScope；
+ *              GOOGLE_CLOUD_PROJECT/LOCATION 环境变量；ADC 凭据。
+ * 【产品维度】让 Vertex 上托管的 Gemini 模型可用（企业场景）。
+ * 【逻辑维度】构造 Vertex 客户端 → 消息/工具转换 → generateContentStream → 归约。
+ * 【关键边界】项目/区域缺失时无法初始化；认证走 ADC 或显式 API key。
+ * 【新手阅读建议】重点看客户端初始化（vertex 模式）与 google-generative-ai.ts 的差异。
+ */
 import {
 	type GenerateContentConfig,
 	type GenerateContentParameters,

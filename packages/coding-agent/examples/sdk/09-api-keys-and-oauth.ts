@@ -4,6 +4,10 @@
  * Configure provider auth through ModelRuntime.
  */
 
+/**
+ * 【文件职责】SDK 示例：API 密钥与 OAuth 登录。
+ * 【新手阅读建议】看认证流程。
+ */
 import { createAgentSession, ModelRuntime, SessionManager } from "@earendil-works/pi-coding-agent";
 
 const modelRuntime = await ModelRuntime.create();

@@ -14,6 +14,10 @@
  *   /editor  - demo editor dialog
  */
 
+/**
+ * 【文件职责】示例：RPC 扩展 UI（远程界面集成演示）。
+ * 【新手阅读建议】看 RPC UI 交互。
+ */
 import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import * as readline from "node:readline";

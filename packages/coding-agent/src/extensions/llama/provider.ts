@@ -10,6 +10,10 @@ import type {
 import { stream, streamSimple } from "@earendil-works/pi-ai/compat";
 import { LlamaClient, type LlamaModelInfo, llamaInferenceUrl, normalizeLlamaServerUrl } from "./client.ts";
 
+/**
+ * 【文件职责】llama 供应商：把本地模型装配为 pi-ai Provider。
+ * 【新手阅读建议】看供应商装配。
+ */
 export const LLAMA_PROVIDER_ID = "llama.cpp";
 export const DEFAULT_LLAMA_SERVER_URL = "http://127.0.0.1:8080";
 function credentialServerUrl(credential: ApiKeyCredential | undefined): string | undefined {

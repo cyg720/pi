@@ -1,6 +1,10 @@
 import type { FileSystem, SessionCreateOptions, SessionMetadata, SessionRepo } from "@earendil-works/pi-agent-core";
 
 /** Result of a prepared SQLite statement execution. */
+/**
+ * 【文件职责】SQLite 存储类型：存储后端接口与条目类型。
+ * 【新手阅读建议】浏览类型即可。
+ */
 export interface SqliteRunResult {
 	/** Number of rows changed by the statement. */
 	changes: number;

@@ -4,6 +4,10 @@ import { theme } from "../theme/theme.ts";
 import { CountdownTimer } from "./countdown-timer.ts";
 import { keyText } from "./keybinding-hints.ts";
 
+/**
+ * 【文件职责】UI 组件：状态指示器（加载/成功/失败点）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export type StatusIndicatorKind = "working" | "retry" | "compaction" | "branchSummary";
 
 export class StatusIndicator extends Loader {

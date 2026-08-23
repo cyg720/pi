@@ -12,6 +12,12 @@ import { SessionManager } from "../session-manager.ts";
  * Interface for rendering custom tools to HTML.
  * Used by agent-session to pre-render extension tool output.
  */
+/**
+ * 【文件职责】会话导出为 HTML：把会话树/消息渲染为可读的静态 HTML 页面。
+ * 【产品维度】让用户分享/归档会话记录。
+ * 【逻辑维度】消息渲染 → 组装页面 → 写出文件。
+ * 【新手阅读建议】看 exportSessionToHtml 主流程。
+ */
 export interface ToolHtmlRenderer {
 	/** Render a tool call to HTML. Returns undefined if tool has no custom renderer. */
 	renderCall(toolCallId: string, toolName: string, args: unknown): string | undefined;

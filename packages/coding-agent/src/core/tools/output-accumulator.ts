@@ -4,6 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "./truncate.ts";
 
+/**
+ * 【文件职责】输出累积器：按行累积工具输出并支持截断/采样（进度展示用）。
+ * 【新手阅读建议】看尾部保留逻辑。
+ */
 export interface OutputAccumulatorOptions {
 	maxLines?: number;
 	maxBytes?: number;

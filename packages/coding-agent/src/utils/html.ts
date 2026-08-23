@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】HTML 工具：转义/生成 HTML 片段（导出页面/错误页用）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export interface DecodedHtmlEntity {
 	text: string;
 	length: number;

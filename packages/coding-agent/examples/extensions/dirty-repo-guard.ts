@@ -5,6 +5,10 @@
  * Useful to ensure work is committed before switching context.
  */
 
+/**
+ * 【文件职责】扩展示例：脏仓库守卫（阻止危险操作）。
+ * 【新手阅读建议】看命令守卫。
+ */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 async function checkDirtyRepo(

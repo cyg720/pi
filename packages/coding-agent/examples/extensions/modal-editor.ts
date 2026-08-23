@@ -9,6 +9,10 @@
  * - ctrl+c, ctrl+d, etc. work in both modes
  */
 
+/**
+ * 【文件职责】扩展示例：模态编辑器。
+ * 【新手阅读建议】看模态框。
+ */
 import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 

@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】pi-harness 评测：验证 AgentHarness 行为（工具/会话/压缩）。
+ * 【新手阅读建议】看用例清单。
+ */
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

@@ -20,6 +20,15 @@ import { SessionManager } from "./session-manager.ts";
  * The caller gets the created session, its cwd-bound services, and all
  * diagnostics collected during setup.
  */
+/**
+ * 【文件职责】AgentSessionRuntime：把 AgentSession 与完整服务集合（模型/认证/存储/工具等）
+ *              装配为可运行运行时，提供会话创建/恢复/导入导出等能力。
+ * 【技术维度】组合式装配；工厂注入；会话文件导入导出。
+ * 【产品维度】是 CLI/服务器复用完整会话能力的统一入口。
+ * 【逻辑维度】createAgentSessionRuntime 装配 → 运行时方法（模型/状态/会话管理）。
+ * 【关键边界】导入文件缺失抛 SessionImportFileNotFoundError；工厂可替换实现。
+ * 【新手阅读建议】先读接口与工厂签名，再读类的方法概览。
+ */
 export interface CreateAgentSessionRuntimeResult extends CreateAgentSessionResult {
 	services: AgentSessionServices;
 	diagnostics: AgentSessionRuntimeDiagnostic[];

@@ -33,6 +33,10 @@ function emitOsc52(text: string): boolean {
 }
 
 /** Read plain text from the system clipboard, if native clipboard access is available. */
+/**
+ * 【文件职责】剪贴板统一入口：读写文本/图片，自动选择实现与清理。
+ * 【新手阅读建议】看主入口与清理注册。
+ */
 export async function readClipboardText(): Promise<string | null> {
 	if (!clipboard) {
 		return null;

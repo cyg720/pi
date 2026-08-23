@@ -10,6 +10,10 @@ const THEME_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 /**
  * Component that renders a theme selector
  */
+/**
+ * 【文件职责】UI 组件：主题选择器。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class ThemeSelectorComponent extends Container {
 	private selectList: SelectList;
 	private onPreview: (themeName: string) => void;

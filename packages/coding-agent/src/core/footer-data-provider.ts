@@ -96,6 +96,14 @@ function shouldPollGitHead(repoDir: string): boolean {
  * Provides git branch and extension statuses - data not otherwise accessible to extensions.
  * Token stats, model info available via ctx.sessionManager and ctx.model.
  */
+/**
+ * 【文件职责】状态栏数据提供器：聚合会话/模型/认证/缓存等状态，驱动 TUI 底栏展示
+ *              （模型、思考级别、会话路径、用量等）。
+ * 【技术维度】事件驱动更新；只读视图类型。
+ * 【产品维度】让用户随时看到当前运行状态（模型/成本/会话位置）。
+ * 【逻辑维度】监听事件 → 维护状态 → 生成行数据。
+ * 【新手阅读建议】先看类字段与公开方法，再看数据聚合逻辑。
+ */
 export class FooterDataProvider {
 	private cwd: string;
 	private static readonly WATCH_DEBOUNCE_MS = 500;

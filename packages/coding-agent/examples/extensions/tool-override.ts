@@ -20,6 +20,10 @@
  *   pi -e ./tool-override.ts
  */
 
+/**
+ * 【文件职责】扩展示例：工具覆盖。
+ * 【新手阅读建议】看工具替换。
+ */
 import type { TextContent } from "@earendil-works/pi-ai";
 import { type ExtensionAPI, getAgentDir, withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { constants, readFileSync } from "fs";

@@ -107,6 +107,10 @@ class UserMessageList implements Component {
 /**
  * Component that renders a user message selector for branching
  */
+/**
+ * 【文件职责】UI 组件：用户消息选择（历史提示选择）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class UserMessageSelectorComponent extends Container {
 	private messageList: UserMessageList;
 

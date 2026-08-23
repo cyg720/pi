@@ -104,6 +104,10 @@ function logRadiusRetry(scope: string, action: string, delayMs: number, failureC
 	);
 }
 
+/**
+ * 【文件职责】Radius 网关服务器：承载 pi-messages 网关请求的服务端。
+ * 【新手阅读建议】看网关处理。
+ */
 export function getRadiusUrl(): string {
 	return process.env.PI_RADIUS_URL || DEFAULT_RADIUS_URL;
 }

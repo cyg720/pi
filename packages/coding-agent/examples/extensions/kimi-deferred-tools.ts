@@ -5,6 +5,10 @@
  *    example prompt: Use the available tools to calculate 100 + 500. Do not calculate it yourself.
  */
 
+/**
+ * 【文件职责】扩展示例：Kimi 延迟工具。
+ * 【新手阅读建议】看延迟工具用法。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 

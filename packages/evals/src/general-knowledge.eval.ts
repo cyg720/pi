@@ -1,3 +1,8 @@
+/**
+ * 【文件职责】通用知识评测：用一组通用知识题目评估模型表现。
+ * 【产品维度】衡量模型整体知识水平。
+ * 【新手阅读建议】看题目集与评分。
+ */
 import { expect } from "vitest";
 import { describeEval } from "vitest-evals";
 import { piCodingAgentHarness } from "./pi-harness.ts";

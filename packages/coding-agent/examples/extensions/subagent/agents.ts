@@ -2,6 +2,10 @@
  * Agent discovery and configuration
  */
 
+/**
+ * 【文件职责】扩展示例：子代理定义。
+ * 【新手阅读建议】看子代理配置。
+ */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";

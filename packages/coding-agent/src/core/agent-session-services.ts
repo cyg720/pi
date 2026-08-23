@@ -22,6 +22,14 @@ import { SettingsManager } from "./settings-manager.ts";
  * exiting. The app layer decides whether warnings should be shown and whether
  * errors should abort startup.
  */
+/**
+ * 【文件职责】会话服务装配：把模型注册表/认证/存储/工具集/设置等全部服务组装为
+ *              AgentSessionServices，并支持从服务直接创建会话。
+ * 【技术维度】依赖组合；工厂函数。
+ * 【产品维度】解耦会话与服务的构造细节，便于替换实现。
+ * 【逻辑维度】createAgentSessionServices 组装 → createAgentSessionFromServices 建会话。
+ * 【新手阅读建议】先读 AgentSessionServices 接口了解服务清单。
+ */
 export interface AgentSessionRuntimeDiagnostic {
 	type: "info" | "warning" | "error";
 	message: string;

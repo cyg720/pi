@@ -3,6 +3,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+/**
+ * 【文件职责】外部编辑器：把当前输入交给系统编辑器编辑后回填。
+ * 【产品维度】支持用 IDE/编辑器撰写长提示。
+ * 【新手阅读建议】看编辑器调用与回填。
+ */
 export interface ExternalEditorOptions {
 	command: string;
 	content: string;

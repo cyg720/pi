@@ -1,7 +1,12 @@
 /**
+ * 【文件职责】扩展示例：计划模式纯工具函数（破坏性命令检测等）。
+ * 【新手阅读建议】看命令模式匹配。
+ */
+/**
  * Pure utility functions for plan mode.
  * Extracted for testability.
  */
+// 计划模式的纯工具函数（中文说明）：独立提取以便测试。
 
 // Destructive commands blocked in plan mode
 const DESTRUCTIVE_PATTERNS = [

@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：Doom WAD 文件查找。
+ * 【新手阅读建议】看资源查找。
+ */
 import { existsSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

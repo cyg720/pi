@@ -7,6 +7,10 @@ import type { SettingsManager } from "../core/settings-manager.ts";
 import { ConfigSelectorComponent, type ScopedResolvedPaths } from "../modes/interactive/components/config-selector.ts";
 import { initTheme, stopThemeWatcher } from "../modes/interactive/theme/theme.ts";
 
+/**
+ * 【文件职责】配置选择器：交互式选择模型/主题等配置（复用 TUI 选择列表）。
+ * 【新手阅读建议】看选择交互。
+ */
 export interface ConfigSelectorOptions {
 	resolvedPaths: ScopedResolvedPaths;
 	settingsManager: SettingsManager;

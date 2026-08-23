@@ -28,6 +28,10 @@ function fileExists(filePath: string): boolean {
 	}
 }
 
+/**
+ * 【文件职责】工具路径解析（与 agent 包 path-utils 对齐）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export async function pathExists(filePath: string): Promise<boolean> {
 	try {
 		await access(filePath, constants.F_OK);

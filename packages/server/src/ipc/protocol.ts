@@ -7,6 +7,10 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import type { InstanceStatus } from "../types.ts";
 
+/**
+ * 【文件职责】IPC 协议：进程间通信的消息格式与编解码。
+ * 【新手阅读建议】看消息结构。
+ */
 export interface SpawnRequest {
 	type: "spawn";
 	cwd: string;

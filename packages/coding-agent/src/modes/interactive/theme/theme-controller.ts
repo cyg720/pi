@@ -15,6 +15,10 @@ import {
 
 type ThemeResult = { success: boolean; error?: string };
 
+/**
+ * 【文件职责】主题控制器：加载/切换/持久化主题（含终端明暗自适应）。
+ * 【新手阅读建议】看主题选择与持久化。
+ */
 export class InteractiveThemeController {
 	private readonly ui: TUI;
 	private readonly settingsManager: SettingsManager;

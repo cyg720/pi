@@ -5,6 +5,11 @@ import { CONFIG_DIR_NAME } from "../config.ts";
 import { loadThemeFromPath, type Theme } from "../modes/interactive/theme/theme.ts";
 import type { ResourceDiagnostic } from "./diagnostics.ts";
 
+/**
+ * 【文件职责】资源加载器：从用户目录加载技能/提示词模板并处理冲突诊断。
+ * 【产品维度】让用户自定义技能/模板可用。
+ * 【新手阅读建议】看加载与冲突处理。
+ */
 export type { ResourceCollision, ResourceDiagnostic } from "./diagnostics.ts";
 
 import { canonicalizePath, isLocalPath, resolvePath } from "../utils/paths.ts";

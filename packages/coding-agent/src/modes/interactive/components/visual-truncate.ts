@@ -5,6 +5,10 @@
 
 import { Text } from "@earendil-works/pi-tui";
 
+/**
+ * 【文件职责】UI 组件：视觉截断（按宽度截断文本展示）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export interface VisualTruncateResult {
 	/** The visual lines to display */
 	visualLines: string[];

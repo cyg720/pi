@@ -93,6 +93,10 @@ const ThemeJsonSchema = Type.Object({
 		// Bash Mode (1 color)
 		bashMode: ColorValueSchema,
 	}),
+/**
+ * 【文件职责】主题定义：coding-agent 的颜色主题（亮/暗两套及配色函数集）。
+ * 【新手阅读建议】看配色函数导出。
+ */
 	export: Type.Optional(
 		Type.Object({
 			pageBg: Type.Optional(ColorValueSchema),

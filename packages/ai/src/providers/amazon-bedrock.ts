@@ -71,6 +71,10 @@ const bedrockAuth: ApiKeyAuth = {
 	},
 };
 
+/**
+ * 【文件职责】Amazon Bedrock 供应商工厂：注册 Bedrock Converse 供应商（认证/模型/API）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function amazonBedrockProvider(): Provider<"bedrock-converse-stream"> {
 	return createProvider({
 		id: "amazon-bedrock",

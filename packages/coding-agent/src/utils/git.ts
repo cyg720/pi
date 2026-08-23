@@ -3,6 +3,10 @@ import hostedGitInfo from "hosted-git-info";
 /**
  * Parsed git URL information.
  */
+/**
+ * 【文件职责】Git 工具：仓库检测/状态/分支/最近提交等只读查询（供系统提示与环境感知）。
+ * 【新手阅读建议】看各查询函数。
+ */
 export type GitSource = {
 	/** Always "git" for git sources */
 	type: "git";

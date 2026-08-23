@@ -8,6 +8,10 @@
  * Never returns partial lines (except bash tail truncation edge case).
  */
 
+/**
+ * 【文件职责】工具输出截断（与 agent 包 truncate 对齐）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export const DEFAULT_MAX_LINES = 2000;
 export const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB
 export const GREP_MAX_LINE_LENGTH = 500; // Max chars per grep match line

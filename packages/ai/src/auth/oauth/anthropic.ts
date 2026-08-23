@@ -2,6 +2,8 @@
  * Anthropic OAuth flow (Claude Pro/Max)
  *
  * NOTE: This module uses Node.js http.createServer for the OAuth callback server.
+ *【中文说明】Anthropic OAuth 流程（Claude Pro/Max）：授权码 + PKCE，回调由
+ * node:http 回环服务器处理；仅 CLI 使用、不适合浏览器环境。
  * It is only intended for CLI use, not browser environments.
  */
 
@@ -29,9 +31,11 @@ const decode = (s: string) => atob(s);
 const CLIENT_ID = decode("OWQxYzI1MGEtZTYxYi00NGQ5LTg4ZWQtNTk0NGQxOTYyZjVl");
 const AUTHORIZE_URL = "https://claude.ai/oauth/authorize";
 const TOKEN_URL = "https://platform.claude.com/v1/oauth/token";
+// 回调主机（可经环境变量覆盖）
 const CALLBACK_HOST = getProviderEnvValue("PI_OAUTH_CALLBACK_HOST") || "127.0.0.1";
 const CALLBACK_PORT = 53692;
 const CALLBACK_PATH = "/callback";
+// 重定向 URI（本地回环）
 const REDIRECT_URI = `http://localhost:${CALLBACK_PORT}${CALLBACK_PATH}`;
 const SCOPES =
 	"org:create_api_key user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload";

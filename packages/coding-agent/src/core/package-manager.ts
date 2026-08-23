@@ -53,6 +53,11 @@ function getNpmVersionRange(version: string | undefined): string | undefined {
 	return version ? (validRange(version) ?? undefined) : undefined;
 }
 
+/**
+ * 【文件职责】包管理器：npm/bun 的安装/运行封装（含无交互、可信执行）。
+ * 【产品维度】支撑扩展安装与脚本执行。
+ * 【新手阅读建议】看安装/运行命令构造。
+ */
 export interface PathMetadata {
 	source: string;
 	scope: SourceScope;

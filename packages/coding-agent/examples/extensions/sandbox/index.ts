@@ -41,6 +41,10 @@
  * Linux also requires: bubblewrap, socat, ripgrep
  */
 
+/**
+ * 【文件职责】扩展示例：沙箱（限制命令执行）。
+ * 【新手阅读建议】看安全控制。
+ */
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";

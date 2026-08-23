@@ -6,6 +6,10 @@ import { spawnProcessSync } from "./child-process.ts";
 
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g;
 
+/**
+ * 【文件职责】路径工具：应用目录/配置目录/日志目录等规范路径解析。
+ * 【新手阅读建议】看各路径常量/函数。
+ */
 export interface PathInputOptions {
 	/** Trim leading/trailing whitespace before normalization. */
 	trim?: boolean;

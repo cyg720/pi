@@ -3,6 +3,10 @@ import type { Api, Model, ProviderEnv, ProviderStreams } from "../types.ts";
 const CLOUDFLARE_ACCOUNT_ID = "CLOUDFLARE_ACCOUNT_ID";
 const CLOUDFLARE_GATEWAY_ID = "CLOUDFLARE_GATEWAY_ID";
 
+/**
+ * 【文件职责】Cloudflare 流式封装：Workers AI 的流处理辅助。
+ * 【新手阅读建议】看流处理。
+ */
 export function resolveCloudflareModel<TApi extends Api>(
 	model: Model<TApi>,
 	env: ProviderEnv | undefined,

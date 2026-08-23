@@ -5,6 +5,10 @@
  * Demonstrates how to cancel session events using the before_* events.
  */
 
+/**
+ * 【文件职责】扩展示例：破坏性命令确认。
+ * 【新手阅读建议】看命令拦截。
+ */
 import type { ExtensionAPI, SessionBeforeSwitchEvent, SessionMessageEntry } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

@@ -5,6 +5,10 @@
  * Patterns checked: rm -rf, sudo, chmod/chown 777
  */
 
+/**
+ * 【文件职责】扩展示例：权限门禁。
+ * 【新手阅读建议】看权限控制。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

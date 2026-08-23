@@ -14,6 +14,10 @@
  *
  * Note: Regular !command syntax (whole-line bash) is preserved and works as before.
  */
+/**
+ * 【文件职责】扩展示例：内联 bash。
+ * 【新手阅读建议】看 bash 执行扩展。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

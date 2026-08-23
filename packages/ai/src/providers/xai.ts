@@ -5,6 +5,10 @@ import { loadXaiOAuth } from "../auth/oauth/load.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { XAI_MODELS } from "./xai.models.ts";
 
+/**
+ * 【文件职责】xAI 供应商工厂（Grok）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function xaiProvider(): Provider<"openai-completions" | "openai-responses"> {
 	return createProvider({
 		id: "xai",

@@ -10,6 +10,10 @@
  * 3. Use /commands extensions to filter by source
  */
 
+/**
+ * 【文件职责】扩展示例：自定义命令。
+ * 【新手阅读建议】看命令注册。
+ */
 import type { ExtensionAPI, SlashCommandInfo } from "@earendil-works/pi-coding-agent";
 
 export default function commandsExtension(pi: ExtensionAPI) {

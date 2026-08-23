@@ -5,6 +5,10 @@
  * without paying for an extra follow-up LLM turn.
  */
 
+/**
+ * 【文件职责】扩展示例：结构化输出。
+ * 【新手阅读建议】看输出解析。
+ */
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";

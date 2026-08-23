@@ -7,6 +7,10 @@
  * Usage: /session-name [name] - set or show session name
  */
 
+/**
+ * 【文件职责】扩展示例：会话命名。
+ * 【新手阅读建议】看会话元信息。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

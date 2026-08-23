@@ -5,6 +5,10 @@
 import { getKeybindings, type Keybinding, type KeyId } from "@earendil-works/pi-tui";
 import { theme } from "../theme/theme.ts";
 
+/**
+ * 【文件职责】UI 组件：快捷键提示行。
+ * 【新手阅读建议】半分钟读完。
+ */
 export interface KeyTextFormatOptions {
 	capitalize?: boolean;
 }

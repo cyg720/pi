@@ -82,6 +82,11 @@ function commandExists(cmd: string): boolean {
 }
 
 // Get the path to a tool (system-wide or in our tools dir)
+/**
+ * 【文件职责】工具管理器：内置工具注册/激活/上下文注入的统一管理。
+ * 【产品维度】工具集装配与启用的中心。
+ * 【新手阅读建议】看注册与激活。
+ */
 export function getToolPath(tool: "fd" | "rg"): string | null {
 	const config = TOOLS[tool];
 	if (!config) return null;

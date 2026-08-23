@@ -21,6 +21,10 @@ function sanitizeStatusText(text: string): string {
 /**
  * Format token counts for compact footer display.
  */
+/**
+ * 【文件职责】UI 组件：底栏（模型/会话/键位提示/状态）。
+ * 【新手阅读建议】看信息聚合。
+ */
 export function formatTokens(count: number): string {
 	if (count < 1000) return count.toString();
 	if (count < 10000) return `${(count / 1000).toFixed(1)}k`;

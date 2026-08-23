@@ -9,6 +9,10 @@
  * This demonstrates that overlays can handle real-time game rendering at 35 FPS.
  */
 
+/**
+ * 【文件职责】扩展示例：Doom 覆盖层入口。
+ * 【新手阅读建议】趣味示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { DoomOverlayComponent } from "./doom-component.ts";
 import { DoomEngine } from "./doom-engine.ts";

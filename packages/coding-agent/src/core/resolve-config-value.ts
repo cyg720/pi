@@ -112,6 +112,11 @@ function resolveTemplate(parts: TemplatePart[], env?: Record<string, string>): s
 	return resolved;
 }
 
+/**
+ * 【文件职责】配置值解析：把配置字符串（含环境变量引用/表达式）解析为实际值。
+ * 【产品维度】支持 `${VAR}` 等动态配置。
+ * 【新手阅读建议】看解析实现。
+ */
 export function getConfigValueEnvVarName(config: string): string | undefined {
 	const reference = parseConfigValueReference(config);
 	if (reference.type !== "template") return undefined;

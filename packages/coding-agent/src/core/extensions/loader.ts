@@ -148,6 +148,11 @@ interface ExtensionCacheToken {
 	generation: number;
 }
 
+/**
+ * 【文件职责】扩展加载器：发现/加载/缓存扩展（含工厂、缓存失效、并行加载）。
+ * 【产品维度】让第三方扩展以文件/包形式接入。
+ * 【新手阅读建议】先看 createExtensionRuntime，再看加载函数族。
+ */
 export function clearExtensionCache(): void {
 	extensionCache.clear();
 	extensionCacheCwd = undefined;

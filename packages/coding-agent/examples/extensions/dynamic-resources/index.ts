@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：动态资源（技能/模板热加载）。
+ * 【新手阅读建议】看资源刷新。
+ */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";

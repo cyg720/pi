@@ -17,6 +17,10 @@
  * 3. Add .md files with your rules
  */
 
+/**
+ * 【文件职责】扩展示例：CLAUDE.md 规则读取。
+ * 【新手阅读建议】看项目规则注入。
+ */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";

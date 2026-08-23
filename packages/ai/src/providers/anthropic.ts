@@ -35,6 +35,10 @@ function anthropicApiKeyAuth(): ApiKeyAuth {
 	};
 }
 
+/**
+ * 【文件职责】Anthropic 供应商工厂：注册 Anthropic（Messages API + OAuth/API key）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function anthropicProvider(): Provider<"anthropic-messages"> {
 	return createProvider({
 		id: "anthropic",

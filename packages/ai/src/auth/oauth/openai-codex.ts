@@ -5,6 +5,15 @@
  * It is only intended for CLI use, not browser environments.
  */
 
+/**
+ * 【文件职责】OpenAI Codex（ChatGPT OAuth）流程：Codex 订阅登录（回调服务器 + PKCE），
+ *              换取会话令牌与专属端点；含令牌刷新与会话资源清理。
+ * 【技术维度】node:crypto/http 的运行时动态导入（浏览器打包安全）；PKCE。
+ * 【产品维度】让 Codex 订阅用户完成 CLI 登录并持续使用。
+ * 【逻辑维度】登录（回调 + 令牌交换）→ 刷新 → toAuth（会话端点）→ 清理注册。
+ * 【关键边界】仅 CLI 使用、不适合浏览器；node 模块按需动态加载。
+ * 【新手阅读建议】先读 login 主流程，再看 refresh/toAuth。
+ */
 // NEVER convert to top-level imports - breaks browser/Vite builds
 let _randomBytes: typeof import("node:crypto").randomBytes | null = null;
 let _http: typeof import("node:http") | null = null;

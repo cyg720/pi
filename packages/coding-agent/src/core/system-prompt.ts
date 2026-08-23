@@ -5,6 +5,11 @@
 import { getDocsPath, getExamplesPath, getReadmePath } from "../config.ts";
 import { formatSkillsForPrompt, type Skill } from "./skills.ts";
 
+/**
+ * 【文件职责】系统提示词构建：按会话上下文组装完整系统提示词（工具/技能/环境等）。
+ * 【产品维度】决定模型行为与工具可用性的关键输入。
+ * 【新手阅读建议】看提示词拼接顺序。
+ */
 export interface BuildSystemPromptOptions {
 	/** Custom system prompt (replaces default). */
 	customPrompt?: string;

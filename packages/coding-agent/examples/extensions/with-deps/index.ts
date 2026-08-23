@@ -5,6 +5,10 @@
  * Requires: npm install in this directory
  */
 
+/**
+ * 【文件职责】扩展示例：带依赖（安装依赖后加载）。
+ * 【新手阅读建议】看依赖安装。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import ms from "ms";
 import { Type } from "typebox";

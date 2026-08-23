@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】工具集出口：转发全部内置工具工厂。
+ * 【新手阅读建议】索引文件。
+ */
 export {
 	type BashOperations,
 	type BashSpawnContext,

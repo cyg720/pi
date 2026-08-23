@@ -2,6 +2,10 @@ import { createRequire } from "module";
 import { dirname, join } from "path";
 import { pathToFileURL } from "url";
 
+/**
+ * 【文件职责】剪贴板原生支持：加载/封装原生剪贴板模块（可选能力降级）。
+ * 【新手阅读建议】看加载与降级。
+ */
 export type ClipboardModule = {
 	getText: () => Promise<string>;
 	setText: (text: string) => Promise<void>;

@@ -27,6 +27,10 @@ type ResourceType = "extensions" | "skills" | "prompts" | "themes";
 type ConfigWriteScope = "global" | "project";
 type SettingsScope = "user" | "project";
 type ProjectOverrideState = "inherit" | "load" | "unload";
+/**
+ * 【文件职责】UI 组件：配置选择对话框（模型/主题/工具等）。
+ * 【新手阅读建议】看选择项组装。
+ */
 export type ScopedResolvedPaths = Record<ConfigWriteScope, ResolvedPaths>;
 
 const RESOURCE_TYPES = ["extensions", "skills", "prompts", "themes"] as const satisfies readonly ResourceType[];

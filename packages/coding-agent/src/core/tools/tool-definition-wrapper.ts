@@ -2,6 +2,10 @@ import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ExtensionContext, ToolDefinition } from "../extensions/types.ts";
 
 /** Wrap a ToolDefinition into an AgentTool for the core runtime. */
+/**
+ * 【文件职责】工具定义包装：把工具定义包装为带扩展能力（进度/上下文）的形式。
+ * 【新手阅读建议】看包装结构。
+ */
 export function wrapToolDefinition<TDetails = unknown>(
 	definition: ToolDefinition<any, TDetails>,
 	ctxFactory?: () => ExtensionContext,

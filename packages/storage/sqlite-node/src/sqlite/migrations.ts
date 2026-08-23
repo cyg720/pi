@@ -2,6 +2,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { SqliteDatabase } from "./types.ts";
 
+/**
+ * 【文件职责】SQLite 迁移：建表与版本迁移 SQL。
+ * 【新手阅读建议】看迁移清单。
+ */
 export interface SqliteMigration {
 	id: string;
 	order: number;

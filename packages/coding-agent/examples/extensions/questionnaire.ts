@@ -5,6 +5,10 @@
  * Multiple questions: tab bar navigation between questions
  */
 
+/**
+ * 【文件职责】扩展示例：问卷。
+ * 【新手阅读建议】交互示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	Editor,

@@ -9,6 +9,15 @@
  * It is only intended for CLI use, not browser environments.
  */
 
+/**
+ * 【文件职责】Radius OAuth 流程（工厂）：为 Radius 网关创建 OAuth 认证实现——
+ *              登录（回调 + PKCE）与令牌刷新，令牌用于 pi-messages 网关请求。
+ * 【技术维度】node:crypto/http 的运行时动态导入（浏览器打包安全）；PKCE。
+ * 【产品维度】让 Radius 网关用户完成登录并持续使用。
+ * 【逻辑维度】createRadiusOAuth(input) → login/refresh/toAuth。
+ * 【关键边界】name/gateway 由创建方提供；仅 CLI 使用。
+ * 【新手阅读建议】对比 anthropic.ts 阅读（结构相似，端点与作用域不同）。
+ */
 // NEVER convert to top-level imports - breaks browser/Vite builds
 let _http: typeof import("node:http") | null = null;
 if (typeof process !== "undefined" && (process.versions?.node || process.versions?.bun)) {

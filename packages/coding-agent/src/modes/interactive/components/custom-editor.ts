@@ -4,6 +4,10 @@ import type { AppKeybinding, KeybindingsManager } from "../../../core/keybinding
 /**
  * Custom editor that handles app-level keybindings for coding-agent.
  */
+/**
+ * 【文件职责】UI 组件：自定义编辑器包装（外部编辑器集成）。
+ * 【新手阅读建议】看编辑器桥接。
+ */
 export class CustomEditor extends Editor {
 	private keybindings: KeybindingsManager;
 	public actionHandlers: Map<AppKeybinding, () => void> = new Map();

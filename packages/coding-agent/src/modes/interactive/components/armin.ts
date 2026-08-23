@@ -57,6 +57,10 @@ function buildFinalGrid(): string[][] {
 	return grid;
 }
 
+/**
+ * 【文件职责】UI 组件：armin（加载指示动画）。
+ * 【新手阅读建议】看动画帧实现。
+ */
 export class ArminComponent implements Component {
 	private ui: TUI;
 	private interval: ReturnType<typeof setInterval> | null = null;

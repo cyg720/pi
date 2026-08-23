@@ -8,6 +8,10 @@
  * Token stats come from ctx.sessionManager/ctx.model (already accessible).
  */
 
+/**
+ * 【文件职责】扩展示例：自定义底栏。
+ * 【新手阅读建议】看 footer 定制。
+ */
 import type { AssistantMessage } from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";

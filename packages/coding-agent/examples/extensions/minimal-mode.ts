@@ -16,6 +16,10 @@
  * Then use ctrl+o to toggle between minimal (collapsed) and full (expanded) views.
  */
 
+/**
+ * 【文件职责】扩展示例：极简模式。
+ * 【新手阅读建议】看 UI 精简。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	createBashTool,

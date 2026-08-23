@@ -8,6 +8,11 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
 
+/**
+ * 【文件职责】会话消息工厂：构造用户/助手/系统等常用消息与系统提示片段。
+ * 【产品维度】统一消息构建，避免散落构造逻辑。
+ * 【新手阅读建议】浏览各工厂函数即可。
+ */
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 
 <summary>

@@ -1,3 +1,15 @@
+/**
+ * 【文件职责】OpenAI Responses API 实现：把 pi 的模型请求转换为 OpenAI Responses 流式请求，
+ *              并处理消息/工具转换、思考块、流事件归约、用量与成本、延迟工具与重试。
+ * 【技术维度】openai SDK 流式请求；共享转换层（openai-responses-shared）；委托工具拆分；
+ *              语法受约束采样；SDK 级重试（可中止退避）。
+ * 【产品维度】让 OpenAI 及 OpenAI 兼容端点（Codex/opencode 等）获得完整流式对话能力。
+ * 【逻辑维度】选项构建（buildBaseOptions + 兼容探测）→ 消息/工具转换 → 请求发出 →
+ *              流事件归约为 pi 消息（含思考签名/工具调用）→ 用量与成本结算。
+ * 【关键边界】max_output_tokens 下限 16；部分供应商需要合成工具结果与 ID 归一化；
+ *              重试由 provider-retry 提供（maxRetries:0 交给 SDK）。
+ * 【新手阅读建议】先读 openai-responses-shared.ts 的转换逻辑，再读本文件的 stream 主流程。
+ */
 import OpenAI from "openai";
 import type { ResponseCreateParamsStreaming } from "openai/resources/responses/responses.js";
 import { clampThinkingLevel } from "../models.ts";

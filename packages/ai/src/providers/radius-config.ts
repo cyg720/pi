@@ -1,6 +1,10 @@
 import type { OAuthCredential } from "../auth/types.ts";
 import type { Model, ThinkingLevelMap } from "../types.ts";
 
+/**
+ * 【文件职责】Radius 配置：网关/认证配置解析与校验。
+ * 【新手阅读建议】看配置解析。
+ */
 export const DEFAULT_RADIUS_GATEWAY = "https://radius.pi.dev";
 
 export type RadiusGatewayModel = {

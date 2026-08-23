@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】llama 客户端：本地 llama 服务器（Ollama 风格）的 API 客户端。
+ * 【新手阅读建议】看请求封装。
+ */
 export type LlamaModelStatus = "unloaded" | "loading" | "loaded" | "downloading" | "sleeping";
 
 export interface LlamaModelInfo {

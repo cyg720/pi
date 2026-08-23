@@ -17,6 +17,10 @@ import type { SourceInfo } from "../../core/source-info.ts";
 // RPC Commands (stdin)
 // ============================================================================
 
+/**
+ * 【文件职责】RPC 类型：RPC 请求/响应/方法定义的类型契约。
+ * 【新手阅读建议】浏览类型即可。
+ */
 export type RpcCommand =
 	// Prompting
 	| { id?: string; type: "prompt"; message: string; images?: ImageContent[]; streamingBehavior?: "steer" | "followUp" }

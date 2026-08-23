@@ -22,6 +22,10 @@ function toError(error: unknown): Error {
 	return error instanceof Error ? error : new Error(String(error));
 }
 
+/**
+ * 【文件职责】RPC 进程：服务器端 RPC 方法实现与生命周期。
+ * 【新手阅读建议】看方法注册与执行。
+ */
 export class RpcProcessInstance {
 	readonly process: ChildProcess;
 

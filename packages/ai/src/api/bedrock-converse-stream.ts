@@ -1,3 +1,15 @@
+/**
+ * 【文件职责】Amazon Bedrock Converse 流式 API 实现：消息/工具/思考/缓存控制转换、
+ *              SSE 流事件归约、代理支持、SigV4 签名与成本计算。
+ * 【技术维度】@aws-sdk/client-bedrock-runtime；Smithy 中间件（头注入/签名）；
+ *              http(s)-proxy-agent；缓存点（cachePoint）与 TTL。
+ * 【产品维度】让 Bedrock 托管的 Claude 等模型可用（企业云场景）。
+ * 【逻辑维度】构造客户端（代理/区域/凭据）→ 转换请求 → ConverseStream →
+ *              事件归约（内容块增量/思考/工具）→ 成本。
+ * 【关键边界】响应头须经 Smithy build 中间件注入以纳入签名；保留头会被忽略；
+ *              思考块与缓存标记受模型兼容开关控制。
+ * 【新手阅读建议】先读请求转换与中间件注入，再看流事件归约状态机。
+ */
 import type { Agent as HttpsAgent } from "node:https";
 import {
 	BedrockRuntimeClient,

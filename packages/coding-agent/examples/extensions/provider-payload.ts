@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：供应商载荷。
+ * 【新手阅读建议】看载荷钩子。
+ */
 import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { CONFIG_DIR_NAME, type ExtensionAPI } from "@earendil-works/pi-coding-agent";

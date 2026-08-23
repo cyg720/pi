@@ -8,6 +8,10 @@ import { theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint, rawKeyHint } from "./keybinding-hints.ts";
 
+/**
+ * 【文件职责】UI 组件：信任选择器（项目/命令信任确认）。
+ * 【新手阅读建议】看确认流程。
+ */
 export type TrustSelection = Pick<ProjectTrustOption, "trusted" | "updates">;
 
 export interface TrustSelectorOptions {

@@ -9,6 +9,10 @@ function ensureServerDir(): void {
 	}
 }
 
+/**
+ * 【文件职责】服务器存储：服务器进程的会话/资源存储桥接。
+ * 【新手阅读建议】看存储代理。
+ */
 export function loadMachine(): MachineRecord | undefined {
 	const machinePath = getMachinePath();
 	if (!existsSync(machinePath)) {

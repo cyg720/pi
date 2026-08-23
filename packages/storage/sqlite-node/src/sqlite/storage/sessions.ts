@@ -1,6 +1,10 @@
 import { SessionError } from "@earendil-works/pi-agent-core";
 import type { SqliteSessionMetadata } from "../types.ts";
 
+/**
+ * 【文件职责】会话表存储：会话元信息/叶子的 SQLite 读写。
+ * 【新手阅读建议】看表结构与读写。
+ */
 export interface SessionRow {
 	id: string;
 	created_at: string;

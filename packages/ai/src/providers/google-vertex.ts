@@ -82,6 +82,10 @@ const vertexAuth: ApiKeyAuth = {
 	},
 };
 
+/**
+ * 【文件职责】Google Vertex 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function googleVertexProvider(): Provider<"google-vertex"> {
 	return createProvider({
 		id: "google-vertex",

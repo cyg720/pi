@@ -8,6 +8,13 @@ export interface OAuthPrompt {
 }
 
 /** Legacy extension OAuth authorization link. */
+/**
+ * 【文件职责】扩展 OAuth 兼容类型：为 coding-agent 扩展提供 OAuth 相关的
+ *              信息/凭据/设备码/登录回调/提示等类型。
+ * 【技术维度】纯类型定义。
+ * 【产品维度】是扩展与核心 OAuth 体系的类型契约。
+ * 【新手阅读建议】按需查阅各类型字段即可。
+ */
 export interface OAuthAuthInfo {
 	url: string;
 	instructions?: string;

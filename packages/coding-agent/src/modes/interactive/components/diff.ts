@@ -65,6 +65,10 @@ function renderIntraLineDiff(oldContent: string, newContent: string): { removedL
 	return { removedLine, addedLine };
 }
 
+/**
+ * 【文件职责】UI 组件：diff 展示（工具结果的差异渲染）。
+ * 【新手阅读建议】看行着色。
+ */
 export interface RenderDiffOptions {
 	/** File path (unused, kept for API compatibility) */
 	filePath?: string;

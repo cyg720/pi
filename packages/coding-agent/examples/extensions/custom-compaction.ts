@@ -13,6 +13,10 @@
  *   pi --extension examples/extensions/custom-compaction.ts
  */
 
+/**
+ * 【文件职责】扩展示例：自定义压缩逻辑。
+ * 【新手阅读建议】看压缩钩子。
+ */
 import { uuidv7 } from "@earendil-works/pi-ai";
 import { complete } from "@earendil-works/pi-ai/compat";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";

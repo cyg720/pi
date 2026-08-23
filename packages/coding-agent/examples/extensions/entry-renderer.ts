@@ -8,6 +8,10 @@
  * Usage: /status-card [message]
  */
 
+/**
+ * 【文件职责】扩展示例：条目渲染器。
+ * 【新手阅读建议】看条目 UI 定制。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Box, Text } from "@earendil-works/pi-tui";
 

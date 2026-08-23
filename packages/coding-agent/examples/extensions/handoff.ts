@@ -12,6 +12,10 @@
  * The generated prompt appears as a draft in the editor for review/editing.
  */
 
+/**
+ * 【文件职责】扩展示例：交接/切换任务。
+ * 【新手阅读建议】看会话交接。
+ */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { uuidv7 } from "@earendil-works/pi-ai";
 import { complete, type Message } from "@earendil-works/pi-ai/compat";

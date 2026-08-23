@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】模型搜索：模型选择器的搜索/过滤逻辑。
+ * 【新手阅读建议】看过滤与排序。
+ */
 export interface ModelSearchItem {
 	id: string;
 	provider: string;

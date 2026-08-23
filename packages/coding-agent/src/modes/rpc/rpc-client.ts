@@ -24,6 +24,10 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 /** RpcCommand without the id field (for internal send) */
 type RpcCommandBody = DistributiveOmit<RpcCommand, "id">;
 
+/**
+ * 【文件职责】RPC 客户端：远程调用 coding-agent 方法的客户端封装。
+ * 【新手阅读建议】看请求/响应封装。
+ */
 export interface RpcClientOptions {
 	/** Path to the CLI entry point (default: searches for dist/cli.js) */
 	cliPath?: string;

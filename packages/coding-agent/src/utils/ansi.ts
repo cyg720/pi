@@ -43,6 +43,11 @@ function ansiRegex({ onlyFirst = false }: { onlyFirst?: boolean } = {}): RegExp 
 
 const regex = ansiRegex();
 
+/**
+ * 【文件职责】ANSI 工具：解析/剥离/使用 ANSI 转义码（着色、样式、宽度处理辅助）。
+ * 【产品维度】TUI 输出与内容清洗的基础。
+ * 【新手阅读建议】看剥离与宽度函数。
+ */
 export function stripAnsi(value: string): string {
 	if (typeof value !== "string") {
 		throw new TypeError(`Expected a \`string\`, got \`${typeof value}\``);

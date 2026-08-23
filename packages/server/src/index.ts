@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】服务器出口：转发服务器公共 API。
+ * 【新手阅读建议】索引文件。
+ */
 export * from "./config.ts";
 export * from "./handler.ts";
 export * from "./ipc/client.ts";

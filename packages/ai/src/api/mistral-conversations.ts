@@ -1,3 +1,13 @@
+/**
+ * 【文件职责】Mistral Conversations API 实现：消息转换（工具调用 ID 长度限制）、
+ *              流式事件归约、思考块处理与成本计算。
+ * 【技术维度】@mistralai/mistralai SDK；工具调用 ID 短哈希归一化；
+ *              严格模式工具；共享变换层。
+ * 【产品维度】让 Mistral 模型（含思考模型）可用。
+ * 【逻辑维度】选项构建 → 消息/工具转换 → 流请求 → 事件归约 → 成本。
+ * 【关键边界】工具调用 ID 需收敛到 9 字符（供应商限制）；思考块按签名保留策略处理。
+ * 【新手阅读建议】对比 openai-completions 阅读差异（ID 归一化与事件解析）。
+ */
 import { Mistral } from "@mistralai/mistralai";
 import type {
 	ChatCompletionStreamRequest,

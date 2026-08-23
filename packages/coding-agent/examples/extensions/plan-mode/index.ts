@@ -12,6 +12,10 @@
  * - Progress tracking widget during execution
  */
 
+/**
+ * 【文件职责】扩展示例：计划模式（先规划后执行）。
+ * 【新手阅读建议】看工作流扩展。
+ */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { AssistantMessage, TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";

@@ -5,6 +5,10 @@
  *   pi -e examples/extensions/mac-system-theme.ts
  */
 
+/**
+ * 【文件职责】扩展示例：macOS 系统主题跟随。
+ * 【新手阅读建议】看主题切换。
+ */
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";

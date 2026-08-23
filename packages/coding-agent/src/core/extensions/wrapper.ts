@@ -14,6 +14,11 @@ import type { RegisteredTool } from "./types.ts";
  * Wrap a RegisteredTool into an AgentTool.
  * Uses the runner's createContext() for consistent context across tools and event handlers.
  */
+/**
+ * 【文件职责】工具包装：把扩展注册的工具包装为标准 AgentTool（含上下文注入与包装器）。
+ * 【产品维度】让扩展工具与内置工具统一执行。
+ * 【新手阅读建议】看 wrapRegisteredTool(s)。
+ */
 export function wrapRegisteredTool(registeredTool: RegisteredTool, runner: ExtensionRunner): AgentTool {
 	const tool = wrapToolDefinition(registeredTool.definition, () => runner.createContext());
 	const execute = tool.execute;

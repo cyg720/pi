@@ -4,6 +4,10 @@ import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint } from "./keybinding-hints.ts";
 
 /** Loader wrapped with borders for extension UI */
+/**
+ * 【文件职责】UI 组件：带边框的加载指示器。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class BorderedLoader extends Container {
 	private loader: CancellableLoader | Loader;
 	private cancellable: boolean;

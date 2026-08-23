@@ -8,6 +8,10 @@ import { keyHint } from "./keybinding-hints.ts";
 /**
  * Login dialog component - replaces editor during OAuth login flow
  */
+/**
+ * 【文件职责】UI 组件：登录对话框（密钥输入/供应商选择）。
+ * 【新手阅读建议】看登录交互。
+ */
 export class LoginDialogComponent extends Container implements Focusable {
 	private contentContainer: Container;
 	private input: Input;

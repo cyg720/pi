@@ -9,6 +9,10 @@
  * 2. Use /tools to open the tool selector
  */
 
+/**
+ * 【文件职责】扩展示例：工具集合。
+ * 【新手阅读建议】看工具注册。
+ */
 import type { ExtensionAPI, ExtensionContext, ToolInfo } from "@earendil-works/pi-coding-agent";
 import { getSettingsListTheme } from "@earendil-works/pi-coding-agent";
 import { Container, type SettingItem, SettingsList } from "@earendil-works/pi-tui";

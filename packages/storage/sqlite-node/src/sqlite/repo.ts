@@ -40,6 +40,10 @@ async function cleanupSessionStorage(storage: SessionStorage): Promise<void> {
 	}
 }
 
+/**
+ * 【文件职责】SQLite 会话仓库实现：会话 CRUD/fork/存储访问。
+ * 【新手阅读建议】看仓库方法。
+ */
 export class SqliteSessionRepo implements SqliteSessionRepoApi {
 	private readonly env: SqliteSessionRepoEnv;
 	private readonly sqlite: SqliteDatabaseFactory;

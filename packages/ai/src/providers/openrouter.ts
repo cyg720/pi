@@ -4,6 +4,10 @@ import { loadOpenRouterOAuth } from "../auth/oauth/load.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { OPENROUTER_MODELS } from "./openrouter.models.ts";
 
+/**
+ * 【文件职责】OpenRouter 供应商工厂（路由偏好支持）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function openrouterProvider(): Provider<"openai-completions"> {
 	return createProvider({
 		id: "openrouter",

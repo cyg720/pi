@@ -21,6 +21,10 @@ const LEVEL_DESCRIPTIONS: Record<ThinkingLevel, string> = {
 /**
  * Component that renders a thinking level selector with borders
  */
+/**
+ * 【文件职责】UI 组件：思考强度选择器。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class ThinkingSelectorComponent extends Container {
 	private selectList: SelectList;
 

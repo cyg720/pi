@@ -8,6 +8,10 @@
  * - Edge case tests (wide chars, styled text, emoji)
  */
 
+/**
+ * 【文件职责】扩展示例：覆盖层测试。
+ * 【新手阅读建议】测试示例。
+ */
 import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@earendil-works/pi-coding-agent";
 import { CURSOR_MARKER, type Focusable, matchesKey, visibleWidth } from "@earendil-works/pi-tui";
 

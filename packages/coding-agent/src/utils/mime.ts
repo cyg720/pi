@@ -3,6 +3,10 @@ import { open } from "node:fs/promises";
 const IMAGE_TYPE_SNIFF_BYTES = 4100;
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
+/**
+ * 【文件职责】MIME 工具：扩展名 ↔ MIME 映射与检测。
+ * 【新手阅读建议】半分钟读完。
+ */
 export function detectSupportedImageMimeType(buffer: Uint8Array): string | null {
 	if (startsWith(buffer, [0xff, 0xd8, 0xff])) {
 		return buffer[3] === 0xf7 ? null : "image/jpeg";

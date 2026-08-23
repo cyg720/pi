@@ -6,6 +6,10 @@ import { CLOUDFLARE_AI_GATEWAY_MODELS } from "./cloudflare-ai-gateway.models.ts"
 import { cloudflareAIGatewayAuth } from "./cloudflare-auth.ts";
 import { cloudflareStreams } from "./cloudflare-stream.ts";
 
+/**
+ * 【文件职责】Cloudflare AI Gateway 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function cloudflareAIGatewayProvider(): Provider<
 	"anthropic-messages" | "openai-completions" | "openai-responses"
 > {

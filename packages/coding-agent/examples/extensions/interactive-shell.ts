@@ -20,6 +20,10 @@
  * If the agent runs an interactive command, it will fail (which is fine).
  */
 
+/**
+ * 【文件职责】扩展示例：交互式 shell。
+ * 【新手阅读建议】看 shell 会话。
+ */
 import { spawnSync } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 

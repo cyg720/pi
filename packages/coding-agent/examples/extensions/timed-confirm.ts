@@ -7,6 +7,10 @@
  * - /timed-signal - Shows confirm using AbortSignal (manual approach)
  */
 
+/**
+ * 【文件职责】扩展示例：限时确认。
+ * 【新手阅读建议】看确认交互。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

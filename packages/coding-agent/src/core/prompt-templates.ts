@@ -8,6 +8,11 @@ import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 /**
  * Represents a prompt template loaded from a markdown file
  */
+/**
+ * 【文件职责】提示词模板：加载/格式化斜杠命令模板（与 agent 包 prompt-templates 对接）。
+ * 【产品维度】支持自定义斜杠命令模板。
+ * 【新手阅读建议】看模板加载与参数渲染。
+ */
 export interface PromptTemplate {
 	name: string;
 	description: string;

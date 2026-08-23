@@ -12,6 +12,10 @@ import { createStartupTui, startStartupTui } from "./startup-ui.ts";
 type SessionsLoader = (onProgress?: SessionListProgress) => Promise<SessionInfo[]>;
 
 /** Show TUI session selector and return selected session path or null if cancelled */
+/**
+ * 【文件职责】会话选择器：启动时选择/恢复历史会话。
+ * 【新手阅读建议】看列表与选择。
+ */
 export async function selectSession(
 	currentSessionsLoader: SessionsLoader,
 	allSessionsLoader: SessionsLoader,

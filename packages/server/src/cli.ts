@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * 【文件职责】服务器 CLI 入口：启动/停止/状态管理 pi 服务器进程。
+ * 【新手阅读建议】看命令分派。
+ */
 import { readFileSync } from "node:fs";
 import { createConnection } from "node:net";
 import { dirname, join } from "node:path";

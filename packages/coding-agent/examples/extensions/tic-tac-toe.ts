@@ -17,6 +17,10 @@
  * separate variables. Only the agent cursor is ever exposed to the agent.
  */
 
+/**
+ * 【文件职责】扩展示例：井字棋游戏。
+ * 【新手阅读建议】趣味示例。
+ */
 import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext, Theme, ToolExecutionMode } from "@earendil-works/pi-coding-agent";
 import { type Component, matchesKey, Text, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";

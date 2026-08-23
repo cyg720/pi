@@ -5,6 +5,10 @@
  * Height is calculated from width to maintain DOOM's aspect ratio.
  */
 
+/**
+ * 【文件职责】扩展示例：Doom 组件（渲染）。
+ * 【新手阅读建议】看渲染实现。
+ */
 import type { Component } from "@earendil-works/pi-tui";
 import { isKeyRelease, type TUI } from "@earendil-works/pi-tui";
 import type { DoomEngine } from "./doom-engine.ts";

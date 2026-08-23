@@ -1,3 +1,13 @@
+/**
+ * 【文件职责】Google Gemini（generative-ai）API 实现：pi 消息 → GoogleGenAI 请求、
+ *              思考配置、流式响应归约与成本计算。
+ * 【技术维度】@google/genai SDK；ThinkingConfig/思考级别映射；共享转换层。
+ * 【产品维度】让 Google Gemini 模型（含思考模型）可用。
+ * 【逻辑维度】选项构建 → 思考配置 → 消息/工具转换 → generateContentStream →
+ *              事件归约（思考/文本/工具调用）→ 成本。
+ * 【关键边界】思考级别需映射到 Google 枚举；图片消息需经降级/占位处理。
+ * 【新手阅读建议】对照 google-vertex.ts 阅读差异（API 形状与认证方式）。
+ */
 import {
 	type GenerateContentConfig,
 	type GenerateContentParameters,

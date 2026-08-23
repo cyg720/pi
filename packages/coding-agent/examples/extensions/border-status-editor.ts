@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】扩展示例：边框状态编辑器（编辑器外观扩展）。
+ * 【新手阅读建议】看编辑器定制。
+ */
 import {
 	CustomEditor,
 	type ExtensionAPI,

@@ -25,6 +25,10 @@ const findSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of results (default: 1000)" })),
 });
 
+/**
+ * 【文件职责】find 工具：按条件递归查找文件/目录（含符号链接与忽略规则）。
+ * 【新手阅读建议】看参数与过滤逻辑。
+ */
 export type FindToolInput = Static<typeof findSchema>;
 
 const DEFAULT_LIMIT = 1000;

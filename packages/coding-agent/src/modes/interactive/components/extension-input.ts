@@ -8,6 +8,10 @@ import { CountdownTimer } from "./countdown-timer.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint } from "./keybinding-hints.ts";
 
+/**
+ * 【文件职责】UI 组件：扩展输入框（扩展注册的输入组件适配）。
+ * 【新手阅读建议】看适配层。
+ */
 export interface ExtensionInputOptions {
 	tui?: TUI;
 	timeout?: number;

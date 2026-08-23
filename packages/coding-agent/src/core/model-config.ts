@@ -204,6 +204,11 @@ const ModelsConfigSchema = Type.Object({
 });
 const validateModelsConfig = Compile(ModelsConfigSchema);
 
+/**
+ * 【文件职责】模型配置：用户配置（models.json）中自定义模型/供应商的解析与结构定义。
+ * 【产品维度】支持自定义模型接入（供应商/API/密钥/参数）。
+ * 【新手阅读建议】先看配置结构类型，再看解析函数。
+ */
 export type ModelsJsonModel = Static<typeof ModelDefinitionSchema>;
 export type ModelsJsonModelOverride = Static<typeof ModelOverrideSchema>;
 export type ModelsJsonProvider = Static<typeof ProviderConfigSchema>;

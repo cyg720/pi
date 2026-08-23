@@ -682,6 +682,10 @@ async function deleteSessionFile(
 /**
  * Component that renders a session selector
  */
+/**
+ * 【文件职责】UI 组件：会话选择器（历史会话列表/搜索/恢复）。
+ * 【新手阅读建议】看列表与选择。
+ */
 export class SessionSelectorComponent extends Container implements Focusable {
 	handleInput(data: string): void {
 		if (this.mode === "rename") {

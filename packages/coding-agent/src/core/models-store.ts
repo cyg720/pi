@@ -5,6 +5,11 @@ import { type AuthStorageBackend, FileAuthStorageBackend } from "./auth-storage.
 
 type StoredModels = Record<string, ModelsStoreEntry>;
 
+/**
+ * 【文件职责】模型目录持久化存储：把动态模型目录缓存到磁盘（含元信息与过期策略）。
+ * 【产品维度】离线启动可用缓存模型目录。
+ * 【新手阅读建议】看读写/过期逻辑。
+ */
 export class InMemoryCodingAgentModelsStore implements ModelsStore {
 	private readonly entries = new Map<string, ModelsStoreEntry>();
 

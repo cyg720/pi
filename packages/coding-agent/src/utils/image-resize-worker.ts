@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】图片缩放 Worker 线程入口：接收主线程的缩放请求（字节/类型/选项），
+ *              在 Worker 内执行缩放并回传结果，避免阻塞主线程。
+ * 【技术维度】node:worker_threads 消息协议；复用 image-resize-core 的进程内缩放。
+ * 【产品维度】大图片缩放不卡 UI。
+ * 【逻辑维度】parentPort.on 接收请求 → resizeImageInProcess → 回传 ResizedImage。
+ * 【新手阅读建议】看消息的请求/响应结构即可。
+ */
 import { parentPort } from "node:worker_threads";
 import { type ImageResizeOptions, type ResizedImage, resizeImageInProcess } from "./image-resize-core.ts";
 

@@ -10,6 +10,10 @@
  * correct for that point in history.
  */
 
+/**
+ * 【文件职责】扩展示例：待办事项。
+ * 【新手阅读建议】看任务管理。
+ */
 import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 import { matchesKey, Text, truncateToWidth } from "@earendil-works/pi-tui";

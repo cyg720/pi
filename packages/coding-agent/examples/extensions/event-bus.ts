@@ -7,6 +7,10 @@
  * Usage: /emit [event-name] [data] - emit an event on the bus
  */
 
+/**
+ * 【文件职责】扩展示例：事件总线订阅。
+ * 【新手阅读建议】看事件订阅。
+ */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

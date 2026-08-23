@@ -34,6 +34,10 @@ export const DoomKeys = {
 	KEY_RALT: 0x80 + 0x38,
 } as const;
 
+/**
+ * 【文件职责】扩展示例：Doom 按键映射。
+ * 【新手阅读建议】看输入映射。
+ */
 import { Key, matchesKey, parseKey } from "@earendil-works/pi-tui";
 
 /**

@@ -144,6 +144,10 @@ function rotate90(photon: Photon, image: PhotonImageType, dstIndex: DstIndexFn):
 }
 
 // Flip orientations mutate in-place. Rotations return a new image (caller must free the old one if different).
+/**
+ * 【文件职责】EXIF 方向：读取/修正图片方向信息（用于正确显示与缩放）。
+ * 【新手阅读建议】看方向解析。
+ */
 export function applyExifOrientation(
 	photon: Photon,
 	image: PhotonImageType,

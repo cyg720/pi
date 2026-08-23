@@ -25,6 +25,10 @@
  *   pi -e ./built-in-tool-renderer.ts
  */
 
+/**
+ * 【文件职责】扩展示例：内置工具渲染器。
+ * 【新手阅读建议】看工具 UI 定制。
+ */
 import type { BashToolDetails, EditToolDetails, ExtensionAPI, ReadToolDetails } from "@earendil-works/pi-coding-agent";
 import { createBashTool, createEditTool, createReadTool, createWriteTool } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";

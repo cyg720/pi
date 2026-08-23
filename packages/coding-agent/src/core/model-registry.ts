@@ -2,6 +2,11 @@ import type { Api, AuthResult, Model, Provider } from "@earendil-works/pi-ai";
 import type { ModelRuntime } from "./model-runtime.ts";
 import type { AuthStatus, ProviderConfigInput } from "./provider-composer.ts";
 
+/**
+ * 【文件职责】模型注册表：管理内置 + 用户自定义模型/供应商的注册、查询与覆盖。
+ * 【产品维度】是模型选择器与运行时取用模型的数据源。
+ * 【新手阅读建议】先看注册/查询接口。
+ */
 export type { ProviderConfigInput } from "./provider-composer.ts";
 export type ResolvedRequestAuth =
 	| {

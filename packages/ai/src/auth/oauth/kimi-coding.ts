@@ -3,6 +3,8 @@
  *
  * RFC 8628 device authorization grant against https://auth.kimi.com with JSON
  * responses. The access token authenticates requests to
+ *【中文说明】Kimi Code（订阅）OAuth 流程：RFC 8628 设备授权（auth.kimi.com，JSON 响应）；
+ * 访问令牌作为 Bearer 认证 https://api.kimi.com/coding 请求。
  * https://api.kimi.com/coding as an `Authorization: Bearer` header.
  */
 
@@ -10,11 +12,14 @@ import { getProviderEnvValue } from "../../utils/provider-env.ts";
 import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
 import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
 
+// Kimi 客户端 ID
 const CLIENT_ID = "17e5f671-d194-4dfb-9706-5516cb48c098";
 const DEFAULT_OAUTH_HOST = "https://auth.kimi.com";
+// 设备码轮询总超时（15 分钟）
 const DEVICE_CODE_TIMEOUT_SECONDS = 15 * 60;
 const DEFAULT_POLL_INTERVAL_SECONDS = 5;
 const REQUEST_TIMEOUT_MS = 30 * 1000;
+// 刷新最大重试次数
 const REFRESH_MAX_RETRIES = 3;
 
 type DeviceAuthorization = {

@@ -6,6 +6,10 @@ import { startIpcServer } from "./ipc/server.ts";
 import { getRadiusServerBaseUrl, isRadiusEnabled, radiusPresence } from "./radius.ts";
 import { supervisor } from "./supervisor.ts";
 
+/**
+ * 【文件职责】serve 入口：启动 HTTP 服务器的主流程。
+ * 【新手阅读建议】看启动与监听。
+ */
 export async function serve(): Promise<void> {
 	const socketPath = getSocketPath();
 	mkdirSync(dirname(socketPath), { recursive: true });

@@ -81,6 +81,10 @@ class NodeSqliteDatabase implements SqliteDatabase {
 	}
 }
 
+/**
+ * 【文件职责】SQLite 存储出口：转发 SQLite 会话存储公共 API。
+ * 【新手阅读建议】索引文件。
+ */
 export function wrapNodeSqliteDatabase(db: DatabaseSync): SqliteDatabase {
 	return new NodeSqliteDatabase(db);
 }

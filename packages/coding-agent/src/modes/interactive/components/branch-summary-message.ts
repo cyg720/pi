@@ -7,6 +7,10 @@ import { keyText } from "./keybinding-hints.ts";
  * Component that renders a branch summary message with collapsed/expanded state.
  * Uses same background color as custom messages for visual consistency.
  */
+/**
+ * 【文件职责】UI 组件：分支摘要消息渲染。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class BranchSummaryMessageComponent extends Box {
 	private expanded = false;
 	private message: BranchSummaryMessage;

@@ -38,6 +38,10 @@
  * CLI flags always override preset values.
  */
 
+/**
+ * 【文件职责】扩展示例：预设。
+ * 【新手阅读建议】看预设机制。
+ */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Api, Model } from "@earendil-works/pi-ai";

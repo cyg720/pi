@@ -5,6 +5,10 @@ import { getTextOutput as getRenderedTextOutput } from "../../../core/tools/rend
 import { convertToPng } from "../../../utils/image-convert.ts";
 import { theme } from "../theme/theme.ts";
 
+/**
+ * 【文件职责】UI 组件：工具执行渲染（进度/结果/错误）。
+ * 【新手阅读建议】看进度展示。
+ */
 export interface ToolExecutionOptions {
 	showImages?: boolean;
 	imageWidthCells?: number;

@@ -4,6 +4,10 @@
  * Escape in editor returns to options, Escape in options cancels
  */
 
+/**
+ * 【文件职责】扩展示例：提问。
+ * 【新手阅读建议】交互示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	Editor,

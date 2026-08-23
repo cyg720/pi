@@ -5,6 +5,10 @@
  * (logo + keybinding hints) with a custom component showing the pi mascot.
  */
 
+/**
+ * 【文件职责】扩展示例：自定义顶栏。
+ * 【新手阅读建议】看 header 定制。
+ */
 import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
 import { VERSION } from "@earendil-works/pi-coding-agent";
 

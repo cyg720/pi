@@ -18,6 +18,10 @@
  *   /thinking-label          Reset to the default label
  */
 
+/**
+ * 【文件职责】扩展示例：隐藏思考标签。
+ * 【新手阅读建议】看消息渲染定制。
+ */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 const DEFAULT_LABEL = "Pondering...";

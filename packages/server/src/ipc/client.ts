@@ -2,6 +2,10 @@ import { createConnection } from "node:net";
 import { getSocketPath } from "../config.ts";
 import { encodeMessage, parseResponseLine, type ServerRequest, type ServerResponse } from "./protocol.ts";
 
+/**
+ * 【文件职责】IPC 客户端：与服务器进程通信的客户端封装。
+ * 【新手阅读建议】看请求/响应封装。
+ */
 export async function sendIpcRequest(request: ServerRequest): Promise<ServerResponse> {
 	const socketPath = getSocketPath();
 

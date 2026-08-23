@@ -10,6 +10,10 @@ import {
 	normalizeRadiusGatewayUrl,
 } from "./radius-config.ts";
 
+/**
+ * 【文件职责】Radius 供应商工厂（pi-messages 网关）。
+ * 【新手阅读建议】看网关注册结构。
+ */
 export interface RadiusProviderOptions {
 	id?: string;
 	name?: string;

@@ -12,6 +12,10 @@
  * 2. Use the extension — it automatically adapts to your active tools and skills
  */
 
+/**
+ * 【文件职责】扩展示例：提示词定制器。
+ * 【新手阅读建议】看提示词钩子。
+ */
 import type { BuildSystemPromptOptions, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /**

@@ -10,6 +10,10 @@
  * 3. When enabled, the agent will respond like a pirate
  */
 
+/**
+ * 【文件职责】扩展示例：海盗模式（提示词玩笑）。
+ * 【新手阅读建议】趣味示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function pirateExtension(pi: ExtensionAPI) {

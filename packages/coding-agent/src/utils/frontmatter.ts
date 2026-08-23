@@ -25,6 +25,10 @@ const extractFrontmatter = (content: string): { yamlString: string | null; body:
 	};
 };
 
+/**
+ * 【文件职责】frontmatter 解析：解析/序列化 YAML 头块（技能/模板用）。
+ * 【新手阅读建议】看解析函数。
+ */
 export const parseFrontmatter = <T extends Record<string, unknown> = Record<string, unknown>>(
 	content: string,
 ): ParsedFrontmatter<T> => {

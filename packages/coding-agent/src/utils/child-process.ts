@@ -15,6 +15,11 @@ import crossSpawn from "cross-spawn";
 
 const EXIT_STDIO_GRACE_MS = 100;
 
+/**
+ * 【文件职责】子进程工具：命令执行封装（超时/中止/输出收集/可破坏）。
+ * 【产品维度】工具执行与后台任务的基础。
+ * 【新手阅读建议】看 runCommand 族函数。
+ */
 export function spawnProcess(
 	command: string,
 	args: string[],

@@ -23,6 +23,11 @@ import {
 	createAgentSessionServices,
 } from "./core/agent-session-services.ts";
 import { formatNoModelsAvailableMessage } from "./core/auth-guidance.ts";
+/**
+ * 【文件职责】main 引导：初始化运行时环境（日志/配置/信号处理）并启动 CLI 主循环。
+ * 【产品维度】进程级引导与优雅退出。
+ * 【新手阅读建议】看启动与清理流程。
+ */
 import { exportFromFile } from "./core/export-html/index.ts";
 import type { InlineExtension } from "./core/extensions/types.ts";
 import { applyHttpProxySettings, configureHttpDispatcher } from "./core/http-dispatcher.ts";

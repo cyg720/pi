@@ -4,6 +4,10 @@
  * Override settings using SettingsManager.
  */
 
+/**
+ * 【文件职责】SDK 示例：设置读写。
+ * 【新手阅读建议】看设置 API。
+ */
 import { createAgentSession, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 
 const cwd = process.cwd();

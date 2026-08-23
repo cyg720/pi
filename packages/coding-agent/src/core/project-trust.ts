@@ -9,6 +9,11 @@ import {
 	type ProjectTrustStore,
 } from "./trust-manager.ts";
 
+/**
+ * 【文件职责】项目信任：按目录记录/查询用户对项目的信任状态（决定工具自动执行策略）。
+ * 【产品维度】平衡便利与安全：信任项目免确认执行。
+ * 【新手阅读建议】看信任存储/查询逻辑。
+ */
 export type AppMode = "interactive" | "print" | "json" | "rpc";
 
 export interface ResolveProjectTrustedOptions {

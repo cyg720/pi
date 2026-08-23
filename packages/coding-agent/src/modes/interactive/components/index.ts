@@ -1,4 +1,8 @@
 // UI Components for extensions
+/**
+ * 【文件职责】组件出口：转发交互模式全部组件。
+ * 【新手阅读建议】索引文件。
+ */
 export { ArminComponent } from "./armin.ts";
 export { AssistantMessageComponent } from "./assistant-message.ts";
 export { BashExecutionComponent } from "./bash-execution.ts";

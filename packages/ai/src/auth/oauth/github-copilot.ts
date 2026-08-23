@@ -1,4 +1,6 @@
 /**
+ *【中文说明】GitHub Copilot OAuth 流程：设备码授权 + 令牌轮询，经 GitHub 登录换取
+ * Copilot 会话令牌；令牌含会话专属 API 端点。
  * GitHub Copilot OAuth flow
  */
 
@@ -6,9 +8,11 @@ import { GITHUB_COPILOT_MODELS } from "../../providers/github-copilot.models.ts"
 import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
 import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
 
+// base64 解码辅助（客户端 ID 以编码形式保存）
 const decode = (s: string) => atob(s);
 const CLIENT_ID = decode("SXYxLmI1MDdhMDhjODdlY2ZlOTg=");
 
+// Copilot API 要求的模拟客户端标识头
 const COPILOT_HEADERS = {
 	"User-Agent": "GitHubCopilotChat/0.35.0",
 	"Editor-Version": "vscode/1.107.0",

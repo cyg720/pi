@@ -8,6 +8,10 @@
  *   npx tsx test.ts claude-sonnet-4-5-20250929 --thinking
  */
 
+/**
+ * 【文件职责】扩展示例：GitLab Duo 供应商测试。
+ * 【新手阅读建议】测试示例。
+ */
 import { type Api, type Context, type Model, registerApiProvider, streamSimple } from "@earendil-works/pi-ai/compat";
 import { readFileSync } from "fs";
 import { getAgentDir } from "packages/coding-agent/src/config.js";

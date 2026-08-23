@@ -16,6 +16,10 @@ const writeSchema = Type.Object({
 	content: Type.String({ description: "Content to write to the file" }),
 });
 
+/**
+ * 【文件职责】write 工具：写文件（与 agent 包 createWriteTool 对齐）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export type WriteToolInput = Static<typeof writeSchema>;
 
 /**

@@ -1,6 +1,10 @@
 import type { SessionTreeEntry, SessionTreeEntryBase } from "@earendil-works/pi-agent-core";
 import { invalidEntry, isRecord } from "./shared.ts";
 
+/**
+ * 【文件职责】会话条目存储：消息等条目的 SQLite 读写。
+ * 【新手阅读建议】看表结构与读写。
+ */
 export interface SessionEntryRow {
 	session_id: string;
 	id: string;

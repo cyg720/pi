@@ -11,6 +11,10 @@
  *   /followup And then?   - Sends while streaming with followUp delivery
  */
 
+/**
+ * 【文件职责】扩展示例：发送用户消息。
+ * 【新手阅读建议】看消息注入。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

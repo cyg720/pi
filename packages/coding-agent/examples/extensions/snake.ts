@@ -2,6 +2,10 @@
  * Snake game extension - play snake with /snake command
  */
 
+/**
+ * 【文件职责】扩展示例：贪吃蛇游戏。
+ * 【新手阅读建议】趣味示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { matchesKey, visibleWidth } from "@earendil-works/pi-tui";
 

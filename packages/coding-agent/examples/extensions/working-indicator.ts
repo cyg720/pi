@@ -16,6 +16,10 @@
  *   /working-indicator reset     Restore pi's default spinner
  */
 
+/**
+ * 【文件职责】扩展示例：工作中指示器。
+ * 【新手阅读建议】看状态指示。
+ */
 import type { ExtensionAPI, ExtensionContext, WorkingIndicatorOptions } from "@earendil-works/pi-coding-agent";
 
 type WorkingIndicatorMode = "dot" | "none" | "pulse" | "spinner" | "default";

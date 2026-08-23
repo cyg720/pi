@@ -11,6 +11,11 @@ import { DEFAULT_THINKING_LEVEL } from "./defaults.ts";
 import type { ModelRuntime } from "./model-runtime.ts";
 
 /** Default model IDs for each known provider */
+/**
+ * 【文件职责】模型解析：把用户配置的模型引用解析为具体 Model 对象（含自定义模型）。
+ * 【产品维度】连接配置层与运行时。
+ * 【新手阅读建议】看解析主函数。
+ */
 export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	"amazon-bedrock": "us.anthropic.claude-opus-4-6-v1",
 	"ant-ling": "Ring-2.6-1T",

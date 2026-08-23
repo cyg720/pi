@@ -7,6 +7,10 @@ import { constants } from "fs";
 import { access, readFile } from "fs/promises";
 import { resolveToCwd } from "./path-utils.ts";
 
+/**
+ * 【文件职责】edit 差异工具：模糊匹配/补丁生成（与 agent 包 edit-diff 对齐）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export function detectLineEnding(content: string): "\r\n" | "\n" {
 	const crlfIdx = content.indexOf("\r\n");
 	const lfIdx = content.indexOf("\n");

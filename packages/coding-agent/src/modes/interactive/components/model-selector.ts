@@ -32,6 +32,10 @@ type ModelScope = "all" | "scoped";
 /**
  * Component that renders a model selector with search
  */
+/**
+ * 【文件职责】UI 组件：模型选择器（列表/搜索/分类）。
+ * 【新手阅读建议】看候选组装与选择。
+ */
 export class ModelSelectorComponent extends Container implements Focusable {
 	private searchInput: Input;
 

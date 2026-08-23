@@ -13,6 +13,10 @@
  * Try it in a project containing .pi, AGENTS.md/CLAUDE.md, or .agents/skills.
  */
 
+/**
+ * 【文件职责】扩展示例：项目信任。
+ * 【新手阅读建议】看信任 API。
+ */
 import type { ExtensionAPI, ProjectTrustEventResult } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

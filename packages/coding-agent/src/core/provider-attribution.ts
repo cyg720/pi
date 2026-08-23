@@ -76,6 +76,11 @@ function getSessionHeaders(model: Model<Api>, sessionId: string | undefined): Re
 	return { "x-opencode-session": sessionId, "x-opencode-client": "pi" };
 }
 
+/**
+ * 【文件职责】供应商归属：推断消息/模型来自哪个供应商与来源（内置/自定义/远程）。
+ * 【产品维度】让 UI 正确标注模型来源。
+ * 【新手阅读建议】看推断函数。
+ */
 export function mergeProviderAttributionHeaders(
 	model: Model<Api>,
 	settingsManager: SettingsManager,

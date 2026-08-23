@@ -16,6 +16,10 @@ const lsSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of entries to return (default: 500)" })),
 });
 
+/**
+ * 【文件职责】ls 工具：列出目录内容（含权限/大小/符号链接标注）。
+ * 【新手阅读建议】看条目格式化。
+ */
 export type LsToolInput = Static<typeof lsSchema>;
 
 const DEFAULT_LIMIT = 500;

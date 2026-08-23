@@ -4,6 +4,10 @@
 
 import type { TUI } from "@earendil-works/pi-tui";
 
+/**
+ * 【文件职责】UI 组件：倒计时定时器（如重试等待显示）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class CountdownTimer {
 	private intervalId: ReturnType<typeof setInterval> | undefined;
 	private remainingSeconds: number;

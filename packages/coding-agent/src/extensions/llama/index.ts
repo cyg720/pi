@@ -39,6 +39,10 @@ async function configuredClient(ctx: ExtensionCommandContext): Promise<LlamaClie
 	return new LlamaClient(serverUrl, result.auth.apiKey);
 }
 
+/**
+ * 【文件职责】llama 出口：注册本地 llama 供应商。
+ * 【新手阅读建议】索引文件。
+ */
 export default function llamaExtension(pi: ExtensionAPI): void {
 	const provider = createLlamaProvider();
 	pi.registerProvider(provider.provider);

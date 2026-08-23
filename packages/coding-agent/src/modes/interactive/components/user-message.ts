@@ -8,6 +8,10 @@ const OSC133_ZONE_FINAL = "\x1b]133;C\x07";
 /**
  * Component that renders a user message
  */
+/**
+ * 【文件职责】UI 组件：用户消息渲染（文本/图片）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class UserMessageComponent extends Container {
 	private text: string;
 	private markdownTheme: MarkdownTheme;

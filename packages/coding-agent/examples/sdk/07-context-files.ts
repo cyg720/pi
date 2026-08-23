@@ -4,6 +4,10 @@
  * Context files provide project-specific instructions loaded into the system prompt.
  */
 
+/**
+ * 【文件职责】SDK 示例：上下文文件。
+ * 【新手阅读建议】看文件注入。
+ */
 import {
 	createAgentSession,
 	DefaultResourceLoader,

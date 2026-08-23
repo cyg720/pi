@@ -11,6 +11,10 @@
  * Start pi with this extension:
  *   pi -e ./examples/extensions/input-transform-streaming.ts
  */
+/**
+ * 【文件职责】扩展示例：流式输入变换。
+ * 【新手阅读建议】看输入处理。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const TRIGGER = /\b(changes?|diff|modified)\b/i;

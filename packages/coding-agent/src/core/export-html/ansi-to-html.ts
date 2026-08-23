@@ -195,6 +195,11 @@ const ANSI_REGEX = /\x1b\[([\d;]*)m/g;
 /**
  * Convert ANSI-escaped text to HTML with inline styles.
  */
+/**
+ * 【文件职责】ANSI 转义 → HTML：把终端彩色文本转换为 HTML 标记（含行数组版本）。
+ * 【产品维度】支撑会话 HTML 导出的样式还原。
+ * 【新手阅读建议】看状态机解析与行转换。
+ */
 export function ansiToHtml(text: string): string {
 	const style = createEmptyStyle();
 	let result = "";

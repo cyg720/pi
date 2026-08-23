@@ -7,6 +7,10 @@ const QUANTIZATION_PATTERN =
 	/(?:^|[-_.])((?:UD-)?(?:IQ\d(?:_[A-Z0-9]+)+|Q\d(?:_[A-Z0-9]+)+|BF16|F16|F32|MXFP\d(?:_[A-Z0-9]+)*))$/iu;
 const SHARD_SUFFIX_PATTERN = /-\d{5}-of-\d{5}$/u;
 
+/**
+ * 【文件职责】llama/HuggingFace：本地模型的下载/加载辅助。
+ * 【新手阅读建议】看下载流程。
+ */
 export interface HuggingFaceModel {
 	id: string;
 	downloads: number;

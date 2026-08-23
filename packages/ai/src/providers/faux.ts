@@ -34,6 +34,10 @@ const DEFAULT_USAGE: Usage = {
 	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 };
 
+/**
+ * 【文件职责】Faux 假供应商：测试/离线用的模拟模型（可编程响应）。
+ * 【新手阅读建议】看响应预设 API。
+ */
 export interface FauxModelDefinition {
 	id: string;
 	name?: string;

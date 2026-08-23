@@ -10,6 +10,10 @@ import { resolveReadPath } from "../core/tools/path-utils.ts";
 import { processImage } from "../utils/image-process.ts";
 import { detectSupportedImageMimeTypeFromFile } from "../utils/mime.ts";
 
+/**
+ * 【文件职责】文件参数处理：把命令行传入的文件转为提示消息。
+ * 【新手阅读建议】看文件读取与转换。
+ */
 export interface ProcessedFiles {
 	text: string;
 	images: ImageContent[];

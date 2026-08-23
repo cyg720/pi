@@ -13,6 +13,11 @@ type TimingLabel = "main" | "extensions";
 
 const timingNamespaces = new Map<TimingLabel, TimingNamespace>();
 
+/**
+ * 【文件职责】计时统计：记录各阶段耗时并呈现。
+ * 【产品维度】让用户了解请求各环节耗时。
+ * 【新手阅读建议】半分钟读完即可。
+ */
 export function resetTimings(namespace: TimingLabel = "main"): void {
 	if (!ENABLED) return;
 	timingNamespaces.set(namespace, { timings: [], lastTime: Date.now() });

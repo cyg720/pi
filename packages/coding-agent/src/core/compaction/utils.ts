@@ -9,6 +9,10 @@ import { contentText, type Message } from "@earendil-works/pi-ai";
 // File Operation Tracking
 // ============================================================================
 
+/**
+ * 【文件职责】压缩工具：文件操作统计、消息序列化与摘要提示词（与 agent 包对齐）。
+ * 【新手阅读建议】与 agent 包同名模块对照阅读。
+ */
 export interface FileOperations {
 	read: Set<string>;
 	written: Set<string>;

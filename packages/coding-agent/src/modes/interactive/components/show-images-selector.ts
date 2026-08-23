@@ -10,6 +10,10 @@ const SHOW_IMAGES_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 /**
  * Component that renders a show images selector with borders
  */
+/**
+ * 【文件职责】UI 组件：图片显示开关选择器。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class ShowImagesSelectorComponent extends Container {
 	private selectList: SelectList;
 

@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { OPENAI_MODELS } from "./openai.models.ts";
 
+/**
+ * 【文件职责】OpenAI 供应商工厂（Responses + Completions）。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function openaiProvider(): Provider<"openai-responses"> {
 	return createProvider({
 		id: "openai",

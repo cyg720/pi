@@ -18,6 +18,11 @@ const EXTENSIONS_DOC_URL =
  *
  * @returns Array of provider names that were migrated
  */
+/**
+ * 【文件职责】数据迁移：把旧版本数据（配置/会话/凭据）迁移到当前结构。
+ * 【产品维度】保证升级后旧数据可用。
+ * 【新手阅读建议】看各迁移步骤。
+ */
 export function migrateAuthToAuthJson(): string[] {
 	const agentDir = getAgentDir();
 	const authPath = join(agentDir, "auth.json");

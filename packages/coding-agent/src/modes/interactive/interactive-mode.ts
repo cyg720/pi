@@ -228,6 +228,11 @@ function quoteIfNeeded(value: string): string {
 	return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+/**
+ * 【文件职责】交互模式主控：装配 TUI/会话/工具/事件流，驱动主循环（渲染/输入/事件分发）。
+ * 【产品维度】是终端交互体验的核心装配点。
+ * 【新手阅读建议】先看启动装配，再看主循环。
+ */
 export function formatResumeCommand(sessionManager: SessionManager): string | undefined {
 	if (!process.stdout.isTTY) return undefined;
 	if (!sessionManager.isPersisted()) return undefined;

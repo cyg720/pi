@@ -4,6 +4,10 @@ import type { AppMode } from "../core/project-trust.ts";
 import type { SettingsManager } from "../core/settings-manager.ts";
 import { showStartupInput, showStartupSelector } from "./startup-ui.ts";
 
+/**
+ * 【文件职责】项目信任 CLI：管理项目信任状态（列表/授予/撤销）。
+ * 【新手阅读建议】看命令处理。
+ */
 export function createProjectTrustContext(options: {
 	cwd: string;
 	mode: AppMode;

@@ -16,6 +16,11 @@ const __dirname = dirname(__filename);
  * Detect if we're running as a Bun compiled binary.
  * Bun binaries have import.meta.url containing "$bunfs", "~BUN", or "%7EBUN" (Bun's virtual filesystem path)
  */
+/**
+ * 【文件职责】配置模块：汇总/导出全部配置（默认值、设置管理器、环境变量辅助）。
+ * 【产品维度】统一配置访问入口。
+ * 【新手阅读建议】看导出清单。
+ */
 export const isBunBinary =
 	import.meta.url.includes("$bunfs") || import.meta.url.includes("~BUN") || import.meta.url.includes("%7EBUN");
 

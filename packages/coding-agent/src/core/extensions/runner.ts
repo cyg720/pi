@@ -263,6 +263,11 @@ const noOpUIContext: ExtensionUIContext = {
 	setToolsExpanded: () => {},
 };
 
+/**
+ * 【文件职责】扩展运行器：在受控环境中执行扩展钩子/命令，并桥接扩展与核心的调用。
+ * 【产品维度】让扩展安全地挂接会话/工具生命周期。
+ * 【新手阅读建议】看运行与桥接方法。
+ */
 export class ExtensionRunner {
 	private extensions: Extension[];
 	private runtime: ExtensionRuntime;

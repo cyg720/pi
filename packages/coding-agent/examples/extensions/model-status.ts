@@ -7,6 +7,10 @@
  * Usage: pi -e ./model-status.ts
  */
 
+/**
+ * 【文件职责】扩展示例：模型状态显示。
+ * 【新手阅读建议】看状态展示。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

@@ -1,7 +1,15 @@
 /**
- * Shared utilities for Google Generative AI and Google Vertex providers.
+ * 【文件职责】Google Gemini / Vertex 共享工具：思考块判定与签名处理、消息与工具转换、
+ *              请求/响应转换、思考级别映射等，供两个 Google 供应商实现复用。
+ * 【技术维度】@google/genai 的 Part/Content 模型；thought/thoughtSignature 协议语义。
+ * 【产品维度】统一 Google 系供应商的消息/思考语义，避免双份实现漂移。
+ * 【逻辑维度】思考判定与文本化 → 消息转换 → 工具转换 → 响应归约共用函数。
+ * 【关键边界】thoughtSignature 可出现在任意 Part 上且需原样保留；跨模型变换经
+ *              transformMessages 处理。
+ * 【新手阅读建议】先读文件头协议说明理解思考签名语义，再读各 convert 函数。
  */
-
+// Shared utilities for Google Generative AI and Google Vertex providers.
+// 本文件为 Google Generative AI 与 Google Vertex 两个供应商提供共享工具（中文说明）。
 import { type Content, FinishReason, FunctionCallingConfigMode, type Part } from "@google/genai";
 import type { Context, ImageContent, Model, StopReason, TextContent, Tool } from "../types.ts";
 import { sanitizeSurrogates } from "../utils/sanitize-unicode.ts";

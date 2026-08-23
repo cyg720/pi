@@ -8,6 +8,10 @@ import { theme } from "../theme/theme.ts";
  * Component that renders a custom session entry from extensions.
  * The host owns transcript spacing; renderer output should provide only its content.
  */
+/**
+ * 【文件职责】UI 组件：自定义条目渲染（扩展数据展示）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export class CustomEntryComponent extends Container {
 	private entry: CustomEntry<unknown>;
 	private renderer: EntryRenderer;

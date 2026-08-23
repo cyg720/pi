@@ -6,6 +6,10 @@ import { loadGitHubCopilotOAuth } from "../auth/oauth/load.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { GITHUB_COPILOT_MODELS } from "./github-copilot.models.ts";
 
+/**
+ * 【文件职责】GitHub Copilot 供应商工厂（OAuth + 动态模型目录）。
+ * 【新手阅读建议】看认证与目录刷新。
+ */
 export function githubCopilotProvider(): Provider<"anthropic-messages" | "openai-completions" | "openai-responses"> {
 	return createProvider({
 		id: "github-copilot",

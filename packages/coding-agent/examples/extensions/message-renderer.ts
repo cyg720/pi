@@ -7,6 +7,10 @@
  * Usage: /status [message] - sends a status message with custom rendering
  */
 
+/**
+ * 【文件职责】扩展示例：消息渲染器。
+ * 【新手阅读建议】看消息 UI 定制。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Box, Text } from "@earendil-works/pi-tui";
 

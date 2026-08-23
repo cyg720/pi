@@ -22,6 +22,10 @@ import type { HuggingFaceModel } from "./huggingface.ts";
 
 const DOWNLOAD_VALUE = "\0download";
 
+/**
+ * 【文件职责】llama UI：本地模型的启动/状态交互界面。
+ * 【新手阅读建议】看状态展示。
+ */
 export type LlamaManagerAction = { type: "model"; model: LlamaModelInfo } | { type: "download" } | { type: "close" };
 
 interface ProgressState extends LlamaProgress {

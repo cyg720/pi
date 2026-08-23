@@ -1,5 +1,9 @@
 // Core session management
 
+/**
+ * 【文件职责】包总出口：转发 SDK/核心能力供外部使用。
+ * 【新手阅读建议】索引文件。
+ */
 export { type Args, parseArgs } from "./cli/args.ts";
 
 // Config paths

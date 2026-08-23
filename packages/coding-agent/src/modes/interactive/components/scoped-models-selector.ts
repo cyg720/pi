@@ -71,6 +71,10 @@ interface ModelItem {
 	enabled: boolean;
 }
 
+/**
+ * 【文件职责】UI 组件：作用域模型选择器（按提供商/标签过滤）。
+ * 【新手阅读建议】看过滤分组。
+ */
 export interface ModelsConfig {
 	allModels: Model<any>[];
 	enabledModelIds: string[] | null;

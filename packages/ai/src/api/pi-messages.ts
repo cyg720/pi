@@ -1,14 +1,15 @@
 /**
- * pi-messages API implementation.
- *
- * Streams pi's own message protocol directly to a backend: the request is a
- * single POST of `{ model, context, options }` to `<baseUrl>/messages`, the
- * response is an SSE stream of serialized assistant-message events plus a
- * terminal `done`/`error` event. This is the wire protocol spoken by the
- * Radius gateway, but any backend implementing it can be used, e.g. via a
- * models.json custom provider with `"api": "pi-messages"`.
+ * 【文件职责】pi-messages API 实现：把 pi 自己的消息协议直接流向后端——单次 POST
+ *              { model, context, options } 到 <baseUrl>/messages，响应为序列化
+ *              助手消息事件的 SSE 流并以 done/error 收尾。
+ * 【技术维度】原生 SSE 协议解析；流式 JSON 修复；诊断附加；debug 元数据。
+ * 【产品维度】是 Radius 网关的线协议；任何实现该协议的后端（含自定义供应商）均可接入。
+ * 【逻辑维度】选项构建 → POST /messages → SSE 逐事件解析 → 归约为 pi 消息 → 诊断/成本。
+ * 【关键边界】后端须完整实现该协议；debug 选项要求后端返回路由元数据。
+ * 【新手阅读建议】先读文件头协议说明，再读 stream 主流程与事件解析。
  */
-
+// pi-messages API implementation.
+// pi-messages API 实现（中文说明）：协议细节见上方英文说明。
 import type {
 	AssistantMessage,
 	AssistantMessageEvent,

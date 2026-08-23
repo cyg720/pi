@@ -8,6 +8,10 @@
  *   pi --extension examples/extensions/titlebar-spinner.ts
  */
 
+/**
+ * 【文件职责】扩展示例：标题栏旋转指示。
+ * 【新手阅读建议】看状态动画。
+ */
 import path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 

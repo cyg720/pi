@@ -1,3 +1,13 @@
+/**
+ * 【文件职责】Azure OpenAI Responses API 实现：与 openai-responses 逻辑相近，
+ *              额外处理 Azure 部署名映射与资源作用域。
+ * 【技术维度】AzureOpenAI SDK；部署名映射表（AZURE_OPENAI_DEPLOYMENT_MAP）；
+ *              共享转换层与流处理。
+ * 【产品维度】让 Azure 托管的 OpenAI Responses 模型可用。
+ * 【逻辑维度】选项构建 → 按模型解析部署名 → 请求 → 流归约（复用 shared）。
+ * 【关键边界】部署名缺失时回退模型 ID；输出 token 下限 16。
+ * 【新手阅读建议】对比 openai-responses.ts 阅读差异点（部署名解析）即可。
+ */
 import { AzureOpenAI } from "openai";
 import type { ResponseCreateParamsStreaming } from "openai/resources/responses/responses.js";
 import { clampThinkingLevel } from "../models.ts";

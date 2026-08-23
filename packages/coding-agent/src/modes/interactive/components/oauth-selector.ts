@@ -11,6 +11,10 @@ import {
 import { theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 
+/**
+ * 【文件职责】UI 组件：OAuth 供应商选择器（登录方式选择）。
+ * 【新手阅读建议】半分钟读完。
+ */
 export type AuthSelectorProvider = {
 	id: string;
 	name: string;

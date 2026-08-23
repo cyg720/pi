@@ -7,6 +7,11 @@ import { join } from "path";
 import { clipboard } from "./clipboard-native.ts";
 import { loadPhoton } from "./photon.ts";
 
+/**
+ * 【文件职责】剪贴板图片：从剪贴板读取图片数据（跨平台）。
+ * 【产品维度】支持粘贴图片到会话。
+ * 【新手阅读建议】看平台分支。
+ */
 export type ClipboardImage = {
 	bytes: Uint8Array;
 	mimeType: string;

@@ -23,6 +23,10 @@ const readSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of lines to read" })),
 });
 
+/**
+ * 【文件职责】read 工具：读取文本/图片（与 agent 包 createReadTool 对齐，含图片处理注入）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export type ReadToolInput = Static<typeof readSchema>;
 
 export interface ReadToolDetails {

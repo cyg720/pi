@@ -52,6 +52,10 @@ const editSchema = Type.Object(
 	{},
 );
 
+/**
+ * 【文件职责】edit 工具：精确文本替换（与 agent 包 createEditTool 对齐）。
+ * 【新手阅读建议】对照 agent 包同名文件阅读。
+ */
 export type EditToolInput = Static<typeof editSchema>;
 type LegacyEditToolInput = EditToolInput & {
 	oldText?: unknown;

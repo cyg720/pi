@@ -64,6 +64,11 @@ function addIgnoreRules(ig: IgnoreMatcher, dir: string, rootDir: string): void {
 	}
 }
 
+/**
+ * 【文件职责】技能管理：加载/解析/调用技能（含技能块回填提示词）。
+ * 【产品维度】让模型按需读取技能文件。
+ * 【新手阅读建议】看加载与调用流程。
+ */
 export interface SkillFrontmatter {
 	name?: string;
 	description?: string;

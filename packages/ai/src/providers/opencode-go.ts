@@ -5,6 +5,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { OPENCODE_GO_MODELS } from "./opencode-go.models.ts";
 
+/**
+ * 【文件职责】OpenCode Go 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function opencodeGoProvider(): Provider<"anthropic-messages" | "openai-completions" | "openai-responses"> {
 	return createProvider<"anthropic-messages" | "openai-completions" | "openai-responses">({
 		id: "opencode-go",

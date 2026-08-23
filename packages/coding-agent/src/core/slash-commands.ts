@@ -1,6 +1,11 @@
 import { APP_NAME } from "../config.ts";
 import type { SourceInfo } from "./source-info.ts";
 
+/**
+ * 【文件职责】斜杠命令注册表：内置 + 用户自定义斜杠命令的定义/查找/执行入口。
+ * 【产品维度】是 /命令 体系的数据源。
+ * 【新手阅读建议】看命令定义结构与注册机制。
+ */
 export type SlashCommandSource = "extension" | "prompt" | "skill";
 
 export interface SlashCommandInfo {

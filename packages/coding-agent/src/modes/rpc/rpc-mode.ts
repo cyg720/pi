@@ -37,6 +37,10 @@ import type {
 	RpcSlashCommand,
 } from "./rpc-types.ts";
 
+/**
+ * 【文件职责】RPC 模式：启动 RPC 服务并处理方法调用。
+ * 【新手阅读建议】看方法注册与分派。
+ */
 // Re-export types for consumers
 export type {
 	RpcCommand,

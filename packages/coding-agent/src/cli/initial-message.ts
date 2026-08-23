@@ -1,6 +1,10 @@
 import type { ImageContent } from "@earendil-works/pi-ai";
 import type { Args } from "./args.ts";
 
+/**
+ * 【文件职责】初始消息：组装启动时的提示（默认提示/系统信息）。
+ * 【新手阅读建议】看消息组装。
+ */
 export interface InitialMessageInput {
 	parsed: Args;
 	fileText?: string;

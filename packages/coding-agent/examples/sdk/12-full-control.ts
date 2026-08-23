@@ -4,6 +4,10 @@
  * Replace everything - no discovery, explicit configuration.
  */
 
+/**
+ * 【文件职责】SDK 示例：全控制（事件/工具/会话精细操作）。
+ * 【新手阅读建议】综合示例。
+ */
 import { getModel } from "@earendil-works/pi-ai/compat";
 import {
 	createAgentSession,

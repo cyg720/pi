@@ -9,6 +9,10 @@
  *   ping                        → "pong" (instant, no LLM)
  *   time                        → current time (instant, no LLM)
  */
+/**
+ * 【文件职责】扩展示例：输入变换。
+ * 【新手阅读建议】看输入处理。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

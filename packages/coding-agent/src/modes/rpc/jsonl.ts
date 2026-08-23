@@ -7,6 +7,10 @@ import { StringDecoder } from "node:string_decoder";
  * Framing is LF-only. Payload strings may contain other Unicode separators such as
  * U+2028 and U+2029. Clients must split records on `\n` only.
  */
+/**
+ * 【文件职责】RPC JSONL：JSONL 行协议编解码（RPC 传输基础）。
+ * 【新手阅读建议】看编解码。
+ */
 export function serializeJsonLine(value: unknown): string {
 	return `${JSON.stringify(value)}\n`;
 }

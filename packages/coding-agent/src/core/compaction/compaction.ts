@@ -31,6 +31,12 @@ import {
 // ============================================================================
 
 /** Details stored in CompactionEntry.details for file tracking */
+/**
+ * 【文件职责】会话历史压缩：估算/切割/生成摘要（与 agent 包 compaction 对齐的实现），
+ *              用于长会话的上下文窗口管理。
+ * 【逻辑维度】估算 → 切割点 → 摘要生成（带重试）→ 准备/执行压缩。
+ * 【新手阅读建议】与 agent 包同名模块对照阅读。
+ */
 export interface CompactionDetails {
 	readFiles: string[];
 	modifiedFiles: string[];

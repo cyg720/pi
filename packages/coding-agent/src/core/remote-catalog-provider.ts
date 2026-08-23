@@ -3,6 +3,11 @@ import { VERSION } from "../config.ts";
 import { getPiUserAgent } from "../utils/pi-user-agent.ts";
 
 const DEFAULT_CATALOG_BASE_URL = "https://pi.dev";
+/**
+ * 【文件职责】远程模型目录：按 URL 拉取模型目录并注册为动态供应商。
+ * 【产品维度】支持集中托管的模型目录分发。
+ * 【新手阅读建议】看拉取/缓存/注册流程。
+ */
 export const REMOTE_CATALOG_REFRESH_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 function mergeModels(baseline: readonly Model<Api>[], dynamic: readonly Model<Api>[]): Model<Api>[] {

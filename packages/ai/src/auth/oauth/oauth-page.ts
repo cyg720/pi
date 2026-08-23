@@ -1,5 +1,14 @@
+/**
+ * 【文件职责】OAuth 登录页 HTML 生成：为成功/错误回调渲染简洁美观的浏览器页面。
+ * 【技术维度】模板字符串 + HTML 转义。
+ * 【产品维度】让用户在浏览器中看到明确的登录结果反馈。
+ * 【逻辑维度】escapeHtml 转义 → renderPage 组装 → 导出成功/错误两页。
+ * 【关键边界】所有用户可控文本必须转义防 XSS；纯静态页面无脚本依赖。
+ * 【新手阅读建议】半分钟读完即可。
+ */
 const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path fill="#fff" fill-rule="evenodd" d="M165.29 165.29 H517.36 V400 H400 V517.36 H282.65 V634.72 H165.29 Z M282.65 282.65 V400 H400 V282.65 Z"/><path fill="#fff" d="M517.36 400 H634.72 V634.72 H517.36 Z"/></svg>`;
 
+// HTML 转义（私有）：防止用户可控文本注入
 function escapeHtml(value: string): string {
 	return value
 		.replaceAll("&", "&amp;")
@@ -9,6 +18,7 @@ function escapeHtml(value: string): string {
 		.replaceAll("'", "&#39;");
 }
 
+// 组装完整页面（私有）：标题/标题栏/消息/详情
 function renderPage(options: { title: string; heading: string; message: string; details?: string }): string {
 	const title = escapeHtml(options.title);
 	const heading = escapeHtml(options.heading);

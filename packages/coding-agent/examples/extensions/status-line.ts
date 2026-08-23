@@ -5,6 +5,10 @@
  * Shows turn progress with themed colors.
  */
 
+/**
+ * 【文件职责】扩展示例：状态行。
+ * 【新手阅读建议】看状态栏定制。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

@@ -3,6 +3,10 @@
  * Uses Kitty keyboard protocol for smooth movement (press/release detection)
  */
 
+/**
+ * 【文件职责】扩展示例：太空入侵者游戏。
+ * 【新手阅读建议】趣味示例。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isKeyRelease, Key, matchesKey, visibleWidth } from "@earendil-works/pi-tui";
 

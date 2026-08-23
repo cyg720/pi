@@ -113,6 +113,10 @@ async function loadSqliteStorage(
 	};
 }
 
+/**
+ * 【文件职责】存储模块出口：转发各存储实现。
+ * 【新手阅读建议】索引文件。
+ */
 export class SqliteSessionStorage implements SessionStorage<SqliteSessionMetadata> {
 	private readonly db: SqliteDatabase;
 	private readonly metadata: SqliteSessionMetadata;

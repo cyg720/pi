@@ -20,6 +20,16 @@ type LockResult<T> = {
 
 const AUTH_FILE_WRITE_OPTIONS = { encoding: "utf-8", mode: 0o600 } as const;
 
+/**
+ * 【文件职责】认证存储（AuthStorage）：把凭据持久化到磁盘（JSON），提供读/列/改/删，
+ *              实现 pi-ai 的 CredentialStore 契约并支持文件锁与并发安全。
+ * 【产品维度】让登录凭据跨会话持久化，供请求认证使用。
+ * 【逻辑维度】FileAuthStorageBackend（落盘）→ InMemoryAuthStorageBackend（测试/临时）→
+ *              AuthStorage（序列化读写 + 修改排队）→ readStoredCredential 便捷读取。
+ * 【关键边界】写入为整文件重写（原子替换）；modify 串行化防并发双刷；
+ *              api-key 命令不在列出时执行。
+ * 【新手阅读建议】先读 AuthStorage 的 modify 串行化，再看两个后端实现。
+ */
 export interface AuthStorageBackend {
 	withLock<T>(fn: (current: string | undefined) => LockResult<T>): T;
 	withLockAsync<T>(fn: (current: string | undefined) => Promise<LockResult<T>>): Promise<T>;

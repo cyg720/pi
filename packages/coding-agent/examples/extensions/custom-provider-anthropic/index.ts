@@ -21,6 +21,10 @@
  * Then use /model to select custom-anthropic/claude-sonnet-4-5
  */
 
+/**
+ * 【文件职责】扩展示例：自定义 Anthropic 供应商。
+ * 【新手阅读建议】看自定义供应商注册。
+ */
 import Anthropic from "@anthropic-ai/sdk";
 import type { ContentBlockParam, MessageCreateParamsStreaming } from "@anthropic-ai/sdk/resources/messages.js";
 import {

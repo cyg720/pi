@@ -54,6 +54,10 @@ function buildImage(): string[] {
 	return lines;
 }
 
+/**
+ * 【文件职责】UI 组件：daxnuts（ASCII 艺术动画/装饰）。
+ * 【新手阅读建议】看图形生成。
+ */
 export class DaxnutsComponent implements Component {
 	private ui: TUI;
 	private image: string[];

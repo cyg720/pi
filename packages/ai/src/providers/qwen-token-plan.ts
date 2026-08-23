@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { QWEN_TOKEN_PLAN_MODELS } from "./qwen-token-plan.models.ts";
 
+/**
+ * 【文件职责】Qwen Token Plan 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function qwenTokenPlanProvider(): Provider<"openai-completions"> {
 	return createProvider({
 		id: "qwen-token-plan",

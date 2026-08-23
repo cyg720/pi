@@ -4,6 +4,10 @@
  * File-based templates that inject content when invoked with /templatename.
  */
 
+/**
+ * 【文件职责】SDK 示例：提示词模板。
+ * 【新手阅读建议】看模板加载与调用。
+ */
 import {
 	createAgentSession,
 	createSyntheticSourceInfo,

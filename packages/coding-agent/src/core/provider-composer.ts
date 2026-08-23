@@ -30,6 +30,11 @@ import {
 	resolveHeadersOrThrow,
 } from "./resolve-config-value.ts";
 
+/**
+ * 【文件职责】供应商组合：把内置 + 自定义供应商装配为 pi-ai Provider 列表。
+ * 【产品维度】统一供应商注册的组装点。
+ * 【新手阅读建议】看组合主函数。
+ */
 export interface ExtensionOAuthConfig {
 	name: string;
 	/** @deprecated Retained for extension source compatibility; ignored by canonical auth flows. */

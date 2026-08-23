@@ -1,3 +1,13 @@
+/**
+ * 【文件职责】pi-ai 包的总出口（barrel 文件）：集中转发核心类型、流式 API 选项、认证体系、
+ *              模型目录与存储、会话资源与工具函数；不含生成目录/供应商工厂/API 注册表等重量级模块。
+ * 【技术维度】纯 TypeScript ESM 再导出（export * 与具名导出组合），无实现逻辑。
+ * 【产品维度】对外暴露稳定统一的 API 表面；二次开发者从这里取用全部核心能力。
+ * 【逻辑维度】按“typebox → 各供应商 API 选项 → 认证 → 扩展 OAuth 类型 → 模型/存储 → 工具函数”分组导出。
+ * 【关键边界】仅导出“核心、无副作用”的子集：供应商工厂在 providers/*、API 实现在 api/*、
+ *              旧式全局 API 在 compat；新增公开模块必须在此登记。
+ * 【新手阅读建议】第一站读本文件建立能力清单认知，再顺着导出跳转到感兴趣的源文件精读。
+ */
 export type { Static, TSchema } from "typebox";
 export { Type } from "typebox";
 
@@ -6,6 +16,8 @@ export { Type } from "typebox";
 // live under "@earendil-works/pi-ai/providers/*", API implementations under
 // "@earendil-works/pi-ai/api/*", the old global API under
 // "@earendil-works/pi-ai/compat".
+// 仅导出核心且无副作用的能力：不含生成目录/供应商工厂/API 注册表/OAuth 实现/compat；
+// 供应商工厂在 providers/*，API 实现在 api/*，旧式全局 API 在 compat。
 export type { AnthropicEffort, AnthropicOptions, AnthropicThinkingDisplay } from "./api/anthropic-messages.ts";
 export type { AzureOpenAIResponsesOptions } from "./api/azure-openai-responses.ts";
 export type { BedrockOptions, BedrockThinkingDisplay } from "./api/bedrock-converse-stream.ts";

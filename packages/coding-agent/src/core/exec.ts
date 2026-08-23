@@ -8,6 +8,12 @@ import { waitForChildProcess } from "../utils/child-process.ts";
 /**
  * Options for executing shell commands.
  */
+/**
+ * 【文件职责】命令执行封装：带工作目录/环境/超时/中止的命令运行，返回 stdout/stderr/退出码。
+ * 【产品维度】是 bash 工具与内部命令的统一执行入口。
+ * 【逻辑维度】execCommand 用子进程执行并收集输出。
+ * 【新手阅读建议】先看 ExecOptions/ExecResult，再读 execCommand。
+ */
 export interface ExecOptions {
 	/** AbortSignal to cancel the command */
 	signal?: AbortSignal;

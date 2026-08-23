@@ -13,6 +13,10 @@
  *   export default function (pi: ExtensionAPI) { ... }
  */
 
+/**
+ * 【文件职责】SDK 示例：扩展接入。
+ * 【新手阅读建议】看扩展加载。
+ */
 import {
 	createAgentSession,
 	DefaultResourceLoader,

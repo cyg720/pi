@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { GOOGLE_MODELS } from "./google.models.ts";
 
+/**
+ * 【文件职责】Google Gemini 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function googleProvider(): Provider<"google-generative-ai"> {
 	return createProvider({
 		id: "google",

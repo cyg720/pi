@@ -1,3 +1,12 @@
+/**
+ * 【文件职责】OpenRouter 图片生成 API：通过 OpenRouter 的 chat.completions 扩展
+ *              生成图片，并解析响应中的 images 字段。
+ * 【技术维度】openai SDK 非流式补全；响应体鸭子类型扩展（images 字段）。
+ * 【产品维度】让支持图片输出的 OpenRouter 模型（如 flux）经统一图片入口可用。
+ * 【逻辑维度】构造包含图片尺寸指令的请求 → 调用补全 → 解析 images 为 ImageContent。
+ * 【关键边界】仅支持由 images 字段携带结果的端点；错误经 provider 归一化呈现。
+ * 【新手阅读建议】半分钟读完：理解"补全请求 → images 字段解析"即可。
+ */
 import OpenAI from "openai";
 import type {
 	ChatCompletion,

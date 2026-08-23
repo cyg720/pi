@@ -6,6 +6,8 @@
  * handled by a one-shot loopback server on an ephemeral port.
  *
  * NOTE: This module uses Node.js http.createServer for the OAuth callback server.
+ *【中文说明】OpenRouter OAuth PKCE 流程：授权码换取永久 API 密钥（非过期令牌对），
+ * 回调由临时端口的单次回环服务器处理；仅 CLI 使用、不适合浏览器环境。
  * It is only intended for CLI use, not browser environments.
  */
 
@@ -15,11 +17,13 @@ import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
 import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
 import { generatePKCE } from "./pkce.ts";
 
+// 授权端点
 const AUTHORIZE_URL = "https://openrouter.ai/auth";
 const TOKEN_URL = "https://openrouter.ai/api/v1/auth/keys";
 const LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
 const TOKEN_EXCHANGE_TIMEOUT_MS = 30_000;
 
+// 回调主机（私有）：PI_OAUTH_CALLBACK_HOST 或 127.0.0.1
 function getCallbackHost(): string {
 	return getProviderEnvValue("PI_OAUTH_CALLBACK_HOST") || "127.0.0.1";
 }

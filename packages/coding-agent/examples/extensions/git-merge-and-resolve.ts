@@ -11,6 +11,10 @@
  * Start pi with this extension:
  *   pi -e ./examples/extensions/git-merge-and-resolve.ts
  */
+/**
+ * 【文件职责】扩展示例：Git 合并与冲突解决。
+ * 【新手阅读建议】看合并工作流。
+ */
 import { createReadStream } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";

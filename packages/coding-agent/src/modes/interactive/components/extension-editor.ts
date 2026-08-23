@@ -19,6 +19,10 @@ import { getEditorTheme, theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint } from "./keybinding-hints.ts";
 
+/**
+ * 【文件职责】UI 组件：扩展编辑器（扩展注册的编辑组件适配）。
+ * 【新手阅读建议】看适配层。
+ */
 export class ExtensionEditorComponent extends Container implements Focusable {
 	private editor: Editor;
 	private onSubmitCallback: (value: string) => void;

@@ -5,6 +5,10 @@
  * tool that queues a follow-up command to trigger reload.
  */
 
+/**
+ * 【文件职责】扩展示例：运行时重载。
+ * 【新手阅读建议】看重载 API。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 

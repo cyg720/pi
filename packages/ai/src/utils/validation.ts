@@ -3,19 +3,44 @@ import type { TLocalizedValidationError } from "typebox/error";
 import { Value } from "typebox/value";
 import type { Tool, ToolCall } from "../types.ts";
 
+/**
+ * 【文件职责】工具调用参数校验与宽松强制转换：用 TypeBox schema 校验 LLM 输出的工具参数，
+ *              并尽力把类型偏差（字符串数字、null、布尔等）强转为 schema 期望的类型。
+ * 【技术维度】TypeBox Compile/Value.Convert；手写 JSON Schema 递归强转（对象/数组/联合/allOf）；
+ *              校验器 WeakMap 缓存；错误路径格式化。
+ * 【产品维度】容忍模型输出的参数类型漂移（如把数字写成字符串），显著提高工具调用成功率，
+ *              同时给出可读的校验失败原因。
+ * 【逻辑维度】类型匹配与基础强转 → 对象/数组/联合递归强转 → 校验器缓存 → 对外两个入口
+ *              （validateToolCall / validateToolArguments）。
+ * 【关键边界】强转仅在 schema 非 TypeBox 原生类型（无 TypeBox.Kind 符号）时应用；
+ *              联合类型强转需候选 schema 校验通过才采用；失败抛带路径的错误。
+ * 【新手阅读建议】先读对外两个入口函数 → 再读 coerceWithJsonSchema 主流程 →
+ *              最后看各 coerce 辅助函数的类型映射规则。
+ */
+// 校验器缓存：schema 对象 → 编译后的校验器（弱引用避免泄漏）
 const validatorCache = new WeakMap<object, ReturnType<typeof Compile>>();
 const TYPEBOX_KIND = Symbol.for("TypeBox.Kind");
+// TypeBox 原生 schema 标记：用于判断是否跳过手写强转
 
+// JSON Schema 子集结构（私有）：仅含强转需要的字段
 interface JsonSchemaObject {
 	type?: string | string[];
+// 类型声明（可数组）
 	properties?: Record<string, JsonSchemaObject>;
+// 对象属性
 	items?: JsonSchemaObject | JsonSchemaObject[];
+// 数组项
 	additionalProperties?: boolean | JsonSchemaObject;
+// 额外属性约束
 	allOf?: JsonSchemaObject[];
+// 全满足子模式
 	anyOf?: JsonSchemaObject[];
+// 任一满足子模式
 	oneOf?: JsonSchemaObject[];
+// 恰一满足子模式
 }
 
+// 提取 schema 的类型列表（私有）：支持字符串或数组写法
 function getSchemaTypes(schema: JsonSchemaObject): string[] {
 	if (typeof schema.type === "string") {
 		return [schema.type];
@@ -26,6 +51,7 @@ function getSchemaTypes(schema: JsonSchemaObject): string[] {
 	return [];
 }
 
+// 判断值是否天然匹配某 JSON 类型（私有）
 function matchesJsonType(value: unknown, type: string): boolean {
 	switch (type) {
 		case "number":
@@ -47,6 +73,7 @@ function matchesJsonType(value: unknown, type: string): boolean {
 	}
 }
 
+// 为子 schema 取校验器（私有）：失败返回 undefined（用于联合强转的候选验证）
 function getSubSchemaValidator(schema: JsonSchemaObject): ReturnType<typeof Compile> | undefined {
 	try {
 		return getValidator(schema as Tool["parameters"]);
@@ -55,6 +82,8 @@ function getSubSchemaValidator(schema: JsonSchemaObject): ReturnType<typeof Comp
 	}
 }
 
+// 基础类型强转（私有）：number/integer/boolean/string/null 各按规则转换；
+// 无法转换则原样返回
 function coercePrimitiveByType(value: unknown, type: string): unknown {
 	switch (type) {
 		case "number": {
@@ -129,6 +158,8 @@ function coercePrimitiveByType(value: unknown, type: string): unknown {
 	}
 }
 
+// 对象属性强转（私有）：遍历 properties 强转对应键；additionalProperties 为对象时
+// 对未定义键也按该模式强转
 function applySchemaObjectCoercion(value: Record<string, unknown>, schema: JsonSchemaObject): void {
 	const properties = schema.properties;
 	const definedKeys = new Set<string>(properties ? Object.keys(properties) : []);
@@ -152,6 +183,7 @@ function applySchemaObjectCoercion(value: Record<string, unknown>, schema: JsonS
 	}
 }
 
+// 数组项强转（私有）：items 为数组按位对应，为对象则逐项套用
 function applySchemaArrayCoercion(value: unknown[], schema: JsonSchemaObject): void {
 	if (Array.isArray(schema.items)) {
 		for (let index = 0; index < value.length; index++) {
@@ -171,6 +203,7 @@ function applySchemaArrayCoercion(value: unknown[], schema: JsonSchemaObject): v
 	}
 }
 
+// 联合模式强转（私有）：逐个候选克隆+强转+校验，首个通过校验者采用；全失败原样返回
 function coerceWithUnionSchema(value: unknown, schemas: JsonSchemaObject[]): unknown {
 	for (const schema of schemas) {
 		const candidate = structuredClone(value);
@@ -183,6 +216,10 @@ function coerceWithUnionSchema(value: unknown, schemas: JsonSchemaObject[]): unk
 	return value;
 }
 
+/**
+ * JSON Schema 递归强转（私有核心）：先处理 allOf/anyOf/oneOf 组合，再做基础类型强转，
+ * 最后对 object/array 递归处理子结构。
+ */
 function coerceWithJsonSchema(value: unknown, schema: JsonSchemaObject): unknown {
 	let nextValue = value;
 
@@ -229,6 +266,7 @@ function coerceWithJsonSchema(value: unknown, schema: JsonSchemaObject): unknown
 	return nextValue;
 }
 
+// 取（缓存的）编译校验器（私有）
 function getValidator(schema: Tool["parameters"]): ReturnType<typeof Compile> {
 	const key = schema as object;
 	const cached = validatorCache.get(key);
@@ -240,6 +278,7 @@ function getValidator(schema: Tool["parameters"]): ReturnType<typeof Compile> {
 	return validator;
 }
 
+// 格式化校验错误路径（私有）：required 错误取缺失属性名；其余转点分路径；根返回 "root"
 function formatValidationPath(error: TLocalizedValidationError): string {
 	if (error.keyword === "required") {
 		const requiredProperties = (error.params as { requiredProperties?: string[] }).requiredProperties;
@@ -260,6 +299,7 @@ function formatValidationPath(error: TLocalizedValidationError): string {
  * @returns The validated arguments
  * @throws Error if tool is not found or validation fails
  */
+// 按名查工具并校验其参数（公开）：工具不存在抛错
 export function validateToolCall(tools: Tool[], toolCall: ToolCall): any {
 	const tool = tools.find((t) => t.name === toolCall.name);
 	if (!tool) {
@@ -274,6 +314,10 @@ export function validateToolCall(tools: Tool[], toolCall: ToolCall): any {
  * @param toolCall The tool call from the LLM
  * @returns The validated (and potentially coerced) arguments
  * @throws Error with formatted message if validation fails
+ */
+/**
+ * 校验工具参数（公开）：克隆参数 → TypeBox Convert → 非原生 schema 时手写强转 →
+ * 编译校验器检查 → 通过返回；失败抛出带路径列表与原始参数的详细错误。
  */
 export function validateToolArguments(tool: Tool, toolCall: ToolCall): any {
 	const args = structuredClone(toolCall.arguments);

@@ -1,6 +1,10 @@
 import { applyExifOrientation } from "./exif-orientation.ts";
 import { loadPhoton } from "./photon.ts";
 
+/**
+ * 【文件职责】图片缩放核心：纯算法缩放（canvas/像素操作，供 Worker 使用）。
+ * 【新手阅读建议】看缩放算法。
+ */
 export interface ImageResizeOptions {
 	maxWidth?: number; // Default: 2000
 	maxHeight?: number; // Default: 2000

@@ -1,6 +1,10 @@
 import { fuzzyMatch } from "@earendil-works/pi-tui";
 import type { SessionInfo } from "../../../core/session-manager.ts";
 
+/**
+ * 【文件职责】UI 组件：会话选择搜索框。
+ * 【新手阅读建议】半分钟读完。
+ */
 export type SortMode = "threaded" | "recent" | "relevance";
 
 export type NameFilter = "all" | "named";

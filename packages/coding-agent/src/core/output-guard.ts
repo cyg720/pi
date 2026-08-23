@@ -42,6 +42,11 @@ async function writeRawStdoutChunk(text: string): Promise<void> {
 	}
 }
 
+/**
+ * 【文件职责】输出保护：限制/截断模型输出与工具输出，防止终端被异常内容破坏。
+ * 【产品维度】保证 UI 稳定（防控制序列注入/超长输出）。
+ * 【新手阅读建议】看清洗/截断函数。
+ */
 export function takeOverStdout(): void {
 	if (stdoutTakeoverState) {
 		return;

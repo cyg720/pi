@@ -7,6 +7,10 @@
  *   pi -e ./bash-spawn-hook.ts
  */
 
+/**
+ * 【文件职责】扩展示例：bash 生成钩子。
+ * 【新手阅读建议】看命令拦截。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { createBashTool } from "@earendil-works/pi-coding-agent";
 

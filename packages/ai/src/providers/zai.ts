@@ -3,6 +3,10 @@ import { envApiKeyAuth } from "../auth/helpers.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { ZAI_MODELS } from "./zai.models.ts";
 
+/**
+ * 【文件职责】z.ai 供应商工厂。
+ * 【新手阅读建议】看供应商注册结构。
+ */
 export function zaiProvider(): Provider<"openai-completions"> {
 	return createProvider({
 		id: "zai",

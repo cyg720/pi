@@ -16,6 +16,11 @@ import { readFileSync } from "node:fs";
  * Restore environment variables from `/proc/self/environ` when running
  * inside a sandbox where Bun's `process.env` is empty.
  */
+/**
+ * 【文件职责】恢复沙箱环境：修复 Bun 二进制在 Linux 沙箱中 process.env 为空的问题
+ *              （读取 /proc/self/environ）。
+ * 【新手阅读建议】看读取与恢复。
+ */
 export function restoreSandboxEnv(): void {
 	if (!process.versions?.bun) return;
 

@@ -7,6 +7,10 @@ import { stripAnsi } from "../../utils/ansi.ts";
 import { resolvePath } from "../../utils/paths.ts";
 import { sanitizeBinaryOutput } from "../../utils/shell.ts";
 
+/**
+ * 【文件职责】工具渲染工具：把工具参数/结果格式化为展示文本。
+ * 【新手阅读建议】看格式化函数。
+ */
 export function shortenPath(path: unknown): string {
 	if (typeof path !== "string") return "";
 	const home = os.homedir();

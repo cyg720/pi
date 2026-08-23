@@ -1,3 +1,16 @@
+/**
+ * 【文件职责】OpenAI Completions（chat）API 实现：最广泛兼容的实现——覆盖 OpenAI、
+ *              DeepSeek、Groq、Mistral 兼容端点等；含思考格式探测、缓存键、
+ *              会话亲和头、语法受约束采样与 SDK 重试。
+ * 【技术维度】openai SDK chat.completions；基于 URL 的兼容自动探测；
+ *              thinking 多种格式映射；prompt_cache 键钳制；chat_template_kwargs。
+ * 【产品维度】是兼容面最广的 API：大多数 OpenAI 兼容服务均可使用。
+ * 【逻辑维度】兼容探测（URL/供应商）→ 消息/思考/工具转换 → 流请求 →
+ *              事件归约（文本/思考/工具调用增量）→ 用量与成本。
+ * 【关键边界】thinking 格式由供应商能力决定；max_output_tokens 字段自动选择；
+ *              重试经 provider-retry 包裹。
+ * 【新手阅读建议】先读 OpenAICompletionsCompat 各开关，再看 stream 主流程。
+ */
 import OpenAI from "openai";
 import type {
 	ChatCompletionAssistantMessageParam,

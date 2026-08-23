@@ -1,3 +1,7 @@
+/**
+ * 【文件职责】服务器类型：配置/请求/响应等类型契约。
+ * 【新手阅读建议】浏览类型即可。
+ */
 export type InstanceStatus = "starting" | "online" | "stopping" | "stopped" | "error";
 
 export interface MachineRecord {

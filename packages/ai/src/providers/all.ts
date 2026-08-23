@@ -43,6 +43,10 @@ import { xiaomiTokenPlanSgpProvider } from "./xiaomi-token-plan-sgp.ts";
 import { zaiProvider } from "./zai.ts";
 import { zaiCodingCnProvider } from "./zai-coding-cn.ts";
 
+/**
+ * 【文件职责】全部内置供应商装配：实例化并导出所有供应商工厂与内置模型目录访问器。
+ * 【新手阅读建议】索引/装配文件。
+ */
 export { radiusProvider };
 
 /** Providers present in the generated catalog. `KnownProvider` additionally

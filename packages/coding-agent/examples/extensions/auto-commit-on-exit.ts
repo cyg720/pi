@@ -5,6 +5,10 @@
  * Uses the last assistant message to generate a commit message.
  */
 
+/**
+ * 【文件职责】扩展示例：退出时自动提交（Git 检查点）。
+ * 【新手阅读建议】看会话生命周期钩子。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

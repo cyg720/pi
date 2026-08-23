@@ -21,6 +21,10 @@ import { fileURLToPath } from "url";
 const require = createRequire(import.meta.url);
 const fs = require("fs") as typeof import("fs");
 
+/**
+ * 【文件职责】Photon（Wasm 图片库）封装：可选的原生图片处理能力。
+ * 【新手阅读建议】看加载与降级。
+ */
 // Re-export types from the main package
 export type { PhotonImage as PhotonImageType } from "@silvia-odwyer/photon-node";
 

@@ -1,11 +1,15 @@
 /**
- * Entry bookmarking example.
- *
- * Shows setLabel to mark entries with labels for easy navigation in /tree.
- * Labels appear in the tree view and help you find important points.
- *
- * Usage: /bookmark [label] - bookmark the last assistant message
+ * 【文件职责】扩展示例：书签命令。
+ * 【新手阅读建议】看斜杠命令扩展。
  */
+// Entry bookmarking example.
+// 条目书签示例（中文说明）：用 setLabel 给条目打标签，便于在 /tree 中导航。
+//
+// Labels appear in the tree view and help you find important points.
+// 标签出现在树视图中，帮助定位重要节点。
+//
+// Usage: /bookmark [label] - bookmark the last assistant message
+// 用法：/bookmark [标签] —— 给最后一条助手消息打书签。
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 

@@ -12,6 +12,10 @@
  * Uses JSON mode to capture structured output from subagents.
  */
 
+/**
+ * 【文件职责】扩展示例：子代理入口。
+ * 【新手阅读建议】看子代理调度。
+ */
 import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";

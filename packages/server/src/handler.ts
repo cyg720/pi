@@ -47,6 +47,10 @@ function unknownInstanceError(instanceId: string): ErrorResponse {
 }
 
 // Overhead types
+/**
+ * 【文件职责】请求处理器：把 HTTP 请求分派到对应 RPC 方法。
+ * 【新手阅读建议】看路由与分派。
+ */
 export async function handleIpcRequest(request: SpawnRequest): Promise<SpawnResponse | ErrorResponse>;
 export async function handleIpcRequest(request: ListRequest): Promise<ListResponse | ErrorResponse>;
 export async function handleIpcRequest(request: StopRequest): Promise<StopResponse | ErrorResponse>;

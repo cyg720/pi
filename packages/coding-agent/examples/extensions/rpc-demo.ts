@@ -17,6 +17,10 @@
  * - setEditorText() - via /rpc-prefill command
  */
 
+/**
+ * 【文件职责】扩展示例：RPC 演示。
+ * 【新手阅读建议】看 RPC 调用。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {

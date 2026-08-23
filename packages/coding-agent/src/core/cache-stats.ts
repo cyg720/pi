@@ -5,6 +5,13 @@ import type { SessionEntry } from "./session-manager.ts";
  * Prompt-cache TTL: idle gaps longer than this are worth mentioning as the
  * likely cause of a miss. Anthropic's default cache TTL is 5 minutes.
  */
+/**
+ * 【文件职责】缓存统计：分析会话条目中的缓存未命中与浪费成本（按模型价格估算），
+ *              用于显示缓存效率与优化建议。
+ * 【产品维度】让用户了解提示缓存的收益与浪费，指导上下文使用。
+ * 【逻辑维度】detectCacheMiss 判定 → collectCacheMisses 收集 → computeCacheWaste 计费。
+ * 【新手阅读建议】先看 CacheMiss/CacheWasteTotals 结构，再读三个函数。
+ */
 export const CACHE_TTL_MS = 5 * 60 * 1000;
 
 /** Per-turn misses at or below this are cache breakpoint granularity noise. */

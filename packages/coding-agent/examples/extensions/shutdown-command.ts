@@ -5,6 +5,10 @@
  * Demonstrates how extensions can use ctx.shutdown() to exit pi cleanly.
  */
 
+/**
+ * 【文件职责】扩展示例：关机命令。
+ * 【新手阅读建议】看命令扩展。
+ */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 

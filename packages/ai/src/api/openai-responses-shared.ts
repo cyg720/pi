@@ -1,3 +1,16 @@
+/**
+ * 【文件职责】OpenAI Responses 共享层：消息/工具转换、思考与工具流事件归约、
+ *              文本签名（TextSignatureV1）处理、用量与成本结算，供 OpenAI 系
+ *              Responses 实现（openai/azure/codex）复用。
+ * 【技术维度】ResponseInput 转换；流事件（ResponseStreamEvent）归约；
+ *              reasoning item 与 tool_search 支持；短哈希做工具调用 ID。
+ * 【产品维度】保证 OpenAI 系实现行为一致，降低多实现维护成本。
+ * 【逻辑维度】convertResponsesMessages/convertResponsesTools → processResponsesStream
+ *              事件归约 → 最终消息与成本。
+ * 【关键边界】文本签名需按版本解析（legacy id 或 V1 JSON）；思考块回放需签名；
+ *              tool_search 生成客户端可执行搜索。
+ * 【新手阅读建议】先读 convert 函数了解转换，再精读 processResponsesStream 的状态机。
+ */
 import type OpenAI from "openai";
 import type {
 	Tool as OpenAITool,

@@ -26,6 +26,10 @@ function formatTokenCount(count: number): string {
 /**
  * List available models, optionally filtered by search pattern
  */
+/**
+ * 【文件职责】模型列表：--list-models 的输出（按供应商/可用性分组）。
+ * 【新手阅读建议】看输出格式化。
+ */
 export async function listModels(modelRuntime: ModelRuntime, searchPattern?: string): Promise<void> {
 	const loadError = modelRuntime.getError();
 	if (loadError) {
