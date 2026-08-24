@@ -1,3 +1,12 @@
+/**
+ * 文件职责：承载由 Emscripten 生成的 DOOM WebAssembly 启动胶水，连接 Node 环境、虚拟文件系统与 doom.wasm 导出。
+ * 技术维度：使用 CommonJS、WebAssembly、Emscripten 运行时、MEMFS、WASI 系统调用适配和类型化数组内存视图。
+ * 产品维度：为 DOOM overlay 示例提供可在代理扩展中启动游戏核心、传递按键并读取帧缓冲区的底层模块。
+ * 逻辑维度：检测运行环境，加载 wasm，初始化内存和文件系统，映射系统调用，最后导出 createDoomModule 工厂。
+ * 关键边界：这是编译生成且高度压缩的构建产物；内部短变量名由工具生成，手工修改会在重新构建时被覆盖。
+ * 新手阅读建议：不要逐个追踪压缩符号；先看文件末尾的 wasm 导出映射和 CommonJS 导出，再回到 createWasm 与 run。
+ */
+// 生成代码元素说明：本文件中的类、函数、变量和常量均由 Emscripten 按运行时模板批量生成，其用途由所在运行时模块（内存、FS、系统调用或导出映射）决定；二次扩展应修改 DOOM 源码或构建配置后重新生成，而非编辑这些压缩符号。
 var createDoomModule = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
   if (typeof __filename != 'undefined') _scriptName = _scriptName || __filename;
@@ -15,7 +24,9 @@ var Module=moduleArg;var readyPromiseResolve,readyPromiseReject;var readyPromise
 if (typeof exports === 'object' && typeof module === 'object') {
   module.exports = createDoomModule;
   // This default export looks redundant, but it allows TS to import this
+  // 中文说明：该默认导出看似重复，但能让 TypeScript 以默认导入方式使用这个 CommonJS 模块。
   // commonjs style module.
+  // 中文说明：这里保持 CommonJS 兼容形状，供示例扩展在 Node 环境加载。
   module.exports.default = createDoomModule;
 } else if (typeof define === 'function' && define['amd'])
   define([], () => createDoomModule);
