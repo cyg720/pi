@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证 AgentHarness 合并基础流选项、提供商请求钩子、保存点更新和载荷钩子的行为。
+ * 技术维度：使用 Vitest、pi-ai FauxProvider、内存 Session 和事件钩子执行完全离线的代理流测试。
+ * 产品维度：让测试和扩展可安全定制超时、Header、Metadata 和请求载荷，并支持工具轮次间更新配置。
+ * 逻辑维度：创建唯一伪提供商，捕获选项快照，再覆盖单钩子合并、多钩子删除、保存点和载荷链。
+ * 关键边界：每个伪提供商 ID 必须唯一以避免路由冲突；对象快照需复制嵌套 Header/Metadata 防止后续变异。
+ * 新手阅读建议：先看 newFaux/captureOptions，再比较 before_provider_request 两个用例中的合并和删除语义。
+ */
 import {
 	createModels,
 	type FauxProviderHandle,
@@ -14,19 +22,26 @@ import type { AgentHarnessOptions } from "../../src/harness/types.ts";
 import { calculateTool } from "../utils/calculate.ts";
 
 /** Shared collection; each faux provider gets a unique id so coexisting fakes route correctly. */
+/** 共享模型集合；每个伪提供商使用唯一 ID，确保多个假端点共存时仍能正确路由。 */
+// models 是所有 Harness 用例共享的模型注册表。
 const models = createModels();
+// fauxCount 为每次 newFaux 递增，保证提供商名称不重复。
 let fauxCount = 0;
 
+/** 创建并注册一个唯一伪提供商；无参数；返回可配置响应的 FauxProviderHandle。 */
 function newFaux(): FauxProviderHandle {
+	// faux 是带自增 provider ID 的新伪提供商句柄。
 	const faux = fauxProvider({ provider: `faux-${++fauxCount}` });
 	models.setProvider(faux.provider);
 	return faux;
 }
 
+/** 用给定选项创建 AgentHarness；参数 options 为完整 Harness 配置；返回实例。 */
 function createHarness(options: AgentHarnessOptions): AgentHarness {
 	return new AgentHarness(options);
 }
 
+/** 对流选项及其可变嵌套对象做浅快照；参数 options 可缺省；返回独立 StreamOptions。 */
 function captureOptions(options: StreamOptions | undefined): StreamOptions {
 	return {
 		...options,
@@ -35,9 +50,13 @@ function captureOptions(options: StreamOptions | undefined): StreamOptions {
 	};
 }
 
+// 验证 AgentHarness 在真正调用提供商前对流选项和载荷钩子的处理。
 describe("AgentHarness stream configuration", () => {
+	// before_provider_request 应看到基础快照，其补丁再与基础选项合并。
 	it("snapshots stream options before provider request hooks", async () => {
+		// capturedOptions 保存伪提供商最终收到的流选项。
 		let capturedOptions: StreamOptions | undefined;
+		// registration 是当前用例独占的伪提供商。
 		const registration = newFaux();
 		registration.setResponses([
 			(_context, options) => {
@@ -46,7 +65,9 @@ describe("AgentHarness stream configuration", () => {
 			},
 		]);
 
+		// session 带固定 ID 和创建时间，用于验证 sessionId 注入。
 		const session = new Session(new InMemorySessionStorage({ metadata: { id: "session-1", createdAt: "now" } }));
+		// harness 配置基础超时、重试、Header、Metadata 和缓存策略。
 		const harness = createHarness({
 			models,
 			session,
@@ -85,8 +106,11 @@ describe("AgentHarness stream configuration", () => {
 		expect(capturedOptions?.metadata).toEqual({ base: true, hook: true });
 	});
 
+	// 多个请求钩子应串联，每个钩子看到前一个结果，并支持 undefined 删除字段。
 	it("chains provider request patches and supports deletion semantics", async () => {
+		// capturedOptions 保存两次补丁应用后的最终结果。
 		let capturedOptions: StreamOptions | undefined;
+		// registration 是本用例的伪提供商。
 		const registration = newFaux();
 		registration.setResponses([
 			(_context, options) => {
@@ -95,6 +119,7 @@ describe("AgentHarness stream configuration", () => {
 			},
 		]);
 
+		// harness 提供可被两个钩子增删的基础选项。
 		const harness = createHarness({
 			models,
 			session: new Session(new InMemorySessionStorage()),
@@ -136,8 +161,11 @@ describe("AgentHarness stream configuration", () => {
 		expect(capturedOptions?.metadata).toBeUndefined();
 	});
 
+	// 工具执行期间 setStreamOptions 应只影响保存点后的下一轮请求，不回改当前请求。
 	it("uses updated stream options for save-point snapshots without mutating the active request", async () => {
+		// capturedOptions 按两轮提供商调用顺序保存独立快照。
 		const capturedOptions: StreamOptions[] = [];
+		// registration 会先返回工具调用，再返回最终文本。
 		const registration = newFaux();
 		registration.setResponses([
 			(_context, options) => {
@@ -152,6 +180,7 @@ describe("AgentHarness stream configuration", () => {
 			},
 		]);
 
+		// harness 启用 calculate 工具并设置首轮选项。
 		const harness = createHarness({
 			models,
 			session: new Session(new InMemorySessionStorage()),
@@ -175,9 +204,13 @@ describe("AgentHarness stream configuration", () => {
 		expect(capturedOptions[1].headers).toEqual({ turn: "second" });
 	});
 
+	// before_provider_payload 钩子应按注册顺序串联，每次看到前一次返回的 payload。
 	it("chains provider payload hooks", async () => {
+		// seenPayloads 记录两个钩子各自收到的载荷。
 		const seenPayloads: unknown[] = [];
+		// finalPayload 保存提供商 onPayload 链最终返回值。
 		let finalPayload: unknown;
+		// registration 在响应工厂中主动调用 onPayload。
 		const registration = newFaux();
 		registration.setResponses([
 			async (_context, options, _state, model) => {
@@ -186,6 +219,7 @@ describe("AgentHarness stream configuration", () => {
 			},
 		]);
 
+		// harness 使用最小会话和模型配置。
 		const harness = createHarness({
 			models,
 			session: new Session(new InMemorySessionStorage()),

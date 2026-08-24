@@ -1,25 +1,48 @@
+/**
+ * 文件职责：验证 Amazon Bedrock 客户端在区域、端点、配置档案和令牌组合下的配置解析结果。
+ * 技术维度：使用 Vitest 提升式 mock 替换 AWS SDK，并通过捕获构造参数观察适配器行为。
+ * 产品维度：保障用户在公有云、GovCloud、私有端点和多种 AWS 认证方式下都能连接正确区域。
+ * 逻辑维度：建立最小 AWS SDK 替身，隔离环境变量，触发一次流请求并逐场景断言客户端配置。
+ * 关键边界：不会真正访问 Bedrock；环境变量必须在每个用例后恢复；区域优先级由生产适配器决定。
+ * 新手阅读建议：先看 captureClientConfig 如何截获配置，再按“内置端点、ARN、自定义认证”顺序阅读用例。
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+/** 提升到 mock 工厂之前创建的共享记录器，保存每次客户端构造参数。 */
 const bedrockMock = vi.hoisted(() => ({
 	constructorCalls: [] as Array<Record<string, unknown>>,
 }));
 
 vi.mock("@aws-sdk/client-bedrock-runtime", () => {
+	/** 模拟 AWS SDK 暴露的服务异常类型，供被测模块正常导入。 */
 	class BedrockRuntimeServiceException extends Error {}
 
+	/** 模拟 Bedrock 客户端，只记录配置并让网络发送稳定失败。 */
 	class BedrockRuntimeClient {
+		/**
+		 * 保存被测代码传入的客户端配置。
+		 * @param config AWS Bedrock 客户端配置。
+		 */
 		constructor(config: Record<string, unknown>) {
 			bedrockMock.constructorCalls.push(config);
 		}
 
+		/**
+		 * 阻止真实网络访问，并让流结果快速结束。
+		 * @returns 永远拒绝的 Promise，错误会被被测流封装。
+		 * @example await client.send();
+		 */
 		send(): Promise<never> {
 			return Promise.reject(new Error("mock send"));
 		}
 	}
 
+	/** 模拟 AWS SDK 的流式会话命令，只保留输入供兼容导入。 */
 	class ConverseStreamCommand {
+		/** 构造命令时收到的原始输入。 */
 		readonly input: unknown;
 
+		/** @param input 待发送到 Bedrock 的命令输入。 */
 		constructor(input: unknown) {
 			this.input = input;
 		}
@@ -48,14 +71,19 @@ import type { BedrockOptions } from "../src/api/bedrock-converse-stream.ts";
 import { getModel, stream as streamBedrock } from "../src/compat.ts";
 import type { Context, Model } from "../src/types.ts";
 
+/** 所有场景复用的最小用户会话。 */
 const context: Context = {
 	messages: [{ role: "user", content: "hello", timestamp: Date.now() }],
 };
 
+/** 测试开始前进程中的 AWS_REGION，结束后必须原样恢复。 */
 const originalAwsRegion = process.env.AWS_REGION;
+/** 测试开始前进程中的 AWS_DEFAULT_REGION。 */
 const originalAwsDefaultRegion = process.env.AWS_DEFAULT_REGION;
+/** 测试开始前进程中的 AWS_PROFILE。 */
 const originalAwsProfile = process.env.AWS_PROFILE;
 
+/** 每个用例前清空构造记录和会影响区域选择的环境变量。 */
 beforeEach(() => {
 	bedrockMock.constructorCalls.length = 0;
 	delete process.env.AWS_REGION;
@@ -63,6 +91,7 @@ beforeEach(() => {
 	delete process.env.AWS_PROFILE;
 });
 
+/** 每个用例后恢复原始 AWS 环境，避免污染其他测试。 */
 afterEach(() => {
 	if (originalAwsRegion === undefined) {
 		delete process.env.AWS_REGION;
@@ -83,6 +112,13 @@ afterEach(() => {
 	}
 });
 
+/**
+ * 触发一次 Bedrock 流请求并返回被构造客户端收到的配置。
+ * @param model 要交给兼容层的 Bedrock 模型。
+ * @param options 可选认证、环境和端点相关选项。
+ * @returns 唯一次 BedrockRuntimeClient 构造调用的配置对象。
+ * @example const config = await captureClientConfig(model, { apiKey: "token" });
+ */
 async function captureClientConfig(
 	model: Model<"bedrock-converse-stream">,
 	options: BedrockOptions = {},
@@ -93,6 +129,7 @@ async function captureClientConfig(
 	return bedrockMock.constructorCalls[0];
 }
 
+/** 覆盖 Bedrock 区域、端点与认证配置的优先级规则。 */
 describe("bedrock endpoint resolution", () => {
 	it("assigns eu-central-1 runtime URLs to built-in EU inference profiles", () => {
 		const model = getModel("amazon-bedrock", "eu.anthropic.claude-sonnet-4-5-20250929-v1:0");
