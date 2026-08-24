@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证 AgentSessionRuntime 在新建、恢复、分叉、取消和会话失效前后的生命周期事件顺序。
+ * 技术维度：使用 Vitest、假模型提供商、运行时工厂、内联扩展监听器和临时文件会话。
+ * 产品维度：让扩展能在会话切换前取消操作、在关闭时清理资源，并在新会话中重新初始化状态。
+ * 逻辑维度：createRuntimeHost 装配真实运行时并收集清理函数，各用例记录事件后断言顺序、原因和取消。
+ * 关键边界：会话替换后旧扩展上下文必须失效；取消事件不能继续关闭/启动；每个运行时需释放。
+ * 新手阅读建议：先看 RecordedSessionEvent 和 createRuntimeHost，再读 new/resume 流程，最后看取消与 fork。
+ */
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -20,34 +28,49 @@ import type {
 	SessionStartEvent,
 } from "../src/index.ts";
 
+/** 本测试关心的四类会话生命周期事件联合。 */
 type RecordedSessionEvent =
 	| SessionBeforeSwitchEvent
 	| SessionBeforeForkEvent
 	| SessionShutdownEvent
 	| SessionStartEvent;
 
+/** 覆盖运行时新建、恢复、分叉和上下文失效的生命周期契约。 */
 describe("AgentSessionRuntime session lifecycle events", () => {
+	/** 当前 describe 注册的运行时清理函数。 */
 	const cleanups: Array<() => Promise<void> | void> = [];
 
+	/** 每个用例后执行全部清理。 */
 	afterEach(async () => {
 		while (cleanups.length > 0) {
 			await cleanups.pop()?.();
 		}
 	});
 
+	/**
+	 * 创建加载指定扩展的假模型会话运行时。
+	 * @param extensionFactory 注册生命周期监听器的扩展。
+	 * @returns 运行时宿主与假提供商。
+	 * @example await createRuntimeHost((pi) => {});
+	 */
 	async function createRuntimeHost(extensionFactory: ExtensionFactory) {
+		/** 当前运行时独立使用的临时目录。 */
 		const tempDir = join(tmpdir(), `pi-runtime-events-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		mkdirSync(tempDir, { recursive: true });
 
+		/** 提供三条固定回复的假模型提供商。 */
 		const faux = registerFauxProvider();
 		faux.setResponses([fauxAssistantMessage("one"), fauxAssistantMessage("two"), fauxAssistantMessage("three")]);
 
+		/** 假提供商认证存储。 */
 		const authStorage = AuthStorage.inMemory();
 		await authStorage.modify(faux.getModel().provider, async () => ({ type: "api_key", key: "faux-key" }));
+		/** 为运行时提供模型和提供商注册的模型运行时。 */
 		const modelRuntime = await ModelRuntime.create({
 			credentials: authStorage,
 			modelsPath: join(tempDir, "models.json"),
 		});
+		/** 假提供商默认模型。 */
 		const model = faux.getModel();
 		modelRuntime.registerProvider(model.provider, {
 			baseUrl: model.baseUrl,
@@ -67,6 +90,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 			],
 		});
 
+		/** 每次会话服务创建复用的模型与资源加载选项。 */
 		const runtimeOptions = {
 			agentDir: tempDir,
 			modelRuntime,
@@ -78,7 +102,9 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 				noThemes: true,
 			},
 		};
+		/** 新建或替换会话时创建服务和 AgentSession 的工厂。 */
 		const createRuntime: CreateAgentSessionRuntimeFactory = async ({ cwd, sessionManager, sessionStartEvent }) => {
+			/** 当前会话对应的服务集合。 */
 			const services = await createAgentSessionServices({
 				...runtimeOptions,
 				cwd,
@@ -94,6 +120,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 				diagnostics: services.diagnostics,
 			};
 		};
+		/** 已创建并完成首次扩展绑定的运行时宿主。 */
 		const runtimeHost = await createAgentSessionRuntime(createRuntime, {
 			cwd: tempDir,
 			agentDir: tempDir,
@@ -113,6 +140,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	}
 
 	it("emits session_before_switch and session_start for new and resume flows", async () => {
+		/** 记录新建与恢复流程事件的数组。 */
 		const events: RecordedSessionEvent[] = [];
 		const { runtimeHost } = await createRuntimeHost((pi) => {
 			pi.on("session_before_switch", (event) => {
@@ -130,12 +158,15 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		events.length = 0;
 
 		await runtimeHost.session.prompt("hello");
+		/** 初始会话文件路径。 */
 		const originalSessionFile = runtimeHost.session.sessionFile;
 		expect(originalSessionFile).toBeTruthy();
 
+		/** 新建会话操作结果。 */
 		const newSessionResult = await runtimeHost.newSession();
 		expect(newSessionResult.cancelled).toBe(false);
 		await runtimeHost.session.bindExtensions({});
+		/** 新建后的第二会话文件路径。 */
 		const secondSessionFile = runtimeHost.session.sessionFile;
 		expect(events).toEqual([
 			{ type: "session_before_switch", reason: "new", targetSessionFile: undefined },
@@ -146,6 +177,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		events.length = 0;
 		expect(secondSessionFile).toBeTruthy();
 
+		/** 恢复原会话的操作结果。 */
 		const switchResult = await runtimeHost.switchSession(originalSessionFile!);
 		expect(switchResult.cancelled).toBe(false);
 		await runtimeHost.session.bindExtensions({});
@@ -157,6 +189,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	});
 
 	it("honors session_before_switch cancellation", async () => {
+		/** 记录取消新建流程事件的数组。 */
 		const events: RecordedSessionEvent[] = [];
 		const { runtimeHost } = await createRuntimeHost((pi) => {
 			pi.on("session_before_switch", (event) => {
@@ -172,8 +205,10 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		events.length = 0;
 
 		await runtimeHost.session.prompt("hello");
+		/** 取消操作前的原会话文件。 */
 		const originalSessionFile = runtimeHost.session.sessionFile;
 
+		/** 被 session_before_switch 取消的新建结果。 */
 		const result = await runtimeHost.newSession();
 		expect(result.cancelled).toBe(true);
 		expect(runtimeHost.session.sessionFile).toBe(originalSessionFile);
@@ -181,12 +216,14 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	});
 
 	it("runs beforeSessionInvalidate after session_shutdown and before rebindSession", async () => {
+		/** 记录关闭、失效前回调和重新绑定顺序。 */
 		const phases: string[] = [];
 		const { runtimeHost } = await createRuntimeHost((pi) => {
 			pi.on("session_shutdown", () => {
 				phases.push("session_shutdown");
 			});
 		});
+		/** 替换前的旧会话，用于验证失效时机。 */
 		const oldSession = runtimeHost.session;
 		runtimeHost.setBeforeSessionInvalidate(() => {
 			phases.push("beforeSessionInvalidate");
@@ -207,7 +244,9 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 	});
 
 	it("emits session_before_fork and session_start and honors cancellation", async () => {
+		/** 记录 fork 成功与取消流程事件。 */
 		const events: RecordedSessionEvent[] = [];
+		/** 下一次 fork 是否应由扩展取消。 */
 		let cancelNextFork = false;
 		const { runtimeHost } = await createRuntimeHost((pi) => {
 			pi.on("session_before_fork", (event) => {
@@ -229,9 +268,12 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 		events.length = 0;
 
 		await runtimeHost.session.prompt("hello");
+		/** 可供分叉的首条用户消息及条目标识。 */
 		const userMessage = runtimeHost.session.getUserMessagesForForking()[0];
+		/** 成功分叉前的会话文件。 */
 		const previousSessionFile = runtimeHost.session.sessionFile;
 
+		/** 成功 fork 操作结果。 */
 		const successResult = await runtimeHost.fork(userMessage.entryId);
 		expect(successResult.cancelled).toBe(false);
 		expect(successResult.selectedText).toBe("hello");
@@ -244,12 +286,14 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 
 		events.length = 0;
 		cancelNextFork = true;
+		/** 被扩展取消的普通 fork 结果。 */
 		const cancelResult = await runtimeHost.fork(userMessage.entryId);
 		expect(cancelResult).toEqual({ cancelled: true });
 		expect(events).toEqual([{ type: "session_before_fork", entryId: userMessage.entryId, position: "before" }]);
 
 		events.length = 0;
 		cancelNextFork = true;
+		/** 被扩展提前取消、无需验证条目存在的 position=at 结果。 */
 		const cancelAtResult = await runtimeHost.fork("missing-entry", { position: "at" });
 		expect(cancelAtResult).toEqual({ cancelled: true });
 		expect(events).toEqual([{ type: "session_before_fork", entryId: "missing-entry", position: "at" }]);

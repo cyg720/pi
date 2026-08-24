@@ -1,8 +1,22 @@
+/**
+ * 文件职责：验证 ModelRuntime 接受统一凭据存储、投影认证方法、解析请求环境并正确合并/变换请求头。
+ * 技术维度：使用 Vitest、内存 AuthStorage/CredentialStore 和动态注册扩展提供商构造认证单元测试。
+ * 产品维度：让登录 UI 展示真实提供商认证方式，并保证扩展提供商能安全使用环境变量、OAuth 和自定义头。
+ * 逻辑维度：authOptions 投影方法，testModel 创建模型，再覆盖存储、可用性、方法状态和请求头处理。
+ * 关键边界：显式 Authorization 大小写不敏感地覆盖自动头；transformHeaders 只执行一次且不下传。
+ * 新手阅读建议：先看 authOptions 如何从提供商生成选项，再读凭据存储和扩展提供商，最后看头合并测试。
+ */
 import { type AuthType, type CredentialStore, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { describe, expect, it } from "vitest";
 import { AuthStorage } from "../src/core/auth-storage.ts";
 import { ModelRuntime } from "../src/core/model-runtime.ts";
 
+/**
+ * 将运行时提供商认证方法投影为 UI 可用选项。
+ * @param runtime 模型运行时。
+ * @param type 可选只保留 oauth 或 api_key。
+ * @returns 认证类型、提供商和方法数组。
+ */
 function authOptions(runtime: ModelRuntime, type?: AuthType) {
 	return runtime
 		.getProviders()
@@ -20,6 +34,11 @@ function authOptions(runtime: ModelRuntime, type?: AuthType) {
 		]);
 }
 
+/**
+ * 创建扩展提供商使用的最小模型元数据。
+ * @param id 模型标识和名称。
+ * @returns 无成本文本模型字段。
+ */
 function testModel(id: string) {
 	return {
 		id,
@@ -32,19 +51,26 @@ function testModel(id: string) {
 	};
 }
 
+/** 覆盖 ModelRuntime 的认证方法发现、凭据读取和请求选项组装。 */
 describe("ModelRuntime auth options", () => {
 	it("accepts a pi-ai CredentialStore", async () => {
+		/** 预置 anthropic API Key 的通用凭据存储。 */
 		const credentials = new InMemoryCredentialStore();
 		await credentials.modify("anthropic", async () => ({ type: "api_key", key: "stored-key" }));
+		/** 使用 pi-ai CredentialStore 创建的模型运行时。 */
 		const runtime = await ModelRuntime.create({ credentials, modelsPath: null });
 
 		expect((await runtime.getAuth("anthropic"))?.auth.apiKey).toBe("stored-key");
 	});
 
 	it("scopes provider availability reads and records refresh failures", async () => {
+		/** 实际保存凭据的底层内存存储。 */
 		const base = new InMemoryCredentialStore();
+		/** 凭据读取过的提供商标识。 */
 		const reads: string[] = [];
+		/** 是否让后续 read 调用失败。 */
 		let failReads = false;
+		/** 记录读取范围并可注入失败的凭据存储包装器。 */
 		const credentials: CredentialStore = {
 			read: async (providerId) => {
 				reads.push(providerId);
@@ -55,6 +81,7 @@ describe("ModelRuntime auth options", () => {
 			modify: (providerId, fn) => base.modify(providerId, fn),
 			delete: (providerId) => base.delete(providerId),
 		};
+		/** 使用记录型凭据存储的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials, modelsPath: null });
 
 		reads.length = 0;
@@ -71,7 +98,9 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("projects provider-owned methods, names, and status", async () => {
+		/** 使用内存认证的内置提供商运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
+		/** 所有提供商暴露的认证选项。 */
 		const options = authOptions(runtime);
 
 		expect(options).toEqual(
@@ -106,6 +135,7 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("attaches the provider's active auth status to every method option", async () => {
+		/** 预置 Anthropic OAuth 凭据的运行时。 */
 		const runtime = await ModelRuntime.create({
 			credentials: AuthStorage.inMemory({
 				anthropic: {
@@ -118,12 +148,14 @@ describe("ModelRuntime auth options", () => {
 			modelsPath: null,
 		});
 
+		/** Anthropic 所有认证方法选项。 */
 		const options = authOptions(runtime).filter((option) => option.provider.id === "anthropic");
 		expect(options).toHaveLength(2);
 		expect(await runtime.checkAuth("anthropic")).toMatchObject({ type: "oauth" });
 	});
 
 	it("constructs an API key method for an extension API-key provider", async () => {
+		/** 用于注册 API Key 扩展提供商的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
 		runtime.registerProvider("extension-api-key", {
 			name: "Extension API Key",
@@ -133,6 +165,7 @@ describe("ModelRuntime auth options", () => {
 			models: [testModel("extension-model")],
 		});
 
+		/** 新扩展提供商对应的认证选项。 */
 		const options = authOptions(runtime).filter((option) => option.provider.id === "extension-api-key");
 		expect(options).toHaveLength(1);
 		expect(options[0]).toMatchObject({
@@ -144,6 +177,7 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("resolves configured auth from request-scoped environment overrides", async () => {
+		/** 用于验证请求级环境覆盖的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
 		runtime.registerProvider("request-env-provider", {
 			baseUrl: "https://example.test/v1",
@@ -153,6 +187,7 @@ describe("ModelRuntime auth options", () => {
 			models: [testModel("request-env-model")],
 		});
 
+		/** 使用请求级环境解析出的认证结果。 */
 		const auth = await runtime.getAuth("request-env-provider", {
 			env: { REQUEST_SCOPED_API_KEY: "request-key", REQUEST_SCOPED_HEADER: "request-header" },
 		});
@@ -161,7 +196,9 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("lets an explicit Authorization header override authHeader case-insensitively", async () => {
+		/** 用于验证 Authorization 覆盖的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
+		/** 提供商流最终收到的头。 */
 		let capturedHeaders: Record<string, string | null> | undefined;
 		runtime.registerProvider("auth-header-provider", {
 			baseUrl: "https://example.test/v1",
@@ -174,6 +211,7 @@ describe("ModelRuntime auth options", () => {
 			},
 			models: [testModel("auth-header-model")],
 		});
+		/** 动态注册后取得的认证头测试模型。 */
 		const model = runtime.getModel("auth-header-provider", "auth-header-model");
 		expect(model).toBeDefined();
 
@@ -183,8 +221,11 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("transforms fully assembled headers once without forwarding the transform", async () => {
+		/** 用于验证完整头变换的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
+		/** 变换后提供商流收到的头。 */
 		let capturedHeaders: Record<string, string | null> | undefined;
+		/** transformHeaders 实际执行次数。 */
 		let transforms = 0;
 		runtime.registerProvider("header-provider", {
 			baseUrl: "https://example.test/v1",
@@ -199,6 +240,7 @@ describe("ModelRuntime auth options", () => {
 			},
 			models: [{ ...testModel("header-model"), headers: { "x-model": "model" } }],
 		});
+		/** 动态注册后取得的头变换测试模型。 */
 		const model = runtime.getModel("header-provider", "header-model");
 		expect(model).toBeDefined();
 
@@ -231,6 +273,7 @@ describe("ModelRuntime auth options", () => {
 	});
 
 	it("does not fabricate an API key method for an extension OAuth-only provider", async () => {
+		/** 用于注册 OAuth-only 扩展提供商的运行时。 */
 		const runtime = await ModelRuntime.create({ credentials: AuthStorage.inMemory(), modelsPath: null });
 		runtime.registerProvider("extension-oauth", {
 			name: "Extension OAuth",
@@ -245,6 +288,7 @@ describe("ModelRuntime auth options", () => {
 			models: [testModel("extension-model")],
 		});
 
+		/** OAuth-only 提供商对应的认证选项。 */
 		const options = authOptions(runtime).filter((option) => option.provider.id === "extension-oauth");
 		expect(options).toHaveLength(1);
 		expect(options[0]).toMatchObject({

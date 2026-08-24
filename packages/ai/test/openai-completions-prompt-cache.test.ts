@@ -1,8 +1,17 @@
+/**
+ * 文件职责：验证 OpenAI Completions 的提示缓存键、长期保留、会话亲和头和显式头覆盖规则。
+ * 技术维度：使用 Vitest 提升式 OpenAI SDK mock，捕获客户端配置与 chat.completions 请求载荷。
+ * 产品维度：提高同一会话的缓存命中与路由稳定性，同时适配 OpenAI、OpenRouter 和自定义代理格式。
+ * 逻辑维度：创建模型和请求捕获助手，再覆盖缓存开关、环境变量、64 字符限制及三种亲和格式。
+ * 关键边界：cacheRetention=none 禁用全部缓存/亲和数据；非 OpenAI 端点需显式兼容；显式头优先。
+ * 新手阅读建议：先看 captureRequest 捕获 payload/headers，再按缓存字段、通用亲和、OpenRouter 格式阅读。
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
 import { getModel } from "../src/compat.ts";
 import type { Model } from "../src/types.ts";
 
+/** FakeOpenAI 构造函数中本测试关心的配置。 */
 interface FakeOpenAIClientOptions {
 	apiKey: string;
 	baseURL: string;
@@ -10,23 +19,28 @@ interface FakeOpenAIClientOptions {
 	defaultHeaders?: Record<string, string>;
 }
 
+/** Completions 请求中本测试关心的缓存和会话字段。 */
 interface CapturedCompletionsPayload {
 	prompt_cache_key?: string;
 	prompt_cache_retention?: "24h" | "in-memory" | null;
 	session_id?: string;
 }
 
+/** 保存最后一次请求载荷和客户端选项的提升式 mock 状态。 */
 const mockState = vi.hoisted(() => ({
 	lastParams: undefined as CapturedCompletionsPayload | undefined,
 	lastClientOptions: undefined as FakeOpenAIClientOptions | undefined,
 }));
 
 vi.mock("openai", () => {
+	/** 捕获客户端选项并返回单块成功流的假 OpenAI 客户端。 */
 	class FakeOpenAI {
+		/** 最小 chat.completions API。 */
 		chat = {
 			completions: {
 				create: (params: CapturedCompletionsPayload) => {
 					mockState.lastParams = params;
+					/** 产出一次 stop 块与固定用量的异步流。 */
 					const stream = {
 						async *[Symbol.asyncIterator]() {
 							yield {
@@ -40,6 +54,7 @@ vi.mock("openai", () => {
 							};
 						},
 					};
+					/** 兼容 SDK withResponse 链的 Promise。 */
 					const promise = Promise.resolve(stream) as Promise<typeof stream> & {
 						withResponse: () => Promise<{
 							data: typeof stream;
@@ -55,6 +70,7 @@ vi.mock("openai", () => {
 			},
 		};
 
+		/** @param options 被测适配器传入的客户端配置。 */
 		constructor(options: FakeOpenAIClientOptions) {
 			mockState.lastClientOptions = options;
 		}
@@ -63,15 +79,19 @@ vi.mock("openai", () => {
 	return { default: FakeOpenAI };
 });
 
+/** 覆盖 Completions 缓存和会话亲和字段的生成与优先级。 */
 describe("openai-completions prompt caching", () => {
+	/** 测试前已有的 PI_CACHE_RETENTION 环境值。 */
 	const originalEnv = process.env.PI_CACHE_RETENTION;
 
+	/** 每个用例前清空捕获状态和缓存环境覆盖。 */
 	beforeEach(() => {
 		mockState.lastParams = undefined;
 		mockState.lastClientOptions = undefined;
 		delete process.env.PI_CACHE_RETENTION;
 	});
 
+	/** 每个用例后恢复原始缓存环境值。 */
 	afterEach(() => {
 		if (originalEnv === undefined) {
 			delete process.env.PI_CACHE_RETENTION;
@@ -80,7 +100,13 @@ describe("openai-completions prompt caching", () => {
 		}
 	});
 
+	/**
+	 * 从内置 OpenAI 模型创建可覆盖字段的 Completions 模型。
+	 * @param overrides 模型端点、提供商或 compat 覆盖。
+	 * @returns API 强制为 openai-completions 的测试模型。
+	 */
 	function createModel(overrides: Partial<Model<"openai-completions">> = {}): Model<"openai-completions"> {
+		/** 去除原 compat 后保留的内置模型字段。 */
 		const { compat: _compat, ...baseModel } = getModel("openai", "gpt-4o-mini");
 		return {
 			...(baseModel as Omit<Model<"openai-completions">, "api">),
@@ -89,6 +115,12 @@ describe("openai-completions prompt caching", () => {
 		};
 	}
 
+	/**
+	 * 发起一次请求并返回捕获的载荷与默认头。
+	 * @param options 缓存保留、会话 ID 和显式请求头。
+	 * @param model 被测模型。
+	 * @returns 捕获的 payload 和 headers。
+	 */
 	async function captureRequest(
 		options?: {
 			cacheRetention?: "none" | "short" | "long";
@@ -127,6 +159,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("clamps prompt_cache_key to OpenAI's 64-character limit", async () => {
+		/** 超过 OpenAI 限制三字符的会话 ID。 */
 		const sessionId = "x".repeat(67);
 		const { payload } = await captureRequest({ sessionId });
 
@@ -141,6 +174,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("omits prompt cache fields for non-OpenAI base URLs without compatible long retention", async () => {
+		/** 不支持长期缓存的自定义代理模型。 */
 		const model = createModel({
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { supportsLongCacheRetention: false },
@@ -160,6 +194,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("sends known session-affinity headers when compat.sendSessionAffinityHeaders is enabled", async () => {
+		/** 开启通用会话亲和头的自定义代理模型。 */
 		const model = createModel({
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
@@ -172,6 +207,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("uses OpenAI no-session format when configured", async () => {
+		/** 使用 OpenAI no-session 亲和格式的模型。 */
 		const model = createModel({
 			compat: { sendSessionAffinityHeaders: true, sessionAffinityFormat: "openai-nosession" },
 		});
@@ -186,6 +222,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("uses OpenRouter session-affinity header when configured", async () => {
+		/** 使用 OpenRouter 单一 x-session-id 格式的代理模型。 */
 		const model = createModel({
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true, sessionAffinityFormat: "openrouter" },
@@ -201,6 +238,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("auto-detects OpenRouter session-affinity header for OpenRouter endpoints", async () => {
+		/** 可从 provider/baseUrl 自动判断 OpenRouter 格式的模型。 */
 		const model = createModel({
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
@@ -217,6 +255,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("omits OpenRouter session-affinity data when disabled", async () => {
+		/** 未开启亲和兼容开关的 OpenRouter 模型。 */
 		const model = createModel({
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
@@ -229,6 +268,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("omits session-affinity headers when cacheRetention is none", async () => {
+		/** 开启亲和头但请求禁用缓存的代理模型。 */
 		const model = createModel({
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
@@ -241,6 +281,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("lets explicit headers override generated session-affinity headers", async () => {
+		/** 用于验证显式头最高优先级的代理模型。 */
 		const model = createModel({
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
