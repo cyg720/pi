@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 # Build DOOM for pi-doom using doomgeneric and Emscripten
+# 使用 doomgeneric 和 Emscripten 为 pi-doom 构建 DOOM。
+# 文件职责：获取 doomgeneric 源码并把定制平台层编译成 Node 可加载的 WebAssembly 模块。
+# 技术维度：使用 Bash、Git、Emscripten emcc 和大量 C 源文件完成 WASM 构建。
+# 产品维度：为终端 DOOM 覆盖层生成运行时脚本和 wasm 资源。
+# 逻辑维度：校验 emcc，按需克隆源码，复制平台文件，读取分辨率并执行编译。
+# 关键边界：需要网络、Git 和 Emscripten；会在项目目录克隆源码并覆盖构建产物。
+# 新手阅读建议：先确认依赖检查和目录变量，再看分辨率参数及 emcc 导出项。
 
 set -e
 
+ # SCRIPT_DIR 是当前构建脚本所在目录。
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# PROJECT_ROOT 是 doom-overlay 扩展根目录。
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# DOOM_DIR 是 DOOM 平台源码目录。
 DOOM_DIR="$PROJECT_ROOT/doom"
+# BUILD_DIR 是最终 JavaScript 和 WASM 输出目录。
 BUILD_DIR="$PROJECT_ROOT/doom/build"
 
 echo "=== pi-doom Build Script ==="
 
 # Check for emcc
+# 检查 Emscripten 编译器是否可用。
 if ! command -v emcc &> /dev/null; then
     echo "Error: Emscripten (emcc) not found!"
     echo ""
@@ -25,6 +37,7 @@ if ! command -v emcc &> /dev/null; then
 fi
 
 # Clone doomgeneric if not present
+# 缺少 doomgeneric 源码时从 GitHub 克隆。
 if [ ! -d "$DOOM_DIR/doomgeneric" ]; then
     echo "Cloning doomgeneric..."
     cd "$DOOM_DIR"
@@ -32,21 +45,26 @@ if [ ! -d "$DOOM_DIR/doomgeneric" ]; then
 fi
 
 # Create build directory
+# 创建构建输出目录。
 mkdir -p "$BUILD_DIR"
 
 # Copy our platform file
+# 把项目定制平台适配 C 文件复制到上游源码目录。
 cp "$DOOM_DIR/doomgeneric_pi.c" "$DOOM_DIR/doomgeneric/doomgeneric/"
 
 echo "Compiling DOOM to WebAssembly..."
 cd "$DOOM_DIR/doomgeneric/doomgeneric"
 
 # Resolution - 640x400 is doomgeneric default, good balance of speed/quality
+# 分辨率默认 640×400，在速度与画质之间平衡。
+# RESX 和 RESY 可由环境变量覆盖，分别表示横向和纵向像素。
 RESX=${DOOM_RESX:-640}
 RESY=${DOOM_RESY:-400}
 
 echo "Resolution: ${RESX}x${RESY}"
 
 # Compile with Emscripten (no sound)
+# 使用 Emscripten 编译无声音版本，并导出覆盖层所需函数和运行时方法。
 emcc -O2 \
     -s WASM=1 \
     -s EXPORTED_FUNCTIONS="['_doomgeneric_Create','_doomgeneric_Tick','_DG_GetFrameBuffer','_DG_GetScreenWidth','_DG_GetScreenHeight','_DG_PushKeyEvent','_malloc','_free']" \
