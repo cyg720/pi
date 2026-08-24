@@ -22,6 +22,15 @@
  * Fixtures are generated fresh on each run.
  */
 
+/**
+ * 文件职责：验证不同模型提供商生成的消息上下文能否被其他提供商继续消费，定位跨提供商格式兼容问题。
+ * 技术维度：使用 Vitest、真实模型 API、TypeBox 工具定义和统一消息类型构造端到端交接测试。
+ * 产品维度：保障用户切换模型或提供商后仍能延续包含思考、工具调用和工具结果的既有对话。
+ * 逻辑维度：准备提供商清单并生成真实上下文，再将其他来源的消息合并后逐个交给目标模型验证。
+ * 关键边界：用例依赖真实凭据、网络和付费额度；可用提供商不足两个时无法形成有效交接矩阵。
+ * 新手阅读建议：先看 ProviderModelPair 与 generateContext，再跟随 beforeAll 的夹具生成和最终交接循环。
+ */
+
 import { writeFileSync } from "fs";
 import { Type } from "typebox";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -32,10 +41,13 @@ import { hasCloudflareAiGatewayCredentials, hasCloudflareWorkersAICredentials } 
 import { resolveApiKey } from "./oauth.ts";
 
 // Simple tool for testing
+// 中文说明：定义一个最小化的数字翻倍工具，用真实工具调用结构测试兼容性。
+/** 变量 testToolSchema：数字翻倍测试工具的参数结构，只接受 number 类型的 value；仅在当前流程内有效。 */
 const testToolSchema = Type.Object({
 	value: Type.Number({ description: "A number to double" }),
 });
 
+/** 变量 testTool：发送给模型的最小工具定义；仅在当前流程内有效。 */
 const testTool: Tool<typeof testToolSchema> = {
 	name: "double_number",
 	description: "Doubles a number and returns the result",
@@ -43,20 +55,30 @@ const testTool: Tool<typeof testToolSchema> = {
 };
 
 // Provider/model pairs to test
+// 中文说明：列出参与上下文生成和接收验证的提供商与模型组合。
 interface ProviderModelPair {
+	/** 提供商注册标识，例如 openai 或 anthropic。 */
 	provider: string;
+	/** 模型标识，用于从注册表查找具体模型。 */
 	model: string;
+	/** 便于日志、缓存和失败文件定位的唯一可读标签。 */
 	label: string;
+	/** 可选 API 协议覆盖，用于同一提供商的不同接口。 */
 	apiOverride?: Api;
+	/** 网关转发时可选的上游密钥环境变量名。 */
 	upstreamApiKeyEnv?: string;
 }
 
+/** 变量 PROVIDER_MODEL_PAIRS：参与测试的提供商与模型配置清单；仅在当前流程内有效。 */
 const PROVIDER_MODEL_PAIRS: ProviderModelPair[] = [
 	// Anthropic
+	// 中文说明：Anthropic 模型组合。
 	{ provider: "anthropic", model: "claude-sonnet-4-5", label: "anthropic-claude-sonnet-4-5" },
 	// Google
+	// 中文说明：Google 模型组合。
 	{ provider: "google", model: "gemini-3-flash-preview", label: "google-gemini-3-flash-preview" },
 	// OpenAI
+	// 中文说明：OpenAI 模型组合。
 	{
 		provider: "openai",
 		model: "gpt-4o-mini",
@@ -66,25 +88,32 @@ const PROVIDER_MODEL_PAIRS: ProviderModelPair[] = [
 	{ provider: "openai", model: "gpt-5-mini", label: "openai-responses-gpt-5-mini" },
 	{ provider: "azure-openai-responses", model: "gpt-4o-mini", label: "azure-openai-responses-gpt-4o-mini" },
 	// OpenAI Codex
+	// 中文说明：OpenAI Codex 模型组合。
 	{ provider: "openai-codex", model: "gpt-5.5", label: "openai-codex-gpt-5.5" },
 	// GitHub Copilot
+	// 中文说明：GitHub Copilot 代理的模型组合。
 	{ provider: "github-copilot", model: "claude-sonnet-4.5", label: "copilot-claude-sonnet-4.5" },
 	{ provider: "github-copilot", model: "gpt-5.1-codex", label: "copilot-gpt-5.1-codex" },
 	{ provider: "github-copilot", model: "gemini-3-flash-preview", label: "copilot-gemini-3-flash-preview" },
 	{ provider: "github-copilot", model: "grok-code-fast-1", label: "copilot-grok-code-fast-1" },
 	// Amazon Bedrock
+	// 中文说明：Amazon Bedrock 托管模型组合。
 	{
 		provider: "amazon-bedrock",
 		model: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
 		label: "bedrock-claude-sonnet-4-5",
 	},
 	// xAI
+	// 中文说明：xAI 模型组合。
 	{ provider: "xai", model: "grok-4.3", label: "xai-grok-4.3" },
 	// Cerebras
+	// 中文说明：Cerebras 模型组合。
 	{ provider: "cerebras", model: "zai-glm-4.7", label: "cerebras-zai-glm-4.7" },
 	// Cloudflare Workers AI
+	// 中文说明：Cloudflare Workers AI 模型组合。
 	{ provider: "cloudflare-workers-ai", model: "@cf/moonshotai/kimi-k2.6", label: "cloudflare-kimi-k2.6" },
 	// Cloudflare AI Gateway
+	// 中文说明：Cloudflare AI Gateway 转发的模型组合。
 	{
 		provider: "cloudflare-ai-gateway",
 		model: "workers-ai/@cf/moonshotai/kimi-k2.6",
@@ -103,19 +132,26 @@ const PROVIDER_MODEL_PAIRS: ProviderModelPair[] = [
 		upstreamApiKeyEnv: "OPENAI_API_KEY",
 	},
 	// Groq
+	// 中文说明：Groq 模型组合。
 	{ provider: "groq", model: "openai/gpt-oss-120b", label: "groq-gpt-oss-120b" },
 	// Hugging Face
+	// 中文说明：Hugging Face 推理模型组合。
 	{ provider: "huggingface", model: "moonshotai/Kimi-K2.5", label: "huggingface-kimi-k2.5" },
 	// Together AI
+	// 中文说明：Together AI 模型组合。
 	{ provider: "together", model: "moonshotai/Kimi-K2.6", label: "together-kimi-k2.6" },
 	// Kimi For Coding
+	// 中文说明：Kimi Coding 模型组合。
 	{ provider: "kimi-coding", model: "kimi-for-coding", label: "kimi-for-coding" },
 	// Mistral
+	// 中文说明：Mistral 模型组合。
 	{ provider: "mistral", model: "devstral-medium-latest", label: "mistral-devstral-medium" },
 	// MiniMax
+	// 中文说明：MiniMax 国际与中国区域组合。
 	{ provider: "minimax", model: "MiniMax-M2.7", label: "minimax-m2.7" },
 	{ provider: "minimax-cn", model: "MiniMax-M2.7", label: "minimax-m2.7" },
 	// OpenCode Zen
+	// 中文说明：OpenCode Zen 模型组合。
 	{ provider: "opencode", model: "big-pickle", label: "zen-big-pickle" },
 	{ provider: "opencode", model: "claude-sonnet-4-5", label: "zen-claude-sonnet-4-5" },
 	{ provider: "opencode", model: "gemini-3-flash", label: "zen-gemini-3-flash" },
@@ -123,32 +159,44 @@ const PROVIDER_MODEL_PAIRS: ProviderModelPair[] = [
 	{ provider: "opencode", model: "gpt-5.2-codex", label: "zen-gpt-5.2-codex" },
 	{ provider: "opencode", model: "minimax-m2.1-free", label: "zen-minimax-m2.1-free" },
 	// OpenCode Go
+	// 中文说明：OpenCode Go 模型组合。
 	{ provider: "opencode-go", model: "kimi-k2.5", label: "go-kimi-k2.5" },
 	{ provider: "opencode-go", model: "minimax-m2.5", label: "go-minimax-m2.5" },
 	// Xiaomi MiMo
+	// 中文说明：小米 MiMo 及不同区域套餐组合。
 	{ provider: "xiaomi", model: "mimo-v2.5-pro", label: "xiaomi-mimo-v2.5-pro" },
 	{ provider: "xiaomi-token-plan-cn", model: "mimo-v2.5-pro", label: "xiaomi-token-plan-cn-mimo-v2.5-pro" },
 	{ provider: "xiaomi-token-plan-ams", model: "mimo-v2.5-pro", label: "xiaomi-token-plan-ams-mimo-v2.5-pro" },
 	{ provider: "xiaomi-token-plan-sgp", model: "mimo-v2.5-pro", label: "xiaomi-token-plan-sgp-mimo-v2.5-pro" },
 	// Qwen Token Plan
+	// 中文说明：通义千问不同区域套餐组合。
 	{ provider: "qwen-token-plan", model: "qwen3.7-max", label: "qwen-token-plan-qwen3.7-max" },
 	{ provider: "qwen-token-plan-cn", model: "qwen3.7-max", label: "qwen-token-plan-cn-qwen3.7-max" },
 ];
 
 // Cached context structure
+// 中文说明：定义每个已生成跨提供商上下文在内存中的缓存结构。
 interface CachedContext {
+	/** 便于日志、缓存和失败文件定位的唯一可读标签。 */
 	label: string;
+	/** 提供商注册标识，例如 openai 或 anthropic。 */
 	provider: string;
+	/** 模型标识，用于从注册表查找具体模型。 */
 	model: string;
+	/** 生成该上下文时实际使用的 API 协议。 */
 	api: Api;
+	/** 真实生成的用户、助手、工具结果与最终回复序列。 */
 	messages: Message[];
+	/** 夹具生成时刻的 ISO 字符串。 */
 	generatedAt: string;
 }
 
 /**
  * Get API key for provider - checks OAuth storage first, then env vars
  */
+/** 中文说明：获取指定提供商的认证密钥。参数 provider 为提供商标识；返回 OAuth 或环境变量中的密钥，缺失时返回 undefined。例如：await getApiKey("openai")。 */
 async function getApiKey(provider: string): Promise<string | undefined> {
+	/** 变量 oauthKey：优先从 OAuth 存储解析出的凭据；仅在当前流程内有效。 */
 	const oauthKey = await resolveApiKey(provider);
 	if (oauthKey) return oauthKey;
 	return getEnvApiKey(provider);
@@ -157,6 +205,7 @@ async function getApiKey(provider: string): Promise<string | undefined> {
 /**
  * Synchronous check for API key availability (env vars only, for skipIf)
  */
+/** 中文说明：同步判断某个提供商/模型组合是否具备所需环境凭据。参数 pair 为组合配置；返回是否可运行该组合。例如：hasApiKey(pair)。 */
 function hasApiKey(pair: ProviderModelPair): boolean {
 	if (pair.provider === "azure-openai-responses") {
 		return hasAzureOpenAICredentials();
@@ -171,8 +220,10 @@ function hasApiKey(pair: ProviderModelPair): boolean {
 	return !!getEnvApiKey(pair.provider);
 }
 
+/** 中文说明：构造需要上游密钥的额外请求头。参数 pair 为组合配置；返回 Authorization 头或 undefined。例如：getHeaders(pair)。 */
 function getHeaders(pair: ProviderModelPair): Record<string, string> | undefined {
 	if (!pair.upstreamApiKeyEnv) return undefined;
+	/** 变量 upstreamApiKey：从指定环境变量读取的上游服务密钥；仅在当前流程内有效。 */
 	const upstreamApiKey = process.env[pair.upstreamApiKeyEnv];
 	return upstreamApiKey ? { Authorization: `Bearer ${upstreamApiKey}` } : undefined;
 }
@@ -180,12 +231,16 @@ function getHeaders(pair: ProviderModelPair): Record<string, string> | undefined
 /**
  * Check if any provider has API keys available (for skipIf at describe level)
  */
+/** 中文说明：判断清单中是否至少有一个可用提供商。无参数；返回布尔值。例如：hasAnyApiKey()。 */
 function hasAnyApiKey(): boolean {
 	return PROVIDER_MODEL_PAIRS.some((pair) => hasApiKey(pair));
 }
 
+/** 中文说明：把失败请求的上下文写入临时 JSON，便于诊断。参数 params 包含标签、错误、载荷和消息；无返回值。例如：dumpFailurePayload(params)。 */
 function dumpFailurePayload(params: { label: string; error: string; payload?: unknown; messages: Message[] }): void {
+	/** 变量 filename：失败诊断文件的唯一临时路径；仅在当前流程内有效。 */
 	const filename = `/tmp/pi-handoff-${params.label}-${Date.now()}.json`;
+	/** 变量 body：写入诊断文件的结构化内容；仅在当前流程内有效。 */
 	const body = {
 		label: params.label,
 		error: params.error,
@@ -200,27 +255,35 @@ function dumpFailurePayload(params: { label: string; error: string; payload?: un
  * Generate a context from a provider/model pair.
  * Makes a real API call to get authentic tool call IDs and thinking blocks.
  */
+/** 中文说明：为一个提供商生成包含工具调用和工具结果的真实上下文。参数 pair 为模型组合、apiKey 为凭据；返回消息与 API 类型，失败时返回 null。例如：await generateContext(pair, apiKey)。 */
 async function generateContext(
 	pair: ProviderModelPair,
 	apiKey: string,
 ): Promise<{ messages: Message[]; api: Api } | null> {
+	/** 变量 baseModel：注册表中查到的基础模型配置；仅在当前流程内有效。 */
 	const baseModel = (getModel as (p: string, m: string) => Model<Api> | undefined)(pair.provider, pair.model);
 	if (!baseModel) {
 		console.log(`  Model not found: ${pair.provider}/${pair.model}`);
 		return null;
 	}
 
+	/** 变量 model：应用 API 覆盖后的实际请求模型；仅在当前流程内有效。 */
 	const model: Model<Api> = pair.apiOverride ? { ...baseModel, api: pair.apiOverride } : baseModel;
 
+	/** 变量 userMessage：触发数字翻倍工具调用的用户消息；仅在当前流程内有效。 */
 	const userMessage: Message = {
 		role: "user",
 		content: "Please double the number 21 using the double_number tool.",
 		timestamp: Date.now(),
 	};
 
+	/** 变量 supportsReasoning：当前模型是否支持推理等级选项；仅在当前流程内有效。 */
 	const supportsReasoning = model.reasoning === true;
+	/** 变量 headers：当前组合需要附加的请求头；仅在当前流程内有效。 */
 	const headers = getHeaders(pair);
+	/** 变量 lastPayload：最近一次发给提供商的原始请求载荷，供失败诊断；仅在当前流程内有效。 */
 	let lastPayload: unknown;
+	/** 变量 assistantResponse：模型首次返回的工具调用响应；仅在当前流程内有效。 */
 	let assistantResponse: AssistantMessage;
 	try {
 		assistantResponse = await completeSimple(
@@ -240,6 +303,7 @@ async function generateContext(
 			},
 		);
 	} catch (error) {
+		/** 变量 msg：标准化后的异常文本；仅在当前流程内有效。 */
 		const msg = error instanceof Error ? error.message : String(error);
 		console.log(`  Initial request failed: ${msg}`);
 		dumpFailurePayload({
@@ -262,6 +326,7 @@ async function generateContext(
 		return null;
 	}
 
+	/** 变量 toolCall：首次响应中找到的工具调用内容块；仅在当前流程内有效。 */
 	const toolCall = assistantResponse.content.find((c) => c.type === "toolCall");
 	if (!toolCall || toolCall.type !== "toolCall") {
 		console.log(`  No tool call in response (stopReason: ${assistantResponse.stopReason})`);
@@ -273,6 +338,7 @@ async function generateContext(
 
 	console.log(`  Tool call ID: ${toolCall.id}`);
 
+	/** 变量 toolResult：模拟执行 double_number 后构造的工具结果消息；仅在当前流程内有效。 */
 	const toolResult: ToolResultMessage = {
 		role: "toolResult",
 		toolCallId: toolCall.id,
@@ -282,7 +348,9 @@ async function generateContext(
 		timestamp: Date.now(),
 	};
 
+	/** 变量 finalResponse：模型消费工具结果后的最终回复；仅在当前流程内有效。 */
 	let finalResponse: AssistantMessage;
+	/** 变量 messagesForFinal：第二次请求发送的完整消息序列；仅在当前流程内有效。 */
 	const messagesForFinal = [userMessage, assistantResponse, toolResult];
 	try {
 		finalResponse = await completeSimple(
@@ -302,6 +370,7 @@ async function generateContext(
 			},
 		);
 	} catch (error) {
+		/** 变量 msg：标准化后的异常文本；仅在当前流程内有效。 */
 		const msg = error instanceof Error ? error.message : String(error);
 		console.log(`  Final request failed: ${msg}`);
 		dumpFailurePayload({
@@ -330,8 +399,11 @@ async function generateContext(
 	};
 }
 
+/** 测试分组：跨提供商上下文交接。 */
 describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
+	/** 变量 contexts：按标签保存的已生成上下文集合；仅在当前流程内有效。 */
 	let contexts: Record<string, CachedContext>;
+	/** 变量 availablePairs：成功生成完整夹具的模型组合；仅在当前流程内有效。 */
 	let availablePairs: ProviderModelPair[];
 
 	beforeAll(async () => {
@@ -341,6 +413,8 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 		console.log("\n=== Generating Fixtures ===\n");
 
 		for (const pair of PROVIDER_MODEL_PAIRS) {
+			/** 循环变量 pair：当前用于生成上下文的提供商/模型组合。 */
+			/** 变量 apiKey：当前提供商解析出的认证密钥；仅在当前流程内有效。 */
 			const apiKey = await getApiKey(pair.provider);
 			if (!apiKey || !hasApiKey(pair)) {
 				console.log(`[${pair.label}] Skipping - no auth for ${pair.provider}`);
@@ -348,6 +422,7 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 			}
 
 			console.log(`[${pair.label}] Generating fixture...`);
+			/** 变量 result：当前提供商上下文生成结果或测试汇总结果；仅在当前流程内有效。 */
 			const result = await generateContext(pair, apiKey);
 
 			if (!result || result.messages.length < 4) {
@@ -370,13 +445,16 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 		console.log(`\n=== ${availablePairs.length}/${PROVIDER_MODEL_PAIRS.length} contexts available ===\n`);
 	}, 300000);
 
+	/** 测试场景：在凭据可用时验证夹具数量或逐目标交接结果。 */
 	it.skipIf(!hasAnyApiKey())("should have at least 2 fixtures to test handoffs", () => {
 		expect(Object.keys(contexts).length).toBeGreaterThanOrEqual(2);
 	});
 
+	/** 测试场景：在凭据可用时验证夹具数量或逐目标交接结果。 */
 	it.skipIf(!hasAnyApiKey())(
 		"should handle cross-provider handoffs for each target",
 		async () => {
+			/** 变量 contextLabels：已成功生成的上下文标签列表；仅在当前流程内有效。 */
 			const contextLabels = Object.keys(contexts);
 
 			if (contextLabels.length < 2) {
@@ -386,9 +464,12 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 
 			console.log("\n=== Testing Cross-Provider Handoffs ===\n");
 
+			/** 变量 results：每个目标提供商的交接测试结果列表；仅在当前流程内有效。 */
 			const results: { target: string; success: boolean; error?: string }[] = [];
 
 			for (const targetPair of availablePairs) {
+				/** 循环变量 targetPair：当前作为上下文接收方的提供商/模型组合。 */
+				/** 变量 apiKey：当前提供商解析出的认证密钥；仅在当前流程内有效。 */
 				const apiKey = await getApiKey(targetPair.provider);
 				if (!apiKey || !hasApiKey(targetPair)) {
 					console.log(`[Target: ${targetPair.label}] Skipping - no auth`);
@@ -396,8 +477,11 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 				}
 
 				// Collect messages from ALL OTHER contexts
+				// 中文说明：收集除当前目标提供商之外的全部上下文消息。
+				/** 变量 otherMessages：除当前目标外收集的所有上下文消息；仅在当前流程内有效。 */
 				const otherMessages: Message[] = [];
 				for (const [label, ctx] of Object.entries(contexts)) {
+					/** 循环变量 label 与 ctx：某个已生成上下文的标签和内容。 */
 					if (label === targetPair.label) continue;
 					otherMessages.push(...ctx.messages);
 				}
@@ -407,6 +491,7 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 					continue;
 				}
 
+				/** 变量 allMessages：追加最终确认请求后的完整交接消息；仅在当前流程内有效。 */
 				const allMessages: Message[] = [
 					...otherMessages,
 					{
@@ -417,6 +502,7 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 					},
 				];
 
+				/** 变量 baseModel：注册表中查到的基础模型配置；仅在当前流程内有效。 */
 				const baseModel = (getModel as (p: string, m: string) => Model<Api> | undefined)(
 					targetPair.provider,
 					targetPair.model,
@@ -426,18 +512,23 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 					continue;
 				}
 
+				/** 变量 model：应用 API 覆盖后的实际请求模型；仅在当前流程内有效。 */
 				const model: Model<Api> = targetPair.apiOverride
 					? { ...baseModel, api: targetPair.apiOverride }
 					: baseModel;
+				/** 变量 supportsReasoning：当前模型是否支持推理等级选项；仅在当前流程内有效。 */
 				const supportsReasoning = model.reasoning === true;
+				/** 变量 headers：当前组合需要附加的请求头；仅在当前流程内有效。 */
 				const headers = getHeaders(targetPair);
 
 				console.log(
 					`[Target: ${targetPair.label}] Testing with ${otherMessages.length} messages from other providers...`,
 				);
 
+				/** 变量 lastPayload：最近一次发给提供商的原始请求载荷，供失败诊断；仅在当前流程内有效。 */
 				let lastPayload: unknown;
 				try {
+					/** 变量 response：目标模型对交接上下文的响应；仅在当前流程内有效。 */
 					const response = await completeSimple(
 						model,
 						{
@@ -465,15 +556,18 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 						});
 						results.push({ target: targetPair.label, success: false, error: response.errorMessage });
 					} else {
+						/** 变量 text：从目标响应提取并拼接的文本；仅在当前流程内有效。 */
 						const text = response.content
 							.filter((c) => c.type === "text")
 							.map((c) => c.text)
 							.join(" ");
+						/** 变量 preview：用于控制台展示的前一百个字符；仅在当前流程内有效。 */
 						const preview = text.slice(0, 100).replace(/\n/g, " ");
 						console.log(`[Target: ${targetPair.label}] SUCCESS: ${preview}...`);
 						results.push({ target: targetPair.label, success: true });
 					}
 				} catch (error) {
+					/** 变量 msg：标准化后的异常文本；仅在当前流程内有效。 */
 					const msg = error instanceof Error ? error.message : String(error);
 					console.log(`[Target: ${targetPair.label}] EXCEPTION: ${msg}`);
 					dumpFailurePayload({
@@ -487,13 +581,16 @@ describe.skipIf(!hasAnyApiKey())("Cross-Provider Handoff", () => {
 			}
 
 			console.log("\n=== Results Summary ===\n");
+			/** 变量 successes：交接成功的结果子集；仅在当前流程内有效。 */
 			const successes = results.filter((r) => r.success);
+			/** 变量 failures：交接失败的结果子集；仅在当前流程内有效。 */
 			const failures = results.filter((r) => !r.success);
 
 			console.log(`Passed: ${successes.length}/${results.length}`);
 			if (failures.length > 0) {
 				console.log("\nFailures:");
 				for (const f of failures) {
+					/** 循环变量 f：当前输出到控制台的失败结果。 */
 					console.log(`  - ${f.target}: ${f.error}`);
 				}
 			}
