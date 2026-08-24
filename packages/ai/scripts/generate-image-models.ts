@@ -190,6 +190,7 @@ function generateImageModelsFile(models: ImagesModel<"openrouter-images">[]): st
 
 import type { ImagesApi, ImagesModel } from "./types.ts";
 
+/** IMAGE_MODELS 是按提供商和模型 ID 建立的只读图片模型目录，运行时用它查询能力与费用元数据。 */
 export const IMAGE_MODELS = {
 ${providerEntries}
 } as const satisfies Record<string, Record<string, ImagesModel<ImagesApi>>>;
