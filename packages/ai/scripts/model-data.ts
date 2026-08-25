@@ -1,3 +1,11 @@
+/**
+ * 文件职责：读取、生成并验证模型目录的数据结构、清单哈希和提供商 JSON 分片。
+ * 技术维度：使用 Node.js 文件 API、SHA-256、正则提取生成代码导入以及运行时结构守卫完成一致性校验。
+ * 产品维度：保证发布包中的模型清单完整且未过期，避免用户看到缺失、重复或字段错误的模型配置。
+ * 逻辑维度：先从生成聚合文件确定提供商，再读取 JSON 结构、计算稳定哈希，最后逐文件校验清单和模型字段。
+ * 关键边界：依赖生成文件的固定导入格式；只接受 JSON 对象；发现任一错误会汇总后抛出，最多展示前 30 条。
+ * 新手阅读建议：先看 ModelDataManifest 与 readModelDataStructure，再看 createModelDataManifest，最后跟读 validateModelDataDirectory。
+ */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -64,6 +72,7 @@ function readJsonObject(path: string, description: string, errors: string[]): Re
 	try {
 		parsed = JSON.parse(readFileSync(path, "utf8"));
 	} catch (error) {
+		/** error 是读取或解析 JSON 时捕获的异常，会转换为校验错误文本而不立即终止全部检查。 */
 		errors.push(`${description} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
 		return undefined;
 	}
@@ -84,8 +93,10 @@ function readProviderStructure(path: string, providerId: string): Record<string,
 
 	/** 已发现模型到所属 API 的映射，用于检测重复模型。 */
 	const models = new Map<string, string>();
+	/** api 与 value 是当前 API 分组名称和模型对象，用于建立模型到 API 的唯一映射。 */
 	for (const [api, value] of Object.entries(groups)) {
 		if (!isRecord(value)) throw new Error(`${path} API group ${JSON.stringify(api)} must be an object`);
+		/** modelId 是当前分组中的模型标识；重复出现在其他分组时属于目录错误。 */
 		for (const modelId of Object.keys(value)) {
 			if (models.has(modelId)) throw new Error(`${path} contains model ${modelId} in more than one API group`);
 			models.set(modelId, api);
@@ -287,11 +298,13 @@ export function validateModelDataDirectory(structure: ModelDataStructure, dataDi
 
 		/** 实际模型 ID 到 API 分组的映射。 */
 		const actualModels = new Map<string, string>();
+		/** api 与 value 是当前提供商文件中的 API 分组及其模型对象。 */
 		for (const [api, value] of Object.entries(groups)) {
 			if (!isRecord(value)) {
 				errors.push(`${filename} API group ${JSON.stringify(api)} must be an object`);
 				continue;
 			}
+			/** modelId 与 model 是当前模型标识和配置记录，用于校验重复项、字段及清单哈希。 */
 			for (const [modelId, model] of Object.entries(value)) {
 				if (actualModels.has(modelId)) {
 					errors.push(`${providerId}/${modelId} appears in more than one API group`);

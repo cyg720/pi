@@ -42,6 +42,7 @@ vi.mock("openai", () => {
 					mockState.lastParams = params;
 					/** 产出一次 stop 块与固定用量的异步流。 */
 					const stream = {
+						/** 产出固定停止响应；无参数，返回可异步遍历的一次性响应块序列。 */
 						async *[Symbol.asyncIterator]() {
 							yield {
 								choices: [{ delta: {}, finish_reason: "stop" }],
@@ -145,6 +146,7 @@ describe("openai-completions prompt caching", () => {
 	}
 
 	it("sets prompt_cache_key for direct OpenAI requests when caching is enabled", async () => {
+		/** payload 是开启缓存时捕获的直接 OpenAI 请求体。 */
 		const { payload } = await captureRequest({ sessionId: "session-123" });
 
 		expect(payload?.prompt_cache_key).toBe("session-123");
@@ -152,6 +154,7 @@ describe("openai-completions prompt caching", () => {
 	});
 
 	it("sets prompt_cache_retention to 24h for direct OpenAI requests when cacheRetention is long", async () => {
+		/** payload 是启用长期缓存时捕获的请求体，应包含 24 小时保留策略。 */
 		const { payload } = await captureRequest({ cacheRetention: "long", sessionId: "session-456" });
 
 		expect(payload?.prompt_cache_key).toBe("session-456");
@@ -161,12 +164,14 @@ describe("openai-completions prompt caching", () => {
 	it("clamps prompt_cache_key to OpenAI's 64-character limit", async () => {
 		/** 超过 OpenAI 限制三字符的会话 ID。 */
 		const sessionId = "x".repeat(67);
+		/** payload 是使用超长会话 ID 构造的请求体，用于验证缓存键截断。 */
 		const { payload } = await captureRequest({ sessionId });
 
 		expect(payload?.prompt_cache_key).toBe("x".repeat(64));
 	});
 
 	it("omits prompt cache fields when cacheRetention is none", async () => {
+		/** payload 是明确关闭缓存时的请求体，不应带任何提示缓存字段。 */
 		const { payload } = await captureRequest({ cacheRetention: "none", sessionId: "session-789" });
 
 		expect(payload?.prompt_cache_key).toBeUndefined();
@@ -179,6 +184,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { supportsLongCacheRetention: false },
 		});
+		/** payload 是不支持长期缓存的代理模型请求体，缓存字段应被省略。 */
 		const { payload } = await captureRequest({ cacheRetention: "long", sessionId: "session-proxy" }, model);
 
 		expect(payload?.prompt_cache_key).toBeUndefined();
@@ -187,6 +193,7 @@ describe("openai-completions prompt caching", () => {
 
 	it("uses PI_CACHE_RETENTION for direct OpenAI requests", async () => {
 		process.env.PI_CACHE_RETENTION = "long";
+		/** payload 是由环境变量启用长期缓存后捕获的直接 OpenAI 请求体。 */
 		const { payload } = await captureRequest({ sessionId: "session-env" });
 
 		expect(payload?.prompt_cache_key).toBe("session-env");
@@ -199,6 +206,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
 		});
+		/** headers 是启用会话亲和时捕获的请求头集合。 */
 		const { headers } = await captureRequest({ sessionId: "session-affinity" }, model);
 
 		expect(headers.session_id).toBe("session-affinity");
@@ -211,6 +219,7 @@ describe("openai-completions prompt caching", () => {
 		const model = createModel({
 			compat: { sendSessionAffinityHeaders: true, sessionAffinityFormat: "openai-nosession" },
 		});
+		/** payload 与 headers 是 openai-nosession 格式下捕获的请求体和请求头。 */
 		const { payload, headers } = await captureRequest({ sessionId: "session-nosession" }, model);
 
 		expect(payload?.session_id).toBeUndefined();
@@ -227,6 +236,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true, sessionAffinityFormat: "openrouter" },
 		});
+		/** payload 与 headers 是显式 OpenRouter 亲和格式下捕获的请求数据。 */
 		const { payload, headers } = await captureRequest({ sessionId: "session-proxy" }, model);
 
 		expect(payload?.session_id).toBeUndefined();
@@ -244,6 +254,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://openrouter.ai/api/v1",
 			compat: { sendSessionAffinityHeaders: true },
 		});
+		/** payload 与 headers 是 OpenRouter 兼容模型请求数据，用于确认不发送 OpenAI 私有字段。 */
 		const { payload, headers } = await captureRequest({ sessionId: "session-openrouter" }, model);
 
 		expect(payload?.session_id).toBeUndefined();
@@ -260,6 +271,7 @@ describe("openai-completions prompt caching", () => {
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
 		});
+		/** payload 与 headers 是按基础地址识别出的 OpenRouter 请求数据。 */
 		const { payload, headers } = await captureRequest({ sessionId: "session-openrouter" }, model);
 
 		expect(payload?.session_id).toBeUndefined();
@@ -273,6 +285,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
 		});
+		/** headers 是关闭缓存时捕获的亲和请求头，相关会话字段应省略。 */
 		const { headers } = await captureRequest({ cacheRetention: "none", sessionId: "session-affinity" }, model);
 
 		expect(headers.session_id).toBeUndefined();
@@ -286,6 +299,7 @@ describe("openai-completions prompt caching", () => {
 			baseUrl: "https://proxy.example.com/v1",
 			compat: { sendSessionAffinityHeaders: true },
 		});
+		/** headers 是带调用方自定义亲和头时捕获的结果，用于验证显式值优先。 */
 		const { headers } = await captureRequest(
 			{
 				sessionId: "session-affinity",

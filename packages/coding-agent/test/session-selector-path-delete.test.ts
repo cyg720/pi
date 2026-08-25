@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证会话选择器的删除快捷键、异步范围切换、会话线程排序以及符号链接路径等价性。
+ * 技术维度：使用 Vitest、TUI 输入模拟、Deferred Promise、ANSI 清理和真实临时目录符号链接构造回归场景。
+ * 产品维度：保障用户搜索会话、切换全部范围或删除会话时不会误操作，并能正确展示父子会话关系。
+ * 逻辑维度：先定义延迟任务、会话工厂和符号链接目录，再测试快捷键、竞态加载、线程结构、排序与当前会话保护。
+ * 关键边界：符号链接用例在无创建权限的平台可能失败；按键绑定和主题是全局单例，必须在用例前重置。
+ * 新手阅读建议：先看 makeSession 和 createDeferred，再读前三个删除快捷键用例，最后分析异步竞态与符号链接场景。
+ */
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -114,6 +122,7 @@ describe("session selector path/delete interactions", () => {
 
 	/** 每个用例后递归删除登记的临时目录。 */
 	afterEach(() => {
+		/** dir 是当前待清理的临时目录；splice 会同步清空登记列表。 */
 		for (const dir of tempDirs.splice(0)) {
 			rmSync(dir, { recursive: true, force: true });
 		}

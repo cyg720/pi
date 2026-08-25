@@ -111,6 +111,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git rev-parse --git-dir", fail);
 
 		const { trigger, exec, sendUserMessage } = setup(cwd, results);
+		/** trigger 启动扩展流程，exec 记录命令，sendUserMessage 记录是否要求模型介入。 */
 		await trigger();
 
 		expect(exec).toHaveBeenCalledTimes(1);
@@ -126,6 +127,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git rev-parse --abbrev-ref --symbolic-full-name @{u}", fail);
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行无上游分支场景，sendUserMessage 用于确认不会发送解决请求。 */
 		await trigger();
 
 		expect(sendUserMessage).not.toHaveBeenCalled();
@@ -145,6 +147,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git diff --name-only --diff-filter=U", { ...ok, stdout: "file.ts\n" });
 
 		const { trigger, exec, sendUserMessage } = setup(cwd, results);
+		/** trigger 检查既有冲突，exec 与 sendUserMessage 分别记录命令和冲突解决提示。 */
 		await trigger();
 
 		// Should not attempt a new fetch/merge
@@ -166,6 +169,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git status --porcelain", { ...ok, stdout: " M src/index.ts\n" });
 
 		const { trigger, exec, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行脏工作树场景，exec 和 sendUserMessage 用于确认流程提前停止。 */
 		await trigger();
 
 		expect(exec).not.toHaveBeenCalledWith("git", ["fetch", "origin"]);
@@ -180,6 +184,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git fetch origin", fail);
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行 fetch 失败场景，sendUserMessage 应保持未调用。 */
 		await trigger();
 
 		expect(sendUserMessage).not.toHaveBeenCalled();
@@ -193,6 +198,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git merge --no-ff origin/main", ok);
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行无冲突合并，sendUserMessage 用于确认无需模型处理。 */
 		await trigger();
 
 		expect(sendUserMessage).not.toHaveBeenCalled();
@@ -226,6 +232,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git diff --name-only --diff-filter=U", { ...ok, stdout: "src/index.ts\n" });
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行文本冲突场景，sendUserMessage 捕获发给模型的解决指令。 */
 		await trigger();
 
 		expect(sendUserMessage).toHaveBeenCalledTimes(1);
@@ -250,6 +257,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git diff --name-only --diff-filter=U", { ...ok, stdout: "empty-ours.ts\n" });
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行空文件冲突场景，sendUserMessage 应携带可辨识的冲突内容。 */
 		await trigger();
 
 		expect(sendUserMessage).toHaveBeenCalledTimes(1);
@@ -267,6 +275,7 @@ describe("git-merge-and-resolve example", () => {
 		results.set("git diff --name-only --diff-filter=U", { ...ok, stdout: "" });
 
 		const { trigger, sendUserMessage } = setup(cwd, results);
+		/** trigger 执行合并失败但无未解决文件的场景，sendUserMessage 应保持未调用。 */
 		await trigger();
 
 		expect(sendUserMessage).not.toHaveBeenCalled();

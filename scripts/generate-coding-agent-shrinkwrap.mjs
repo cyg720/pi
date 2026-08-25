@@ -36,6 +36,7 @@ const args = new Set(process.argv.slice(2));
 /** 是否只检查现有 shrinkwrap 而不写文件。 */
 const checkOnly = args.has("--check");
 
+/** arg 是当前命令行参数；仅识别检查模式等脚本选项。 */
 for (const arg of args) {
 	if (arg !== "--check") {
 		console.error(`Unknown argument: ${arg}`);
@@ -88,11 +89,13 @@ function sortedPackageEntry(entry) {
 	const sorted = {};
 
 	for (const field of fieldOrder) {
+		/** field 是当前优先输出字段名，存在于记录中时按约定顺序复制。 */
 		if (entry[field] !== undefined) {
 			sorted[field] = entry[field];
 		}
 	}
 	for (const [field, value] of Object.entries(entry).sort(([a], [b]) => a.localeCompare(b))) {
+		/** field 与 value 是按名称排序的当前剩余字段和值，用于保留未知元数据。 */
 		if (sorted[field] === undefined) {
 			sorted[field] = value;
 		}
@@ -118,7 +121,9 @@ function copyPackageJsonEntry(packageJson, options) {
 		? { name: packageJson.name, version: packageJson.version }
 		: { version: packageJson.version };
 
+	/** field 是当前允许写入 shrinkwrap 包记录的标准字段名。 */
 	for (const field of [
+		/** field 是当前允许写入 shrinkwrap 包记录的标准字段名。 */
 		"license",
 		"dependencies",
 		"optionalDependencies",
@@ -169,6 +174,7 @@ function getInternalWorkspaces(lockPackages) {
 	const workspaces = new Map();
 
 	for (const [lockPath, entry] of Object.entries(lockPackages)) {
+		/** lockPath 与 entry 是当前安装路径和包记录，用于建立依赖解析索引。 */
 		if (!lockPath.startsWith("packages/") || lockPath.includes("/node_modules/") || !entry.name || !entry.version) {
 			continue;
 		}
@@ -251,6 +257,7 @@ function addInternalWorkspace(shrinkwrapPackages, addedPaths, queue, name, works
 	addedPaths.add(outputPath);
 
 	for (const dependencyName of Object.keys(packageDependencies(packageJson))) {
+		/** dependencyName 是根包当前运行时依赖名称，用于追踪完整传递闭包。 */
 		queue.push({ name: dependencyName, from: outputPath });
 	}
 }
@@ -269,6 +276,7 @@ function addExternalPackage(lockPackages, shrinkwrapPackages, addedPaths, queue,
 	addedPaths.add(lockPath);
 
 	for (const dependencyName of Object.keys(packageDependencies(entry))) {
+		/** dependencyName 是当前包的运行时依赖名称，用于继续遍历依赖图。 */
 		queue.push({ name: dependencyName, from: lockPath });
 	}
 }
@@ -314,18 +322,21 @@ function validateShrinkwrap(shrinkwrap, internalNames) {
 	}
 
 	for (const packageId of allowedInstallScriptPackages.keys()) {
+		/** packageId 是允许执行安装脚本的当前包标识，必须存在于生成结果中。 */
 		if (!seenAllowedInstallScriptPackages.has(packageId)) {
 			errors.push(`allowed install-script package ${packageId} is no longer present; remove it from the allowlist`);
 		}
 	}
 
 	for (const name of internalNames) {
+		/** name 是当前工作区内部包名，用于确认未被错误打包进发布锁。 */
 		if (!includedPackageNames.has(name)) {
 			errors.push(`internal dependency ${name} is missing`);
 		}
 	}
 
 	for (const [lockPath, entry] of Object.entries(shrinkwrap.packages)) {
+		/** lockPath 与 entry 是 shrinkwrap 中的当前路径和记录，用于执行最终安全校验。 */
 		for (const dependencyName of Object.keys(packageDependencies(entry))) {
 			/** 依赖名是否在任一允许的 node_modules 层级出现。 */
 			const dependencyIncluded = [...includedPaths].some(
@@ -439,6 +450,7 @@ try {
 		);
 	}
 } catch (error) {
+	/** error 是生成或校验 shrinkwrap 时的顶层异常；打印可读信息后以失败状态退出。 */
 	console.error(error instanceof Error ? error.message : String(error));
 	process.exit(1);
 }

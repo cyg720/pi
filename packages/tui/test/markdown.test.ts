@@ -1008,7 +1008,9 @@ again, hello world`,
 			const closingBackticksIndex = plainLines.indexOf("```");
 			assert.ok(closingBackticksIndex !== -1, "Should have closing backticks");
 
+			/** afterBackticks 是反引号结束位置之后的渲染文本片段；取值范围由本用例输入和相邻类型约束。 */
 			const afterBackticks = plainLines.slice(closingBackticksIndex + 1);
+			/** emptyLineCount 是目标片段中空白行的数量；取值范围由本用例输入和相邻类型约束。 */
 			const emptyLineCount = afterBackticks.findIndex((line) => line !== "");
 
 			assert.strictEqual(
@@ -1019,6 +1021,7 @@ again, hello world`,
 		});
 
 		it("should normalize paragraph and code block spacing to one blank line", () => {
+			/** cases 是本用例依次验证的 Markdown 输入样例数组；取值范围由本用例输入和相邻类型约束。 */
 			const cases = [
 				`hello this is text
 \`\`\`
@@ -1033,11 +1036,16 @@ code block
 
 more text`,
 			];
+			/** expectedLines 是每个输入样例预期占用的渲染行数；取值范围由本用例输入和相邻类型约束。 */
 			const expectedLines = ["hello this is text", "", "```", "  code block", "```", "", "more text"];
 
+			/** text 是当前 Markdown 边界输入样例；取值来自 cases，仅在本轮断言中使用。 */
 			for (const text of cases) {
+				/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 				const markdown = new Markdown(text, 0, 0, defaultMarkdownTheme);
+				/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 				const lines = markdown.render(80);
+				/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 				const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 				assert.deepStrictEqual(
@@ -1049,11 +1057,16 @@ more text`,
 		});
 
 		it("should not add a trailing blank line when code block is the last rendered block", () => {
+			/** cases 是本用例依次验证的 Markdown 输入样例数组；取值范围由本用例输入和相邻类型约束。 */
 			const cases = ["```js\nconst hello = 'world';\n```", "hello world\n\n```js\nconst hello = 'world';\n```"];
 
+			/** text 是当前 Markdown 边界输入样例；取值来自 cases，仅在本轮断言中使用。 */
 			for (const text of cases) {
+				/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 				const markdown = new Markdown(text, 0, 0, defaultMarkdownTheme);
+				/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 				const lines = markdown.render(80);
+				/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 				const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 				assert.notStrictEqual(
@@ -1067,6 +1080,7 @@ more text`,
 
 	describe("Spacing after dividers", () => {
 		it("should have only one blank line between divider and following paragraph", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`hello world
 
@@ -1078,13 +1092,18 @@ again, hello world`,
 				defaultMarkdownTheme,
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
+			/** dividerIndex 是分隔线所在渲染行的索引；取值范围由本用例输入和相邻类型约束。 */
 			const dividerIndex = plainLines.findIndex((line) => line.includes("─"));
 			assert.ok(dividerIndex !== -1, "Should have divider");
 
+			/** afterDivider 是分隔线之后的渲染行切片；取值范围由本用例输入和相邻类型约束。 */
 			const afterDivider = plainLines.slice(dividerIndex + 1);
+			/** emptyLineCount 是目标片段中空白行的数量；取值范围由本用例输入和相邻类型约束。 */
 			const emptyLineCount = afterDivider.findIndex((line) => line !== "");
 
 			assert.strictEqual(
@@ -1095,8 +1114,11 @@ again, hello world`,
 		});
 
 		it("should not add a trailing blank line when divider is the last rendered block", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("---", 0, 0, defaultMarkdownTheme);
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 			assert.notStrictEqual(
@@ -1109,6 +1131,7 @@ again, hello world`,
 
 	describe("Spacing after headings", () => {
 		it("should have only one blank line between heading and following paragraph", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`# Hello
 
@@ -1118,13 +1141,18 @@ This is a paragraph`,
 				defaultMarkdownTheme,
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
+			/** headingIndex 是标题所在渲染行的索引；取值范围由本用例输入和相邻类型约束。 */
 			const headingIndex = plainLines.findIndex((line) => line.includes("Hello"));
 			assert.ok(headingIndex !== -1, "Should have heading");
 
+			/** afterHeading 是标题之后的渲染行切片；取值范围由本用例输入和相邻类型约束。 */
 			const afterHeading = plainLines.slice(headingIndex + 1);
+			/** emptyLineCount 是目标片段中空白行的数量；取值范围由本用例输入和相邻类型约束。 */
 			const emptyLineCount = afterHeading.findIndex((line) => line !== "");
 
 			assert.strictEqual(
@@ -1135,8 +1163,11 @@ This is a paragraph`,
 		});
 
 		it("should not add a trailing blank line when heading is the last rendered block", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("# Hello", 0, 0, defaultMarkdownTheme);
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 			assert.notStrictEqual(
@@ -1149,6 +1180,7 @@ This is a paragraph`,
 
 	describe("Spacing after blockquotes", () => {
 		it("should have only one blank line between blockquote and following paragraph", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`hello world
 
@@ -1160,13 +1192,18 @@ again, hello world`,
 				defaultMarkdownTheme,
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
+			/** quoteIndex 是引用块起始渲染行的索引；取值范围由本用例输入和相邻类型约束。 */
 			const quoteIndex = plainLines.findIndex((line) => line.includes("This is a quote"));
 			assert.ok(quoteIndex !== -1, "Should have blockquote");
 
+			/** afterQuote 是引用块之后的渲染行切片；取值范围由本用例输入和相邻类型约束。 */
 			const afterQuote = plainLines.slice(quoteIndex + 1);
+			/** emptyLineCount 是目标片段中空白行的数量；取值范围由本用例输入和相邻类型约束。 */
 			const emptyLineCount = afterQuote.findIndex((line) => line !== "");
 
 			assert.strictEqual(
@@ -1177,8 +1214,11 @@ again, hello world`,
 		});
 
 		it("should not add a trailing blank line when blockquote is the last rendered block", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("> This is a quote", 0, 0, defaultMarkdownTheme);
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 			assert.notStrictEqual(
@@ -1192,6 +1232,7 @@ again, hello world`,
 	describe("Blockquotes with multiline content", () => {
 		it("should apply consistent styling to all lines in lazy continuation blockquote", () => {
 			// Markdown "lazy continuation" - second line without > is still part of the quote
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`>Foo
 bar`,
@@ -1203,15 +1244,20 @@ bar`,
 				},
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
 
 			// Both lines should have the quote border
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** quotedLines 是从输出中筛选出的引用内容行数组；取值范围由本用例输入和相邻类型约束。 */
 			const quotedLines = plainLines.filter((line) => line.startsWith("│ "));
 			assert.strictEqual(quotedLines.length, 2, `Expected 2 quoted lines, got: ${JSON.stringify(plainLines)}`);
 
 			// Both lines should have italic (from theme.quote styling)
+			/** fooLine 是包含 foo 文本的渲染行；取值范围由本用例输入和相邻类型约束。 */
 			const fooLine = lines.find((line) => line.includes("Foo"));
+			/** barLine 是包含 bar 文本的渲染行；取值范围由本用例输入和相邻类型约束。 */
 			const barLine = lines.find((line) => line.includes("bar"));
 			assert.ok(fooLine, "Should have Foo line");
 			assert.ok(barLine, "Should have bar line");
@@ -1226,6 +1272,7 @@ bar`,
 		});
 
 		it("should apply consistent styling to explicit multiline blockquote", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`>Foo
 >bar`,
@@ -1237,15 +1284,20 @@ bar`,
 				},
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
 
 			// Both lines should have the quote border
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** quotedLines 是从输出中筛选出的引用内容行数组；取值范围由本用例输入和相邻类型约束。 */
 			const quotedLines = plainLines.filter((line) => line.startsWith("│ "));
 			assert.strictEqual(quotedLines.length, 2, `Expected 2 quoted lines, got: ${JSON.stringify(plainLines)}`);
 
 			// Both lines should have italic (from theme.quote styling)
+			/** fooLine 是包含 foo 文本的渲染行；取值范围由本用例输入和相邻类型约束。 */
 			const fooLine = lines.find((line) => line.includes("Foo"));
+			/** barLine 是包含 bar 文本的渲染行；取值范围由本用例输入和相邻类型约束。 */
 			const barLine = lines.find((line) => line.includes("bar"));
 			assert.ok(fooLine?.includes("\x1b[3m"), `Foo line should have italic: ${fooLine}`);
 			assert.ok(barLine?.includes("\x1b[3m"), `bar line should have italic: ${barLine}`);
@@ -1256,6 +1308,7 @@ bar`,
 		});
 
 		it("should render list content inside blockquotes", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				`> 1. bla bla
 > - nested bullet`,
@@ -1264,8 +1317,11 @@ bar`,
 				defaultMarkdownTheme,
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** quotedLines 是从输出中筛选出的引用内容行数组；取值范围由本用例输入和相邻类型约束。 */
 			const quotedLines = plainLines.filter((line) => line.startsWith("│ "));
 
 			assert.ok(
@@ -1279,25 +1335,32 @@ bar`,
 		});
 
 		it("should wrap long blockquote lines and add border to each wrapped line", () => {
+			/** longText 是用于触发自动换行的长文本输入；取值范围由本用例输入和相邻类型约束。 */
 			const longText = "This is a very long blockquote line that should wrap to multiple lines when rendered";
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(`> ${longText}`, 0, 0, defaultMarkdownTheme);
 
 			// Render at narrow width to force wrapping
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(30);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 			// Filter to non-empty lines (exclude trailing blank line after blockquote)
+			/** contentLines 是去除装饰或空行后保留的正文行数组；取值范围由本用例输入和相邻类型约束。 */
 			const contentLines = plainLines.filter((line) => line.length > 0);
 
 			// Should have multiple lines due to wrapping
 			assert.ok(contentLines.length > 1, `Expected multiple wrapped lines, got: ${JSON.stringify(contentLines)}`);
 
 			// Every content line should start with the quote border
+			/** line 是当前渲染文本行；循环逐行检查宽度或内容边界。 */
 			for (const line of contentLines) {
 				assert.ok(line.startsWith("│ "), `Wrapped line should have quote border: "${line}"`);
 			}
 
 			// All content should be preserved
+			/** allText 是合并全部正文行得到的纯文本；取值范围由本用例输入和相邻类型约束。 */
 			const allText = contentLines.join(" ");
 			assert.ok(allText.includes("very long"), "Should preserve 'very long'");
 			assert.ok(allText.includes("blockquote"), "Should preserve 'blockquote'");
@@ -1305,6 +1368,7 @@ bar`,
 		});
 
 		it("should properly indent wrapped blockquote lines with styling", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				"> This is styled text that is long enough to wrap",
 				0,
@@ -1316,18 +1380,23 @@ bar`,
 				},
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(25);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "").trimEnd());
 
 			// Filter to non-empty lines
+			/** contentLines 是去除装饰或空行后保留的正文行数组；取值范围由本用例输入和相邻类型约束。 */
 			const contentLines = plainLines.filter((line) => line.length > 0);
 
 			// All lines should have the quote border
+			/** line 是当前渲染文本行；循环逐行检查宽度或内容边界。 */
 			for (const line of contentLines) {
 				assert.ok(line.startsWith("│ "), `Line should have quote border: "${line}"`);
 			}
 
 			// Check that italic is applied (from theme.quote)
+			/** allOutput 是合并全部渲染行得到的输出文本；取值范围由本用例输入和相邻类型约束。 */
 			const allOutput = lines.join("\n");
 			assert.ok(allOutput.includes("\x1b[3m"), "Should have italic");
 
@@ -1336,9 +1405,12 @@ bar`,
 		});
 
 		it("should render inline formatting inside blockquotes and reapply quote styling after", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("> Quote with **bold** and `code`", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
 
 			// Should have the quote border
@@ -1348,11 +1420,13 @@ bar`,
 			);
 
 			// Content should be preserved
+			/** allPlain 是移除 ANSI 后合并得到的完整纯文本；取值范围由本用例输入和相邻类型约束。 */
 			const allPlain = plainLines.join(" ");
 			assert.ok(allPlain.includes("Quote with"), "Should preserve 'Quote with'");
 			assert.ok(allPlain.includes("bold"), "Should preserve 'bold'");
 			assert.ok(allPlain.includes("code"), "Should preserve 'code'");
 
+			/** allOutput 是合并全部渲染行得到的输出文本；取值范围由本用例输入和相邻类型约束。 */
 			const allOutput = lines.join("\n");
 
 			// Should have bold styling (\x1b[1m)
@@ -1368,9 +1442,12 @@ bar`,
 
 	describe("Heading with inline code", () => {
 		it("should preserve heading styling after inline code", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("### Why `sourceInfo` should not be optional", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joinedOutput 是合并带样式渲染行得到的单一输出字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedOutput = lines.join("\n");
 
 			// The heading theme is bold+cyan. After the yellow inline code, the heading
@@ -1380,11 +1457,13 @@ bar`,
 
 			// Find the position of "should not be optional" in the raw output.
 			// It must be preceded by heading style codes (bold+cyan), not appear unstyled.
+			/** afterCodeIndex 是代码块结束后目标文本的字符索引；取值范围由本用例输入和相邻类型约束。 */
 			const afterCodeIndex = joinedOutput.indexOf("should not be optional");
 			assert.ok(afterCodeIndex > 0, "Should contain text after inline code");
 
 			// Look at the ANSI codes between the code span end and "should not be optional".
 			// There should be bold (\x1b[1m) and cyan (\x1b[36m) re-applied.
+			/** precedingChunk 是目标索引之前用于检查间距的输出片段；取值范围由本用例输入和相邻类型约束。 */
 			const precedingChunk = joinedOutput.slice(Math.max(0, afterCodeIndex - 40), afterCodeIndex);
 			assert.ok(
 				precedingChunk.includes("\x1b[1m"),
@@ -1397,14 +1476,19 @@ bar`,
 		});
 
 		it("should preserve heading styling after inline code for h1", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("# Title with `code` inside", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joinedOutput 是合并带样式渲染行得到的单一输出字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedOutput = lines.join("\n");
 
+			/** afterCodeIndex 是代码块结束后目标文本的字符索引；取值范围由本用例输入和相邻类型约束。 */
 			const afterCodeIndex = joinedOutput.indexOf("inside");
 			assert.ok(afterCodeIndex > 0, "Should contain text after inline code");
 
+			/** precedingChunk 是目标索引之前用于检查间距的输出片段；取值范围由本用例输入和相邻类型约束。 */
 			const precedingChunk = joinedOutput.slice(Math.max(0, afterCodeIndex - 40), afterCodeIndex);
 			// H1 uses heading + bold + underline
 			assert.ok(precedingChunk.includes("\x1b[1m"), `Should re-apply bold for h1: ${precedingChunk}`);
@@ -1413,18 +1497,24 @@ bar`,
 		});
 
 		it("should not leak h1 underline into padding when inline code is the last token", async () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("# Important distinction from `open()`", 0, 0, defaultMarkdownTheme);
+			/** terminal 是记录光标写入和清屏行为的测试终端；取值范围由本用例输入和相邻类型约束。 */
 			const terminal = new VirtualTerminal(80, 4);
+			/** tui 是承载 Markdown 组件并驱动差异渲染的测试界面；取值范围由本用例输入和相邻类型约束。 */
 			const tui = new TUI(terminal);
 			tui.addChild(markdown);
 			tui.start();
 			await terminal.waitForRender();
 
+			/** renderedLine 是终端最终保存的当前渲染行；取值范围由本用例输入和相邻类型约束。 */
 			const renderedLine = markdown.render(80)[0];
 			assert.ok(renderedLine, "Should render heading line");
+			/** contentWidth 是去除边框后可供正文使用的终端列数；取值范围由本用例输入和相邻类型约束。 */
 			const contentWidth = renderedLine.replace(/\x1b\[[0-9;]*m/g, "").trimEnd().length;
 			assert.ok(contentWidth > 0, "Should have visible heading content");
 
+			/** col 是当前终端列索引；从 0 递增到内容宽度减一。 */
 			for (let col = contentWidth; col < 80; col++) {
 				assert.strictEqual(getCellUnderline(terminal, 0, col), 0, `Expected no underline in padding at col ${col}`);
 			}
@@ -1433,14 +1523,19 @@ bar`,
 		});
 
 		it("should preserve heading styling after bold text", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("## Heading with **bold** and more", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joinedOutput 是合并带样式渲染行得到的单一输出字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedOutput = lines.join("\n");
 
+			/** afterBoldIndex 是粗体片段结束后目标文本的字符索引；取值范围由本用例输入和相邻类型约束。 */
 			const afterBoldIndex = joinedOutput.indexOf("and more");
 			assert.ok(afterBoldIndex > 0, "Should contain text after bold");
 
+			/** precedingChunk 是目标索引之前用于检查间距的输出片段；取值范围由本用例输入和相邻类型约束。 */
 			const precedingChunk = joinedOutput.slice(Math.max(0, afterBoldIndex - 40), afterBoldIndex);
 			assert.ok(precedingChunk.includes("\x1b[1m"), `Should re-apply bold for h2: ${precedingChunk}`);
 			assert.ok(precedingChunk.includes("\x1b[36m"), `Should re-apply cyan for h2: ${precedingChunk}`);
@@ -1449,10 +1544,14 @@ bar`,
 
 	describe("Strikethrough syntax", () => {
 		it("should render ~~text~~ as strikethrough", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("Use ~~strikethrough~~ here", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joinedOutput 是合并带样式渲染行得到的单一输出字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedOutput = lines.join("\n");
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "")).join(" ");
 
 			assert.ok(joinedOutput.includes("\x1b[9m"), "Should apply strikethrough styling");
@@ -1461,10 +1560,14 @@ bar`,
 		});
 
 		it("should keep ~text~ as plain text", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("Use ~strikethrough~ literally", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joinedOutput 是合并带样式渲染行得到的单一输出字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedOutput = lines.join("\n");
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, "")).join(" ");
 
 			assert.ok(joinedPlain.includes("~strikethrough~"), "Single-tilde delimiters should remain visible");
@@ -1480,10 +1583,14 @@ bar`,
 		it("should not duplicate URL for autolinked emails", () => {
 			// Hyperlinks capability does not affect the mailto: display check.
 			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("Contact user@example.com for help", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join(" ");
 
 			// Should contain the email once, not duplicated with mailto:
@@ -1493,23 +1600,32 @@ bar`,
 
 		it("should not duplicate URL for bare URLs", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("Visit https://example.com for more", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join(" ");
 
 			// URL should appear only once
+			/** urlCount 是输出文本中目标 URL 的出现次数；取值范围由本用例输入和相邻类型约束。 */
 			const urlCount = (joinedPlain.match(/https:\/\/example\.com/g) || []).length;
 			assert.strictEqual(urlCount, 1, "URL should appear exactly once");
 		});
 
 		it("should show URL in parentheses when hyperlinks are not supported", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("[click here](https://example.com)", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join(" ");
 
 			assert.ok(joinedPlain.includes("click here"), "Should contain link text");
@@ -1518,10 +1634,14 @@ bar`,
 
 		it("should show mailto URL in parentheses when hyperlinks are not supported", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: false });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("[Email me](mailto:test@example.com)", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join(" ");
 
 			assert.ok(joinedPlain.includes("Email me"), "Should contain link text");
@@ -1530,9 +1650,12 @@ bar`,
 
 		it("should emit OSC 8 hyperlink sequence when terminal supports hyperlinks", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("[click here](https://example.com)", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joined 是合并全部渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joined = lines.join("");
 
 			// OSC 8 open: ESC ] 8 ; ; <url> ESC \
@@ -1540,9 +1663,11 @@ bar`,
 			// OSC 8 close: ESC ] 8 ; ; ESC \
 			assert.ok(joined.includes("\x1b]8;;\x1b\\"), "Should contain OSC 8 close sequence");
 			// Visible text is present
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b[^a-zA-Z]*[a-zA-Z]|\x1b\].*?\x1b\\/g, ""));
 			assert.ok(plainLines.join("").includes("click here"), "Should contain link text");
 			// URL is NOT printed inline as plain text
+			/** rawPlain 是保留原始空白结构但移除 ANSI 的输出文本；取值范围由本用例输入和相邻类型约束。 */
 			const rawPlain = lines.map((line) =>
 				line.replace(/\x1b\]8;;[^\x1b]*\x1b\\/g, "").replace(/\x1b\[[0-9;]*m/g, ""),
 			);
@@ -1551,9 +1676,12 @@ bar`,
 
 		it("should use OSC 8 for mailto links when terminal supports hyperlinks", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("[Email me](mailto:test@example.com)", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joined 是合并全部渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joined = lines.join("");
 
 			assert.ok(
@@ -1565,13 +1693,17 @@ bar`,
 
 		it("should use OSC 8 for bare URLs when terminal supports hyperlinks", () => {
 			setCapabilities({ images: null, trueColor: false, hyperlinks: true });
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("Visit https://example.com for more", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** joined 是合并全部渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joined = lines.join("");
 
 			assert.ok(joined.includes("\x1b]8;;https://example.com\x1b\\"), "Should contain OSC 8 hyperlink");
 			// URL should not also appear as raw parenthetical text
+			/** rawPlain 是保留原始空白结构但移除 ANSI 的输出文本；取值范围由本用例输入和相邻类型约束。 */
 			const rawPlain = lines.map((line) =>
 				line.replace(/\x1b\]8;;[^\x1b]*\x1b\\/g, "").replace(/\x1b\[[0-9;]*m/g, ""),
 			);
@@ -1583,6 +1715,7 @@ bar`,
 		it("should render content with HTML-like tags as text", () => {
 			// When the model emits something like <thinking>content</thinking> in regular text,
 			// marked might treat it as HTML and hide the content
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown(
 				"This is text with <thinking>hidden content</thinking> that should be visible",
 				0,
@@ -1590,8 +1723,11 @@ bar`,
 				defaultMarkdownTheme,
 			);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join(" ");
 
 			// The content inside the tags should be visible
@@ -1602,10 +1738,14 @@ bar`,
 		});
 
 		it("should render HTML tags in code blocks correctly", () => {
+			/** markdown 是使用测试主题构造的 Markdown 渲染组件；取值范围由本用例输入和相邻类型约束。 */
 			const markdown = new Markdown("```html\n<div>Some HTML</div>\n```", 0, 0, defaultMarkdownTheme);
 
+			/** lines 是组件在指定终端宽度下产生的带样式渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const lines = markdown.render(80);
+			/** plainLines 是移除 ANSI 控制码后的可读渲染行数组；取值范围由本用例输入和相邻类型约束。 */
 			const plainLines = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+			/** joinedPlain 是合并纯文本渲染行得到的单一字符串；取值范围由本用例输入和相邻类型约束。 */
 			const joinedPlain = plainLines.join("\n");
 
 			// HTML in code blocks should be visible
@@ -1657,6 +1797,7 @@ bar`,
 
 			/** 常量 partial 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const partial = new Markdown("```ts\nconst x = 1;\n``", 0, 0, defaultMarkdownTheme);
+			/** complete 是由测试控制的异步完成回调；取值范围由本用例输入和相邻类型约束。 */
 			const complete = new Markdown("```ts\nconst x = 1;\n```", 0, 0, defaultMarkdownTheme);
 
 			assert.strictEqual(partial.render(80).length, complete.render(80).length);

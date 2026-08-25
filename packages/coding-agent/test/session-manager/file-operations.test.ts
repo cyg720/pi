@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证会话 JSONL 的容错读取、最近会话发现、自定义扁平目录和损坏文件恢复策略。
+ * 技术维度：使用 Vitest、Node.js 同步文件 API、稀疏超大文件写入和真实 mtime 差异测试磁盘边界。
+ * 产品维度：保障用户会话即使含坏行、超大头部或空文件也能安全恢复，且不会覆盖非会话数据。
+ * 逻辑维度：依次测试 loadEntriesFromFile、findMostRecentSession、扁平目录作用域和 setSessionFile 损坏文件处理。
+ * 关键边界：超大文件用例可能消耗显著磁盘地址空间；10ms 延迟用于区分 mtime；所有临时目录必须递归清理。
+ * 新手阅读建议：先看基础有效/无效 JSONL 用例，再读扫描上限与超大文件，最后比较空文件恢复和非空损坏保护。
+ */
 import { constants as bufferConstants } from "buffer";
 import { appendFileSync, closeSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from "fs";
 import { tmpdir } from "os";
@@ -162,6 +170,7 @@ describe("loadEntriesFromFile", () => {
 			const newline = Buffer.from("\n");
 			/** 每次扩展文件的偏移步长。 */
 			const stride = 16 * 1024 * 1024;
+			/** offset 是稀疏文件写入位置，按 16 MiB 递增直到超过字符串长度上限。 */
 			for (let offset = stride; offset <= bufferConstants.MAX_STRING_LENGTH + stride; offset += stride) {
 				writeSync(fd, newline, 0, newline.length, offset);
 			}

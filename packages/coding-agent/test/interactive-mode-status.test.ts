@@ -275,9 +275,11 @@ describe("InteractiveMode.showExtensionCustom", () => {
 		const overlay = new TestFocusableComponent("OVERLAY");
 		/** 常量 replacement 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const replacement = new TestFocusableComponent("REPLACEMENT");
+		/** closeOverlay 是稍后由覆盖层回调赋值的关闭函数；参数 value 为关闭结果，无返回值。 */
 		let closeOverlay: (value: string) => void = () => {
 			throw new Error("closeOverlay was not initialized");
 		};
+		/** closeReplacement 是替换覆盖层的关闭函数；参数 value 为关闭结果，无返回值。 */
 		let closeReplacement: (value: string) => void = () => {
 			throw new Error("closeReplacement was not initialized");
 		};
@@ -372,14 +374,17 @@ describe("InteractiveMode.setupAutocompleteProvider", () => {
 
 		/** 常量 wrap1 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const wrap1: AutocompleteProviderFactory = (current): AutocompleteProvider => ({
+			/** 记录第一层调用后转发建议查询；参数为文本行、光标位置和选项，返回当前提供者的建议。 */
 			async getSuggestions(lines, cursorLine, cursorCol, options) {
 				calls.push("getSuggestions:wrap1");
 				return current.getSuggestions(lines, cursorLine, cursorCol, options);
 			},
+			/** 记录第一层调用后转发补全应用；参数描述编辑位置、候选项和前缀，返回更新后的文本与光标。 */
 			applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
 				calls.push("applyCompletion:wrap1");
 				return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
 			},
+			/** 记录第一层调用后判断是否触发文件补全；参数为文本行和光标位置，返回布尔值。 */
 			shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
 				calls.push("shouldTrigger:wrap1");
 				return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;
@@ -387,14 +392,17 @@ describe("InteractiveMode.setupAutocompleteProvider", () => {
 		});
 		/** 常量 wrap2 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const wrap2: AutocompleteProviderFactory = (current): AutocompleteProvider => ({
+			/** 记录第二层调用后转发建议查询；参数为文本行、光标位置和选项，返回当前提供者的建议。 */
 			async getSuggestions(lines, cursorLine, cursorCol, options) {
 				calls.push("getSuggestions:wrap2");
 				return current.getSuggestions(lines, cursorLine, cursorCol, options);
 			},
+			/** 记录第二层调用后转发补全应用；参数描述编辑位置、候选项和前缀，返回更新后的文本与光标。 */
 			applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
 				calls.push("applyCompletion:wrap2");
 				return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
 			},
+			/** 记录第二层调用后判断是否触发文件补全；参数为文本行和光标位置，返回布尔值。 */
 			shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
 				calls.push("shouldTrigger:wrap2");
 				return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;

@@ -188,10 +188,12 @@ async function loadContextWindows() {
 		for (const [providerName, provider] of Object.entries(providers)) {
 			/** 当前提供商按模型 ID 配置的覆盖。 */
 			const overrides = provider?.modelOverrides && typeof provider.modelOverrides === "object" ? provider.modelOverrides : {};
+			/** modelId 与 override 是当前模型标识及其覆盖配置；只收集数值型上下文窗口。 */
 			for (const [modelId, override] of Object.entries(overrides)) {
 				if (typeof override?.contextWindow === "number") windows.set(`${providerName}/${modelId}`, override.contextWindow);
 			}
 			if (Array.isArray(provider?.models)) {
+				/** model 是提供商内联定义的当前模型；标识和窗口均有效时才加入映射。 */
 				for (const model of provider.models) {
 					if (typeof model?.id === "string" && typeof model.contextWindow === "number") windows.set(`${providerName}/${model.id}`, model.contextWindow);
 				}
@@ -232,6 +234,7 @@ async function scanSessions(sessionsDir, sinceMs, contextWindows, cwdFilter) {
 	const sessions = [];
 	/** 扫描文件、跳过文件和坏行计数。 */
 	const meta = { sessionsDir, sessionFilesScanned: 0, sessionFilesIncluded: 0, sessionFilesSkippedOlderThanSince: 0, malformedLines: 0 };
+	/** sessionFile 是递归扫描出的当前会话 JSONL 文件；每个文件只处理一次。 */
 	for await (const sessionFile of walkJsonlFiles(sessionsDir)) {
 		meta.sessionFilesScanned++;
 		/** 从文件名解析的创建时间。 */
@@ -266,6 +269,7 @@ async function scanSessions(sessionsDir, sinceMs, contextWindows, cwdFilter) {
 		const input = createReadStream(sessionFile, { encoding: "utf8" });
 		/** 按行读取且兼容 CRLF 的接口。 */
 		const rl = createInterface({ input, crlfDelay: Infinity });
+		/** line 是当前 JSONL 文本行；空行跳过，解析失败计入 malformedLines。 */
 		for await (const line of rl) {
 			if (!line.trim()) continue;
 			/** 当前 JSONL 行解析后的条目。 */
@@ -296,6 +300,7 @@ async function scanSessions(sessionsDir, sinceMs, contextWindows, cwdFilter) {
 			/** 当前消息条目中的消息对象。 */
 			const message = entry.message;
 			if (message.role === "assistant" && Array.isArray(message.content)) {
+				/** block 是助手消息中的当前内容块；这里只统计名为 bash 的工具调用。 */
 				for (const block of message.content) {
 					if (block?.type !== "toolCall" || block.name !== "bash") continue;
 					/** Bash 工具调用参数中的命令字符串。 */
@@ -442,18 +447,22 @@ function buildTextReport(summary) {
 	lines.push(lineForGroup(summary.totals));
 	lines.push("");
 	lines.push("By day");
+	/** group 是按日期聚合的当前统计组，直接格式化为一行。 */
 	for (const group of summary.byDay) lines.push(lineForGroup(group));
 	lines.push("");
 	lines.push("By model");
+	/** group 是按模型聚合的当前统计组，直接格式化为一行。 */
 	for (const group of summary.byModel) lines.push(lineForGroup(group));
 	lines.push("");
 	lines.push("By model, then by day");
+	/** model 是当前模型汇总项，包含总计、窗口信息及按日期子组。 */
 	for (const model of summary.byModelDay) {
 		lines.push("");
 		/** 当前模型可用的上下文窗口说明；未知时显示 unknown。 */
 		const contextWindowLabel = model.contextWindows.length === 0 ? "unknown" : model.contextWindows.map((value) => formatInt(value)).join(", ");
 		lines.push(`${model.key} contextWindow=${contextWindowLabel}`);
 		lines.push(lineForGroup(model, "  total "));
+		/** group 是当前模型下的单日统计组，使用缩进格式输出。 */
 		for (const group of model.byDay) lines.push(lineForGroup(group, "  "));
 	}
 	if (summary.scan.malformedLines > 0) {

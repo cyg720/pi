@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证 llama.cpp 扩展的注册、认证、模型缓存、Hugging Face 查询以及 SSE 加载和下载流程。
+ * 技术维度：使用 Vitest、Node.js 临时 HTTP 服务、SSE 事件流和内存模型存储模拟本地路由器与远端仓库。
+ * 产品维度：保障用户可连接本地 llama.cpp、发现 GGUF 模型并看到可靠的加载和下载进度。
+ * 逻辑维度：先提供服务器与 JSON 响应辅助函数，再逐项测试扩展注册、URL、缓存、认证、搜索和异步模型操作。
+ * 关键边界：所有网络均指向测试内临时服务；计时依赖短延迟；用例结束必须关闭连接，避免测试进程悬挂。
+ * 新手阅读建议：先看 listen/json 辅助函数，再看 provider 缓存和认证用例，最后阅读两个 SSE 状态机用例。
+ */
 import { once } from "node:events";
 import { createServer, type RequestListener, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -238,6 +246,7 @@ describe("llama.cpp extension", () => {
 		const streams = new Set<ServerResponse>();
 		/** 向所有 SSE 客户端广播事件；参数 event 为可序列化载荷，无返回值。 */
 		const send = (event: unknown) => {
+			/** response 是当前已连接的 SSE 响应流；向每个订阅者写入同一事件。 */
 			for (const response of streams) response.write(`data: ${JSON.stringify(event)}\n\n`);
 		};
 		/** 模拟模型目录、加载端点和 SSE 端点的服务 URL。 */
@@ -288,6 +297,7 @@ describe("llama.cpp extension", () => {
 		const streams = new Set<ServerResponse>();
 		/** 向所有下载进度订阅者广播事件；无返回值。 */
 		const send = (event: unknown) => {
+			/** response 是当前下载进度订阅者的响应流；广播内容保持一致。 */
 			for (const response of streams) response.write(`data: ${JSON.stringify(event)}\n\n`);
 		};
 		/** 模拟模型创建、目录和 SSE 端点的服务 URL。 */

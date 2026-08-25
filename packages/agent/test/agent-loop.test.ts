@@ -178,6 +178,7 @@ describe("agentLoop with AgentMessage", () => {
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
+		/** event 是 Agent 循环当前事件；完整收集后用于断言消息生命周期。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -261,6 +262,7 @@ describe("agentLoop with AgentMessage", () => {
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
+		/** event 是带自定义消息转换场景的当前事件，用于收集最终事件序列。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -325,6 +327,7 @@ describe("agentLoop with AgentMessage", () => {
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
+		/** _ 是仅用于耗尽流的当前事件，本用例不读取其内容。 */
 		for await (const _ of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -370,6 +373,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行 Echo 工具；参数为调用 ID 和已校验值，返回文本及详情结果。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -431,6 +435,7 @@ describe("agentLoop with AgentMessage", () => {
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
+		/** event 是工具执行场景的当前 Agent 事件，用于核对调用与结果顺序。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -469,6 +474,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行 Echo 工具并记录参数；返回对应文本和原值详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -522,6 +528,7 @@ describe("agentLoop with AgentMessage", () => {
 		const events: AgentEvent[] = [];
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, streamFn);
+		/** event 是截断工具参数场景的当前事件，用于确认错误终止且工具未执行。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -560,6 +567,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行宽松参数 Echo 工具；参数值可为字符串或数字，返回字符串化结果。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value as string | number);
 				return {
@@ -617,6 +625,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
+		/** _event 仅用于耗尽参数准备场景的事件流，不读取具体事件。 */
 		for await (const _event of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -639,6 +648,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Edit",
 			description: "Edit tool",
 			parameters: toolSchema,
+			/** 将旧式单项编辑参数整理为 edits 数组；返回供 execute 使用的标准参数对象。 */
 			prepareArguments(args) {
 				if (!args || typeof args !== "object") {
 					return args as { edits: { oldText: string; newText: string }[] };
@@ -656,6 +666,7 @@ describe("agentLoop with AgentMessage", () => {
 					edits: [...(input.edits ?? []), { oldText: input.oldText, newText: input.newText }],
 				};
 			},
+			/** 执行整理后的 Edit 参数；返回编辑数量文本及计数详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.edits);
 				return {
@@ -713,6 +724,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
+		/** _event 仅用于耗尽 prepareArguments 工具场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -742,6 +754,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行并行测试 Echo 工具；首项等待门闩，用于观察第二项是否提前开始。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -803,6 +816,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是默认并行工具场景的当前事件，用于核对两次执行结束标识。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -847,6 +861,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行普通 Echo 工具并记录值；返回可核对的文本和详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -928,6 +943,7 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
+		/** event 是 steer 注入场景的当前事件，用于验证工具完成后才加入引导消息。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -985,6 +1001,7 @@ describe("agentLoop with AgentMessage", () => {
 			description: "Slow tool",
 			parameters: toolSchema,
 			executionMode: "sequential",
+			/** 顺序执行慢工具；首项等待门闩，用于确认后项不会抢先开始。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -1046,6 +1063,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是顺序工具执行场景的当前事件，用于收集并检查执行顺序。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1084,6 +1102,7 @@ describe("agentLoop with AgentMessage", () => {
 			description: "Slow tool",
 			parameters: toolSchema,
 			executionMode: "sequential",
+			/** 执行慢速顺序工具并记录顺序；值为 a 时等待外部释放。 */
 			async execute(_toolCallId, params) {
 				executionOrder.push(`slow:${params.value}`);
 				if (params.value === "a") {
@@ -1160,6 +1179,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是混合快慢工具场景的当前事件，用于确认全局顺序约束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1192,6 +1212,7 @@ describe("agentLoop with AgentMessage", () => {
 			description: "Echo tool",
 			parameters: toolSchema,
 			executionMode: "parallel",
+			/** 显式并行执行 Echo 工具；首项等待门闩以验证第二项可先启动。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -1252,6 +1273,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是显式并行工具场景的当前事件，用于核对并行开始与结束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1271,6 +1293,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行基础 Echo 工具；返回对应文本与详情，供后续中止场景复用。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1336,6 +1359,7 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
+		/** _event 仅用于耗尽中止工具场景的事件流，不读取事件内容。 */
 		for await (const _event of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -1357,6 +1381,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行 Echo 工具并记录值；返回文本及详情以验证工具结果消息。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -1429,6 +1454,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是工具结果转换场景的当前事件，用于收集最终消息。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1468,6 +1494,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行后返回 terminate 标记；用于验证单个工具可终止后续模型轮次。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1510,6 +1537,7 @@ describe("agentLoop with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是 terminate 工具场景的当前事件，用于确认循环在工具结果后结束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1531,6 +1559,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 根据参数值选择性返回 terminate；首项应终止同批后续工作。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1581,6 +1610,7 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
+		/** _event 仅用于耗尽条件终止场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -1608,6 +1638,7 @@ describe("agentLoop with AgentMessage", () => {
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
+			/** 执行未终止的 Echo 工具；返回普通结果供继续循环场景使用。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1648,6 +1679,7 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
+		/** _event 仅用于耗尽继续循环场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
 			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -1716,6 +1748,7 @@ describe("agentLoopContinue with AgentMessage", () => {
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoopContinue(context, config, undefined, streamFn);
 
+		/** event 是 agentLoopContinue 当前事件，用于验证从既有上下文继续执行。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -1798,6 +1831,7 @@ describe("agentLoopContinue with AgentMessage", () => {
 
 		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
+		/** event 是最终回归场景的当前事件，用于还原完整助手消息序列。 */
 		for await (const event of stream) {
 			events.push(event);
 		}

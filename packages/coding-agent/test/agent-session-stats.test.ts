@@ -147,6 +147,7 @@ function syncAgentMessages(session: AgentSession, sessionManager: SessionManager
 describe("AgentSession.getSessionStats", () => {
 	it("exposes the current context usage alongside token totals", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 提供统计接口，sessionManager 用于写入构成本用例上下文的会话消息。 */
 
 		try {
 			sessionManager.appendMessage(createUserMessage("hello", 1));
@@ -166,6 +167,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("reports unknown current context usage immediately after compaction", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 用于读取压缩后统计，sessionManager 用于构造压缩前历史与压缩记录。 */
 
 		try {
 			sessionManager.appendMessage(createUserMessage("first", 1));
@@ -192,6 +194,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("uses post-compaction usage for current context instead of stale kept usage", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 返回当前上下文用量，sessionManager 构造压缩前后两阶段的消息序列。 */
 
 		try {
 			sessionManager.appendMessage(createUserMessage("first", 1));
@@ -219,6 +222,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("includes branch summary usage in session totals", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 汇总用量，sessionManager 写入带用量的分支摘要以验证其计入总数。 */
 
 		try {
 			sessionManager.branchWithSummary(null, "summary", undefined, false, {
@@ -242,6 +246,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("includes compaction usage in session totals", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 提供最终总量，sessionManager 写入含用量的压缩条目。 */
 
 		try {
 			/** 压缩记录第一个保留消息标识。 */
@@ -267,6 +272,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("includes tool result usage in session totals", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 读取总量，sessionManager 写入工具调用及工具结果消息。 */
 
 		try {
 			sessionManager.appendMessage(
@@ -319,6 +325,7 @@ describe("AgentSession.getSessionStats", () => {
 
 	it("ignores zero-usage messages when checking for post-compaction context usage", async () => {
 		const { session, sessionManager } = await createSession();
+		/** session 检查当前上下文，sessionManager 构造压缩后零用量与有效用量消息。 */
 
 		try {
 			sessionManager.appendMessage(createUserMessage("first", 1));

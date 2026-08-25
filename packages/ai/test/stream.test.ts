@@ -57,6 +57,7 @@ const calculatorTool: Tool<typeof calculatorSchema> = {
 	parameters: calculatorSchema,
 };
 
+/** 验证基础文本流事件与最终消息；model 为目标模型，options 为可选流参数；成功时无返回值。示例：await basicTextGeneration(model)。 */
 async function basicTextGeneration<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const context: Context = {
@@ -89,6 +90,7 @@ async function basicTextGeneration<TApi extends Api>(model: Model<TApi>, options
 	);
 }
 
+/** 验证工具调用的开始、增量和结束事件；model 为目标模型，options 为可选流参数；成功时无返回值。示例：await handleToolCall(model)。 */
 async function handleToolCall<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const context: Context = {
@@ -115,6 +117,7 @@ async function handleToolCall<TApi extends Api>(model: Model<TApi>, options?: St
 	let accumulatedToolArgs = "";
 	/** 变量 index 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	let index = 0;
+	/** event 是当前流事件；循环按序核对工具调用生命周期和内容索引。 */
 	for await (const event of s) {
 		if (event.type === "toolcall_start") {
 			hasToolStart = true;
@@ -181,6 +184,7 @@ async function handleToolCall<TApi extends Api>(model: Model<TApi>, options?: St
 	}
 }
 
+/** 验证文本事件按 start、delta、end 顺序流出；model 为目标模型，options 为可选参数；成功时无返回值。示例：await handleStreaming(model)。 */
 async function handleStreaming<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	/** 变量 textStarted 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	let textStarted = false;
@@ -198,6 +202,7 @@ async function handleStreaming<TApi extends Api>(model: Model<TApi>, options?: S
 	/** 常量 s 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const s = stream(model, context, options);
 
+	/** event 是当前文本流事件；循环累计增量并记录开始、结束标志。 */
 	for await (const event of s) {
 		if (event.type === "text_start") {
 			textStarted = true;
@@ -217,6 +222,7 @@ async function handleStreaming<TApi extends Api>(model: Model<TApi>, options?: S
 	expect(response.content.some((b) => b.type === "text")).toBeTruthy();
 }
 
+/** 验证支持推理的模型输出思考事件；model 为目标模型，options 为可选参数；成功时无返回值。示例：await handleThinking(model)。 */
 async function handleThinking<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	/** 变量 thinkingStarted 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	let thinkingStarted = false;
@@ -240,6 +246,7 @@ async function handleThinking<TApi extends Api>(model: Model<TApi>, options?: St
 	/** 常量 s 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const s = stream(model, context, options);
 
+	/** event 是当前思考流事件；循环累计思考增量并记录生命周期。 */
 	for await (const event of s) {
 		if (event.type === "thinking_start") {
 			thinkingStarted = true;
@@ -260,6 +267,7 @@ async function handleThinking<TApi extends Api>(model: Model<TApi>, options?: St
 	expect(response.content.some((b) => b.type === "thinking")).toBeTruthy();
 }
 
+/** 验证支持图片的模型可读取图像输入；model 为目标模型，options 为可选参数；不支持图片时直接返回。示例：await handleImage(model)。 */
 async function handleImage<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	// Check if the model supports images
 	// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -317,6 +325,7 @@ async function handleImage<TApi extends Api>(model: Model<TApi>, options?: Strea
 	}
 }
 
+/** 验证多轮文本与工具调用上下文可连续传递；model 为目标模型，options 为可选参数；成功时无返回值。示例：await multiTurn(model)。 */
 async function multiTurn<TApi extends Api>(model: Model<TApi>, options?: StreamOptionsWithExtras) {
 	/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const context: Context = {
@@ -1944,6 +1953,7 @@ describe("Generate E2E Tests", () => {
 				try {
 					execSync("ollama pull gpt-oss:20b", { stdio: "inherit" });
 				} catch (_e) {
+					/** _e 是本地模型拉取失败异常；此处不读取详情，只提示并跳过相关测试。 */
 					console.warn("Failed to pull gpt-oss:20b model, tests will be skipped");
 					return;
 				}

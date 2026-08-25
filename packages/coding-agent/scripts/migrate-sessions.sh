@@ -21,6 +21,7 @@ AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 DRY_RUN=false
 
 if [[ "$1" == "--dry-run" ]]; then
+	# DRY_RUN 在收到 --dry-run 时切换为 true，后续只输出计划而不移动文件。
     DRY_RUN=true
     echo "Dry run mode - no files will be moved"
     echo

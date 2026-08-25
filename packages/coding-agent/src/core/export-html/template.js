@@ -1427,6 +1427,7 @@
             success = true;
           }
         } catch (err) {
+          /** err 是 Clipboard API 写入失败异常；无需读取详情，随后尝试兼容回退方案。 */
           // Clipboard API failed, try fallback
           // 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
         }
@@ -1445,6 +1446,7 @@
             success = document.execCommand('copy');
             document.body.removeChild(textarea);
           } catch (err) {
+            /** err 是旧式复制命令失败异常，仅记录到控制台供导出页面调试。 */
             console.error('Failed to copy:', err);
           }
         }
@@ -1773,17 +1775,26 @@
             <div class="tools-header">Available Tools</div>
             <div class="tools-content">
               ${tools.map(t => {
+                /** hasParams 表示当前工具是否声明了至少一个参数属性。 */
                 const hasParams = t.parameters && typeof t.parameters === 'object' && t.parameters.properties && Object.keys(t.parameters.properties).length > 0;
                 if (!hasParams) {
                   return `<div class="tool-item"><span class="tool-item-name">${escapeHtml(t.name)}</span> - <span class="tool-item-desc">${escapeHtml(t.description)}</span></div>`;
                 }
+                /** params 是当前工具的参数模式对象，已由 hasParams 确认具有 properties。 */
                 const params = t.parameters;
+                /** properties 是按参数名索引的属性定义集合。 */
                 const properties = params.properties;
+                /** required 是必填参数名数组；未声明时使用空数组。 */
                 const required = params.required || [];
+                /** paramsHtml 累计当前工具各参数的 HTML 片段。 */
                 let paramsHtml = '';
+                /** name 与 prop 是当前参数名称和模式定义，用于生成一行参数说明。 */
                 for (const [name, prop] of Object.entries(properties)) {
+                  /** isRequired 表示当前参数名是否列在必填数组中。 */
                   const isRequired = required.includes(name);
+                  /** typeStr 是供页面展示的参数类型，缺失时回退为 any。 */
                   const typeStr = prop.type || 'any';
+                  /** reqLabel 是必填或可选状态对应的 HTML 标签。 */
                   const reqLabel = isRequired ? '<span class="tool-param-required">required</span>' : '<span class="tool-param-optional">optional</span>';
                   paramsHtml += `<div class="tool-param"><span class="tool-param-name">${escapeHtml(name)}</span> <span class="tool-param-type">${escapeHtml(typeStr)}</span> ${reqLabel}`;
                   if (prop.description) {
@@ -1940,9 +1951,11 @@
           html() {
             return undefined;
           },
+          /** 禁用默认 tag 解析；无参数，返回 undefined 让文本按普通 Markdown 处理。 */
           tag() {
             return undefined;
           },
+          /** 解析严格删除线标记；src 为候选源码，匹配时返回 del 令牌，否则返回 undefined。 */
           del(src) {
             /** 常量 match 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
             const match = strictStrikethroughRegex.exec(src);

@@ -124,46 +124,55 @@ async function captureClientBaseUrl(baseUrl: string): Promise<string> {
 describe("azure-openai-responses base URL normalization", () => {
 	it("normalizes Cognitive Services root endpoints to /openai/v1", async () => {
 		const baseURL = await captureClientBaseUrl("https://marc-quicktests-resource.cognitiveservices.azure.com");
+		/** baseURL 是 Cognitive Services 根地址经适配器规范化后的客户端基础地址。 */
 		expect(baseURL).toBe("https://marc-quicktests-resource.cognitiveservices.azure.com/openai/v1");
 	});
 
 	it("normalizes Microsoft Foundry root endpoints to /openai/v1", async () => {
 		const baseURL = await captureClientBaseUrl("https://marc-quicktests-resource.ai.azure.com");
+		/** baseURL 是 Microsoft Foundry 根地址规范化后的客户端基础地址。 */
 		expect(baseURL).toBe("https://marc-quicktests-resource.ai.azure.com/openai/v1");
 	});
 
 	it("normalizes Azure OpenAI root endpoints to /openai/v1", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-resource.openai.azure.com");
+		/** baseURL 是 Azure OpenAI 根地址规范化后的版本化 API 地址。 */
 		expect(baseURL).toBe("https://my-resource.openai.azure.com/openai/v1");
 	});
 
 	it("normalizes /openai to /openai/v1", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-resource.cognitiveservices.azure.com/openai");
+		/** baseURL 是已有 openai 路径补齐 v1 后的地址。 */
 		expect(baseURL).toBe("https://my-resource.cognitiveservices.azure.com/openai/v1");
 	});
 
 	it("preserves /openai/v1 endpoints", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-resource.cognitiveservices.azure.com/openai/v1");
+		/** baseURL 是已规范的 Azure 地址，预期保持原值。 */
 		expect(baseURL).toBe("https://my-resource.cognitiveservices.azure.com/openai/v1");
 	});
 
 	it("normalizes /openai/v1/responses to /openai/v1", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-resource.services.ai.azure.com/openai/v1/responses");
+		/** baseURL 是移除具体 responses 资源段后的通用 v1 基础地址。 */
 		expect(baseURL).toBe("https://my-resource.services.ai.azure.com/openai/v1");
 	});
 
 	it("preserves explicit non-Azure proxy paths", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-proxy.example.com/v1");
+		/** baseURL 是非 Azure 代理地址，适配器不应改写其自定义路径。 */
 		expect(baseURL).toBe("https://my-proxy.example.com/v1");
 	});
 
 	it("strips query params when normalizing Azure host URLs", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-resource.openai.azure.com/openai?api-version=2024-12-01");
+		/** baseURL 是去除 Azure 查询参数并补齐标准路径后的地址。 */
 		expect(baseURL).toBe("https://my-resource.openai.azure.com/openai/v1");
 	});
 
 	it("preserves query params on non-Azure proxy URLs", async () => {
 		const baseURL = await captureClientBaseUrl("https://my-proxy.example.com/v1?custom=true");
+		/** baseURL 是带自定义查询参数的非 Azure 代理地址，预期完整保留。 */
 		expect(baseURL).toBe("https://my-proxy.example.com/v1?custom=true");
 	});
 

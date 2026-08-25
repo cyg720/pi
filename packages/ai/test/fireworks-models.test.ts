@@ -180,6 +180,7 @@ function createContext(tools: Tool[] = [tool]): Context {
 async function readRequestBody(request: IncomingMessage): Promise<Record<string, unknown>> {
 	/** 按到达顺序收集的请求字节块。 */
 	const chunks: Buffer[] = [];
+	/** chunk 是 HTTP 请求正文的当前字节块；字符串块会统一转为 Buffer。 */
 	for await (const chunk of request) {
 		chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
 	}
@@ -237,6 +238,7 @@ async function captureAnthropicRequest(
 			sessionId: options?.sessionId,
 		});
 
+		/** event 是本地适配器流当前事件；收到完成或错误终止事件后停止等待。 */
 		for await (const event of stream) {
 			if (event.type === "done" || event.type === "error") break;
 		}
@@ -269,8 +271,10 @@ function getTools(body: Record<string, unknown>): Record<string, unknown>[] {
 /** 对比 Fireworks 与原生 Anthropic 的会话亲和和工具兼容字段。 */
 describe("Fireworks Anthropic session affinity and tool compat", () => {
 	it("sends x-session-affinity header for Fireworks models", async () => {
+		/** model 是启用 Fireworks 兼容设置的测试模型。 */
 		const model = createFireworksModel();
 		// Need a real port, capture will assign one
+		/** request 是带会话 ID 的 Fireworks 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "fireworks-session-1",
 		});
@@ -279,7 +283,9 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits x-session-affinity header for native Anthropic models", async () => {
+		/** model 是原生 Anthropic 测试模型，不应采用 Fireworks 亲和头。 */
 		const model = createAnthropicModel();
+		/** request 是带会话 ID 的原生 Anthropic 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "anthropic-session-1",
 		});
@@ -288,7 +294,9 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits x-session-affinity header when cacheRetention is none", async () => {
+		/** model 是 Fireworks 测试模型，用于验证关闭缓存时禁用亲和头。 */
 		const model = createFireworksModel();
+		/** request 是 cacheRetention 为 none 时捕获的 Fireworks 请求。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "fireworks-session-2",
 			cacheRetention: "none",
@@ -298,38 +306,53 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits cache_control on tools for Fireworks models", async () => {
+		/** model 是 Fireworks 测试模型，用于验证工具缓存字段兼容性。 */
 		const model = createFireworksModel();
+		/** request 是包含工具定义的 Fireworks 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
+		/** tools 是请求正文中的工具定义数组。 */
 		const tools = getTools(request.body);
+		/** lastTool 是最后一个工具，短缓存标记通常附着在该项。 */
 		const lastTool = tools[tools.length - 1];
 		expect(lastTool.cache_control).toBeUndefined();
 	});
 
 	it("omits eager_input_streaming on tools for Fireworks models", async () => {
+		/** model 是 Fireworks 测试模型，用于检查不兼容的 eager_input_streaming 字段。 */
 		const model = createFireworksModel();
+		/** request 是包含多项工具定义的 Fireworks 请求。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
+		/** tools 是请求正文中的全部工具定义。 */
 		const tools = getTools(request.body);
+		/** t 是当前工具定义；每项都不应包含 eager_input_streaming。 */
 		for (const t of tools) {
 			expect(t.eager_input_streaming).toBeUndefined();
 		}
 	});
 
 	it("sends cache_control on tools for native Anthropic models", async () => {
+		/** model 是原生 Anthropic 测试模型，应保留工具缓存控制字段。 */
 		const model = createAnthropicModel();
+		/** request 是原生 Anthropic 工具请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
+		/** tools 是原生请求中的工具定义数组。 */
 		const tools = getTools(request.body);
+		/** lastTool 是应带 ephemeral 缓存控制的最后一项工具。 */
 		const lastTool = tools[tools.length - 1];
 		expect(lastTool.cache_control).toBeDefined();
 		expect((lastTool.cache_control as { type: string }).type).toBe("ephemeral");
 	});
 
 	it("sends eager_input_streaming on tools for native Anthropic models", async () => {
+		/** model 是原生 Anthropic 测试模型，应支持工具参数提前流式输入。 */
 		const model = createAnthropicModel();
+		/** request 是原生 Anthropic 工具请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
+		/** tools 是请求正文中的工具定义数组，用首项验证提前流式标记。 */
 		const tools = getTools(request.body);
 		expect(tools[0].eager_input_streaming).toBe(true);
 	});

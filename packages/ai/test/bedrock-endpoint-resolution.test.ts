@@ -132,6 +132,7 @@ async function captureClientConfig(
 /** 覆盖 Bedrock 区域、端点与认证配置的优先级规则。 */
 describe("bedrock endpoint resolution", () => {
 	it("assigns eu-central-1 runtime URLs to built-in EU inference profiles", () => {
+		/** model 是内置欧盟推理配置模型，用于检查其预设运行时地址。 */
 		const model = getModel("amazon-bedrock", "eu.anthropic.claude-sonnet-4-5-20250929-v1:0");
 
 		expect(model.baseUrl).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com");
@@ -139,8 +140,10 @@ describe("bedrock endpoint resolution", () => {
 
 	it("does not pin standard AWS endpoints when AWS_REGION is configured", async () => {
 		process.env.AWS_REGION = "us-east-2";
+		/** model 是标准美国区域模型；配置环境区域时不应固定 SDK 端点。 */
 		const model = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
 
+		/** config 是 SDK 客户端构造参数，应采用环境区域且省略显式端点。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.region).toBe("us-east-2");
@@ -148,8 +151,10 @@ describe("bedrock endpoint resolution", () => {
 	});
 
 	it("derives region from a built-in EU endpoint when no region or profile is configured", async () => {
+		/** model 是带内置欧盟端点的模型，用于反向推导区域。 */
 		const model = getModel("amazon-bedrock", "eu.anthropic.claude-sonnet-4-5-20250929-v1:0");
 
+		/** config 是无环境区域和配置文件时生成的 SDK 参数。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.endpoint).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com");
@@ -157,8 +162,10 @@ describe("bedrock endpoint resolution", () => {
 	});
 
 	it("handles missing regions for explicit, scoped, and ambient profiles", async () => {
+		/** model 是带可推导欧盟端点的模型，用于比较三种配置文件来源。 */
 		const model = getModel("amazon-bedrock", "eu.anthropic.claude-sonnet-4-5-20250929-v1:0");
 
+		/** config 保存当前配置文件来源对应的 SDK 参数，并在本用例中依次重新赋值。 */
 		let config = await captureClientConfig(model, { profile: "bedrock-profile" });
 
 		expect(config.profile).toBe("bedrock-profile");
@@ -181,12 +188,15 @@ describe("bedrock endpoint resolution", () => {
 
 	it("still passes custom Bedrock endpoints through to the SDK client", async () => {
 		process.env.AWS_REGION = "us-west-2";
+		/** baseModel 是用于构造自定义 VPC 端点模型的内置配置基线。 */
 		const baseModel = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
+		/** model 是覆盖 baseUrl 后的测试模型，端点应原样传给 SDK。 */
 		const model: Model<"bedrock-converse-stream"> = {
 			...baseModel,
 			baseUrl: "https://bedrock-vpc.example.com",
 		};
 
+		/** config 是自定义端点模型生成的 SDK 客户端参数。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.endpoint).toBe("https://bedrock-vpc.example.com");
@@ -195,12 +205,15 @@ describe("bedrock endpoint resolution", () => {
 
 	it("extracts region from inference profile ARN regardless of AWS_REGION", async () => {
 		process.env.AWS_REGION = "us-east-1";
+		/** baseModel 是自定义商业区 ARN 模型的字段基线。 */
 		const baseModel = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
+		/** model 使用 us-west-2 推理配置 ARN，优先级应高于环境区域。 */
 		const model: Model<"bedrock-converse-stream"> = {
 			...baseModel,
 			id: "arn:aws:bedrock:us-west-2:123456789012:application-inference-profile/abc123",
 		};
 
+		/** config 是从商业区 ARN 推导后的 SDK 参数。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.region).toBe("us-west-2");
@@ -208,12 +221,15 @@ describe("bedrock endpoint resolution", () => {
 
 	it("extracts region from GovCloud inference profile ARN", async () => {
 		process.env.AWS_REGION = "us-east-1";
+		/** baseModel 是自定义 GovCloud ARN 模型的字段基线。 */
 		const baseModel = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
+		/** model 使用 aws-us-gov 分区 ARN，用于验证 GovCloud 区域解析。 */
 		const model: Model<"bedrock-converse-stream"> = {
 			...baseModel,
 			id: "arn:aws-us-gov:bedrock:us-gov-west-1:123456789012:application-inference-profile/abc123",
 		};
 
+		/** config 是从 GovCloud ARN 推导后的 SDK 参数。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.region).toBe("us-gov-west-1");
@@ -221,12 +237,15 @@ describe("bedrock endpoint resolution", () => {
 
 	it("preserves ambient AWS auth for custom model IDs through compat dispatch", async () => {
 		process.env.AWS_PROFILE = "bedrock-profile";
+		/** baseModel 是自定义推理配置 ARN 的字段基线。 */
 		const baseModel = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
+		/** model 使用自定义 ARN，同时应保留环境中的 AWS 配置文件认证。 */
 		const model: Model<"bedrock-converse-stream"> = {
 			...baseModel,
 			id: "arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/example",
 		};
 
+		/** config 是兼容分派最终交给 SDK 的认证与端点参数。 */
 		const config = await captureClientConfig(model);
 
 		expect(config.profile).toBe("bedrock-profile");
@@ -235,8 +254,10 @@ describe("bedrock endpoint resolution", () => {
 	});
 
 	it("uses the generic API key option as a Bedrock bearer token", async () => {
+		/** model 是用于验证通用 apiKey 映射为 Bedrock Bearer Token 的标准模型。 */
 		const model = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
 
+		/** config 是传入通用 API Key 后生成的 SDK 认证参数。 */
 		const config = await captureClientConfig(model, { apiKey: "bedrock-api-key" });
 
 		expect(config.token).toEqual({ token: "bedrock-api-key" });

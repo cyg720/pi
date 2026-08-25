@@ -1,3 +1,11 @@
+/**
+ * 文件职责：通过启动真实 RPC 子进程端到端验证状态、会话持久化、压缩、Bash、模型设置、树查询和导出接口。
+ * 技术维度：使用 Vitest 长超时、RpcClient、临时会话目录、真实提供商凭据和 JSONL 磁盘检查覆盖进程边界。
+ * 产品维度：保障外部编辑器或自动化客户端可稳定控制 Pi，并从 RPC 获得与交互模式一致的会话能力。
+ * 逻辑维度：每个用例启动独立客户端，依次测试查询、消息与 Bash 持久化、设置、会话管理、条目/树和元数据。
+ * 关键边界：需要 Anthropic 凭据和已构建 dist/cli.js；包含真实模型与 Shell 调用；单用例超时最长两分钟。
+ * 新手阅读建议：先看 beforeEach 的 RpcClient 配置和 getState，再看 promptAndWait/文件检查，最后读 entries/tree 游标语义。
+ */
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -417,6 +425,7 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_OAUTH_T
 		/** 全量条目和当前叶节点。 */
 		const { entries, leafId } = await client.getEntries();
 		expect(entries.length).toBeGreaterThanOrEqual(2); // user + assistant
+		/** entry 是 RPC 返回的当前会话条目；每项都应带持久化生成的标识。 */
 		for (const entry of entries) {
 			expect(entry.id).toBeDefined();
 		}

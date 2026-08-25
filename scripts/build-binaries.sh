@@ -50,26 +50,32 @@ OUTPUT_DIR=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-install)
+			# SKIP_INSTALL 由该选项切换为 true，禁止执行 npm ci。
             SKIP_INSTALL=true
             shift
             ;;
         --skip-deps)
+			# SKIP_DEPS 由该选项切换为 true，跳过跨平台原生依赖安装。
             SKIP_DEPS=true
             shift
             ;;
         --skip-build)
+			# SKIP_BUILD 由该选项切换为 true，复用已有包构建结果。
             SKIP_BUILD=true
             shift
             ;;
         --offline-model-data)
+			# OFFLINE_MODEL_DATA 由该选项切换为 true，构建时只使用仓库内置模型数据。
             OFFLINE_MODEL_DATA=true
             shift
             ;;
         --platform)
+			# PLATFORM 保存 --platform 后的目标平台名，稍后会校验其是否在六个平台内。
             PLATFORM="$2"
             shift 2
             ;;
         --out)
+			# OUTPUT_DIR 保存 --out 后的输出目录，参数解析后会转换为绝对路径。
             OUTPUT_DIR="$2"
             shift 2
             ;;
@@ -95,9 +101,11 @@ if [[ -n "$PLATFORM" ]]; then
 fi
 
 if [[ -z "$OUTPUT_DIR" ]]; then
+	# OUTPUT_DIR 未指定时采用 coding-agent 包内的默认 binaries 目录。
     OUTPUT_DIR="packages/coding-agent/binaries"
 fi
 if [[ "$OUTPUT_DIR" != /* ]]; then
+	# OUTPUT_DIR 为相对路径时，以仓库根目录为基准转换为绝对路径。
     OUTPUT_DIR="$(pwd)/$OUTPUT_DIR"
 fi
 
@@ -153,8 +161,10 @@ mkdir -p "$OUTPUT_DIR"/{darwin-arm64,darwin-x64,linux-x64,linux-arm64,windows-x6
 # 根据 --platform 选择单个平台，否则构建六个平台。
 # 实际要编译和打包的平台数组。
 if [[ -n "$PLATFORM" ]]; then
+	# PLATFORMS 只包含命令行指定且已校验的单个平台。
     PLATFORMS=("$PLATFORM")
 else
+	# PLATFORMS 未指定筛选条件时包含全部六个发布目标。
     PLATFORMS=(darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64 windows-arm64)
 fi
 
@@ -192,27 +202,39 @@ for platform in "${PLATFORMS[@]}"; do
 # 当前平台对应的 clipboard .node 文件名。
     case "$platform" in
         darwin-arm64)
+			# clipboard_native_package 是 macOS ARM64 对应的 clipboard 包名。
             clipboard_native_package="clipboard-darwin-arm64"
+			# clipboard_native_file 是 macOS ARM64 对应的原生模块文件名。
             clipboard_native_file="clipboard.darwin-arm64.node"
             ;;
         darwin-x64)
+			# clipboard_native_package 是 macOS x64 对应的 clipboard 包名。
             clipboard_native_package="clipboard-darwin-x64"
+			# clipboard_native_file 是 macOS x64 对应的原生模块文件名。
             clipboard_native_file="clipboard.darwin-x64.node"
             ;;
         linux-x64)
+			# clipboard_native_package 是 Linux x64 GNU 对应的 clipboard 包名。
             clipboard_native_package="clipboard-linux-x64-gnu"
+			# clipboard_native_file 是 Linux x64 对应的原生模块文件名。
             clipboard_native_file="clipboard.linux-x64-gnu.node"
             ;;
         linux-arm64)
+			# clipboard_native_package 是 Linux ARM64 GNU 对应的 clipboard 包名。
             clipboard_native_package="clipboard-linux-arm64-gnu"
+			# clipboard_native_file 是 Linux ARM64 对应的原生模块文件名。
             clipboard_native_file="clipboard.linux-arm64-gnu.node"
             ;;
         windows-x64)
+			# clipboard_native_package 是 Windows x64 MSVC 对应的 clipboard 包名。
             clipboard_native_package="clipboard-win32-x64-msvc"
+			# clipboard_native_file 是 Windows x64 对应的原生模块文件名。
             clipboard_native_file="clipboard.win32-x64-msvc.node"
             ;;
         windows-arm64)
+			# clipboard_native_package 是 Windows ARM64 MSVC 对应的 clipboard 包名。
             clipboard_native_package="clipboard-win32-arm64-msvc"
+			# clipboard_native_file 是 Windows ARM64 对应的原生模块文件名。
             clipboard_native_file="clipboard.win32-arm64-msvc.node"
             ;;
     esac

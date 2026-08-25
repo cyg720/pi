@@ -40,11 +40,13 @@ function createErrorMessage(errorMessage: string): AssistantMessage {
 
 describe("isContextOverflow", () => {
 	it("detects explicit Ollama prompt-too-long errors", () => {
+		/** message 是 Fireworks 风格的超长上下文错误消息，预期被识别为溢出。 */
 		const message = createErrorMessage("400 `prompt too long; exceeded max context length by 100918 tokens`");
 		expect(isContextOverflow(message, 32768)).toBe(true);
 	});
 
 	it("detects Together AI context length errors", () => {
+		/** message 是 Together AI 返回的输入长度错误消息，包含实际值和模型上限。 */
 		const message = createErrorMessage(
 			"400 The input (516368 tokens) is longer than the model's context length (262144 tokens).",
 		);
@@ -52,6 +54,7 @@ describe("isContextOverflow", () => {
 	});
 
 	it("detects LiteLLM-wrapped OpenAI maximum context length errors", () => {
+		/** message 是 LiteLLM 包装的最大上下文错误，预期穿透多层错误前缀后仍被识别。 */
 		const message = createErrorMessage(
 			"Error: 503 litellm.ServiceUnavailableError: litellm.MidStreamFallbackError: litellm.APIConnectionError: APIConnectionError: OpenAIException - Requested token count exceeds the model's maximum context length of 131072 tokens.",
 		);
@@ -59,6 +62,7 @@ describe("isContextOverflow", () => {
 	});
 
 	it("detects OpenAI-compatible parenthesized maximum context length errors", () => {
+		/** message 是通用 input length 超限错误，数值超过给定模型窗口。 */
 		const message = createErrorMessage(
 			"Error: 400 Input length (265330) exceeds model's maximum context length (262144).",
 		);
@@ -66,6 +70,7 @@ describe("isContextOverflow", () => {
 	});
 
 	it("detects OpenRouter Poolside maximum allowed input length errors", () => {
+		/** message 是最大允许输入长度错误，预期按上下文窗口容差识别为溢出。 */
 		const message = createErrorMessage(
 			"Provider returned error: Input length 131393 exceeds the maximum allowed input length of 131040 tokens.",
 		);
@@ -87,6 +92,7 @@ describe("isContextOverflow", () => {
 	});
 
 	it("does not treat generic non-overflow Ollama errors as overflow", () => {
+		/** message 是普通模型运行器崩溃错误，不含上下文超限语义。 */
 		const message = createErrorMessage("500 `model runner crashed unexpectedly`");
 		expect(isContextOverflow(message, 32768)).toBe(false);
 	});
@@ -101,16 +107,19 @@ describe("isContextOverflow", () => {
 	});
 
 	it("does not treat Bedrock service unavailable as overflow", () => {
+		/** message 是临时服务不可用错误，不能误判为上下文溢出。 */
 		const message = createErrorMessage("Service unavailable: The service is temporarily unavailable.");
 		expect(isContextOverflow(message, 200000)).toBe(false);
 	});
 
 	it("does not treat generic rate limit errors as overflow", () => {
+		/** message 是通用速率限制错误，与上下文长度无关。 */
 		const message = createErrorMessage("Rate limit exceeded, please retry after 30 seconds.");
 		expect(isContextOverflow(message, 200000)).toBe(false);
 	});
 
 	it("does not treat HTTP 429 style errors as overflow", () => {
+		/** message 是 HTTP 429 风格请求过多错误，不应被“Too many”字样误导。 */
 		const message = createErrorMessage("Too many requests. Please slow down.");
 		expect(isContextOverflow(message, 200000)).toBe(false);
 	});
@@ -137,16 +146,19 @@ describe("isContextOverflow", () => {
 	}
 
 	it("detects Xiaomi-style overflow (length stop with zero output and filled context)", () => {
+		/** message 是输入加缓存读取接近上下文上限且无输出的 length 停止消息。 */
 		const message = createLengthStopMessage(58, 1048512, 0);
 		expect(isContextOverflow(message, 1048576)).toBe(true);
 	});
 
 	it("does not treat normal length stops with output as overflow", () => {
+		/** message 是包含正常输出的 length 停止消息，不表示输入上下文溢出。 */
 		const message = createLengthStopMessage(1000, 0, 4096);
 		expect(isContextOverflow(message, 200000)).toBe(false);
 	});
 
 	it("does not treat length stops far below context as overflow", () => {
+		/** message 是远低于上下文上限的 length 停止消息，不应判定为溢出。 */
 		const message = createLengthStopMessage(100, 0, 0);
 		expect(isContextOverflow(message, 200000)).toBe(false);
 	});

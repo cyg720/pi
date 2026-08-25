@@ -160,6 +160,7 @@ describe("openai-codex streaming", () => {
 		const encoder = new TextEncoder();
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 				controller.close();
@@ -222,6 +223,7 @@ describe("openai-codex streaming", () => {
 		/** 变量 sawDone 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let sawDone = false;
 
+		/** event 是当前异步事件流产出的事件；循环按顺序处理，取值仅在本轮有效。 */
 		for await (const event of streamResult) {
 			if (event.type === "text_delta") {
 				sawTextDelta = true;
@@ -250,6 +252,7 @@ describe("openai-codex streaming", () => {
 
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 			},
@@ -321,6 +324,7 @@ describe("openai-codex streaming", () => {
 
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 			},
@@ -456,6 +460,7 @@ describe("openai-codex streaming", () => {
 		let cancelled = false;
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				/** enqueue 封装当前回调或辅助步骤；参数 chunk: string 提供输入，返回值用于后续流程。示例：enqueue(...)。 */
 				const enqueue = (chunk: string) => {
@@ -509,6 +514,7 @@ describe("openai-codex streaming", () => {
 					}, 20),
 				);
 			},
+			/** 取消当前模拟响应流；无参数且无返回值，用于验证取消回调。 */
 			cancel() {
 				cancelled = true;
 				/** 循环变量 timer 表示当前遍历项或索引，仅在循环体内有效。 */
@@ -550,6 +556,7 @@ describe("openai-codex streaming", () => {
 			transport: "sse",
 			signal: controller.signal,
 		});
+		/** event 是当前异步事件流产出的事件；循环按顺序处理，取值仅在本轮有效。 */
 		for await (const event of resultStream) {
 			events.push(event.type === "text_delta" ? `text_delta:${event.delta}` : event.type);
 			if (event.type === "text_delta" && event.delta === "one") {
@@ -616,6 +623,7 @@ describe("openai-codex streaming", () => {
 		const encoder = new TextEncoder();
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 				controller.close();
@@ -700,6 +708,7 @@ describe("openai-codex streaming", () => {
 				capturedBody = decodeCodexRequestBody(init?.body);
 				return new Response(
 					new ReadableStream<Uint8Array>({
+						/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 						start(controller) {
 							controller.enqueue(encoder.encode(buildSSEPayload({ status: "completed" })));
 							controller.close();
@@ -757,6 +766,7 @@ describe("openai-codex streaming", () => {
 				async () =>
 					new Response(
 						new ReadableStream<Uint8Array>({
+							/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 							start(controller) {
 								controller.enqueue(encoder.encode(buildSSEPayload({ status: "completed" })));
 								controller.close();
@@ -814,6 +824,7 @@ describe("openai-codex streaming", () => {
 				capturedHeaders = init?.headers instanceof Headers ? init.headers : undefined;
 				return new Response(
 					new ReadableStream<Uint8Array>({
+						/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 						start(controller) {
 							controller.enqueue(encoder.encode(buildSSEPayload({ status: "completed" })));
 							controller.close();
@@ -866,6 +877,7 @@ describe("openai-codex streaming", () => {
 		const encoder = new TextEncoder();
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 				controller.close();
@@ -943,6 +955,7 @@ describe("openai-codex streaming", () => {
 				requestedToolChoice = decodeCodexRequestBody(init?.body)?.tool_choice;
 				return new Response(
 					new ReadableStream<Uint8Array>({
+						/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 						start(controller) {
 							controller.enqueue(encoder.encode(sse));
 							controller.close();
@@ -1004,6 +1017,7 @@ describe("openai-codex streaming", () => {
 				async () =>
 					new Response(
 						new ReadableStream<Uint8Array>({
+							/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 							start(controller) {
 								controller.enqueue(encoder.encode(sse));
 								controller.close();
@@ -1113,6 +1127,7 @@ describe("openai-codex streaming", () => {
 		const encoder = new TextEncoder();
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 				controller.close();
@@ -1225,6 +1240,7 @@ describe("openai-codex streaming", () => {
 			const encoder = new TextEncoder();
 			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new ReadableStream<Uint8Array>({
+				/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 				start(controller) {
 					controller.enqueue(encoder.encode(sse));
 					controller.close();
@@ -1334,6 +1350,7 @@ describe("openai-codex streaming", () => {
 		const encoder = new TextEncoder();
 		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = new ReadableStream<Uint8Array>({
+			/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 			start(controller) {
 				controller.enqueue(encoder.encode(sse));
 				controller.close();
@@ -1409,8 +1426,10 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor(_url: string, protocols?: string | string[] | { headers?: Record<string, string> }) {
 				if (protocols && typeof protocols === "object" && !Array.isArray(protocols)) {
 					capturedWebSocketHeaders = protocols.headers;
@@ -1418,6 +1437,7 @@ describe("openai-codex streaming", () => {
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -1428,10 +1448,12 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(data: string): void {
 				sentBodies.push(JSON.parse(data));
 				/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
@@ -1473,8 +1495,10 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -1534,13 +1558,16 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor() {
 				connections++;
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -1551,10 +1578,12 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(data: string): void {
 				sentBodies.push(JSON.parse(data) as { prompt_cache_key?: string });
 				queueMicrotask(() => {
@@ -1571,10 +1600,12 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {
 				closedConnections++;
 			}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -1646,6 +1677,7 @@ describe("openai-codex streaming", () => {
 
 			return new Response(
 				new ReadableStream<Uint8Array>({
+					/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 					start(controller) {
 						controller.enqueue(encoder.encode(sse));
 						controller.close();
@@ -1658,8 +1690,10 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -1670,14 +1704,17 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(): void {
 				throw new Error("send should not be called before websocket open");
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {}
 		}
 
@@ -1738,13 +1775,16 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket extends EventTarget {
+			/** limitReached 标记当前连接是否触发并发限制，取值由连接序号决定。 */
 			private readonly limitReached = connections++ === 0;
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor() {
 				super();
 				queueMicrotask(() => this.dispatchEvent(new Event("open")));
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(): void {
 				/** 常量 event 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const event = this.limitReached
@@ -1762,6 +1802,7 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {}
 		}
 
@@ -1817,6 +1858,7 @@ describe("openai-codex streaming", () => {
 
 			return new Response(
 				new ReadableStream<Uint8Array>({
+					/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 					start(controller) {
 						controller.enqueue(encoder.encode(sse));
 						controller.close();
@@ -1829,14 +1871,19 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** OPEN 是模拟 WebSocket 已连接状态码，值固定为 1。 */
 			static OPEN = 1;
+			/** readyState 保存当前模拟连接状态，初始为 OPEN，关闭后按场景更新。 */
 			readyState = MockWebSocket.OPEN;
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor(_url: string, _protocols?: string | string[] | { headers?: Record<string, string> }) {
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -1847,18 +1894,22 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(data: string): void {
 				sentBodies.push(JSON.parse(data));
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {
 				this.readyState = 3;
 			}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -1923,14 +1974,19 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** OPEN 是模拟 WebSocket 已连接状态码，值固定为 1。 */
 			static OPEN = 1;
+			/** readyState 保存当前模拟连接状态，初始为 OPEN，关闭后按场景更新。 */
 			readyState = MockWebSocket.OPEN;
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor(_url: string, _protocols?: string | string[] | { headers?: Record<string, string> }) {
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -1941,10 +1997,12 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(): void {
 				queueMicrotask(() => {
 					this.dispatch("message", {
@@ -1956,10 +2014,12 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {
 				this.readyState = 3;
 			}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -2021,16 +2081,23 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** OPEN 是模拟 WebSocket 已连接状态码，值固定为 1。 */
 			static OPEN = 1;
+			/** CLOSED 是模拟 WebSocket 已关闭状态码，值固定为 3。 */
 			static CLOSED = 3;
+			/** readyState 保存当前模拟连接状态，初始为 OPEN，关闭后按场景更新。 */
 			readyState = MockWebSocket.OPEN;
+			/** connectionId 是当前模拟连接的递增编号，用于区分重连前后的行为。 */
 			private readonly connectionId = ++connections;
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor(_url: string, _protocols?: string | string[] | { headers?: Record<string, string> }) {
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -2041,10 +2108,12 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(): void {
 				sentConnectionIds.push(this.connectionId);
 				/** 常量 responseId 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
@@ -2063,10 +2132,12 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {
 				this.readyState = MockWebSocket.CLOSED;
 			}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -2134,14 +2205,19 @@ describe("openai-codex streaming", () => {
 
 		/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 		class MockWebSocket {
+			/** OPEN 是模拟 WebSocket 已连接状态码，值固定为 1。 */
 			static OPEN = 1;
+			/** readyState 保存当前模拟连接状态，初始为 OPEN，关闭后按场景更新。 */
 			readyState = MockWebSocket.OPEN;
+			/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 			private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+			/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 			constructor(_url: string, _protocols?: string | string[] | { headers?: Record<string, string> }) {
 				queueMicrotask(() => this.dispatch("open", {}));
 			}
 
+			/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 			addEventListener(type: string, listener: (event: unknown) => void): void {
 				/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				let listeners = this.listeners.get(type);
@@ -2152,10 +2228,12 @@ describe("openai-codex streaming", () => {
 				listeners.add(listener);
 			}
 
+			/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 			removeEventListener(type: string, listener: (event: unknown) => void): void {
 				this.listeners.get(type)?.delete(listener);
 			}
 
+			/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 			send(data: string): void {
 				sentBodies.push(JSON.parse(data));
 				/** 常量 responseId 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
@@ -2214,10 +2292,12 @@ describe("openai-codex streaming", () => {
 				});
 			}
 
+			/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 			close(): void {
 				this.readyState = 3;
 			}
 
+			/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 			private dispatch(type: string, event: unknown): void {
 				/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 				for (const listener of this.listeners.get(type) ?? []) {
@@ -2327,6 +2407,7 @@ describe("openai-codex streaming", () => {
 				async () =>
 					new Response(
 						new ReadableStream<Uint8Array>({
+							/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 							start(controller) {
 								controller.enqueue(encoder.encode(buildSSEPayload({ status: "completed" })));
 								controller.close();
@@ -2347,16 +2428,23 @@ describe("openai-codex streaming", () => {
 
 			/** 模拟当前场景所需的 WebSocket 生命周期、监听器和服务端事件；仅用于本用例的内存协议替身。 */
 			class MockWebSocket {
+				/** OPEN 是模拟 WebSocket 已连接状态码，值固定为 1。 */
 				static OPEN = 1;
+				/** CLOSED 是模拟 WebSocket 已关闭状态码，值固定为 3。 */
 				static CLOSED = 3;
+				/** readyState 保存当前模拟连接状态，初始为 OPEN，关闭后按场景更新。 */
 				readyState = MockWebSocket.OPEN;
+				/** connectionId 是当前模拟连接的递增编号，用于区分重连前后的行为。 */
 				private readonly connectionId = ++connections;
+				/** listeners 按事件类型保存模拟 WebSocket 监听器，仅在当前实例内有效。 */
 				private listeners = new Map<string, Set<(event: unknown) => void>>();
 
+				/** 创建当前模拟 WebSocket；参数为连接地址与可选协议或请求头，仅供本用例使用。 */
 				constructor(_url: string, _protocols?: string | string[] | { headers?: Record<string, string> }) {
 					queueMicrotask(() => this.dispatch("open", {}));
 				}
 
+				/** 注册事件监听器；type 为事件类型，listener 为回调，无返回值。 */
 				addEventListener(type: string, listener: (event: unknown) => void): void {
 					/** 变量 listeners 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					let listeners = this.listeners.get(type);
@@ -2367,10 +2455,12 @@ describe("openai-codex streaming", () => {
 					listeners.add(listener);
 				}
 
+				/** 移除事件监听器；type 为事件类型，listener 为原回调，无返回值。 */
 				removeEventListener(type: string, listener: (event: unknown) => void): void {
 					this.listeners.get(type)?.delete(listener);
 				}
 
+				/** 处理客户端发送的数据；data（若存在）为序列化请求，无返回值，并按场景触发模拟响应。 */
 				send(data: string): void {
 					/** 常量 body 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const body = JSON.parse(data) as { input: unknown[]; previous_response_id?: string };
@@ -2453,10 +2543,12 @@ describe("openai-codex streaming", () => {
 					]);
 				}
 
+				/** 关闭当前模拟连接；无参数且无返回值，用于结束本用例连接生命周期。 */
 				close(): void {
 					this.readyState = MockWebSocket.CLOSED;
 				}
 
+				/** 依次分派模拟服务端事件；events 为事件数组，无返回值。 */
 				private dispatchEvents(events: unknown[]): void {
 					queueMicrotask(() => {
 						/** 循环变量 event 表示当前遍历项或索引，仅在循环体内有效。 */
@@ -2466,6 +2558,7 @@ describe("openai-codex streaming", () => {
 					});
 				}
 
+				/** 向指定类型的全部监听器分派事件；type 为类型，event 为载荷，无返回值。 */
 				private dispatch(type: string, event: unknown): void {
 					/** 循环变量 listener 表示当前遍历项或索引，仅在循环体内有效。 */
 					for (const listener of this.listeners.get(type) ?? []) {
@@ -2514,6 +2607,7 @@ describe("openai-codex streaming", () => {
 				sessionId,
 				transport: "websocket-cached",
 			});
+			/** event 是当前异步事件流产出的事件；循环按顺序处理，取值仅在本轮有效。 */
 			for await (const event of secondStream) {
 				eventTypes.push(event.type);
 			}
@@ -2590,6 +2684,7 @@ describe("openai-codex streaming", () => {
 
 			return new Response(
 				new ReadableStream<Uint8Array>({
+					/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 					start(controller) {
 						controller.enqueue(encoder.encode(sse));
 						controller.close();
@@ -2707,6 +2802,7 @@ describe("openai-codex streaming", () => {
 			capturedBody = init?.body as Uint8Array | string | undefined;
 			return new Response(
 				new ReadableStream<Uint8Array>({
+					/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 					start(controller) {
 						controller.enqueue(encoder.encode(sse));
 						controller.close();
@@ -2798,6 +2894,7 @@ describe("openai-codex streaming", () => {
 
 			return new Response(
 				new ReadableStream<Uint8Array>({
+					/** 启动当前模拟响应流；controller 为流控制器，方法按本场景推送事件后关闭或报错。 */
 					start(controller) {
 						controller.enqueue(encoder.encode(sse));
 						controller.close();

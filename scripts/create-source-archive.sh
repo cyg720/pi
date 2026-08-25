@@ -45,16 +45,19 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --version)
             require_value "$@"
+			# version 保存 --version 后的发布版本，并在解析完成后校验安全字符和包版本一致性。
             version="$2"
             shift 2
             ;;
         --ref)
             require_value "$@"
+			# source_ref 保存 --ref 后的 Git 引用，稍后解析为确定提交对象。
             source_ref="$2"
             shift 2
             ;;
         --out)
             require_value "$@"
+			# output 保存 --out 后的归档路径，稍后相对调用目录转换为绝对路径。
             output="$2"
             shift 2
             ;;
