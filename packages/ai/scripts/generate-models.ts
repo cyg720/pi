@@ -1067,6 +1067,7 @@ async function fetchNvidiaNimModelIds(): Promise<Map<string, string>> {
 		console.log(`Fetched ${data.data?.length ?? 0} model IDs from NVIDIA NIM`);
 		return modelIds;
 	} catch (error) {
+		/** error 是 NVIDIA NIM 目录请求异常；严格模式重抛，否则回退为空映射。 */
 		console.error("Failed to fetch NVIDIA NIM models:", error);
 		if (generatorOptions.strict) throw error;
 		return new Map();
@@ -1144,6 +1145,7 @@ async function fetchOpenRouterModels(): Promise<Model<any>[]> {
 		console.log(`Fetched ${models.length} tool-capable models from OpenRouter`);
 		return models;
 	} catch (error) {
+		/** error 是 OpenRouter 目录请求或解析异常；严格模式重抛，否则返回空列表。 */
 		console.error("Failed to fetch OpenRouter models:", error);
 		if (generatorOptions.strict) throw error;
 		return [];
@@ -1219,6 +1221,7 @@ async function fetchAiGatewayModels(): Promise<Model<any>[]> {
 		console.log(`Fetched ${models.length} tool-capable models from Vercel AI Gateway`);
 		return models;
 	} catch (error) {
+		/** error 是 Vercel AI Gateway 目录请求异常；严格模式重抛，否则返回空列表。 */
 		console.error("Failed to fetch Vercel AI Gateway models:", error);
 		if (generatorOptions.strict) throw error;
 		return [];
@@ -2329,6 +2332,7 @@ async function loadModelsDevData(): Promise<Model<any>[]> {
 		console.log(`Loaded ${models.length} tool-capable models from models.dev`);
 		return models;
 	} catch (error) {
+		/** error 是 models.dev 数据读取或解析异常；严格模式重抛，否则返回空列表。 */
 		console.error("Failed to load models.dev data:", error);
 		if (generatorOptions.strict) throw error;
 		return [];
@@ -3069,6 +3073,7 @@ async function generateModels() {
 				renameSync(stagedDataDir, dataDir);
 				validateGeneratedModelData(packageRoot);
 			} catch (error) {
+				/** error 是新目录替换或校验异常；恢复旧目录后继续向上传递。 */
 				rmSync(dataDir, { recursive: true, force: true });
 				if (hadPreviousData && existsSync(previousDataDir)) renameSync(previousDataDir, dataDir);
 				throw error;
@@ -3080,6 +3085,7 @@ async function generateModels() {
 					: "Generated JSON model values under src/providers/data/",
 			);
 		} catch (error) {
+			/** error 是生成目录发布阶段异常；先恢复目录文件，再交由调用方处理。 */
 			restoreGeneratedCatalog?.();
 			throw error;
 		} finally {

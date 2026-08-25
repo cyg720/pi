@@ -27,6 +27,7 @@ const oauthTokens = await Promise.all([
 /** 常量 [anthropicOAuthToken, githubCopilotToken, openaiCodexToken] 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 const [anthropicOAuthToken, githubCopilotToken, openaiCodexToken] = oauthTokens;
 
+/** 使用给定模型发送完全空的用户内容并验证结果；llm 为目标模型，options 为可选流参数；成功时无返回值。示例：await testEmptyMessage(model)。 */
 async function testEmptyMessage<TApi extends Api>(llm: Model<TApi>, options: StreamOptionsWithExtras = {}) {
 	// Test with completely empty content array
 	// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -57,6 +58,7 @@ async function testEmptyMessage<TApi extends Api>(llm: Model<TApi>, options: Str
 	}
 }
 
+/** 使用给定模型发送空字符串内容并验证兼容性；llm 为目标模型，options 为可选流参数；成功时无返回值。示例：await testEmptyStringMessage(model)。 */
 async function testEmptyStringMessage<TApi extends Api>(llm: Model<TApi>, options: StreamOptionsWithExtras = {}) {
 	// Test with empty string content
 	// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -85,6 +87,7 @@ async function testEmptyStringMessage<TApi extends Api>(llm: Model<TApi>, option
 	}
 }
 
+/** 使用给定模型发送仅含空白字符的内容；llm 为目标模型，options 为可选流参数；成功时无返回值。示例：await testWhitespaceOnlyMessage(model)。 */
 async function testWhitespaceOnlyMessage<TApi extends Api>(llm: Model<TApi>, options: StreamOptionsWithExtras = {}) {
 	// Test with whitespace-only content
 	// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
@@ -113,6 +116,7 @@ async function testWhitespaceOnlyMessage<TApi extends Api>(llm: Model<TApi>, opt
 	}
 }
 
+/** 验证对话历史中的空助手消息可被处理；llm 为目标模型，options 为可选流参数；成功时无返回值。示例：await testEmptyAssistantMessage(model)。 */
 async function testEmptyAssistantMessage<TApi extends Api>(llm: Model<TApi>, options: StreamOptionsWithExtras = {}) {
 	// Test with empty assistant message in conversation flow
 	// User -> Empty Assistant -> User

@@ -64,6 +64,7 @@ function asCalculatorArguments(args: ToolCall["arguments"]): CalculatorArguments
 /** 功能：计算一条已校验工具调用；参数 toolCall；返回：数值结果。示例：evaluateCalculatorCall(call)。 */
 function evaluateCalculatorCall(toolCall: ToolCall): number {
 	const { a, b, operation } = asCalculatorArguments(toolCall.arguments);
+	/** a、b 是已校验的数值操作数，operation 只允许加、减、乘、除四类运算。 */
 	switch (operation) {
 		case "add":
 			return a + b;
@@ -146,11 +147,13 @@ const hasAnthropicCredentials = !!getEnvApiKey("anthropic");
 describe.skipIf(!hasBedrockCredentials())("Amazon Bedrock interleaved thinking", () => {
 	it("should do interleaved thinking on Claude Opus 4.5", { retry: 3 }, async () => {
 		const llm = getModel("amazon-bedrock", "global.anthropic.claude-opus-4-5-20251101-v1:0");
+		/** llm 是本用例选定的 Bedrock Opus 4.5 模型，用于验证高强度交错思考。 */
 		await assertSecondToolCallWithInterleavedThinking(llm, "high");
 	});
 
 	it("should do interleaved thinking on Claude Opus 4.6", { retry: 3 }, async () => {
 		const llm = getModel("amazon-bedrock", "global.anthropic.claude-opus-4-6-v1");
+		/** llm 是本用例选定的 Bedrock Opus 4.6 模型，用于验证高强度交错思考。 */
 		await assertSecondToolCallWithInterleavedThinking(llm, "high");
 	});
 });
@@ -158,11 +161,13 @@ describe.skipIf(!hasBedrockCredentials())("Amazon Bedrock interleaved thinking",
 describe.skipIf(!hasAnthropicCredentials)("Anthropic interleaved thinking", () => {
 	it("should do interleaved thinking on Claude Opus 4.5", { retry: 3 }, async () => {
 		const llm = getModel("anthropic", "claude-opus-4-5");
+		/** llm 是 Anthropic 原生 Opus 4.5 模型，仅在凭据可用时执行在线契约。 */
 		await assertSecondToolCallWithInterleavedThinking(llm, "high");
 	});
 
 	it("should do interleaved thinking on Claude Opus 4.6", { retry: 3 }, async () => {
 		const llm = getModel("anthropic", "claude-opus-4-6");
+		/** llm 是 Anthropic 原生 Opus 4.6 模型，仅在凭据可用时执行在线契约。 */
 		await assertSecondToolCallWithInterleavedThinking(llm, "high");
 	});
 });

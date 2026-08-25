@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证 AgentSession 面对可重试错误时的重试次数、事件、等待语义和工具循环完整性。
+ * 技术维度：使用 Vitest、可编程 EventStream、内存 SessionManager 和临时认证配置模拟提供商响应序列。
+ * 产品维度：保障网络抖动或服务过载时用户请求能自动恢复，且 prompt 不会在后台工作未结束时提前返回。
+ * 逻辑维度：先定义模拟消息流和会话工厂，再测试成功重试、耗尽、延迟事件、network_error 及重试后的工具循环。
+ * 关键边界：重试延迟缩短为 1ms；临时目录在用例后递归删除；模拟流只接受 done/error 作为终止事件。
+ * 新手阅读建议：先看 MockAssistantStream 和 createSession，再读前三个基础重试用例，最后分析工具调用回归场景。
+ */
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

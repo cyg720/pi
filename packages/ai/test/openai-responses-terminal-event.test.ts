@@ -204,6 +204,7 @@ describe("OpenAI Responses terminal event handling", () => {
 		// events 收集包装器输出的全部统一事件。
 		const events: AssistantMessageEvent[] = [];
 
+		/** event 是包装流当前产出的统一事件；循环完整收集后再检查终止顺序。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
@@ -223,6 +224,7 @@ describe("OpenAI Responses terminal event handling", () => {
 		const model = createModel();
 		const output = createOutput(model);
 		const stream = new AssistantMessageEventStream();
+		/** stream 接收 completed 序列转换出的统一事件，并保存最终结果供断言。 */
 
 		await processResponsesStream(createCompletedEvents(), output, stream, model);
 
@@ -243,6 +245,7 @@ describe("OpenAI Responses terminal event handling", () => {
 		const model = createModel();
 		const output = createOutput(model);
 		const stream = new AssistantMessageEventStream();
+		/** stream 接收 incomplete 序列；本用例重点确认不完整原因被保留。 */
 
 		await processResponsesStream(createIncompleteEvents(), output, stream, model);
 
@@ -263,6 +266,7 @@ describe("OpenAI Responses terminal event handling", () => {
 		const model = createModel();
 		const output = createOutput(model);
 		const stream = new AssistantMessageEventStream();
+		/** stream 接收 failed 序列；处理器应将服务端错误转换为拒绝结果。 */
 
 		await expect(processResponsesStream(createFailedEvents(), output, stream, model)).rejects.toThrow(
 			"server_error: boom",

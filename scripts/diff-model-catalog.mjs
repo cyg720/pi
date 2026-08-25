@@ -123,6 +123,7 @@ function generateCatalog(cwd, outputDir, pretty = false) {
 function formatProviderCatalogs(outputDir) {
 	/** providers JSON 子目录。 */
 	const providersDir = join(outputDir, "providers");
+	/** entry 是 providers 目录中的当前文件名；非 JSON 文件会被忽略。 */
 	for (const entry of readdirSync(providersDir)) {
 		if (!entry.endsWith(".json")) continue;
 		/** 当前提供商 JSON 路径。 */
@@ -193,6 +194,7 @@ function canonicalizeJson(value, parentKey) {
 
 	/** 写入规范键顺序的新对象。 */
 	const result = {};
+	/** key 是按目录规则排序后的当前对象键，用于递归生成稳定 JSON。 */
 	for (const key of sortJsonKeys(Object.keys(value), parentKey)) {
 		result[key] = canonicalizeJson(value[key], key);
 	}
@@ -261,6 +263,7 @@ try {
 	);
 
 	const nodeModules = join(repoRoot, "node_modules");
+	/** nodeModules 是当前工作区依赖目录；存在时链接到基线工作树以避免重复安装。 */
 	if (existsSync(nodeModules)) {
 		symlinkSync(nodeModules, join(baselineWorktree, "node_modules"), process.platform === "win32" ? "junction" : "dir");
 	}
@@ -349,6 +352,7 @@ try {
 		console.log(`No model catalog changes${requestedProviders.length === 1 ? ` for ${requestedProviders[0]}` : ""}.`);
 	} else {
 		console.log(`\n${differences} model catalog entr${differences === 1 ? "y" : "ies"} changed.`);
+		/** changedModel 是目录差异中的当前模型标识，用于逐行输出摘要。 */
 		for (const changedModel of changedModels) {
 			console.log(`- ${changedModel}`);
 		}
@@ -358,6 +362,7 @@ try {
 		try {
 			run("git", ["worktree", "remove", "--force", baselineWorktree], { cwd: repoRoot });
 		} catch (error) {
+			/** error 是清理临时工作树时捕获的异常；记录后仍继续删除临时目录。 */
 			console.error(error instanceof Error ? error.message : String(error));
 		}
 	}

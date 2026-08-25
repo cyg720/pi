@@ -140,6 +140,12 @@ async function resolveAutoSinceMs(options) {
 	}
 }
 
+/**
+ * 递归遍历目录并按名称顺序产出 JSONL 会话文件。
+ * @param {string} dir 起始目录路径。
+ * @returns {AsyncGenerator<string>} 可异步迭代的 JSONL 文件绝对路径序列。
+ * @example for await (const file of walkJsonlFiles("./sessions")) console.log(file);
+ */
 async function* walkJsonlFiles(dir) {
 	/** 常量 entries 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -872,6 +878,7 @@ async function scanSessions(sessionsDir, since) {
 		unmatchedToolResults: 0,
 	};
 
+	/** sessionFile 是递归扫描得到的当前会话文件；每个文件只统计一次。 */
 	for await (const sessionFile of walkJsonlFiles(sessionsDir)) {
 		meta.sessionFilesScanned++;
 		/** 常量 sessionTimestampMs 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
@@ -890,6 +897,7 @@ async function scanSessions(sessionsDir, since) {
 		/** 常量 rl 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const rl = createInterface({ input, crlfDelay: Infinity });
 
+		/** line 是会话文件中的当前 JSONL 文本行；空行会被忽略。 */
 		for await (const line of rl) {
 			if (!line.trim()) continue;
 			/** 变量 entry 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */

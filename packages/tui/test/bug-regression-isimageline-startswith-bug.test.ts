@@ -110,6 +110,7 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 				`Text before \x1b_Ga=T,f=100${"A".repeat(300000)} text after`,
 			];
 
+			/** line 是包含 Kitty 图像控制序列的当前边界样本，均应识别为图像行。 */
 			for (const line of scenarios) {
 				assert.strictEqual(isImageLine(line), true, `Should detect Kitty sequence in: ${line.slice(0, 50)}...`);
 			}
@@ -130,6 +131,7 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 				`Text before \x1b]1337;File=size=800,600;inline=1:${"B".repeat(300000)} text after`,
 			];
 
+			/** line 是包含 iTerm2 图像控制序列的当前边界样本，均应识别为图像行。 */
 			for (const line of scenarios) {
 				assert.strictEqual(isImageLine(line), true, `Should detect iTerm2 sequence in: ${line.slice(0, 50)}...`);
 			}
@@ -193,6 +195,7 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 				"\x1b[1mBold\x1b[0m \x1b]1337;File=:base64==\x07\x1b[0m",
 			];
 
+			/** line 是带 ANSI 修饰的当前图像序列样本，用于确认前缀不会妨碍识别。 */
 			for (const line of lines) {
 				assert.strictEqual(
 					isImageLine(line),
@@ -296,6 +299,7 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 				"./_G_test_file.txt",
 			];
 
+			/** path 是普通文件路径样本，名称虽含控制序列片段但不应被误判为图像。 */
 			for (const path of filePaths) {
 				assert.strictEqual(isImageLine(path), false, `Should not falsely detect image sequence in path: ${path}`);
 			}

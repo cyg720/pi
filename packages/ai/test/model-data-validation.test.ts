@@ -26,6 +26,7 @@ const temporaryRoots: string[] = [];
 
 // 每个用例后删除全部临时模型数据树。
 afterEach(() => {
+	/** root 是当前待删除的临时目录；数组会在遍历前被原地清空。 */
 	for (const root of temporaryRoots.splice(0)) rmSync(root, { force: true, recursive: true });
 });
 
@@ -113,6 +114,7 @@ describe("generated model data validation", () => {
 	// 合法 API 分组数据应能从聚合器读取并通过目录校验。
 	it("reads and validates API-grouped model data", () => {
 		const { dataDir, packageRoot, structure } = createFixture();
+		/** dataDir、packageRoot 和 structure 分别表示数据目录、临时包根目录与预期目录结构。 */
 		expect(readModelDataStructure(packageRoot)).toEqual(structure);
 		expect(() => validateModelDataDirectory(structure, dataDir)).not.toThrow();
 	});
@@ -120,6 +122,7 @@ describe("generated model data validation", () => {
 	// 数据目录缺失时应给出明确不存在错误。
 	it("rejects a missing model data directory", () => {
 		const { dataDir, structure } = createFixture();
+		/** dataDir 是即将删除的数据目录，structure 是随后用于触发缺失目录校验的结构定义。 */
 		rmSync(dataDir, { recursive: true });
 		expect(() => validateModelDataDirectory(structure, dataDir)).toThrow("does not exist");
 	});
@@ -211,6 +214,7 @@ describe("generated model data validation", () => {
 	// 聚合器导入的提供商分片集合必须与实际分片一一对应。
 	it("rejects missing provider shards imported by the aggregator", () => {
 		const { packageRoot } = createFixture();
+		/** packageRoot 是本用例临时模型包根目录，用于改写聚合器制造缺失分片。 */
 		writeFileSync(
 			join(packageRoot, "src", "models.generated.ts"),
 			'import { TEST_PROVIDER_MODELS } from "./providers/test-provider.models.ts";\nimport { MISSING_MODELS } from "./providers/missing.models.ts";\n',

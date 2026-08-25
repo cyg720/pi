@@ -259,6 +259,7 @@ function rewriteSessionCwd(raw: string, sourceCwd: string, targetCwd: string): s
 	/** 逐步应用替换的 JSONL 文本。 */
 	let rewritten = raw;
 
+	/** sourceVariant 是源工作目录的当前等价写法；与目标相同的写法无需替换。 */
 	for (const sourceVariant of getCwdRewriteVariants(sourceCwd)) {
 		if (sourceVariant === targetCwd) continue;
 		rewritten = rewritten.split(escapeJsonString(sourceVariant)).join(target);
@@ -274,6 +275,7 @@ function rewriteSessionCwd(raw: string, sourceCwd: string, targetCwd: string): s
 			new RegExp(`[A-Za-z]:(?:[^"\\r\\n])*?${escapedName}`, "g"),
 			new RegExp(`/[A-Za-z]/(?:[^"\\r\\n])*?${escapedName}`, "g"),
 		];
+		/** pattern 是当前 Windows 路径兼容表达式，用于清理残留绝对路径。 */
 		for (const pattern of windowsPathPatterns) {
 			rewritten = rewritten.replace(pattern, target);
 		}
@@ -315,8 +317,10 @@ async function findIssueGistId(owner: string, repo: string, issue: string): Prom
 
 		/** 当前页解析出的评论列表。 */
 		const comments = (await response.json()) as IssueComment[];
+		/** comment 是当前议题评论；仅分析 GitHub Actions 机器人发布的内容。 */
 		for (const comment of comments) {
 			if (comment.user?.login !== "github-actions[bot]") continue;
+			/** match 是评论正文中当前匹配到的 Gist 链接，其第一捕获组为 Gist ID。 */
 			for (const match of (comment.body ?? "").matchAll(GIST_URL_IN_TEXT_RE)) {
 				gistIds.push(match[1]);
 			}
@@ -436,6 +440,7 @@ export default function (pi: ExtensionAPI) {
 					},
 				});
 			} catch (error) {
+				/** error 是导入复现数据时捕获的未知异常，将转为可读文本显示给用户。 */
 				ctx.ui.notify(`ir: ${error instanceof Error ? error.message : String(error)}`, "error");
 			}
 		},

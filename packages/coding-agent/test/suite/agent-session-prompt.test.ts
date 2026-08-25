@@ -1,3 +1,11 @@
+/**
+ * 文件职责：刻画 AgentSession.prompt 在空闲、工具循环、附件、技能、模板、扩展命令和流式排队状态下的行为。
+ * 技术维度：使用 Harness、faux 提供商、TypeBox 工具、可控 Promise 和临时技能文件执行无网络集成测试。
+ * 产品维度：保障用户输入在各种入口和运行状态下被正确展开、排队或拒绝，并等待完整模型/工具循环。
+ * 逻辑维度：从基础 prompt 与工具调用开始，再验证资源展开、命令分派、sendUserMessage、input 事件和流式并发边界。
+ * 关键边界：Harness 与临时目录必须清理；流式期间新 prompt 必须指定 steer/followUp；无模型或认证时应立即报错。
+ * 新手阅读建议：先读基础 prompt 和单/多工具用例，再看技能模板展开，最后比较空闲与流式 input 行为。
+ */
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

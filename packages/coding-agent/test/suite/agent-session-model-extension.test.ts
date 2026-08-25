@@ -1,3 +1,11 @@
+/**
+ * 文件职责：刻画 AgentSession 的模型切换、思考级别以及扩展对工具、上下文、输入、系统提示和生命周期的影响。
+ * 技术维度：使用无网络 Harness、faux 消息、TypeBox 工具和内联扩展工厂执行完整事件链测试。
+ * 产品维度：保障用户切换模型和扩展定制不会破坏认证、会话记录、工具结果或提示上下文。
+ * 逻辑维度：先测试模型与思考设置，再覆盖工具拦截/改写、上下文与输入变换、命令查看选项及生命周期事件。
+ * 关键边界：每个 Harness 必须清理；模型认证可显式关闭；扩展修改只应影响提供商上下文，不回写原用户消息。
+ * 新手阅读建议：先读 setModel 与 cycleModel，用工具拦截理解扩展钩子，再阅读 context/input/before_agent_start 差异。
+ */
 import type { AgentTool, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { fauxAssistantMessage, fauxToolCall, type Model, type Usage } from "@earendil-works/pi-ai";
 import { Type } from "typebox";

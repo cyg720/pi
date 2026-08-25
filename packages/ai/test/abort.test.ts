@@ -1,3 +1,11 @@
+/**
+ * 文件职责：跨多个 AI 提供商验证流式中止、立即中止，以及中止消息进入上下文后的后续请求行为。
+ * 技术维度：使用 Vitest 条件跳过、AbortController、异步事件迭代和共享泛型测试函数覆盖不同 API 适配器。
+ * 产品维度：保障用户停止生成时请求及时结束，并且会话仍可继续，不因空的 aborted 助手消息而损坏。
+ * 逻辑维度：先定义三种中止共享流程，再为每个具备凭据的提供商选择模型和专属选项执行相同契约。
+ * 关键边界：多数用例需要真实凭据和网络；中途停止以累计 50 个字符为触发条件；单个在线用例最多重试三次。
+ * 新手阅读建议：先看 testImmediateAbort，再看 testAbortSignal 和 testAbortThenNewMessage，最后比较各提供商选项差异。
+ */
 import { describe, expect, it } from "vitest";
 import { complete, getModel, stream } from "../src/compat.ts";
 import type { Api, Context, Model, StreamOptions } from "../src/types.ts";
@@ -36,6 +44,7 @@ async function testAbortSignal<TApi extends Api>(llm: Model<TApi>, options: Stre
 	const controller = new AbortController();
 	/** 当前模型返回的异步事件流。 */
 	const response = await stream(llm, context, { ...options, signal: controller.signal });
+	/** event 是当前流事件；文本或思考增量累计到阈值后会触发中止。 */
 	for await (const event of response) {
 		if (abortFired) return;
 		if (event.type === "text_delta" || event.type === "thinking_delta") {

@@ -1,3 +1,11 @@
+/**
+ * 文件职责：使用伪提供商刻画 AgentSession 的自动重试、工具循环和公共/扩展事件顺序。
+ * 技术维度：基于 Harness、确定性 faux 消息、TypeBox 工具和事件订阅执行无真实网络的行为回归测试。
+ * 产品维度：保障重试不会漏发或乱序事件，调用方可稳定驱动 UI、扩展和后续 prompt。
+ * 逻辑维度：先规范化高频 message_update，再覆盖重试成功/失败/取消、工具恢复、事件优先级、流式增量和中止持久化。
+ * 关键边界：每个 Harness 必须 cleanup；重试延迟缩短用于测试；连续 message_update 会合并为一个顺序标记。
+ * 新手阅读建议：先看 normalizeEventOrder，再读前三个重试场景，随后比较单轮和工具轮事件序列，最后看中止用例。
+ */
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { fauxAssistantMessage, fauxThinking, fauxToolCall } from "@earendil-works/pi-ai";
 import { Type } from "typebox";

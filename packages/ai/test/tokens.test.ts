@@ -1,3 +1,11 @@
+/**
+ * 文件职责：跨提供商验证流式请求被中止后，助手消息中的 Token 与费用统计符合各协议实际能力。
+ * 技术维度：使用 Vitest 条件跳过、AbortController、异步事件迭代和 API Key/OAuth 提供商矩阵执行在线契约测试。
+ * 产品维度：保障用户中止长输出后，界面和费用统计不会显示错误用量，同时兼容只在终块返回 usage 的服务。
+ * 逻辑维度：共享函数在累计 1000 字符后中止并按 API/提供商分支断言，再对每个有凭据模型重复执行。
+ * 关键边界：用例依赖真实网络与密钥；不同提供商上报时机不同；小米流式 usage 已知缺失，因此相关用例固定跳过。
+ * 新手阅读建议：先看 testTokensOnAbort 的三类断言分支，再浏览 API Key 矩阵，最后阅读 OAuth 与已知限制说明。
+ */
 import { describe, expect, it } from "vitest";
 import { getModel, getModels, stream } from "../src/compat.ts";
 import type { Api, Context, Model, StreamOptions } from "../src/types.ts";
@@ -44,6 +52,7 @@ async function testTokensOnAbort<TApi extends Api>(llm: Model<TApi>, options: St
 	let abortFired = false;
 	/** 累计文本和思考增量以判断中止阈值。 */
 	let text = "";
+	/** event 是当前流事件；达到 1000 字符前持续累计增量，之后触发一次中止。 */
 	for await (const event of response) {
 		if (!abortFired && (event.type === "text_delta" || event.type === "thinking_delta")) {
 			text += event.delta;

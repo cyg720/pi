@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证通用 Session 在内存存储和 JSONL 文件存储上的消息、分支、压缩与元数据行为一致。
+ * 技术维度：使用 Vitest 参数化测试、异步存储接口、树形会话记录和 Node.js 文件读取完成双实现契约测试。
+ * 产品维度：保障用户切换持久化方式后仍能可靠恢复对话、分支、标签和压缩上下文。
+ * 逻辑维度：先定义安全取值与共享测试套件，再分别传入内存存储和 JSONL 存储工厂执行全部场景。
+ * 关键边界：JSONL 检查依赖临时目录；自定义条目默认不进入模型消息，除非配置投影器。
+ * 新手阅读建议：先看 runSessionSuite 的输入，再按“消息—分支—压缩—自定义条目—持久化”顺序阅读用例。
+ */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -325,6 +333,7 @@ runSessionSuite(
 		/** 除头部之外的全部会话条目。 */
 		const entries = lines.slice(1).map((line) => JSON.parse(line));
 		expect(entries.some((entry) => entry.type === "leaf")).toBe(true);
+		/** entry 是 JSONL 中当前反序列化的会话条目；必须使用具体类型且具有字符串 ID。 */
 		for (const entry of entries) {
 			expect(entry.type).not.toBe("entry");
 			expect(typeof entry.id).toBe("string");

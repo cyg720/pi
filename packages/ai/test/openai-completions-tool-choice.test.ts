@@ -42,6 +42,7 @@ vi.mock("openai", () => {
 					mockState.lastParams = params;
 					/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const stream = {
+						/** 依次产出模拟响应块；无参数，返回可异步遍历的块序列，用于替代真实网络流。 */
 						async *[Symbol.asyncIterator]() {
 							/** 常量 chunks 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 							const chunks = mockState.chunks ?? [
@@ -843,6 +844,7 @@ describe("openai-completions tool_choice", () => {
 
 		/** 常量 toolCallContentIndexes 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolCallContentIndexes: number[] = [];
+		/** event 是流中的当前事件；这里只收集工具调用生命周期事件的内容索引。 */
 		for await (const event of s) {
 			if (event.type === "toolcall_start" || event.type === "toolcall_delta" || event.type === "toolcall_end") {
 				toolCallContentIndexes.push(event.contentIndex);
@@ -1015,6 +1017,7 @@ describe("openai-completions tool_choice", () => {
 		const eventTypes: string[] = [];
 		/** 常量 toolEventsByContentIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolEventsByContentIndex = new Map<number, string[]>();
+		/** event 是流中的当前事件；循环按内容索引归组工具调用事件并保留完整类型顺序。 */
 		for await (const event of s) {
 			eventTypes.push(event.type);
 			if (event.type === "toolcall_start" || event.type === "toolcall_delta" || event.type === "toolcall_end") {

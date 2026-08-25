@@ -73,6 +73,7 @@ describe.skipIf(!oauthToken)("Anthropic OAuth tool name normalization", () => {
 		// toolCallName 保存 toolcall_end 中恢复后的工具名。
 		let toolCallName: string | undefined;
 
+		/** event 是当前流事件；只在工具调用结束时读取规范化后的名称。 */
 		for await (const event of s) {
 			if (event.type === "toolcall_end") {
 				// toolCall 是当前完成事件对应的内容块。
@@ -123,6 +124,7 @@ describe.skipIf(!oauthToken)("Anthropic OAuth tool name normalization", () => {
 		// toolCallName 保存入站规范化后的名称。
 		let toolCallName: string | undefined;
 
+		/** event 是当前流事件；循环定位工具调用结束事件并提取入站名称。 */
 		for await (const event of s) {
 			if (event.type === "toolcall_end") {
 				// toolCall 是流中结束的工具调用内容块。
@@ -177,6 +179,7 @@ describe.skipIf(!oauthToken)("Anthropic OAuth tool name normalization", () => {
 		// toolCallName 保存模型返回并经规范化后的名称。
 		let toolCallName: string | undefined;
 
+		/** event 是当前流事件；仅从结束事件对应的内容块读取工具名。 */
 		for await (const event of s) {
 			if (event.type === "toolcall_end") {
 				// toolCall 是已完成的工具调用块。
@@ -238,6 +241,7 @@ describe.skipIf(!oauthToken)("Anthropic OAuth tool name normalization", () => {
 		// toolCallName 保存最终返回名称。
 		let toolCallName: string | undefined;
 
+		/** event 是当前流事件；循环确认重复名称冲突后的最终工具名。 */
 		for await (const event of s) {
 			if (event.type === "toolcall_end") {
 				// toolCall 是当前 toolcall_end 对应的内容块。

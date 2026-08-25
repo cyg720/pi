@@ -75,9 +75,11 @@ async function startServer(options: ResponderOptions): Promise<{ baseUrl: string
 
 			response.statusCode = 200;
 			response.setHeader("content-type", "text/event-stream");
+			/** name 和 value 分别是待写入模拟响应的请求头名称与值，来源限于测试选项。 */
 			for (const [name, value] of Object.entries(options.headers ?? {})) {
 				response.setHeader(name, value);
 			}
+			/** event 是待编码为 SSE 数据行的单个模拟事件。 */
 			for (const event of options.events ?? []) {
 				response.write(`data: ${JSON.stringify(event)}\n\n`);
 			}
@@ -165,6 +167,7 @@ describe("pi-messages", () => {
 			maxTokens: 100,
 			headers: { "x-custom": "1" },
 		});
+		/** event 是事件流当前产出的事件；循环将其全部收集以便后续断言。 */
 		for await (const event of eventStream) {
 			events.push(event);
 		}

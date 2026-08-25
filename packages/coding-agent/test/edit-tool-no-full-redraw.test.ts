@@ -148,6 +148,7 @@ describe("edit tool TUI rendering", () => {
 		const tui = new TUI(terminal);
 		// root 包含大量历史行和工具组件，模拟已滚动聊天。
 		const root = new Container();
+		/** i 是历史行序号，从 0 到 199，用于构造足够长的滚动区域。 */
 		for (let i = 0; i < 200; i++) {
 			root.addChild(new Text(`history ${i}`, 0, 0));
 		}
@@ -223,6 +224,7 @@ describe("edit tool TUI rendering", () => {
 		const lines = (await readFile(filePath, "utf8")).trimEnd().split("\n");
 		const edits = createLargeEdits(lines).slice(0, 2);
 		const diff = await computeEditsDiff(filePath, edits, process.cwd());
+		/** diff 是预先计算并保存的编辑差异；错误分支会在构造组件前终止用例。 */
 		if ("error" in diff) {
 			throw new Error(diff.error);
 		}
@@ -240,6 +242,7 @@ describe("edit tool TUI rendering", () => {
 			tui,
 			process.cwd(),
 		);
+		/** component 是依据已保存差异重放的工具组件，用于验证渲染不依赖原文件。 */
 		tui.addChild(component);
 		tui.start();
 		await waitForRender();
@@ -267,6 +270,7 @@ describe("edit tool TUI rendering", () => {
 		const dir = await mkdtemp(join(tmpdir(), "pi-edit-preflight-"));
 		tempDirs.push(dir);
 		const filePath = join(dir, "missing-edit.txt");
+		/** filePath 指向不含目标旧文本的短文件，用于触发编辑预检失败。 */
 		await writeFile(filePath, "line 0\nline 1\n", "utf8");
 
 		// terminal、tui、component 构造预检失败渲染路径。
@@ -281,6 +285,7 @@ describe("edit tool TUI rendering", () => {
 			tui,
 			process.cwd(),
 		);
+		/** component 是预检失败场景的工具组件，后续断言其错误输出不会触发全屏重绘。 */
 		tui.addChild(component);
 		tui.start();
 		await waitForRender();

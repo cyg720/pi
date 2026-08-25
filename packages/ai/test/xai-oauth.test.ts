@@ -1,3 +1,11 @@
+/**
+ * 文件职责：验证 xAI OAuth 设备码登录与刷新令牌流程的请求格式、轮询节奏、安全校验和错误处理。
+ * 技术维度：使用 Vitest 假时钟、全局 fetch 模拟、AbortController 与 Response/URLSearchParams 构造协议级测试。
+ * 产品维度：保障用户通过 Grok/xAI 订阅登录时看到可信验证地址，并能正确等待授权、取消或刷新凭据。
+ * 逻辑维度：先定义响应和调用包装器，再覆盖 pending/slow_down、默认间隔、URI 安全、拒绝、取消和刷新场景。
+ * 关键边界：只信任 HTTPS 验证地址；令牌过期时间预留五分钟；每个用例后必须恢复全局模拟和真实时钟。
+ * 新手阅读建议：先看 deviceCodeResponse、tokenResponse 和 loginXaiForTest，再按正常登录、异常登录、刷新顺序阅读。
+ */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { xaiOAuth } from "../src/auth/oauth/xai.ts";
 import type { OAuthCredential } from "../src/auth/types.ts";
@@ -67,6 +75,7 @@ function loginXaiForTest(options: {
 		notify: (event) => {
 			if (event.type === "device_code") {
 				const { type: _, ...info } = event;
+				/** _ 丢弃事件类型字段，info 保留设备码回调所需的其余公开信息。 */
 				options.onDeviceCode(info);
 			}
 		},

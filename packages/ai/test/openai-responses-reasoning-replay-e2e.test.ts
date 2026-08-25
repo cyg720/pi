@@ -119,6 +119,7 @@ describe.skipIf(!process.env.OPENAI_API_KEY || !process.env.ANTHROPIC_API_KEY)(
 
 			/** OpenAI API Key。 */
 			const apiKey = getEnvApiKey("openai");
+			/** apiKey 仅来自测试环境；缺失时立即停止，避免发出无凭据请求。 */
 			if (!apiKey) {
 				throw new Error("Missing OPENAI_API_KEY");
 			}
@@ -240,8 +241,10 @@ describe.skipIf(!process.env.OPENAI_API_KEY || !process.env.ANTHROPIC_API_KEY)(
 
 			/** Anthropic API Key。 */
 			const anthropicApiKey = getEnvApiKey("anthropic");
+			/** anthropicApiKey 用于跨提供商回放的 Anthropic 请求，不应写入日志或断言快照。 */
 			/** OpenAI API Key。 */
 			const openaiApiKey = getEnvApiKey("openai");
+			/** openaiApiKey 用于同一回放流程的 OpenAI 请求，不应写入日志或断言快照。 */
 			if (!anthropicApiKey || !openaiApiKey) {
 				throw new Error("Missing API keys");
 			}

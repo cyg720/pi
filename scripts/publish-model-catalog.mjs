@@ -127,6 +127,7 @@ function validateBundle(inputDir) {
 	if (!isDeepStrictEqual(providerIds, expectedProviderIds)) {
 		throw new Error("providers.json does not match the sorted providers in models.json");
 	}
+	/** providerId 是必须存在的提供商标识；循环逐一确认聚合目录没有漏项。 */
 	for (const providerId of REQUIRED_PROVIDERS) {
 		if (!Object.hasOwn(models, providerId)) throw new Error(`Required provider is missing: ${providerId}`);
 	}
@@ -144,6 +145,7 @@ function validateBundle(inputDir) {
 		if (!isDeepStrictEqual(providerFile, providerModels)) {
 			throw new Error(`Provider shard does not match models.json: ${providerId}`);
 		}
+		/** modelId 和 model 是当前分片中的模型标识与目录记录，用于执行字段级校验。 */
 		for (const [modelId, model] of Object.entries(providerModels)) {
 			if (
 				typeof model !== "object" ||
@@ -261,6 +263,7 @@ function validateIndex(index) {
 		throw new Error(`Existing ${CATALOG_INDEX_KEY} has an unsupported schema`);
 	}
 	if (!Array.isArray(index.catalogs)) throw new Error(`Existing ${CATALOG_INDEX_KEY} has no catalogs array`);
+	/** catalog 是索引中的当前历史目录记录；每项都必须符合既定对象结构。 */
 	for (const catalog of index.catalogs) {
 		if (
 			typeof catalog !== "object" ||
@@ -375,6 +378,7 @@ async function main() {
 			`${revisionPrefix}/providers.json`,
 			IMMUTABLE_CACHE_CONTROL,
 		);
+		/** providerId 是当前待上传的提供商分片标识，路径与汇总清单保持一致。 */
 		for (const providerId of bundle.providerIds) {
 			uploadJson(
 				options.bucket,

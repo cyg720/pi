@@ -254,7 +254,9 @@ function normalizeLinkTarget(target, options) {
 	/** 目标仓库基础 URL。 */
 	const repoUrl = `https://github.com/${options.repo}`;
 
+	/** route 是 GitHub 文件或目录链接类型，只允许 blob 与 tree。 */
 	for (const route of ["blob", "tree"]) {
+		/** branch 是待识别的默认分支名称，只处理 main 与 master。 */
 		for (const branch of ["main", "master"]) {
 			/** 指向 main/master 的浮动 blob/tree 前缀。 */
 			const floatingRefPrefix = `${repoUrl}/${route}/${branch}/`;
@@ -420,6 +422,7 @@ function fixGithubReleases(options) {
 		/** 去重后用于控制台展示的链接变更。 */
 		const unique = uniqueChanges(result.changes);
 		console.log(`${options.dryRun ? "Would update" : "Updating"} ${tag} (${unique.length} link${unique.length === 1 ? "" : "s"})`);
+		/** change 是一条去重后的链接替换记录，用于向操作者展示前后地址。 */
 		for (const change of unique) {
 			console.log(`  ${change.from}`);
 			console.log(`  -> ${change.to}`);
@@ -453,6 +456,7 @@ try {
 		throw new Error(`Unknown command: ${command}`);
 	}
 } catch (error) {
+	/** error 是命令执行阶段捕获的未知异常；输出前会先判断是否为 Error。 */
 	console.error(error instanceof Error ? error.message : error);
 	process.exit(1);
 }

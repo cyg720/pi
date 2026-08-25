@@ -153,6 +153,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 				events.push(event);
 			});
 		});
+		/** runtimeHost 是装有上述事件监听器的测试运行时，用于驱动新建和恢复流程。 */
 
 		expect(events).toEqual([{ type: "session_start", reason: "startup" }]);
 		events.length = 0;
@@ -200,6 +201,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 				events.push(event);
 			});
 		});
+		/** runtimeHost 是会取消切换事件的测试运行时，用于确认取消结果被调用方遵守。 */
 
 		expect(events).toEqual([{ type: "session_start", reason: "startup" }]);
 		events.length = 0;
@@ -263,6 +265,7 @@ describe("AgentSessionRuntime session lifecycle events", () => {
 				events.push(event);
 			});
 		});
+		/** runtimeHost 是带条件式 fork 取消监听器的测试运行时，用于覆盖允许与拒绝两条路径。 */
 
 		expect(events).toEqual([{ type: "session_start", reason: "startup" }]);
 		events.length = 0;

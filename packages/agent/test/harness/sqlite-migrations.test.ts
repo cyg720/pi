@@ -389,12 +389,15 @@ describe("SQLite migrations", () => {
 		let cleanupCount = 0;
 		/** 提供空条目并记录 cleanup 的源存储替身。 */
 		const sourceStorage = {
+			/** 返回空会话条目列表；无参数，供迁移流程读取源数据。 */
 			async getEntries() {
 				return [];
 			},
+			/** 返回空的根路径或压缩路径；无参数，表示源存储没有可迁移链路。 */
 			async getPathToRootOrCompaction() {
 				return [];
 			},
+			/** 记录清理调用次数；无参数且无返回值，用于验证资源释放发生一次。 */
 			async cleanup() {
 				cleanupCount += 1;
 			},
@@ -403,6 +406,7 @@ describe("SQLite migrations", () => {
 		const originalOpen = repo.open.bind(repo);
 		repo.open = async () =>
 			({
+				/** 返回本用例构造的源存储替身；无参数，供仓库迁移逻辑取得数据源。 */
 				getStorage() {
 					return sourceStorage;
 				},

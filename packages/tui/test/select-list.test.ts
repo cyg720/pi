@@ -82,7 +82,9 @@ describe("SelectList", () => {
 			minPrimaryColumnWidth: 12,
 			maxPrimaryColumnWidth: 20,
 		});
+		/** list 是设置主列宽上下限的选择列表，用于验证普通文本描述的起始列。 */
 		const rendered = list.render(80);
+		/** rendered 是 80 列宽下的渲染行数组，后续比较两行描述的字符索引。 */
 
 		assert.equal(rendered[0].indexOf("first"), 14);
 		assert.equal(rendered[1].indexOf("second"), 14);
@@ -104,7 +106,9 @@ describe("SelectList", () => {
 			minPrimaryColumnWidth: 12,
 			maxPrimaryColumnWidth: 20,
 		});
+		/** list 是含 ANSI 样式主标签的选择列表，用于验证可见宽度而非原始字符串长度。 */
 		const rendered = list.render(80);
+		/** rendered 是带 ANSI 控制码的渲染行数组，需通过可见索引辅助函数检查对齐。 */
 
 		assert.equal(visibleIndexOf(rendered[0], "first"), 22);
 		assert.equal(visibleIndexOf(rendered[1], "second"), 22);
@@ -134,7 +138,9 @@ describe("SelectList", () => {
 				return `${text.slice(0, Math.max(0, maxWidth - 1))}…`;
 			},
 		});
+		/** list 是启用自定义主标签截断器的选择列表，主列宽固定为 12。 */
 		const rendered = list.render(80);
+		/** rendered 是截断后的渲染行数组，用于确认省略号存在且描述列保持对齐。 */
 
 		assert.ok(rendered[0].includes("…"));
 		assert.equal(visibleIndexOf(rendered[0], "first"), visibleIndexOf(rendered[1], "second"));

@@ -1,3 +1,11 @@
+/**
+ * 文件职责：跨提供商验证上下文中缺少对应结果的孤立工具调用会被安全过滤，后续用户请求仍能成功。
+ * 技术维度：使用 Vitest 条件跳过、共享泛型测试函数、TypeBox 工具定义以及 API Key/OAuth 两类凭据矩阵。
+ * 产品维度：保障用户取消工具或切换问题后不会因历史工具调用不完整而导致整个对话报错。
+ * 逻辑维度：先构造 calculate 工具与共享两步对话，再为每个可用提供商选择模型和专属选项执行契约。
+ * 关键边界：用例调用真实模型且最多重试三次；第一轮必须产生工具调用；第二轮允许直接文本或新的工具调用。
+ * 新手阅读建议：先完整阅读 testToolCallWithoutResult 的五个步骤，再浏览提供商矩阵，重点比较 Azure、OAuth 和推理选项。
+ */
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
 import { complete, getModel } from "../src/compat.ts";

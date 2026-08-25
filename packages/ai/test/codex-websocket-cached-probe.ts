@@ -138,6 +138,7 @@ function buildPrompt(turn: number): string {
 		`After the tool result arrives, reply exactly: TURN ${turn} OK ${marker}`,
 		"The following repeated block is intentional benchmark padding.",
 	];
+	/** i 是填充记录序号，固定从 1 递增到 180，仅用于生成可重复的长提示。 */
 	for (let i = 1; i <= 180; i++) {
 		lines.push(
 			`Turn ${turn} synthetic record ${String(i).padStart(3, "0")}: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega.`,
@@ -229,6 +230,7 @@ async function main(): Promise<void> {
 	console.log(`scratch ${resolve(join(tmpdir(), args.sessionId))}`);
 	console.log("");
 
+	/** turn 是当前对话轮次，从 1 递增到命令行指定的总轮数。 */
 	for (let turn = 1; turn <= args.turns; turn++) {
 		context.messages.push({ role: "user", content: buildPrompt(turn), timestamp: Date.now() });
 		/** 本轮开始前的 WebSocket 累计计数快照。 */
@@ -290,6 +292,7 @@ async function main(): Promise<void> {
 				finalText = textOf(message);
 				break;
 			}
+			/** call 是本次响应中待执行的单个工具调用；循环会逐项回填工具结果。 */
 			for (const call of toolCalls) {
 				context.messages.push(executeTool(call) as Message);
 				toolResults++;
