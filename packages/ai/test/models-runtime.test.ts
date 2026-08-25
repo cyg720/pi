@@ -821,6 +821,7 @@ describe("Models runtime", () => {
 		const events: string[] = [];
 		/** 常量 stream 保存传递助手事件的异步流；取值由声明类型和当前场景约束，注意隔离可变状态。 */
 		const stream = models.streamSimple(model, context);
+		// event 是当前标准化助手流事件，循环按顺序记录其类型。
 		for await (const event of stream) {
 			events.push(event.type);
 		}

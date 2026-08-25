@@ -25,8 +25,10 @@ const generatedCatalogDataDir = join(process.cwd(), "packages/ai/src/providers/d
 // 处理缺失生成模型目录的 esbuild 插件。
 const generatedCatalogDataPlugin = {
 	name: "generated-model-catalog",
+	/** 参数 build 是 esbuild 插件上下文；注册模型 JSON 解析钩子且无返回值；示例：由 esbuild 自动调用。 */
 	setup(build) {
 		build.onResolve({ filter: /^\.\/data\/[^/]+\.json$/ }, (args) => {
+			// path 是当前模型数据导入解析得到的绝对路径。
 			const path = resolve(dirname(args.importer), args.path);
 			if (dirname(path) !== generatedCatalogDataDir || existsSync(path)) return;
 			return { path, namespace: "empty-generated-model-catalog" };

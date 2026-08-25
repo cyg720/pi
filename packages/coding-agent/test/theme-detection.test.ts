@@ -58,6 +58,7 @@ describe("detectTerminalBackgroundTheme", () => {
 			env: { COLORFGBG: "15;0" },
 			timeoutMs: 250,
 			ui: {
+				/** 参数 timeoutMs 是查询上限；记录后返回浅色背景；示例：由检测器调用。 */
 				async queryTerminalBackgroundColor({ timeoutMs }: { timeoutMs: number }): Promise<RgbColor | undefined> {
 					queriedTimeoutMs = timeoutMs;
 					return { r: 250, g: 250, b: 250 };
@@ -79,6 +80,7 @@ describe("detectTerminalBackgroundTheme", () => {
 			env: { COLORFGBG: "15;0" },
 			timeoutMs: 250,
 			ui: {
+				/** 无参数；返回 undefined 模拟终端无响应；示例：由检测器调用。 */
 				async queryTerminalBackgroundColor(): Promise<RgbColor | undefined> {
 					return undefined;
 				},
@@ -98,6 +100,7 @@ describe("detectTerminalBackgroundTheme", () => {
 			env: { COLORFGBG: "0;15" },
 			timeoutMs: 250,
 			ui: {
+				/** 无参数；抛出写终端失败异常且不返回；示例：由检测器调用。 */
 				async queryTerminalBackgroundColor(): Promise<RgbColor | undefined> {
 					throw new Error("terminal write failed");
 				},

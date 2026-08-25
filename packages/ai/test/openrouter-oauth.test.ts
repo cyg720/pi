@@ -39,6 +39,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 function base64url(bytes: Uint8Array): string {
 	/** 逐字节转换得到的二进制字符串。 */
 	let binary = "";
+	// byte 是随机字节数组中的当前数值，范围为 0 到 255。
 	for (const byte of bytes) binary += String.fromCharCode(byte);
 	return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
@@ -52,6 +53,7 @@ describe.sequential("OpenRouter OAuth", () => {
 	});
 
 	it("is exposed by both OpenRouter providers alongside API-key auth", () => {
+		// provider 是当前待检查的文本或图片 OpenRouter 提供商定义。
 		for (const provider of [openrouterProvider(), openrouterImagesProvider()]) {
 			expect(provider.auth.apiKey).toBeDefined();
 			expect(provider.auth.oauth).toBeDefined();

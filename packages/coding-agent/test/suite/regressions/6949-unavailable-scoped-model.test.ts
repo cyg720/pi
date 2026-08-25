@@ -144,6 +144,7 @@ describe("issue #6949 unavailable scoped models", () => {
 		if (!selector) throw new Error("Expected scoped-model selector to open");
 		// rendered 是去除 ANSI 样式后的可断言文本。
 		const rendered = stripAnsi(selector.render(100).join("\n"));
+		// unavailableId 是当前应显示 unavailable 标记的模型标识。
 		for (const unavailableId of unavailableIds) {
 			expect(rendered).toContain(`${unavailableId} [unavailable] ✗`);
 		}
@@ -159,6 +160,7 @@ describe("issue #6949 unavailable scoped models", () => {
 		const model = harness.models[0];
 		// fullId 是期望显示的完整模型标识。
 		const fullId = `${model.provider}/${model.id}`;
+		// context 和 getSelector 是当前空目录选择器的交互上下文与读取函数。
 		const { context, getSelector } = createInteractiveContext({
 			allModels: [],
 			enabledModelIds: [],
@@ -190,6 +192,7 @@ describe("issue #6949 unavailable scoped models", () => {
 		const enabledIds = [one, two].map((model) => `${model.provider}/${model.id}`);
 		// unavailableId 是额外存在于设置但不在目录的模型。
 		const unavailableId = `${one.provider}/unavailable`;
+		// context、getSelector 和 setScopedModels 用于读取并更新当前作用域选择状态。
 		const { context, getSelector, setScopedModels } = createInteractiveContext({
 			allModels: [...harness.models],
 			enabledModelIds: [...enabledIds, unavailableId],

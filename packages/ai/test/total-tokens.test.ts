@@ -56,6 +56,11 @@ ${Array(50)
 
 Remember: Always be helpful and concise.`;
 
+/**
+ * 连续请求两次以比较首次和缓存命中的 Token 用量。
+ * 参数 llm 是待测模型，options 是流式选项；返回两次完整 Usage。
+ * 使用示例：`await testTotalTokensWithCache(model, { apiKey })`。
+ */
 async function testTotalTokensWithCache<TApi extends Api>(
 	llm: Model<TApi>,
 	options: StreamOptionsWithExtras = {},

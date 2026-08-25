@@ -125,6 +125,7 @@ for (const file of files) {
 	// lines 是按换行拆分的独立 JSON 条目文本。
 	const lines = content.trim().split("\n");
 
+	// line 是当前会话 JSONL 文件中待解析的一行记录。
 	for (const line of lines) {
 		if (!line) continue;
 
@@ -190,6 +191,8 @@ let grandTotal = 0;
 // providerTotals 跨日期累计每个提供商的费用分项。
 const providerTotals: { [p: string]: DayCost } = {};
 
+
+// day 是按日期排序后的当前成本汇总键。
 for (const day of sortedDays) {
 	console.log(`\n${day}`);
 	console.log("-".repeat(40));

@@ -103,6 +103,7 @@ function buildContext(assistant: AssistantMessage): Context {
 async function collectEvents(stream: AsyncIterable<AssistantMessageEvent>): Promise<AssistantMessageEvent[]> {
 	// events 按到达顺序累积流事件。
 	const events: AssistantMessageEvent[] = [];
+	// event 是当前标准化流事件，按原始到达顺序保存。
 	for await (const event of stream) {
 		events.push(event);
 	}
@@ -175,6 +176,7 @@ describe("openai-completions thinking-as-text replay", () => {
 
 			// body 逐块拼接 POST 请求正文。
 			let body = "";
+			// chunk 是当前 HTTP 请求正文分片，转换为字符串后追加。
 			for await (const chunk of req) {
 				body += chunk.toString();
 			}

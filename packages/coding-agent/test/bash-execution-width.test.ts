@@ -29,9 +29,11 @@ function createTuiStub(columns: number): { columns: number; stub: any } {
 	// stub 模拟 BashExecutionComponent 访问的终端和界面方法。
 	const stub = {
 		terminal: {
+			/** 无参数；返回当前可变终端列数；示例：`stub.terminal.columns`。 */
 			get columns() {
 				return state.columns;
 			},
+			/** 无参数；返回固定终端行数 24；示例：`stub.terminal.rows`。 */
 			get rows() {
 				return 24;
 			},

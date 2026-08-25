@@ -591,6 +591,7 @@ describe("AgentHarness tools", () => {
 					context,
 				);
 			} catch (cause) {
+				// cause 是本次工具执行抛出的未知异常，保存后供后续断言检查。
 				error = cause;
 			}
 

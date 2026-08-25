@@ -75,6 +75,7 @@ function cleanupDetachedChild(pidFile: string): void {
 
 // 每个用例后恢复被修改路径的访问权限，忽略已删除路径。
 afterEach(async () => {
+	// path 是当前待恢复访问权限的测试路径。
 	for (const path of chmodRestorePaths.splice(0)) {
 		try {
 			await access(path);
@@ -298,6 +299,7 @@ describe("NodeExecutionEnv", () => {
 			env.writeFile("other.txt", "hello", signal),
 			env.listDir(".", signal),
 		]);
+		// result 是当前并发执行环境操作的中止结果。
 		for (const result of results) {
 			expect(result.ok).toBe(false);
 			if (!result.ok) expect(result.error).toMatchObject({ code: "aborted" });

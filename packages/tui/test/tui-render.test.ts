@@ -57,6 +57,7 @@ class LoggingVirtualTerminal extends VirtualTerminal {
 	}
 }
 
+/** 参数 updates 是临时环境变量，run 是待执行回调；返回回调结果并恢复环境；示例：`await withEnv({ CI: "1" }, run)`。 */
 async function withEnv<T>(updates: Record<string, string | undefined>, run: () => Promise<T>): Promise<T> {
 	/** 常量 previousValues 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const previousValues = new Map<string, string | undefined>();

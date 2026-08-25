@@ -164,7 +164,10 @@ let parseErrors = 0;
 /** 递归发现的全部会话文件。 */
 const files = jsonlFiles(sessionsDir);
 
+
+// file 是当前待扫描的会话 JSONL 文件路径。
 for (const file of files) {
+	// line 是当前会话文件中待解析的一行记录。
 	for (const line of readFileSync(file, "utf8").split("\n")) {
 		if (!line.trim()) continue;
 		/** 当前 JSONL 行解析出的记录。 */
@@ -175,6 +178,7 @@ for (const file of files) {
 		const message = entry.message;
 		if (!message) continue;
 		if (message.role === "assistant" && Array.isArray(message.content)) {
+			// block 是当前助手消息中的内容块，仅工具调用会进入统计。
 			for (const block of message.content) {
 				if (block.type !== "toolCall" || !("name" in block) || typeof block.name !== "string") continue;
 				/** 当前工具名对应的累计统计。 */

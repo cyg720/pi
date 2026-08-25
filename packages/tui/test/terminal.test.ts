@@ -81,12 +81,15 @@ describe("ProcessTerminal Kitty keyboard protocol negotiation", () => {
 		return {
 			terminal,
 			writes,
+			/** 参数 data 是模拟输入文本；转交当前处理器且无返回值；示例：`session.send("x")`。 */
 			send(data: string): void {
 				dataHandler?.(data);
 			},
+			/** 无参数；返回最近输入或 undefined；示例：`session.getInput()`。 */
 			getInput(): string | undefined {
 				return input;
 			},
+			/** 无参数；恢复终端替身且无返回值；示例：`session.cleanup()`。 */
 			cleanup(): void {
 				if (cleaned) return;
 				cleaned = true;

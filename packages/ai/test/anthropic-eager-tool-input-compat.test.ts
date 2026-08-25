@@ -72,6 +72,7 @@ function createContext(tools: Tool[] = [tool]): Context {
 async function readRequestBody(request: IncomingMessage): Promise<Record<string, unknown>> {
 	// chunks 按到达顺序收集请求体二进制片段。
 	const chunks: Buffer[] = [];
+	// chunk 是请求正文当前到达的二进制或字符串分片。
 	for await (const chunk of request) {
 		chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
 	}
@@ -117,6 +118,7 @@ async function captureAnthropicRequest(
 			cacheRetention: "none",
 		});
 
+		// event 是当前 Anthropic 流事件，完成或出错后停止消费。
 		for await (const event of stream) {
 			if (event.type === "done" || event.type === "error") break;
 		}

@@ -19,6 +19,7 @@ const mockState = vi.hoisted(() => ({
 }));
 
 vi.mock("@anthropic-ai/sdk", () => {
+	/** 无参数；返回固定 Anthropic SSE Response；示例：`await createSseResponse()`。 */
 	function createSseResponse(): Response {
 		// 模拟 Anthropic 成功响应的两段 SSE 文本。
 		const body = [
@@ -90,6 +91,7 @@ describe("Copilot Claude via Anthropic Messages", () => {
 
 		// 使用测试会话令牌创建的 Anthropic 事件流。
 		const s = streamAnthropic(model, context, { apiKey: "tid_copilot_session_test_token" });
+		// event 是当前 Copilot Anthropic 流事件，错误后停止消费。
 		for await (const event of s) {
 			if (event.type === "error") break;
 		}
@@ -139,6 +141,7 @@ describe("Copilot Claude via Anthropic Messages", () => {
 			apiKey: "tid_copilot_session_test_token",
 			interleavedThinking: true,
 		});
+		// event 是当前交错思考流事件，错误后停止消费。
 		for await (const event of s) {
 			if (event.type === "error") break;
 		}

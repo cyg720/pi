@@ -756,6 +756,7 @@ describe("Context overflow error handling", () => {
 				try {
 					execSync("ollama pull gpt-oss:20b", { stdio: "inherit" });
 				} catch (_e) {
+					// _e 是本地模型下载失败异常；内容无需断言，只用于触发跳过路径。
 					console.warn("Failed to pull gpt-oss:20b model, tests will be skipped");
 					return;
 				}

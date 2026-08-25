@@ -566,6 +566,7 @@ async function runRpcBenchmarkRun({ runtime, runIndex, measuredIndex, options, p
 			try {
 				parsed = JSON.parse(line);
 			} catch (error) {
+				// error 是解析子进程 JSONL 响应失败时捕获的异常，用于生成诊断文本。
 				responseError = error instanceof Error ? error.message : String(error);
 				return;
 			}

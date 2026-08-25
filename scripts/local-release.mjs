@@ -296,6 +296,8 @@ if (!options.skipCheck) {
 	run("npm", ["run", "check"], { cwd: repoRoot });
 }
 
+
+// pkg 是当前待清理并构建的工作区包描述。
 for (const pkg of packages) {
 	run("npm", ["run", "clean"], { cwd: pkg.directory });
 	run("npm", ["run", pkg.directory === "packages/ai" ? "build:offline" : "build"], { cwd: pkg.directory });
@@ -348,6 +350,8 @@ if (!options.skipInstall) {
 console.log("\nLocal release artifacts created:");
 console.log(`  ${outDir}`);
 console.log("\nTarballs:");
+
+// tarball 是当前已打包工作区产物的绝对路径。
 for (const tarball of tarballs.values()) {
 	console.log(`  ${tarball}`);
 }

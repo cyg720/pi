@@ -122,6 +122,7 @@ async function callShutdown(context: ShutdownThis, options?: { fromSignal?: bool
 	try {
 		await (interactiveModePrototype as InteractiveModePrototypeWithShutdown).shutdown.call(context, options);
 	} catch (error) {
+		// error 是 shutdown 用于模拟进程退出的异常；非预期类型继续抛出。
 		if (!(error instanceof ProcessExitError)) throw error;
 	}
 }
@@ -132,6 +133,7 @@ describe("InteractiveMode.shutdown ordering (#5080)", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 		restoreStdoutIsTTY();
+		// dir 是当前待清理的回归测试临时目录。
 		for (const dir of tempDirs.splice(0)) {
 			rmSync(dir, { recursive: true, force: true });
 		}
@@ -208,6 +210,7 @@ describe("InteractiveMode.shutdown ordering (#5080)", () => {
 
 		await callShutdown(context, { fromSignal: true });
 
+		// call 是 stdout.write 的当前调用参数，用于排除恢复提示输出。
 		for (const call of stdoutWrite.mock.calls) {
 			expect(call[0]).not.toContain("To resume this session:");
 		}

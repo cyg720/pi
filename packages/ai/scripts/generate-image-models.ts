@@ -28,6 +28,7 @@ const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
  * @returns 是否包含 `--strict`；例如 `readStrictOption(["--strict"])` 返回 true。
  */
 function readStrictOption(args: string[]): boolean {
+	// arg 是当前命令行参数；除 --strict 外的值都会触发错误。
 	for (const arg of args) {
 		if (arg !== "--strict") throw new Error(`Unknown argument: ${arg}`);
 	}
@@ -133,6 +134,7 @@ async function fetchOpenRouterImageModels(strict: boolean): Promise<ImagesModel<
 		console.log(`Fetched ${models.length} image models from OpenRouter`);
 		return models;
 	} catch (error) {
+		// error 是获取或解析 OpenRouter 目录时捕获的异常，strict 模式会继续抛出。
 		console.error("Failed to fetch OpenRouter image models:", error);
 		if (strict) throw error;
 		return [];

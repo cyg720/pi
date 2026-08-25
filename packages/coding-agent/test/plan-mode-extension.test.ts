@@ -72,10 +72,12 @@ function setup(options: { activeTools?: string[]; selectChoice?: string; editorT
 	// api 是计划模式扩展需要的最小 ExtensionAPI 实现。
 	const api = {
 		registerFlag: vi.fn(),
+		/** 参数 name 和 command 是命令标识及处理器；保存处理器且无返回值；示例：由扩展注册时调用。 */
 		registerCommand(name: string, command: { handler: CommandHandler }) {
 			commands.set(name, command.handler);
 		},
 		registerShortcut: vi.fn(),
+		/** 参数 event 和 handler 是事件名及回调；仅记录 agent_end 回调且无返回值；示例：`api.on("agent_end", handler)`。 */
 		on(event: string, handler: unknown) {
 			if (event === "agent_end") agentEndHandler = handler as AgentEndHandler;
 		},

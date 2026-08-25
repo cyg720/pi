@@ -23,6 +23,7 @@ describe("config value env var syntax migration", () => {
 
 	// 每个用例后删除临时目录并恢复 console 等模拟函数。
 	afterEach(() => {
+		// dir 是当前待递归删除的测试临时目录。
 		for (const dir of tempDirs.splice(0)) {
 			fs.rmSync(dir, { recursive: true, force: true });
 		}
@@ -123,6 +124,7 @@ describe("config value env var syntax migration", () => {
 		const envKeys = ["CUSTOM_API_KEY", "HEADER_API_KEY", "MODEL_API_KEY", "OVERRIDE_API_KEY"];
 		// savedEnv 保存每个环境变量原值，finally 中逐项还原。
 		const savedEnv: Record<string, string | undefined> = {};
+		// key 是当前待覆盖并保存原值的配置环境变量名。
 		for (const key of envKeys) {
 			savedEnv[key] = process.env[key];
 			process.env[key] = `env-${key}`;
@@ -204,6 +206,7 @@ describe("config value env var syntax migration", () => {
 				},
 			});
 		} finally {
+			// key 是当前待恢复或删除的配置环境变量名。
 			for (const key of envKeys) {
 				if (savedEnv[key] === undefined) {
 					delete process.env[key];

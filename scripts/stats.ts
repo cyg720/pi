@@ -217,6 +217,8 @@ const stats = new Map<string, DayStats>();
 // grandTotal 跨全部日期和提供商累加总计。
 const grandTotal = createTotals();
 
+
+// file 是会话目录中当前待解析的 JSONL 文件名。
 for (const file of readdirSync(sessionsDir)) {
 	if (!file.endsWith(".jsonl")) continue;
 
@@ -224,6 +226,7 @@ for (const file of readdirSync(sessionsDir)) {
 	const path = join(sessionsDir, file);
 	// lines 是会话文件按换行拆分后的条目文本。
 	const lines = readFileSync(path, "utf8").split("\n");
+	// line 是当前待解析并累计用量的 JSONL 行。
 	for (const line of lines) {
 		if (!line.trim()) continue;
 
@@ -274,6 +277,7 @@ for (const day of [...stats.keys()].sort()) {
 	// dayStats 是当前输出日期的汇总和提供商细分。
 	const dayStats = stats.get(day)!;
 	printTotals(day, dayStats);
+	// provider 是当前日期内按名称排序的提供商标识。
 	for (const provider of [...dayStats.providers.keys()].sort()) {
 		printTotals(`  ${provider}`, dayStats.providers.get(provider)!);
 	}

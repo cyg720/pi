@@ -355,6 +355,7 @@ describe("TUI overlay non-capturing", () => {
 				// then .then() pushes controller as a microtask
 				// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 				let timerHandle: ReturnType<typeof tui.showOverlay> | null = null;
+				/** doneFn 是测试稍后替换的无参完成回调，无返回值；示例：`doneFn()`。 */
 				let doneFn: () => void = () => {
 					throw new Error("doneFn was not initialized");
 				};

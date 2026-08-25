@@ -129,10 +129,12 @@ function removeStaleWorkspaceLockEntries() {
 	/** 已删除的旧工作区包条目数。 */
 	let removed = 0;
 
+	// path 和 pkg 是 lockfile 中当前包路径及其元数据。
 	for (const [path, pkg] of Object.entries(lock.packages)) {
 		if (!path.startsWith("packages/") || pkg.link === true) {
 			continue;
 		}
+		// name 和 version 是当前工作区包名及发布目标版本。
 		for (const [name, version] of workspaceVersions) {
 			if (path.endsWith(`/node_modules/${name}`) && pkg.version !== version) {
 				delete lock.packages[path];

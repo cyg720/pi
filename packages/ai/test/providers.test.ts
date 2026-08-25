@@ -78,6 +78,7 @@ describe("builtin providers", () => {
 	it("uses official Kimi K3 pricing for Moonshot providers", () => {
 		/** 当前用例创建或取得的模型集合，用于注册提供商并查询模型或认证。 */
 		const models = builtinModels();
+		// provider 是当前国际或中国区 Moonshot 提供商标识。
 		for (const provider of ["moonshotai", "moonshotai-cn"]) {
 			expect(models.getModel(provider, "kimi-k3")?.cost).toEqual({
 				input: 3,
@@ -98,6 +99,7 @@ describe("builtin providers", () => {
 			"kimi-for-coding-highspeed": { input: 1.9, output: 8, cacheRead: 0.38, cacheWrite: 0 },
 		};
 
+		// modelId 和 cost 是当前 Kimi Coding 模型标识及预期费用。
 		for (const [modelId, cost] of Object.entries(expectedCosts)) {
 			expect(models.getModel("kimi-coding", modelId)?.cost).toEqual(cost);
 		}

@@ -62,6 +62,7 @@ async function capturePayload(
 		},
 	});
 
+	// event 是载荷捕获流中的当前事件，出现错误即结束消费。
 	for await (const event of s) {
 		if (event.type === "error") {
 			break;
@@ -291,6 +292,7 @@ describe("Application inference profile support", () => {
 			},
 		);
 
+		// event 是当前 Bedrock 实际流事件，错误事件出现后停止等待。
 		for await (const event of s) {
 			if (event.type === "error") break;
 		}

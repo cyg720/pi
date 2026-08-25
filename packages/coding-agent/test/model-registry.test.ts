@@ -1407,6 +1407,7 @@ describe("ModelRegistry", () => {
 			try {
 				getApiProvider("openai-completions")?.streamSimple(openAiModel, emptyContext);
 			} catch (error) {
+				// error 是自定义流覆盖主动抛出的异常，用于确认覆盖仍生效。
 				threwCustomOverride = error instanceof Error && error.message === "custom streamSimple override";
 			}
 			expect(threwCustomOverride).toBe(false);
@@ -1418,6 +1419,7 @@ describe("ModelRegistry", () => {
 			try {
 				getApiProvider("openai-completions")?.streamSimple(openAiModel, emptyContext);
 			} catch (error) {
+				// error 是注销注册表后再次调用自定义覆盖时捕获的异常。
 				threwCustomOverrideAfterUnregister =
 					error instanceof Error && error.message === "custom streamSimple override";
 			}

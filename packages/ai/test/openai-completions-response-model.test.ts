@@ -31,7 +31,9 @@ vi.mock("openai", () => {
 					const chunks = mockState.chunks;
 					// 可由 for-await 消费的最小流对象。
 					const stream = {
+						/** 无参数；按顺序返回 chunks；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
+							// chunk 是当前待返回的模拟 OpenAI 响应分片。
 							for (const chunk of chunks) yield chunk;
 						},
 					};
