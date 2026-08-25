@@ -283,6 +283,7 @@ function cmdTest(filePath: string): void {
 
 	console.log(`\n=== Testing ${filePath} ===\n`);
 
+	// name 和 hex 分别是主题变量名称及其十六进制颜色值。
 	for (const [name, hex] of Object.entries(vars as Record<string, string>)) {
 		if (!hex.startsWith("#")) continue;
 		/** 当前颜色的 RGB 通道。 */

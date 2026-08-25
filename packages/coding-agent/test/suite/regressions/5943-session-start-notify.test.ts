@@ -43,6 +43,7 @@ function createUiContext(
 		addAutocompleteProvider: () => {},
 		setEditorComponent: () => {},
 		getEditorComponent: () => undefined,
+		/** 无参数；返回当前全局主题；示例：`ui.theme`。 */
 		get theme() {
 			return theme;
 		},

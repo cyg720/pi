@@ -87,6 +87,7 @@ async function capturePayload(context: Context, model = baseModel): Promise<unkn
 			return payload;
 		},
 	});
+	// event 是当前 Bedrock 流事件；遇到预期错误事件后停止消费。
 	for await (const event of s) {
 		if (event.type === "error") break;
 	}

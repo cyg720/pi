@@ -27,6 +27,7 @@ afterEach(() => {
 		Reflect.deleteProperty(process.stdout, "isTTY");
 	}
 
+	// dir 是本轮待递归删除的测试临时目录，只来自 tempDirs 登记项。
 	for (const dir of tempDirs.splice(0)) {
 		rmSync(dir, { recursive: true, force: true });
 	}

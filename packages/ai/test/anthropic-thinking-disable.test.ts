@@ -117,6 +117,7 @@ async function runWithoutReasoning(model: Model<"anthropic-messages">): Promise<
 	// thinkingCharCount 累加 thinking_delta 中的字符数。
 	let thinkingCharCount = 0;
 
+	// event 是当前 Anthropic 流事件，用于累计 thinking 生命周期和增量字符数。
 	for await (const event of s) {
 		if (event.type === "thinking_start" || event.type === "thinking_end") {
 			thinkingEventCount += 1;

@@ -30,6 +30,7 @@ vi.mock("openai", () => {
 				create: () => {
 					// stream 是只产生一个停止事件的异步可迭代对象。
 					const stream = {
+						/** 无参数；依次返回模拟完成分片；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
 							yield {
 								choices: [{ delta: {}, finish_reason: "stop" }],

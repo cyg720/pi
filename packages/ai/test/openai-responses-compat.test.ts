@@ -36,6 +36,7 @@ function getHeader(headers: CapturedHeaders, name: string): string | null {
 		return match?.[1] ?? null;
 	}
 
+	// key 和 value 是当前待执行不区分大小写匹配的 Header 名称和值。
 	for (const [key, value] of Object.entries(headers)) {
 		if (key.toLowerCase() === lowerName) return typeof value === "string" ? value : value.join(", ");
 	}

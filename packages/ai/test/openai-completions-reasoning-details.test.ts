@@ -30,6 +30,7 @@ vi.mock("openai", () => {
 					const chunks = mockState.chunkSets.shift() ?? [];
 					// 支持 for-await 消费的最小异步可迭代对象。
 					const stream = {
+						/** 无参数；按队列顺序返回模拟分片；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
 							for (const chunk of chunks) {
 								// chunk 是单个模拟增量；生成器逐项返回且最终不提供额外返回值。

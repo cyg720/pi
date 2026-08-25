@@ -247,6 +247,7 @@ describe("bedrock custom headers middleware", () => {
 
 		// nextSpy 和 fakeArgs 用于实际执行中间件并验证写入。
 		const nextSpy = vi.fn(async (a: unknown) => a);
+		// fakeArgs 是可由中间件写入自定义 Header 的空请求参数。
 		const fakeArgs = { request: { headers: {} as Record<string, string> } };
 		await reg.handler(nextSpy)(fakeArgs);
 

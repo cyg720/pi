@@ -26,6 +26,7 @@ describe("inline extension naming", () => {
 		const root = join(tmpdir(), `pi-inline-naming-${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 		// cwd 和 agentDir 分别是项目与代理目录。
 		const cwd = join(root, "project");
+		// agentDir 是当前夹具隔离出的代理级资源目录。
 		const agentDir = join(root, "agent");
 		mkdirSync(cwd, { recursive: true });
 		mkdirSync(agentDir, { recursive: true });

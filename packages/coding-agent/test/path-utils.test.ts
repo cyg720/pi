@@ -84,6 +84,7 @@ describe("path-utils", () => {
 			try {
 				// files 是临时目录中需要逐个删除的文件名。
 				const files = readdirSync(tempDir);
+				// file 是 files 中当前待解除链接的文件名。
 				for (const file of files) {
 					unlinkSync(join(tempDir, file));
 				}

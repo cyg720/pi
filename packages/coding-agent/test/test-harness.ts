@@ -542,6 +542,7 @@ async function createHarnessWithResourceLoader(
 		settingsManager,
 		faux: fauxState,
 		events,
+		/** 参数 type 是目标事件类型；返回匹配事件数组；示例：`harness.eventsOfType("message_end")`。 */
 		eventsOfType<T extends AgentSessionEvent["type"]>(type: T) {
 			return events.filter((e): e is Extract<AgentSessionEvent, { type: T }> => e.type === type);
 		},

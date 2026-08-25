@@ -56,6 +56,7 @@ function parseSession(filePath: string): string[] {
 	/** 仅收集用户和助手的非空文本消息。 */
 	const messages: string[] = [];
 
+	// entry 是会话 JSONL 中当前待筛选和提取文本的条目。
 	for (const entry of entries) {
 		if (entry.type !== "message") continue;
 		/** 已确认类型为 message 的会话条目。 */

@@ -395,6 +395,7 @@ export function buildTestTree(
 	/** 已创建消息文本到条目标识的映射。 */
 	const ids = new Map<string, string>();
 
+	// msg 是 structure.messages 中当前待写入会话树的消息描述。
 	for (const msg of structure.messages) {
 		if (msg.branchFrom) {
 			/** 分支起点文本对应的条目标识。 */

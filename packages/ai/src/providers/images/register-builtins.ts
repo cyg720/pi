@@ -65,6 +65,7 @@ export const generateImagesOpenRouter: ImagesFunction<"openrouter-images", Image
 		const module = await loadOpenRouterImagesProviderModule();
 		return await module.generateImages(model, context, options);
 	} catch (error) {
+		// error 是动态加载或图片调用阶段捕获的未知异常，仅用于构造结构化失败结果。
 		return createLazyLoadErrorImages(model, error);
 	}
 };

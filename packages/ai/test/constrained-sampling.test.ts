@@ -191,6 +191,7 @@ describe("constrained tool sampling", () => {
 				},
 			],
 		};
+		// invalidArguments 是当前缺字段或字段类型错误的语法工具参数夹具。
 		for (const invalidArguments of [{}, { payload: 42 }]) {
 			replayedToolCall.arguments = invalidArguments;
 			expect(() =>

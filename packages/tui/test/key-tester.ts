@@ -75,6 +75,7 @@ class KeyLogger implements Component {
 		this.tui.requestRender();
 	}
 
+	/** 清除组件缓存；当前无缓存所以不执行操作。无参数、无返回值；示例：`tester.invalidate()`。 */
 	invalidate(): void {
 		// No cached state to invalidate currently
 		// 当前没有需要清除的缓存状态。

@@ -29,6 +29,7 @@ const tempDirs: string[] = [];
 
 // 每个用例结束后清理临时文件树。
 afterEach(() => {
+	// dir 是当前待删除的测试临时目录，只来自 tempDirs 登记项。
 	for (const dir of tempDirs.splice(0)) {
 		rmSync(dir, { recursive: true, force: true });
 	}

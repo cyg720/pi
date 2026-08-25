@@ -224,6 +224,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 				const lines = buffer.split("\n");
 				buffer = lines.pop() || "";
 
+				// line 是本次网络分片中已经完整结束的一行 SSE 文本。
 				for (const line of lines) {
 					if (line.startsWith("data: ")) {
 						/** 去除 SSE data: 前缀后的 JSON 文本。 */

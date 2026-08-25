@@ -168,6 +168,7 @@ async function drainResult(stream: {
 	[Symbol.asyncIterator](): AsyncIterator<unknown>;
 	result(): Promise<{ errorMessage?: string; stopReason?: string }>;
 }) {
+	// _event 是为耗尽流而读取的事件，本辅助函数不检查其内容。
 	for await (const _event of stream) {
 		void _event;
 	}

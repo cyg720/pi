@@ -192,6 +192,7 @@ describe("Anthropic Messages eager tool input streaming E2E", () => {
 
 	// 按生成模型兼容设置，对每个有凭据的提供商执行代表请求。
 	describe("generated compatibility settings", () => {
+		// testCase 是当前提供商按成本选出的代表模型及其可选凭据。
 		for (const testCase of generatedCompatCases) {
 			it.skipIf(!testCase.apiKey)(`${testCase.name} accepts configured tool streaming`, { retry: 2 }, async () => {
 				await expectToolEnabledRequestAccepted(testCase.model, testCase.apiKey);

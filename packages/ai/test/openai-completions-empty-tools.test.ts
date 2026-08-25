@@ -36,6 +36,7 @@ vi.mock("openai", () => {
 					mockState.lastParams = params;
 					/** 只产出一次 stop 与固定用量的异步流。 */
 					const stream = {
+						/** 无参数；返回固定停止分片；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
 							yield {
 								choices: [{ delta: {}, finish_reason: "stop" }],

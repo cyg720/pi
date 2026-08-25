@@ -142,6 +142,7 @@ describe("getSupportedThinkingLevels", () => {
 		// cases 包含国际与中国区两个 Moonshot 路由。
 		const cases = [getModel("moonshotai", "kimi-k2.7-code"), getModel("moonshotai-cn", "kimi-k2.7-code")];
 
+		// model 是当前区域的 Kimi K2.7 Code 模型，循环验证两者共享同一推理等级。
 		for (const model of cases) {
 			expect(model).toBeDefined();
 			expect(getSupportedThinkingLevels(model!)).toEqual(["minimal", "low", "medium", "high"]);

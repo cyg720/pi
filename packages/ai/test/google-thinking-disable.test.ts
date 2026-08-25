@@ -71,6 +71,7 @@ async function runWithoutReasoning<TApi extends Api>(
 	// thinkingCharCount 累加推理增量字符数，预期为 0。
 	let thinkingCharCount = 0;
 
+	// event 是当前 Google 流事件，用于确认关闭推理后不再出现 thinking 生命周期或增量。
 	for await (const event of s) {
 		if (event.type === "thinking_start" || event.type === "thinking_end") {
 			thinkingEventCount += 1;

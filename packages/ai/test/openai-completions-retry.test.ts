@@ -27,6 +27,7 @@ vi.mock("openai", () => {
 					mockState.requestOptions.push(options);
 					// 固定返回文本 ok 后正常停止的异步流。
 					const stream = {
+						/** 无参数；依次返回文本和停止分片；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
 							yield {
 								id: "chatcmpl-test",

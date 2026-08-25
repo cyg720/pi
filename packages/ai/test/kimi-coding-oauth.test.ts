@@ -133,6 +133,7 @@ describe("Kimi Code OAuth", () => {
 
 		/** 尚未完成的设备登录 Promise。 */
 		const credentialPromise = kimiCodingOAuth.login(createInteraction(events));
+		// i 限制最多五次清空微任务队列，等待设备码通知出现。
 		for (let i = 0; i < 5 && events.length === 0; i++) {
 			await vi.advanceTimersByTimeAsync(0);
 		}

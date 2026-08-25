@@ -505,6 +505,7 @@ describe("skills", () => {
 			/** 后加载同名技能产生的冲突警告。 */
 			const collisionWarnings: Array<{ skillPath: string; message: string }> = [];
 
+			// skill 是第一来源中当前待注册到技能映射的条目。
 			for (const skill of first.skills) {
 				skillMap.set(skill.name, skill);
 			}

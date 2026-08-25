@@ -56,6 +56,7 @@ vi.mock("openai", () => {
 					mockState.lastParams = params;
 					// stream 是只产生一次 stop 片段的异步可迭代对象。
 					const stream = {
+						/** 无参数；返回单个停止分片；示例：`for await (const chunk of stream)`。 */
 						async *[Symbol.asyncIterator]() {
 							yield {
 								id: "chatcmpl-test",

@@ -109,6 +109,7 @@ const context: ImagesContext = { input: [{ type: "text", text: "a red circle" }]
 /** 覆盖图片模型注册表的同步查询、认证、调用、刷新和内置配置。 */
 describe("ImagesModels", () => {
 	it("registers providers and reads models synchronously", () => {
+		/** models 是本例新建的空图片模型注册表，随后注册 p1 与 p2。 */
 		const models = createImagesModels();
 		models.setProvider(testProvider({ id: "p1", models: [testImageModel("p1", "m1"), testImageModel("p1", "m2")] }));
 		models.setProvider(testProvider({ id: "p2", models: [testImageModel("p2", "m3")] }));
