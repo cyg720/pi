@@ -1,31 +1,22 @@
-/**
- * 文件职责：验证 xAI Responses 模型目录、推理档位和兼容请求的端点、认证及字段。
- * 技术维度：使用 Vitest、fetch 模拟、SSE 完成响应和 xaiProvider 流接口捕获 Request。
- * 产品维度：保证 Grok 4.5 使用新 Responses API，而旧或退役模型不会误暴露。
- * 逻辑维度：检查模型目录与能力，模拟成功请求并断言 URL、头、缓存、推理和 developer 输入。
- * 关键边界：不访问真实 xAI；每例后恢复 fetch 模拟，完成事件不含实际文本输出。
- * 新手阅读建议：先看 completedResponse 和 captureRequest，再读三个用例从目录到请求逐层验证。
- */
+import { arch, platform, release } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
 import type { OpenAIResponsesOptions } from "../src/api/openai-responses.ts";
+import { stream as streamOpenAIResponses } from "../src/api/openai-responses.ts";
 import { getSupportedThinkingLevels } from "../src/models.ts";
 import { XAI_MODELS } from "../src/providers/xai.models.ts";
 import { xaiProvider } from "../src/providers/xai.ts";
 import type { Context, Model } from "../src/types.ts";
 
-/** 描述测试捕获的 HTTP 请求关键字段。 */
+const PI_USER_AGENT = `pi (${platform()} ${release()}; ${arch()})`;
+
 type CapturedRequest = {
-	// url 是完整请求地址。
 	url: string;
-	// headers 是规范化后的请求头。
 	headers: Headers;
-	// body 是解析后的 JSON 请求体。
 	body: Record<string, unknown>;
 };
 
-/** 创建只包含 response.completed 的成功 SSE 响应；无参数，返回 Response。 */
 function completedResponse(): Response {
-	// event 是模拟 xAI 完成事件对象。
 	const event = {
 		type: "response.completed",
 		sequence_number: 0,
@@ -47,21 +38,60 @@ function completedResponse(): Response {
 	});
 }
 
-/**
- * 模拟 fetch 并捕获 xAI 提供商发送的请求。
- * 参数：model、context、options 分别为模型、上下文和 Responses 选项。
- * 返回值：捕获请求 Promise。
- */
+const customCompletionsModel: Model<"openai-completions"> = {
+	id: "grok-custom",
+	name: "Grok Custom",
+	api: "openai-completions",
+	provider: "xai",
+	baseUrl: "https://api.x.ai/v1",
+	reasoning: false,
+	input: ["text"],
+	cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+	contextWindow: 128000,
+	maxTokens: 16384,
+};
+
+async function captureCompletionsUserAgent(headers?: Record<string, string>): Promise<string | null> {
+	let userAgent: string | null = null;
+	vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+		userAgent = new Request(input, init).headers.get("user-agent");
+		const chunks = [
+			{ id: "chatcmpl-ua", choices: [{ delta: { content: "ok" }, finish_reason: null, index: 0 }] },
+			{
+				id: "chatcmpl-ua",
+				choices: [{ delta: {}, finish_reason: "stop", index: 0 }],
+				usage: {
+					prompt_tokens: 1,
+					completion_tokens: 1,
+					prompt_tokens_details: { cached_tokens: 0 },
+					completion_tokens_details: { reasoning_tokens: 0 },
+				},
+			},
+		];
+		const body = `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}`).join("\n\n")}\n\ndata: [DONE]\n\n`;
+		return new Response(body, {
+			status: 200,
+			headers: { "content-type": "text/event-stream" },
+		});
+	});
+
+	const result = await streamOpenAICompletions(
+		customCompletionsModel,
+		{ messages: [{ role: "user", content: "hello", timestamp: 1 }] },
+		{ apiKey: "xai-test-token", headers },
+	).result();
+
+	expect(result.stopReason, result.errorMessage).toBe("stop");
+	return userAgent;
+}
+
 async function captureRequest(
 	model: Model<"openai-responses">,
 	context: Context,
 	options: OpenAIResponsesOptions,
 ): Promise<CapturedRequest> {
-	// captured 保存 fetch 观察到的请求，调用前允许未定义。
 	let captured: CapturedRequest | undefined;
-	// input 和 init 是 fetch 参数，回调将其规范化为 Request。
 	vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
-		// request 是便于读取 URL、头和正文的标准请求对象。
 		const request = new Request(input, init);
 		captured = {
 			url: request.url,
@@ -71,7 +101,6 @@ async function captureRequest(
 		return completedResponse();
 	});
 
-	// result 是假 SSE 完成后的助手结果。
 	const result = await xaiProvider().stream(model, context, options).result();
 	expect(result.stopReason, result.errorMessage).toBe("stop");
 	expect(captured).toBeDefined();
@@ -79,14 +108,11 @@ async function captureRequest(
 }
 
 describe("xAI Responses provider", () => {
-	// 每例后恢复 fetch 等模拟；无参数，无返回值。
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
-	// 验证退役和重复模型不在内置目录；无参数，无返回值。
 	it("excludes retired and redundant models from the built-in catalog", () => {
-		// modelId 是当前不应出现的模型标识。
 		for (const modelId of [
 			"grok-3",
 			"grok-3-fast",
@@ -98,16 +124,17 @@ describe("xAI Responses provider", () => {
 		}
 	});
 
-	// 验证仅 Grok 4.5 使用 Responses 和 low/medium/high；无参数，无返回值。
-	it("uses Responses with low/medium/high efforts only for Grok 4.5", () => {
-		expect(XAI_MODELS["grok-4.5"].api).toBe("openai-responses");
+	it("routes every built-in xAI model through Responses", () => {
+		for (const model of Object.values(XAI_MODELS)) {
+			expect(model.api, model.id).toBe("openai-responses");
+		}
 		expect(getSupportedThinkingLevels(XAI_MODELS["grok-4.5"])).toEqual(["low", "medium", "high"]);
-		expect(XAI_MODELS["grok-4.3"].api).toBe("openai-completions");
+		expect(getSupportedThinkingLevels(XAI_MODELS["grok-4.6"])).toEqual(["low", "medium", "high", "xhigh"]);
+		expect(getSupportedThinkingLevels(XAI_MODELS["grok-4.3"])).toEqual(["off", "low", "medium", "high"]);
+		expect(getSupportedThinkingLevels(XAI_MODELS["grok-build-0.1"])).toEqual(["low", "medium", "high"]);
 	});
 
-	// 验证真实请求形状符合 xAI Responses 兼容要求；无参数，无返回值。
 	it("uses /responses with bearer auth and xAI-compatible request fields", async () => {
-		// captured 是提供商发送前被 fetch 模拟截获的请求。
 		const captured = await captureRequest(
 			XAI_MODELS["grok-4.5"],
 			{
@@ -124,6 +151,7 @@ describe("xAI Responses provider", () => {
 
 		expect(captured.url).toBe("https://api.x.ai/v1/responses");
 		expect(captured.headers.get("authorization")).toBe("Bearer xai-test-token");
+		expect(captured.headers.get("user-agent")).toBe(PI_USER_AGENT);
 		expect(captured.headers.get("session_id")).toBe("pi-session-123");
 		expect(captured.body).toMatchObject({
 			model: "grok-4.5",
@@ -142,5 +170,104 @@ describe("xAI Responses provider", () => {
 				}),
 			]),
 		);
+	});
+
+	it("requests encrypted reasoning without an effort override", async () => {
+		const captured = await captureRequest(
+			XAI_MODELS["grok-4.5"],
+			{ messages: [{ role: "user", content: "hello", timestamp: 1 }] },
+			{ apiKey: "xai-test-token" },
+		);
+
+		expect(captured.body).toMatchObject({
+			model: "grok-4.5",
+			store: false,
+			include: ["reasoning.encrypted_content"],
+		});
+		expect(captured.body).not.toHaveProperty("reasoning");
+	});
+
+	it("uses /responses for Grok 4.6 with xhigh effort and encrypted reasoning", async () => {
+		const captured = await captureRequest(
+			XAI_MODELS["grok-4.6"],
+			{
+				systemPrompt: "You are a careful coding assistant.",
+				messages: [{ role: "user", content: "hello", timestamp: 1 }],
+			},
+			{
+				apiKey: "xai-test-token",
+				reasoningEffort: "xhigh",
+			},
+		);
+
+		expect(captured.url).toBe("https://api.x.ai/v1/responses");
+		expect(captured.body).toMatchObject({
+			model: "grok-4.6",
+			store: false,
+			stream: true,
+			reasoning: { effort: "xhigh" },
+			include: ["reasoning.encrypted_content"],
+		});
+	});
+
+	it("uses /responses for Grok 4.3", async () => {
+		const captured = await captureRequest(
+			XAI_MODELS["grok-4.3"],
+			{
+				messages: [{ role: "user", content: "hello", timestamp: 1 }],
+			},
+			{
+				apiKey: "xai-test-token",
+				reasoningEffort: "low",
+			},
+		);
+
+		expect(captured.url).toBe("https://api.x.ai/v1/responses");
+		expect(captured.body).toMatchObject({
+			model: "grok-4.3",
+			store: false,
+			include: ["reasoning.encrypted_content"],
+			reasoning: { effort: "low" },
+		});
+	});
+
+	it("uses pi's User-Agent by default for Responses requests", async () => {
+		let userAgent: string | null = null;
+		vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+			userAgent = new Request(input, init).headers.get("user-agent");
+			return completedResponse();
+		});
+
+		const openaiModel: Model<"openai-responses"> = {
+			...XAI_MODELS["grok-4.5"],
+			provider: "openai",
+			baseUrl: "https://api.openai.com/v1",
+		};
+		const result = await streamOpenAIResponses(
+			openaiModel,
+			{ messages: [{ role: "user", content: "hello", timestamp: 1 }] },
+			{ apiKey: "test-token" },
+		).result();
+
+		expect(result.stopReason, result.errorMessage).toBe("stop");
+		expect(userAgent).toBe(PI_USER_AGENT);
+	});
+
+	it("lets explicit headers override the default Responses User-Agent", async () => {
+		const captured = await captureRequest(
+			XAI_MODELS["grok-4.5"],
+			{ messages: [{ role: "user", content: "hello", timestamp: 1 }] },
+			{ apiKey: "xai-test-token", headers: { "User-Agent": "custom-agent" } },
+		);
+
+		expect(captured.headers.get("user-agent")).toBe("custom-agent");
+	});
+
+	it("uses pi's User-Agent by default for Completions requests", async () => {
+		expect(await captureCompletionsUserAgent()).toBe(PI_USER_AGENT);
+	});
+
+	it("lets explicit headers override the default Completions User-Agent", async () => {
+		expect(await captureCompletionsUserAgent({ "User-Agent": "custom-agent" })).toBe("custom-agent");
 	});
 });

@@ -1,4 +1,12 @@
 /**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/oauth/anthropic` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:http`、`../../utils/provider-env.ts`、`../types.ts`、`./oauth-page.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/oauth/anthropic` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `anthropicOAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `anthropicOAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+/**
  * Anthropic OAuth flow (Claude Pro/Max)
  *
  * NOTE: This module uses Node.js http.createServer for the OAuth callback server.
@@ -9,7 +17,7 @@
 
 import type { Server } from "node:http";
 import { getProviderEnvValue } from "../../utils/provider-env.ts";
-import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
+import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
 import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
 import { generatePKCE } from "./pkce.ts";
 
@@ -171,7 +179,7 @@ async function startCallbackServer(expectedState: string): Promise<CallbackServe
 	});
 }
 
-async function postJson(url: string, body: Record<string, string | number>): Promise<string> {
+async function postJson(url: string, body: Record<string, string | number>, signal: AbortSignal): Promise<string> {
 	const response = await fetch(url, {
 		method: "POST",
 		headers: {
@@ -179,7 +187,7 @@ async function postJson(url: string, body: Record<string, string | number>): Pro
 			Accept: "application/json",
 		},
 		body: JSON.stringify(body),
-		signal: AbortSignal.timeout(30_000),
+		signal: AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
 	});
 
 	const responseBody = await response.text();
@@ -196,17 +204,22 @@ async function exchangeAuthorizationCode(
 	state: string,
 	verifier: string,
 	redirectUri: string,
+	signal: AbortSignal,
 ): Promise<OAuthCredential> {
 	let responseBody: string;
 	try {
-		responseBody = await postJson(TOKEN_URL, {
-			grant_type: "authorization_code",
-			client_id: CLIENT_ID,
-			code,
-			state,
-			redirect_uri: redirectUri,
-			code_verifier: verifier,
-		});
+		responseBody = await postJson(
+			TOKEN_URL,
+			{
+				grant_type: "authorization_code",
+				client_id: CLIENT_ID,
+				code,
+				state,
+				redirect_uri: redirectUri,
+				code_verifier: verifier,
+			},
+			signal,
+		);
 	} catch (error) {
 		throw new Error(
 			`Token exchange request failed. url=${TOKEN_URL}; redirect_uri=${redirectUri}; response_type=authorization_code; details=${formatErrorDetails(error)}`,
@@ -230,10 +243,13 @@ async function exchangeAuthorizationCode(
 	};
 }
 
-async function loginAnthropic(interaction: AuthInteraction): Promise<OAuthCredential> {
+async function loginAnthropic(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const { verifier, challenge } = await generatePKCE();
 	const server = await startCallbackServer(verifier);
 	const manualAbort = new AbortController();
+	const onAbort = () => server.cancelWait();
+	interaction.signal.addEventListener("abort", onAbort, { once: true });
+	if (interaction.signal.aborted) onAbort();
 	let code: string | undefined;
 	let state: string | undefined;
 	let manualInput: string | undefined;
@@ -299,8 +315,9 @@ async function loginAnthropic(interaction: AuthInteraction): Promise<OAuthCreden
 		if (!code) throw new Error("Missing authorization code");
 		if (!state) throw new Error("Missing OAuth state");
 		interaction.notify({ type: "progress", message: "Exchanging authorization code for tokens..." });
-		return exchangeAuthorizationCode(code, state, verifier, REDIRECT_URI);
+		return exchangeAuthorizationCode(code, state, verifier, REDIRECT_URI, interaction.signal);
 	} finally {
+		interaction.signal.removeEventListener("abort", onAbort);
 		manualAbort.abort();
 		server.server.close();
 	}
@@ -309,14 +326,18 @@ async function loginAnthropic(interaction: AuthInteraction): Promise<OAuthCreden
 /**
  * Refresh Anthropic OAuth token
  */
-async function refreshAnthropicToken(refreshToken: string): Promise<OAuthCredential> {
+async function refreshAnthropicToken(refreshToken: string, signal: AbortSignal): Promise<OAuthCredential> {
 	let responseBody: string;
 	try {
-		responseBody = await postJson(TOKEN_URL, {
-			grant_type: "refresh_token",
-			client_id: CLIENT_ID,
-			refresh_token: refreshToken,
-		});
+		responseBody = await postJson(
+			TOKEN_URL,
+			{
+				grant_type: "refresh_token",
+				client_id: CLIENT_ID,
+				refresh_token: refreshToken,
+			},
+			signal,
+		);
 	} catch (error) {
 		throw new Error(`Anthropic token refresh request failed. url=${TOKEN_URL}; details=${formatErrorDetails(error)}`);
 	}
@@ -345,8 +366,9 @@ async function refreshAnthropicToken(refreshToken: string): Promise<OAuthCredent
 
 export const anthropicOAuth: OAuthAuth = {
 	name: "Anthropic (Claude Pro/Max)",
+	isSubscription: true,
 	login: loginAnthropic,
-	refresh: (credential) => refreshAnthropicToken(credential.refresh),
+	refresh: (credential, signal) => refreshAnthropicToken(credential.refresh, signal),
 
 	async toAuth(credential) {
 		return { apiKey: credential.access };

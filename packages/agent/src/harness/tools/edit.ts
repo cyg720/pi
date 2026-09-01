@@ -55,6 +55,13 @@ const editSchema = Type.Object(
 export type EditToolInput = Static<typeof editSchema>;
 /** 旧版输入形状（中文说明）：早期版本直接传顶层 oldText/newText，用于兼容识别。 */
 type LegacyEditToolInput = EditToolInput & { oldText?: unknown; newText?: unknown };
+type SingleEditInput = { oldText: string; newText: string };
+
+function isSingleEditInput(value: unknown): value is SingleEditInput {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+	const edit = value as Record<string, unknown>;
+	return typeof edit.oldText === "string" && typeof edit.newText === "string";
+}
 
 /** 编辑工具详情（中文说明）：可读 diff、unified patch 与新文件首处变更行号。 */
 export interface EditToolDetails {
@@ -74,8 +81,14 @@ function prepareEditArguments(input: unknown): EditToolInput {
 	if (typeof args.edits === "string") {
 		try {
 			const parsed: unknown = JSON.parse(args.edits);
-			if (Array.isArray(parsed)) args.edits = parsed;
+			if (Array.isArray(parsed)) {
+				args.edits = parsed;
+			} else if (isSingleEditInput(parsed)) {
+				args.edits = [parsed];
+			}
 		} catch {}
+	} else if (isSingleEditInput(args.edits)) {
+		args.edits = [args.edits];
 	}
 
 	const legacy = args as LegacyEditToolInput;

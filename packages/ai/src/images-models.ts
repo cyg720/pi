@@ -250,6 +250,7 @@ class ImagesModelsImpl implements MutableImagesModels {
 			const resolution = await this.getAuth(model, {
 				apiKey: options?.apiKey,
 				env: options?.env,
+				signal: options?.signal,
 			});
 			const auth = resolution?.auth;
 			if (!auth) {
@@ -324,7 +325,7 @@ export function createImagesProvider(input: CreateImagesProviderOptions): Images
 		name: input.name ?? input.id,
 		auth: input.auth,
 		getModels: () => models,
-	// 动态刷新实现：并发去重；刷新结束清空 in-flight 标记
+		// 动态刷新实现：并发去重；刷新结束清空 in-flight 标记
 		refreshModels: refreshModels
 			? () => {
 					inflightRefresh ??= (async () => {
@@ -337,7 +338,7 @@ export function createImagesProvider(input: CreateImagesProviderOptions): Images
 					return inflightRefresh;
 				}
 			: undefined,
-	// 生成实现：直接委托图片 API
+		// 生成实现：直接委托图片 API
 		generateImages: (model, context, options) => input.api.generateImages(model, context, options),
 	};
 }

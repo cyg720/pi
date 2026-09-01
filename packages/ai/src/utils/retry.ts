@@ -59,6 +59,7 @@ const RETRYABLE_PROVIDER_ERROR_PATTERN = buildProviderErrorPattern([
 	// Wrapper/provider text for transient upstream failures, including OpenRouter
 	// "Provider returned error" responses (#2264).
 	"provider.?returned.?error",
+	"exceeded request buffer limit while retrying upstream",
 
 	// Network, proxy, and fetch transport failures. This includes OpenAI Codex
 	// raw-fetch failures such as "upstream connect", "connection refused", and
@@ -132,7 +133,7 @@ export interface RetryPolicy {
 export interface RetryCallbacks {
 	/** Emitted before the backoff sleep of each retry attempt (1-indexed). */
 	onRetryScheduled?: (
-	// 每次重试的退避睡眠前触发（attempt 从 1 起）
+		// 每次重试的退避睡眠前触发（attempt 从 1 起）
 		attempt: number,
 		maxAttempts: number,
 		delayMs: number,
@@ -209,21 +210,21 @@ export async function retryAssistantCall(
 		const response = await produce();
 
 		// Abort: terminal but not successful. Never retry an aborted message.
-	// 中止：终态且不算成功；永不重试已中止的消息
+		// 中止：终态且不算成功；永不重试已中止的消息
 		if (response.stopReason === "aborted") {
 			if (lastRetry) await callbacks?.onRetryFinished?.(false, lastRetry.attempt);
 			return response;
 		}
 
 		// Success: non-error, non-abort responses return as-is.
-	// 成功：非错误、非中止的响应原样返回
+		// 成功：非错误、非中止的响应原样返回
 		if (response.stopReason !== "error") {
 			if (lastRetry) await callbacks?.onRetryFinished?.(true, lastRetry.attempt);
 			return response;
 		}
 
 		// Non-retryable, or budget exhausted: return the final error message.
-	// 不可重试或预算耗尽：直接返回最终错误消息
+		// 不可重试或预算耗尽：直接返回最终错误消息
 		if (attempt >= maxAttempts || !isRetryableAssistantError(response)) {
 			if (lastRetry) await callbacks?.onRetryFinished?.(false, lastRetry.attempt, response.errorMessage);
 			return response;

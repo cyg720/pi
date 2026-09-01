@@ -101,7 +101,6 @@ describe("issue #3217 scoped model ordering", () => {
 		const selector = new ModelSelectorComponent(
 			createFakeTui(),
 			modelOne,
-			harness.settingsManager,
 			harness.session.modelRuntime,
 			[{ model: modelTwo }, { model: modelOne }, { model: modelThree }],
 			() => {},
@@ -124,7 +123,7 @@ describe("issue #3217 scoped model ordering", () => {
 		const orderedIds = renderedLines.slice(0, 3).map((line) => {
 			// line 是当前模型渲染行，modelId 是去除箭头与提供商后的标识。
 			const [modelId] = line.trim().replace(/^→\s*/, "").split(" [");
-			return modelId?.trim() ?? "";
+			return modelId?.replace(/^✓\s*/, "").trim() ?? "";
 		});
 
 		expect(orderedIds).toEqual([modelTwo.id, modelOne.id, modelThree.id]);

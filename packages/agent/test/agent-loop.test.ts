@@ -1,11 +1,3 @@
-/**
- * 文件职责：验证 agentLoop 与 agentLoopContinue 在消息事件、工具调用、上下文转换、排队消息、终止和错误路径下的行为。
- * 技术维度：使用 Vitest、EventStream、TypeBox 模式和可控模拟流，构造无需真实模型服务的代理循环测试。
- * 产品维度：保障代理对话在普通回复、工具执行、并行调度与中断场景中保持可预测，避免用户看到丢消息或乱序结果。
- * 逻辑维度：先定义模型、消息与流辅助对象，再依次覆盖消息转换、工具生命周期、调度顺序、停止条件及继续既有上下文。
- * 关键边界：测试依赖微任务和少量定时器推进异步流；模拟流必须发送 done 事件，否则消费循环不会结束。
- * 新手阅读建议：先阅读辅助构造函数和基础消息事件用例，再看工具执行与队列测试，最后阅读终止条件和 agentLoopContinue 场景。
- */
 import {
 	type AssistantMessage,
 	type AssistantMessageEvent,
@@ -21,13 +13,7 @@ import { setDefaultStreamFn } from "../src/index.ts";
 import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage, AgentTool } from "../src/types.ts";
 
 // Mock stream for testing - mimics MockAssistantStream
-// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
-/**
- * 用于测试的助手事件流，模拟真实模型流的完成与失败收束方式。
- * 使用场景：测试通过 push 注入事件，并由代理循环异步消费这些事件。
- */
 class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMessage> {
-	/** 初始化流结束判定和最终结果提取逻辑；无参数，无显式返回值。示例：new MockAssistantStream()。 */
 	constructor() {
 		super(
 			(event) => event.type === "done" || event.type === "error",
@@ -40,7 +26,6 @@ class MockAssistantStream extends EventStream<AssistantMessageEvent, AssistantMe
 	}
 }
 
-/** createUsage 执行当前测试辅助步骤；参数 无 按签名提供输入，返回值供调用方断言。示例：createUsage()。 */
 function createUsage() {
 	return {
 		input: 0,
@@ -52,7 +37,6 @@ function createUsage() {
 	};
 }
 
-/** createModel 执行当前测试辅助步骤；参数 无 按签名提供输入，返回值供调用方断言。示例：createModel()。 */
 function createModel(): Model<"openai-responses"> {
 	return {
 		id: "mock",
@@ -68,7 +52,6 @@ function createModel(): Model<"openai-responses"> {
 	};
 }
 
-/** createAssistantMessage 执行当前测试辅助步骤；参数 无 按签名提供输入，返回值供调用方断言。示例：createAssistantMessage()。 */
 function createAssistantMessage(
 	content: AssistantMessage["content"],
 	stopReason: AssistantMessage["stopReason"] = "stop",
@@ -85,7 +68,6 @@ function createAssistantMessage(
 	};
 }
 
-/** createUserMessage 执行当前测试辅助步骤；参数 text 按签名提供输入，返回值供调用方断言。示例：createUserMessage(...)。 */
 function createUserMessage(text: string): UserMessage {
 	return {
 		role: "user",
@@ -95,20 +77,15 @@ function createUserMessage(text: string): UserMessage {
 }
 
 // Simple identity converter for tests - just passes through standard messages
-// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 function identityConverter(messages: AgentMessage[]): Message[] {
 	return messages.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "toolResult") as Message[];
 }
 
-// 用例分组：集中验证“default stream function compatibility”相关功能。
 describe("default stream function compatibility", () => {
-	// 测试场景：验证“uses the configured default when a legacy caller omits streamFn”对应的行为、结果与边界。
 	it("uses the configured default when a legacy caller omits streamFn", async () => {
-		/** 变量 calls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let calls = 0;
 		setDefaultStreamFn(() => {
 			calls++;
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
 				stream.push({
@@ -121,11 +98,8 @@ describe("default stream function compatibility", () => {
 		});
 
 		try {
-			/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const context: AgentContext = { systemPrompt: "", messages: [], tools: [] };
-			/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const config: AgentLoopConfig = { model: createModel(), convertToLlm: identityConverter };
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = Reflect.apply(agentLoop, undefined, [
 				[createUserMessage("Hello")],
 				context,
@@ -141,59 +115,45 @@ describe("default stream function compatibility", () => {
 	});
 });
 
-// 用例分组：集中验证“agentLoop with AgentMessage”相关功能。
 describe("agentLoop with AgentMessage", () => {
-	// 测试场景：验证“should emit events with AgentMessage types”对应的行为、结果与边界。
 	it("should emit events with AgentMessage types", async () => {
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [],
 			tools: [],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("Hello");
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage([{ type: "text", text: "Hi there!" }]);
 				stream.push({ type: "done", reason: "stop", message });
 			});
 			return stream;
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
-		/** event 是 Agent 循环当前事件；完整收集后用于断言消息生命周期。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 
 		// Should have user message and assistant message
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(messages.length).toBe(2);
 		expect(messages[0].role).toBe("user");
 		expect(messages[1].role).toBe("assistant");
 
 		// Verify event sequence
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const eventTypes = events.map((e) => e.type);
 		expect(eventTypes).toContain("agent_start");
 		expect(eventTypes).toContain("turn_start");
@@ -203,41 +163,33 @@ describe("agentLoop with AgentMessage", () => {
 		expect(eventTypes).toContain("agent_end");
 	});
 
-	// 测试场景：验证“should handle custom message types via convertToLlm”对应的行为、结果与边界。
 	it("should handle custom message types via convertToLlm", async () => {
 		// Create a custom message type
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		interface CustomNotification {
 			role: "notification";
 			text: string;
 			timestamp: number;
 		}
 
-		/** 常量 notification 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const notification: CustomNotification = {
 			role: "notification",
 			text: "This is a notification",
 			timestamp: Date.now(),
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [notification as unknown as AgentMessage], // Custom message in context
 			tools: [],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("Hello");
 
-		/** 变量 convertedMessages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let convertedMessages: Message[] = [];
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: (messages) => {
 				// Filter out notifications, convert rest
-				// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 				convertedMessages = messages
 					.filter((m) => (m as { role: string }).role !== "notification")
 					.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "toolResult") as Message[];
@@ -245,37 +197,28 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage([{ type: "text", text: "Response" }]);
 				stream.push({ type: "done", reason: "stop", message });
 			});
 			return stream;
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
-		/** event 是带自定义消息转换场景的当前事件，用于收集最终事件序列。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// The notification should have been filtered out in convertToLlm
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(convertedMessages.length).toBe(1); // Only user message
 		expect(convertedMessages[0].role).toBe("user");
 	});
 
-	// 测试场景：验证“should apply transformContext before convertToLlm”对应的行为、结果与边界。
 	it("should apply transformContext before convertToLlm", async () => {
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [
@@ -287,20 +230,15 @@ describe("agentLoop with AgentMessage", () => {
 			tools: [],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("new message");
 
-		/** 变量 transformedMessages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let transformedMessages: AgentMessage[] = [];
-		/** 变量 convertedMessages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let convertedMessages: Message[] = [];
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			transformContext: async (messages) => {
 				// Keep only last 2 messages (prune old ones)
-				// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 				transformedMessages = messages.slice(-2);
 				return transformedMessages;
 			},
@@ -312,42 +250,30 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage([{ type: "text", text: "Response" }]);
 				stream.push({ type: "done", reason: "stop", message });
 			});
 			return stream;
 		};
 
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
-		/** _ 是仅用于耗尽流的当前事件，本用例不读取其内容。 */
 		for await (const _ of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
 		// transformContext should have been called first, keeping only last 2
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(transformedMessages.length).toBe(2);
 		// Then convertToLlm receives the pruned messages
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(convertedMessages.length).toBe(2);
 	});
 
-	// 测试场景：验证“should handle tool calls and results”对应的行为、结果与边界。
 	it("should handle tool calls and results", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: string[] = [];
-		/** 常量 toolUsage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolUsage = {
 			input: 1,
 			output: 2,
@@ -356,7 +282,6 @@ describe("agentLoop with AgentMessage", () => {
 			totalTokens: 10,
 			cost: { input: 0.1, output: 0.2, cacheRead: 0.3, cacheWrite: 0.4, total: 1 },
 		};
-		/** 常量 patchedToolUsage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const patchedToolUsage = {
 			input: 5,
 			output: 6,
@@ -365,15 +290,12 @@ describe("agentLoop with AgentMessage", () => {
 			totalTokens: 26,
 			cost: { input: 0.5, output: 0.6, cacheRead: 0.7, cacheWrite: 0.8, total: 2.6 },
 		};
-		/** 变量 observedToolUsage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let observedToolUsage: typeof toolUsage | undefined;
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行 Echo 工具；参数为调用 ID 和已校验值，返回文本及详情结果。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -384,17 +306,14 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("echo something");
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
@@ -404,16 +323,12 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
 					// First call: return tool call
-					// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 					const message = createAssistantMessage(
 						[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
 						"toolUse",
@@ -421,7 +336,6 @@ describe("agentLoop with AgentMessage", () => {
 					stream.push({ type: "done", reason: "toolUse", message });
 				} else {
 					// Second call: return final response
-					// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					stream.push({ type: "done", reason: "stop", message });
 				}
@@ -430,24 +344,18 @@ describe("agentLoop with AgentMessage", () => {
 			return stream;
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
 
-		/** event 是工具执行场景的当前 Agent 事件，用于核对调用与结果顺序。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// Tool should have been executed
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(executed).toEqual(["hello"]);
 
 		// Should have tool execution events
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const toolStart = events.find((e) => e.type === "tool_execution_start");
-		/** 常量 toolEnd 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolEnd = events.find((e) => e.type === "tool_execution_end");
 		expect(toolStart).toBeDefined();
 		expect(toolEnd).toBeDefined();
@@ -455,26 +363,19 @@ describe("agentLoop with AgentMessage", () => {
 			expect(toolEnd.isError).toBe(false);
 		}
 		expect(observedToolUsage).toEqual(toolUsage);
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
-		/** 常量 toolResult 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolResult = messages.find((message) => message.role === "toolResult");
 		expect(toolResult?.role === "toolResult" ? toolResult.usage : undefined).toEqual(patchedToolUsage);
 	});
 
-	// 测试场景：验证“should not execute tool calls from a length-truncated assistant message”对应的行为、结果与边界。
 	it("should not execute tool calls from a length-truncated assistant message", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: string[] = [];
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行 Echo 工具并记录参数；返回对应文本和原值详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -484,38 +385,31 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
 					// Output hit the token limit mid tool call. The salvage parser can
 					// produce arguments that validate but are silently truncated, so
 					// nothing in this message may execute.
-					// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 					const message = createAssistantMessage(
 						[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hel" } }],
 						"length",
 					);
 					stream.push({ type: "done", reason: "length", message });
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					stream.push({ type: "done", reason: "stop", message });
 				}
@@ -524,50 +418,37 @@ describe("agentLoop with AgentMessage", () => {
 			return stream;
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, streamFn);
-		/** event 是截断工具参数场景的当前事件，用于确认错误终止且工具未执行。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// The tool must never execute with potentially truncated arguments.
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(executed).toEqual([]);
 
-		/** 常量 toolEnd 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolEnd = events.find((e) => e.type === "tool_execution_end");
 		expect(toolEnd).toBeDefined();
 		if (toolEnd?.type === "tool_execution_end") {
 			expect(toolEnd.isError).toBe(true);
-			/** 常量 text 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const text = toolEnd.result.content.find((c: { type: string }) => c.type === "text");
 			expect(text && "text" in text ? text.text : "").toContain("output token limit");
 		}
 
 		// The loop continues so the model can re-issue the tool call.
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(callIndex).toBe(2);
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 		expect(messages[messages.length - 1].role).toBe("assistant");
 	});
 
-	// 测试场景：验证“should execute mutated beforeToolCall args without revalidation”对应的行为、结果与边界。
 	it("should execute mutated beforeToolCall args without revalidation", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: Array<string | number> = [];
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string | number }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行宽松参数 Echo 工具；参数值可为字符串或数字，返回字符串化结果。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value as string | number);
 				return {
@@ -577,44 +458,35 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("echo something");
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			beforeToolCall: async ({ args }) => {
-				/** 常量 mutableArgs 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const mutableArgs = args as { value: string | number };
 				mutableArgs.value = 123;
 				return undefined;
 			},
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
 						"toolUse",
 					);
 					stream.push({ type: "done", reason: "toolUse", message });
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					stream.push({ type: "done", reason: "stop", message });
 				}
@@ -623,37 +495,27 @@ describe("agentLoop with AgentMessage", () => {
 			return stream;
 		};
 
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
-		/** _event 仅用于耗尽参数准备场景的事件流，不读取具体事件。 */
 		for await (const _event of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
 		expect(executed).toEqual([123]);
 	});
 
-	// 测试场景：验证“should prepare tool arguments for validation”对应的行为、结果与边界。
 	it("should prepare tool arguments for validation", async () => {
-		/** 常量 replaceSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const replaceSchema = Type.Object({ oldText: Type.String(), newText: Type.String() });
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ edits: Type.Array(replaceSchema) });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: Array<Array<{ oldText: string; newText: string }>> = [];
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { count: number }> = {
 			name: "edit",
 			label: "Edit",
 			description: "Edit tool",
 			parameters: toolSchema,
-			/** 将旧式单项编辑参数整理为 edits 数组；返回供 execute 使用的标准参数对象。 */
 			prepareArguments(args) {
 				if (!args || typeof args !== "object") {
 					return args as { edits: { oldText: string; newText: string }[] };
 				}
-				/** 常量 input 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const input = args as {
 					edits?: Array<{ oldText: string; newText: string }>;
 					oldText?: string;
@@ -666,7 +528,6 @@ describe("agentLoop with AgentMessage", () => {
 					edits: [...(input.edits ?? []), { oldText: input.oldText, newText: input.newText }],
 				};
 			},
-			/** 执行整理后的 Edit 参数；返回编辑数量文本及计数详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.edits);
 				return {
@@ -676,30 +537,23 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("edit something");
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{
@@ -713,7 +567,6 @@ describe("agentLoop with AgentMessage", () => {
 					);
 					stream.push({ type: "done", reason: "toolUse", message });
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					stream.push({ type: "done", reason: "stop", message });
 				}
@@ -722,39 +575,28 @@ describe("agentLoop with AgentMessage", () => {
 			return stream;
 		};
 
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, streamFn);
-		/** _event 仅用于耗尽 prepareArguments 工具场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
 		expect(executed).toEqual([[{ oldText: "before", newText: "after" }]]);
 	});
 
-	// 测试场景：验证“should emit tool_execution_end in completion order but persist tool results in source order”对应的行为、结果与边界。
 	it("should emit tool_execution_end in completion order but persist tool results in source order", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 变量 firstResolved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let firstResolved = false;
-		/** 变量 parallelObserved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let parallelObserved = false;
-		/** 变量 releaseFirst 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let releaseFirst: (() => void) | undefined;
-		/** 常量 firstDone 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const firstDone = new Promise<void>((resolve) => {
 			releaseFirst = resolve;
 		});
 
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行并行测试 Echo 工具；首项等待门闩，用于观察第二项是否提前开始。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -770,31 +612,24 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("echo both");
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			toolExecution: "parallel",
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, () => {
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
@@ -805,7 +640,6 @@ describe("agentLoop with AgentMessage", () => {
 					mockStream.push({ type: "done", reason: "toolUse", message });
 					setTimeout(() => releaseFirst?.(), 20);
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -814,28 +648,23 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是默认并行工具场景的当前事件，用于核对两次执行结束标识。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 toolExecutionEndIds 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolExecutionEndIds = events.flatMap((event) => {
 			if (event.type !== "tool_execution_end") {
 				return [];
 			}
 			return [event.toolCallId];
 		});
-		/** 常量 toolResultIds 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolResultIds = events.flatMap((event) => {
 			if (event.type !== "message_end" || event.message.role !== "toolResult") {
 				return [];
 			}
 			return [event.message.toolCallId];
 		});
-		/** 常量 turnToolResultIds 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const turnToolResultIds = events.flatMap((event) => {
 			if (event.type !== "turn_end") {
 				return [];
@@ -849,19 +678,14 @@ describe("agentLoop with AgentMessage", () => {
 		expect(turnToolResultIds).toEqual(["tool-1", "tool-2"]);
 	});
 
-	// 测试场景：验证“should inject queued messages after all tool calls complete”对应的行为、结果与边界。
 	it("should inject queued messages after all tool calls complete", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: string[] = [];
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行普通 Echo 工具并记录值；返回可核对的文本和详情。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -871,33 +695,25 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("start");
-		/** 常量 queuedUserMessage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const queuedUserMessage: AgentMessage = createUserMessage("interrupt");
 
-		/** 变量 queuedDelivered 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let queuedDelivered = false;
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 变量 sawInterruptInContext 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let sawInterruptInContext = false;
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			toolExecution: "sequential",
 			getSteeringMessages: async () => {
 				// Return steering message after tool execution has started.
-				// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 				if (executed.length >= 1 && !queuedDelivered) {
 					queuedDelivered = true;
 					return [queuedUserMessage];
@@ -906,24 +722,19 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, (_model, ctx, _options) => {
 			// Check if interrupt message is in context on second call
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 			if (callIndex === 1) {
 				sawInterruptInContext = ctx.messages.some(
 					(m) => m.role === "user" && typeof m.content === "string" && m.content === "interrupt",
 				);
 			}
 
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
 					// First call: return two tool calls
-					// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
@@ -934,7 +745,6 @@ describe("agentLoop with AgentMessage", () => {
 					mockStream.push({ type: "done", reason: "toolUse", message });
 				} else {
 					// Second call: return final response
-					// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -943,16 +753,13 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** event 是 steer 注入场景的当前事件，用于验证工具完成后才加入引导消息。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// Both tools should execute before steering is injected
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(executed).toEqual(["first", "second"]);
 
-		/** 常量 toolEnds 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolEnds = events.filter(
 			(e): e is Extract<AgentEvent, { type: "tool_execution_end" }> => e.type === "tool_execution_end",
 		);
@@ -961,7 +768,6 @@ describe("agentLoop with AgentMessage", () => {
 		expect(toolEnds[1].isError).toBe(false);
 
 		// Queued message should appear in events after both tool result messages
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const eventSequence = events.flatMap((event) => {
 			if (event.type !== "message_start") return [];
 			if (event.message.role === "toolResult") return [`tool:${event.message.toolCallId}`];
@@ -975,33 +781,24 @@ describe("agentLoop with AgentMessage", () => {
 		expect(eventSequence.indexOf("tool:tool-2")).toBeLessThan(eventSequence.indexOf("interrupt"));
 
 		// Interrupt message should be in context when second LLM call is made
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(sawInterruptInContext).toBe(true);
 	});
 
-	// 测试场景：验证“should force sequential execution when a tool has executionMode=sequential even with default parallel config”对应的行为、结果与边界。
 	it("should force sequential execution when a tool has executionMode=sequential even with default parallel config", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 变量 firstResolved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let firstResolved = false;
-		/** 变量 parallelObserved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let parallelObserved = false;
-		/** 变量 releaseFirst 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let releaseFirst: (() => void) | undefined;
-		/** 常量 firstDone 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const firstDone = new Promise<void>((resolve) => {
 			releaseFirst = resolve;
 		});
 
-		/** 常量 slowTool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const slowTool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "slow",
 			label: "Slow",
 			description: "Slow tool",
 			parameters: toolSchema,
 			executionMode: "sequential",
-			/** 顺序执行慢工具；首项等待门闩，用于确认后项不会抢先开始。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -1017,31 +814,24 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [slowTool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("run both");
 		// config is parallel (default), but tool forces sequential
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, () => {
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "slow", arguments: { value: "first" } },
@@ -1052,7 +842,6 @@ describe("agentLoop with AgentMessage", () => {
 					mockStream.push({ type: "done", reason: "toolUse", message });
 					setTimeout(() => releaseFirst?.(), 20);
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -1061,18 +850,14 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是顺序工具执行场景的当前事件，用于收集并检查执行顺序。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// With sequential execution, second tool should NOT start before first finishes
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(parallelObserved).toBe(false);
 
-		/** 常量 toolResultIds 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolResultIds = events.flatMap((event) => {
 			if (event.type !== "message_end" || event.message.role !== "toolResult") {
 				return [];
@@ -1082,27 +867,20 @@ describe("agentLoop with AgentMessage", () => {
 		expect(toolResultIds).toEqual(["tool-1", "tool-2"]);
 	});
 
-	// 测试场景：验证“should force sequential execution when one of multiple tools has executionMode=sequential”对应的行为、结果与边界。
 	it("should force sequential execution when one of multiple tools has executionMode=sequential", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executionOrder 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executionOrder: string[] = [];
-		/** 变量 releaseSlow 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let releaseSlow: (() => void) | undefined;
-		/** 常量 slowDone 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const slowDone = new Promise<void>((resolve) => {
 			releaseSlow = resolve;
 		});
 
-		/** 常量 slowTool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const slowTool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "slow",
 			label: "Slow",
 			description: "Slow tool",
 			parameters: toolSchema,
 			executionMode: "sequential",
-			/** 执行慢速顺序工具并记录顺序；值为 a 时等待外部释放。 */
 			async execute(_toolCallId, params) {
 				executionOrder.push(`slow:${params.value}`);
 				if (params.value === "a") {
@@ -1115,14 +893,12 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 fastTool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fastTool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "fast",
 			label: "Fast",
 			description: "Fast tool",
 			parameters: toolSchema,
 			// no executionMode = defaults to parallel
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 			async execute(_toolCallId, params) {
 				executionOrder.push(`fast:${params.value}`);
 				return {
@@ -1132,32 +908,24 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [slowTool, fastTool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("run both");
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			// parallel by default, but slowTool forces sequential
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, () => {
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "slow", arguments: { value: "a" } },
@@ -1168,7 +936,6 @@ describe("agentLoop with AgentMessage", () => {
 					mockStream.push({ type: "done", reason: "toolUse", message });
 					setTimeout(() => releaseSlow?.(), 20);
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -1177,42 +944,31 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是混合快慢工具场景的当前事件，用于确认全局顺序约束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// Fast tool should NOT run before slow tool finishes
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(executionOrder[0]).toBe("slow:a");
 		expect(executionOrder).toContain("fast:b");
 	});
 
-	// 测试场景：验证“should allow parallel execution when all tools have executionMode=parallel”对应的行为、结果与边界。
 	it("should allow parallel execution when all tools have executionMode=parallel", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 变量 firstResolved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let firstResolved = false;
-		/** 变量 parallelObserved 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let parallelObserved = false;
-		/** 变量 releaseFirst 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let releaseFirst: (() => void) | undefined;
-		/** 常量 firstDone 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const firstDone = new Promise<void>((resolve) => {
 			releaseFirst = resolve;
 		});
 
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
 			executionMode: "parallel",
-			/** 显式并行执行 Echo 工具；首项等待门闩以验证第二项可先启动。 */
 			async execute(_toolCallId, params) {
 				if (params.value === "first") {
 					await firstDone;
@@ -1228,30 +984,23 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 userPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userPrompt: AgentMessage = createUserMessage("echo both");
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([userPrompt], context, config, undefined, () => {
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
@@ -1262,7 +1011,6 @@ describe("agentLoop with AgentMessage", () => {
 					mockStream.push({ type: "done", reason: "toolUse", message });
 					setTimeout(() => releaseFirst?.(), 20);
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -1271,29 +1019,22 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是显式并行工具场景的当前事件，用于核对并行开始与结束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
 		// With executionMode=parallel, second tool should start before first finishes
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(parallelObserved).toBe(true);
 	});
 
-	// 测试场景：验证“should use prepareNextTurn snapshot before continuing”对应的行为、结果与边界。
 	it("should use prepareNextTurn snapshot before continuing", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行基础 Echo 工具；返回对应文本与详情，供后续中止场景复用。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1301,21 +1042,19 @@ describe("agentLoop with AgentMessage", () => {
 				};
 			},
 		};
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "first prompt",
 			messages: [],
 			tools: [tool],
 		};
-		/** 变量 convertedSecondTurnSystemPrompt 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let convertedSecondTurnSystemPrompt = "";
-		/** 变量 prepared 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
+		let prepareCalls = 0;
 		let prepared = false;
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			prepareNextTurn: async ({ context: currentContext }) => {
+				prepareCalls++;
 				if (prepared) return undefined;
 				prepared = true;
 				return {
@@ -1328,15 +1067,12 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 变量 llmCalls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let llmCalls = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, (_model, ctx) => {
 			llmCalls++;
 			if (llmCalls === 2) {
 				convertedSecondTurnSystemPrompt = ctx.systemPrompt ?? "";
 			}
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (llmCalls === 1) {
@@ -1359,29 +1095,23 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** _event 仅用于耗尽中止工具场景的事件流，不读取事件内容。 */
 		for await (const _event of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
 		expect(llmCalls).toBe(2);
+		expect(prepareCalls).toBe(1);
 		expect(convertedSecondTurnSystemPrompt).toBe("second prompt");
 	});
 
-	// 测试场景：验证“should stop after the current turn when shouldStopAfterTurn returns true”对应的行为、结果与边界。
 	it("should stop after the current turn when shouldStopAfterTurn returns true", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 executed 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const executed: string[] = [];
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行 Echo 工具并记录值；返回文本及详情以验证工具结果消息。 */
 			async execute(_toolCallId, params) {
 				executed.push(params.value);
 				return {
@@ -1391,22 +1121,16 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 变量 steeringPolls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let steeringPolls = 0;
-		/** 变量 followUpPolls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let followUpPolls = 0;
-		/** 变量 callbackToolResultIds 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callbackToolResultIds: string[] = [];
-		/** 变量 callbackContextRoles 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callbackContextRoles: string[] = [];
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
@@ -1426,16 +1150,12 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 变量 llmCalls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let llmCalls = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, () => {
 			llmCalls++;
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (llmCalls === 1) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
 						"toolUse",
@@ -1452,14 +1172,11 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是工具结果转换场景的当前事件，用于收集最终消息。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 		expect(llmCalls).toBe(1);
 		expect(executed).toEqual(["hello"]);
@@ -1484,17 +1201,13 @@ describe("agentLoop with AgentMessage", () => {
 		]);
 	});
 
-	// 测试场景：验证“should stop after a tool batch when every tool result sets terminate=true”对应的行为、结果与边界。
 	it("should stop after a tool batch when every tool result sets terminate=true", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行后返回 terminate 标记；用于验证单个工具可终止后续模型轮次。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1504,28 +1217,22 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** 变量 llmCalls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let llmCalls = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, () => {
 			llmCalls++;
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage(
 					[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
 					"toolUse",
@@ -1535,31 +1242,142 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是 terminate 工具场景的当前事件，用于确认循环在工具结果后结束。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 		expect(llmCalls).toBe(1);
 		expect(messages.map((message) => message.role)).toEqual(["user", "assistant", "toolResult"]);
 		expect(events.filter((event) => event.type === "turn_end")).toHaveLength(1);
 	});
 
-	// 测试场景：验证“should continue after parallel tool calls when not all tool results terminate”对应的行为、结果与边界。
-	it("should continue after parallel tool calls when not all tool results terminate", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
+	it("should stop after a blocked tool call when beforeToolCall sets terminate=true", async () => {
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
+		let executed = false;
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 根据参数值选择性返回 terminate；首项应终止同批后续工作。 */
+			async execute() {
+				executed = true;
+				return {
+					content: [{ type: "text", text: "should not execute" }],
+					details: { value: "unexpected" },
+				};
+			},
+		};
+		const context: AgentContext = {
+			systemPrompt: "",
+			messages: [],
+			tools: [tool],
+		};
+		const config: AgentLoopConfig = {
+			model: createModel(),
+			convertToLlm: identityConverter,
+			beforeToolCall: async () => ({ block: true, reason: "Blocked by policy", terminate: true }),
+		};
+
+		let llmCalls = 0;
+		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, () => {
+			llmCalls++;
+			const mockStream = new MockAssistantStream();
+			queueMicrotask(() => {
+				const message =
+					llmCalls === 1
+						? createAssistantMessage(
+								[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
+								"toolUse",
+							)
+						: createAssistantMessage([{ type: "text", text: "should not run" }]);
+				mockStream.push({ type: "done", reason: llmCalls === 1 ? "toolUse" : "stop", message });
+			});
+			return mockStream;
+		});
+
+		for await (const _event of stream) {
+			// consume
+		}
+
+		const messages = await stream.result();
+		const toolResult = messages.find((message) => message.role === "toolResult");
+		expect(executed).toBe(false);
+		expect(llmCalls).toBe(1);
+		expect(toolResult?.role === "toolResult" ? toolResult.isError : false).toBe(true);
+		expect(toolResult?.role === "toolResult" ? toolResult.content : []).toContainEqual({
+			type: "text",
+			text: "Blocked by policy",
+		});
+	});
+
+	it("should continue after a mixed batch with one terminating blocked call", async () => {
+		const toolSchema = Type.Object({ value: Type.String() });
+		const executed: string[] = [];
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params) {
+				executed.push(params.value);
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		const context: AgentContext = {
+			systemPrompt: "",
+			messages: [],
+			tools: [tool],
+		};
+		const config: AgentLoopConfig = {
+			model: createModel(),
+			convertToLlm: identityConverter,
+			toolExecution: "parallel",
+			beforeToolCall: async ({ args }) => {
+				const { value } = args as { value: string };
+				return value === "first" ? { block: true, reason: "Blocked first", terminate: true } : undefined;
+			},
+		};
+
+		let llmCalls = 0;
+		const stream = agentLoop([createUserMessage("echo both")], context, config, undefined, () => {
+			llmCalls++;
+			const mockStream = new MockAssistantStream();
+			queueMicrotask(() => {
+				const message =
+					llmCalls === 1
+						? createAssistantMessage(
+								[
+									{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
+									{ type: "toolCall", id: "tool-2", name: "echo", arguments: { value: "second" } },
+								],
+								"toolUse",
+							)
+						: createAssistantMessage([{ type: "text", text: "done" }]);
+				mockStream.push({ type: "done", reason: llmCalls === 1 ? "toolUse" : "stop", message });
+			});
+			return mockStream;
+		});
+
+		for await (const _event of stream) {
+			// consume
+		}
+
+		expect(executed).toEqual(["second"]);
+		expect(llmCalls).toBe(2);
+	});
+
+	it("should continue after parallel tool calls when not all tool results terminate", async () => {
+		const toolSchema = Type.Object({ value: Type.String() });
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1569,29 +1387,23 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			toolExecution: "parallel",
 		};
 
-		/** 变量 callIndex 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let callIndex = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo both")], context, config, undefined, () => {
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
 				if (callIndex === 0) {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage(
 						[
 							{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
@@ -1601,7 +1413,6 @@ describe("agentLoop with AgentMessage", () => {
 					);
 					mockStream.push({ type: "done", reason: "toolUse", message });
 				} else {
-					/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 					const message = createAssistantMessage([{ type: "text", text: "done" }]);
 					mockStream.push({ type: "done", reason: "stop", message });
 				}
@@ -1610,13 +1421,10 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** _event 仅用于耗尽条件终止场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 		expect(callIndex).toBe(2);
 		expect(messages.map((message) => message.role)).toEqual([
@@ -1628,17 +1436,13 @@ describe("agentLoop with AgentMessage", () => {
 		]);
 	});
 
-	// 测试场景：验证“should allow afterToolCall to mark a tool batch as terminating”对应的行为、结果与边界。
 	it("should allow afterToolCall to mark a tool batch as terminating", async () => {
-		/** 常量 toolSchema 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const toolSchema = Type.Object({ value: Type.String() });
-		/** 常量 tool 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {
 			name: "echo",
 			label: "Echo",
 			description: "Echo tool",
 			parameters: toolSchema,
-			/** 执行未终止的 Echo 工具；返回普通结果供继续循环场景使用。 */
 			async execute(_toolCallId, params) {
 				return {
 					content: [{ type: "text", text: `echoed: ${params.value}` }],
@@ -1647,29 +1451,23 @@ describe("agentLoop with AgentMessage", () => {
 			},
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "",
 			messages: [],
 			tools: [tool],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 			afterToolCall: async () => ({ terminate: true }),
 		};
 
-		/** 变量 llmCalls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let llmCalls = 0;
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, () => {
 			llmCalls++;
-			/** 常量 mockStream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const mockStream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage(
 					[{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }],
 					"toolUse",
@@ -1679,28 +1477,22 @@ describe("agentLoop with AgentMessage", () => {
 			return mockStream;
 		});
 
-		/** _event 仅用于耗尽继续循环场景的事件流。 */
 		for await (const _event of stream) {
 			// consume
-			// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		}
 
 		expect(llmCalls).toBe(1);
 	});
 });
 
-// 用例分组：集中验证“agentLoopContinue with AgentMessage”相关功能。
 describe("agentLoopContinue with AgentMessage", () => {
-	// 测试场景：验证“should throw when context has no messages”对应的行为、结果与边界。
 	it("should throw when context has no messages", () => {
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [],
 			tools: [],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
@@ -1713,91 +1505,72 @@ describe("agentLoopContinue with AgentMessage", () => {
 		).toThrow("Cannot continue: no messages in context");
 	});
 
-	// 测试场景：验证“should continue from existing context without emitting user message events”对应的行为、结果与边界。
 	it("should continue from existing context without emitting user message events", async () => {
-		/** 常量 userMessage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const userMessage: AgentMessage = createUserMessage("Hello");
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [userMessage],
 			tools: [],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: identityConverter,
 		};
 
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage([{ type: "text", text: "Response" }]);
 				stream.push({ type: "done", reason: "stop", message });
 			});
 			return stream;
 		};
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const stream = agentLoopContinue(context, config, undefined, streamFn);
 
-		/** event 是 agentLoopContinue 当前事件，用于验证从既有上下文继续执行。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 
 		// Should only return the new assistant message (not the existing user message)
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(messages.length).toBe(1);
 		expect(messages[0].role).toBe("assistant");
 
 		// Should NOT have user message events (that's the key difference from agentLoop)
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const messageEndEvents = events.filter((e) => e.type === "message_end");
 		expect(messageEndEvents.length).toBe(1);
 		expect((messageEndEvents[0] as any).message.role).toBe("assistant");
 	});
 
-	// 测试场景：验证“should allow custom message types as last message (caller responsibility)”对应的行为、结果与边界。
 	it("should allow custom message types as last message (caller responsibility)", async () => {
 		// Custom message that will be converted to user message by convertToLlm
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		interface CustomMessage {
 			role: "custom";
 			text: string;
 			timestamp: number;
 		}
 
-		/** 常量 customMessage 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const customMessage: CustomMessage = {
 			role: "custom",
 			text: "Hook content",
 			timestamp: Date.now(),
 		};
 
-		/** 常量 context 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const context: AgentContext = {
 			systemPrompt: "You are helpful.",
 			messages: [customMessage as unknown as AgentMessage],
 			tools: [],
 		};
 
-		/** 常量 config 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const config: AgentLoopConfig = {
 			model: createModel(),
 			convertToLlm: (messages) => {
 				// Convert custom to user message
-				// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 				return messages
 					.map((m) => {
 						if ((m as any).role === "custom") {
@@ -1813,12 +1586,9 @@ describe("agentLoopContinue with AgentMessage", () => {
 			},
 		};
 
-		/** streamFn 封装当前回调或辅助步骤；参数 无 提供输入，返回值用于后续流程。示例：streamFn()。 */
 		const streamFn = () => {
-			/** 常量 stream 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const stream = new MockAssistantStream();
 			queueMicrotask(() => {
-				/** 常量 message 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 				const message = createAssistantMessage([{ type: "text", text: "Response to custom message" }]);
 				stream.push({ type: "done", reason: "stop", message });
 			});
@@ -1826,17 +1596,13 @@ describe("agentLoopContinue with AgentMessage", () => {
 		};
 
 		// Should not throw - the custom message will be converted to user message
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		const stream = agentLoopContinue(context, config, undefined, streamFn);
 
-		/** 常量 events 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const events: AgentEvent[] = [];
-		/** event 是最终回归场景的当前事件，用于还原完整助手消息序列。 */
 		for await (const event of stream) {
 			events.push(event);
 		}
 
-		/** 常量 messages 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const messages = await stream.result();
 		expect(messages.length).toBe(1);
 		expect(messages[0].role).toBe("assistant");

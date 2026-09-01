@@ -1,3 +1,12 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `types` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `@earendil-works/pi-telemetry`、`./api/anthropic-messages.ts`、`./api/azure-openai-responses.ts`、`./api/bedrock-converse-stream.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `types` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `KnownApi`、`Api`、`KnownImagesApi`、`ImagesApi`、`KnownProvider`、`ProviderId`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `KnownApi`、`Api`、`KnownImagesApi`、`ImagesApi`、`KnownProvider`、`ProviderId` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+import type { TelemetryContext } from "@earendil-works/pi-telemetry";
 import type { AnthropicOptions } from "./api/anthropic-messages.ts";
 import type { AzureOpenAIResponsesOptions } from "./api/azure-openai-responses.ts";
 import type { BedrockOptions } from "./api/bedrock-converse-stream.ts";
@@ -13,20 +22,6 @@ import type { AssistantMessageEventStream } from "./utils/event-stream.ts";
 
 export type { AssistantMessageEventStream } from "./utils/event-stream.ts";
 
-/**
- * 【文件职责】pi-ai 核心类型契约：API/供应商/模型/消息/用量/选项/流事件等全部公共类型，
- *              以及各 API 的兼容性配置（OpenAI/Anthropic/Bedrock/OpenRouter 路由等）。
- * 【技术维度】类型别名/联合/条件映射（ApiOptionsMap→ApiStreamOptions）；接口继承与泛型；
- *              字符串字面量联合 + 开放字符串（KnownApi | string）兼顾类型安全与扩展。
- * 【产品维度】是包内所有模块共同的语言：模型目录、API 实现、上层应用全部依此对接。
- * 【逻辑维度】标识联合（API/供应商）→ 通用选项 → API 选项映射 → 流契约 → 图片体系 →
- *              消息内容与用量 → 消息联合 → 事件协议 → 各 API 兼容配置 → 模型接口。
- * 【关键边界】StreamFunction 契约：失败必须编码进事件流而非抛出；Headers 的 null 值表示
- *              抑制同名默认头；compat 字段按 TApi 条件收窄。
- * 【新手阅读建议】先读 Message/Model/StreamOptions 三大核心 → 再读事件协议 →
- *              最后按需查阅各 Compat 配置（自定义供应商时必看）。
- */
-// 已知 API 标识联合（内置 API 名称）
 export type KnownApi =
 	| "openai-completions"
 	| "mistral-conversations"
@@ -40,15 +35,11 @@ export type KnownApi =
 	| "pi-messages";
 
 export type Api = KnownApi | (string & {});
-// API 类型：已知值或任意字符串（允许自定义 API 扩展）
 
-// 已知图片生成 API
 export type KnownImagesApi = "openrouter-images";
 
-// 图片 API 类型（可扩展）
 export type ImagesApi = KnownImagesApi | (string & {});
 
-// 已知供应商 ID 联合（内置供应商）
 export type KnownProvider =
 	| "amazon-bedrock"
 	| "ant-ling"
@@ -77,6 +68,7 @@ export type KnownProvider =
 	| "huggingface"
 	| "fireworks"
 	| "together"
+	| "baseten"
 	| "opencode"
 	| "opencode-go"
 	| "kimi-coding"
@@ -84,117 +76,85 @@ export type KnownProvider =
 	| "cloudflare-ai-gateway"
 	| "qwen-token-plan"
 	| "qwen-token-plan-cn"
+	| "qwen-token-plan-individual"
 	| "xiaomi"
 	| "xiaomi-token-plan-cn"
 	| "xiaomi-token-plan-ams"
 	| "xiaomi-token-plan-sgp";
 export type ProviderId = KnownProvider | string;
-// 供应商 ID 类型（可扩展）
 
-// 已知图片供应商
 export type KnownImagesProvider = "openrouter";
 
 export type ImagesProviderId = KnownImagesProvider | string;
-// 图片供应商 ID 类型
 
-// 思考强度（不含 off）：minimal~max 共六档
+export type ToolChoice = "auto" | "none";
 export type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 export type ModelThinkingLevel = "off" | ThinkingLevel;
-// 模型思考强度：含 off（关闭）
 export type ThinkingLevelMap = Partial<Record<ModelThinkingLevel, string | null>>;
-// 思考级别映射：pi 档位 → 供应商具体取值；null 表示该档不受支持
 export type ChatTemplateKwargValue =
-// chat 模板参数字面量类型：可含 $var 引用 pi 控制的思考开关/强度
 	| string
 	| number
 	| boolean
 	| null
 	| {
-			$var: "thinking.enabled" | "thinking.effort";
+			$var: "thinking.enabled" | "thinking.effort" | "thinking.budget";
 			omitWhenOff?: boolean;
 	  };
 
+/** Top-level request field used to cap reasoning tokens on OpenAI-compatible servers. */
+export type ThinkingTokenBudgetField = "thinking_token_budget" | "thinking_budget" | "thinking_budget_tokens";
+
 /** Token budgets for each thinking level (token-based providers only) */
-/** 各思考级别的 token 预算（中文说明）：仅按 token 计费的供应商使用。 */
 export interface ThinkingBudgets {
 	minimal?: number;
-	// minimal 档预算
 	low?: number;
-	// low 档预算
 	medium?: number;
-	// medium 档预算
 	high?: number;
-	// high 档预算
 }
 
-// 各供应商共享的基础选项
 // Base options all providers share
-// 提示缓存保留策略：无/短/长
 export type CacheRetention = "none" | "short" | "long";
 
-// 传输方式：SSE / WebSocket / WebSocket+缓存 / 自动
 export type Transport = "sse" | "websocket" | "websocket-cached" | "auto";
 
 /** Provider-scoped environment overrides. Values take precedence over process.env. */
-// 供应商作用域环境变量覆盖（优先于 process.env）
 export type ProviderEnv = Record<string, string>;
 export type ProviderHeaders = Record<string, string | null>;
-// 请求头类型：null 值表示抑制同名默认头
+export type FetchFunction = typeof globalThis.fetch;
 export type SessionAffinityFormat = "openai" | "openai-nosession" | "openrouter";
-// 会话亲和头格式：openai 带 session_id；openai-nosession 不带；openrouter 用 x-session-id
 
-/** 供应商 HTTP 响应元信息（中文说明）：供 onResponse 回调观察。 */
 export interface ProviderResponse {
 	status: number;
-	// HTTP 状态码
 	headers: Record<string, string>;
-	// 响应头
 }
 
-/**
- * 流式请求选项（中文说明）：所有供应商共享的基类选项——
- * 采样参数、中止、密钥、传输、缓存、会话、载荷/响应回调、头、超时、重试与元数据。
- */
-export interface StreamOptions {
-	temperature?: number;
-	// 采样温度
-	maxTokens?: number;
-	// 最大输出 token 数
+/** Authentication, HTTP transport, and lifecycle callbacks shared by provider requests. */
+export interface ProviderRequestOptions<TModel = Model<Api>> {
 	signal?: AbortSignal;
-	// 中止信号
+	/** Explicit parent context for telemetry produced by this logical request. */
+	telemetryContext?: TelemetryContext;
 	apiKey?: string;
-	// 显式 API 密钥（优先于认证解析）
 	/**
-	 * Preferred transport for providers that support multiple transports.
-	 * Providers that do not support this option ignore it.
+	 * Optional fetch implementation for provider HTTP requests.
+	 * Defaults to `globalThis.fetch`. Provider adapters that cannot inject a custom implementation may reject it.
+	 * This does not affect WebSocket transports.
 	 */
-	transport?: Transport;
-	// 首选传输方式（不支持多传输的供应商忽略）
+	fetch?: FetchFunction;
 	/**
-	 * Prompt cache retention preference. Providers map this to their supported values.
-	 * Default: "short".
+	 * Provider-scoped environment values. These take precedence over process.env for
+	 * provider configuration such as regional settings, endpoint placeholders, and
+	 * proxy variables.
 	 */
-	cacheRetention?: CacheRetention;
-	// 缓存保留偏好；默认 "short"
-	/**
-	 * Optional session identifier for providers that support session-based caching.
-	 * Providers can use this to enable prompt caching, request routing, or other
-	 * session-aware features. Ignored by providers that don't support it.
-	 */
-	sessionId?: string;
-	// 会话 ID：支持会话缓存的供应商可用它启用提示缓存/路由等
+	env?: ProviderEnv;
 	/**
 	 * Optional callback for inspecting or replacing provider payloads before sending.
 	 * Return undefined to keep the payload unchanged.
 	 */
-	onPayload?: (payload: unknown, model: Model<Api>) => unknown | undefined | Promise<unknown | undefined>;
-	// 载荷回调：发送前检查/替换载荷；返回 undefined 保持原样
+	onPayload?: (payload: unknown, model: TModel) => unknown | undefined | Promise<unknown | undefined>;
 	/**
-	 * Optional callback invoked after an HTTP response is received and before
-	 * its body stream is consumed.
+	 * Optional callback invoked after an HTTP response is received.
 	 */
-	onResponse?: (response: ProviderResponse, model: Model<Api>) => void | Promise<void>;
-	// 响应回调：收到 HTTP 响应且尚未消费 body 时触发
+	onResponse?: (response: ProviderResponse, model: TModel) => void | Promise<void>;
 	/**
 	 * Optional custom HTTP headers to include in API requests.
 	 * Merged with provider defaults; caller values override default headers.
@@ -204,27 +164,16 @@ export interface StreamOptions {
 	 * A null value suppresses a provider/API default header with the same name.
 	 */
 	headers?: ProviderHeaders;
-	// 自定义请求头：与默认头合并、调用方优先；Bedrock 走 SigV4 签名中间件；
-	// null 值抑制同名默认头
 	/**
 	 * HTTP request timeout in milliseconds for providers/SDKs that support it.
 	 * For example, OpenAI and Anthropic SDK clients default to 10 minutes.
 	 */
 	timeoutMs?: number;
-	// HTTP 请求超时（毫秒）；OpenAI/Anthropic SDK 默认 10 分钟
-	/**
-	 * WebSocket connect timeout in milliseconds for providers that support
-	 * WebSocket transports. This covers the connection/open handshake only;
-	 * stream idleness after connection uses timeoutMs.
-	 */
-	websocketConnectTimeoutMs?: number;
-	// WebSocket 建连超时（毫秒）；连接后的空闲用 timeoutMs
 	/**
 	 * Maximum retry attempts for providers/SDKs that support client-side retries.
 	 * For example, OpenAI and Anthropic SDK clients default to 2.
 	 */
 	maxRetries?: number;
-	// 客户端重试次数上限
 	/**
 	 * Maximum delay in milliseconds to wait for a retry when the server requests a long wait.
 	 * If the server's requested delay exceeds this value, the request fails immediately
@@ -233,33 +182,72 @@ export interface StreamOptions {
 	 * Default: 60000 (60 seconds). Set to 0 to disable the cap.
 	 */
 	maxRetryDelayMs?: number;
-	// 服务端要求长等待时的最大等待上限（毫秒）；超限立即失败并携带请求延迟；
-	// 默认 60000，设 0 关闭上限
+}
+
+export interface StreamOptions extends ProviderRequestOptions<Model<Api>> {
+	/**
+	 * Optional callback invoked after an HTTP response is received and before
+	 * its body stream is consumed.
+	 */
+	onResponse?: (response: ProviderResponse, model: Model<Api>) => void | Promise<void>;
+	temperature?: number;
+	/**
+	 * Arbitrary sampling parameters merged into the request body as-is, after the named request
+	 * fields, so keys here override them. Lets custom OpenAI-compatible servers (llama.cpp, vLLM,
+	 * SGLang, ...) receive parameters pi does not model, e.g. `top_p`, `top_k`, `min_p`,
+	 * `repetition_penalty`. Merged over `Model.samplingParams` per key. Only applied by
+	 * OpenAI-compatible adapters (completions, responses, Azure responses); other APIs ignore it.
+	 */
+	samplingParams?: Record<string, unknown>;
+	maxTokens?: number;
+	/**
+	 * Preferred transport for providers that support multiple transports.
+	 * Providers that do not support this option ignore it.
+	 */
+	transport?: Transport;
+	/**
+	 * Prompt cache retention preference. Providers map this to their supported values.
+	 * Default: "short".
+	 */
+	cacheRetention?: CacheRetention;
+	/**
+	 * Optional session identifier for providers that support session-based caching.
+	 * Providers can use this to enable prompt caching, request routing, or other
+	 * session-aware features. Ignored by providers that don't support it.
+	 */
+	sessionId?: string;
+	/**
+	 * WebSocket connect timeout in milliseconds for providers that support
+	 * WebSocket transports. This covers the connection/open handshake only;
+	 * stream idleness after connection uses timeoutMs.
+	 */
+	websocketConnectTimeoutMs?: number;
 	/**
 	 * Optional metadata to include in API requests.
 	 * Providers extract the fields they understand and ignore the rest.
 	 * For example, Anthropic uses `user_id` for abuse tracking and rate limiting.
 	 */
 	metadata?: Record<string, unknown>;
-	// 元数据：供应商提取认识的字段（如 Anthropic 的 user_id）
-	/**
-	 * Provider-scoped environment values. These take precedence over process.env for
-	 * provider configuration such as regional settings, endpoint placeholders, and
-	 * proxy variables.
-	 */
-	env?: ProviderEnv;
-	// 供应商作用域环境变量
 }
 
-// 宽化的流选项（未知键透传）
 export type ProviderStreamOptions = StreamOptions & Record<string, unknown>;
+
+export interface DeferredFetchOptions extends ProviderRequestOptions<Model<Api>> {
+	/**
+	 * Maximum provider long-poll duration in milliseconds.
+	 * Defaults to 0, which performs one status check.
+	 */
+	wait?: number;
+}
+
+/** Request options for best-effort deferred-response cancellation. */
+export type DeferredCancelOptions = ProviderRequestOptions<Model<Api>>;
 
 /**
  * Maps known APIs to their full provider-specific stream option types.
  * Type-only imports from API implementation modules are erased at emit, so
  * this is tree-shake safe.
  */
-/** API → 完整供应商选项 的映射表（中文说明）：仅类型导入、构建期擦除，摇树安全。 */
 export interface ApiOptionsMap {
 	"anthropic-messages": AnthropicOptions;
 	"openai-completions": OpenAICompletionsOptions;
@@ -277,27 +265,27 @@ export interface ApiOptionsMap {
  * Full stream options for an API. Known APIs resolve to their concrete option
  * type; custom API strings fall back to the generic shape.
  */
-// API 流选项（中文说明）：已知 API 解析为其具体选项类型；自定义 API 回退通用形态
 export type ApiStreamOptions<TApi extends Api> = TApi extends keyof ApiOptionsMap
 	? ApiOptionsMap[TApi]
 	: StreamOptions & Record<string, unknown>;
 
 /**
  * The uniform stream contract of an API implementation module: every module
- * under `src/api/` exports exactly `stream` and `streamSimple`, so the module
- * itself satisfies this interface. Lazy wrappers (`lazyApi()`) and provider
+ * under `src/api/` exports `stream` and `streamSimple`; capable modules may also
+ * export deferred-response methods. Lazy wrappers (`lazyApi()`) and provider
  * factories pass these around as values. This is the untyped dispatch shape;
  * per-API option typing lives on the implementation modules themselves and on
  * `Provider.stream()` via `ApiStreamOptions`.
  */
-/**
- * API 实现模块的统一流契约（中文说明）：每个 src/api/ 下模块恰好导出
- * stream 与 streamSimple，因此模块本身满足此接口；懒包装与供应商工厂以值传递。
- * 这是无类型分派形态；具体选项类型在各实现模块与 Provider.stream 上。
- */
 export interface ProviderStreams {
 	stream(model: Model<Api>, context: Context, options?: StreamOptions): AssistantMessageEventStream;
 	streamSimple(model: Model<Api>, context: Context, options?: SimpleStreamOptions): AssistantMessageEventStream;
+	fetchDeferred?(
+		model: Model<Api>,
+		handle: DeferredHandle,
+		options?: DeferredFetchOptions,
+	): AssistantMessageEventStream;
+	cancelDeferred?(model: Model<Api>, handle: DeferredHandle, options?: DeferredCancelOptions): Promise<void>;
 }
 
 /**
@@ -306,7 +294,6 @@ export interface ProviderStreams {
  * so the module itself satisfies this interface. Lazy wrappers and image
  * provider factories pass these around as values.
  */
-/** 图片生成 API 实现模块的统一契约（中文说明）：每个图片 API 模块导出 generateImages。 */
 export interface ProviderImages {
 	generateImages(
 		model: ImagesModel<ImagesApi>,
@@ -315,46 +302,7 @@ export interface ProviderImages {
 	): Promise<AssistantImages>;
 }
 
-/** 图片生成选项（中文说明）：与 StreamOptions 结构平行（密钥/回调/头/超时/重试/元数据）。 */
-export interface ImagesOptions {
-	signal?: AbortSignal;
-	apiKey?: string;
-	/**
-	 * Provider-scoped environment values. These take precedence over process.env for
-	 * provider configuration such as endpoint placeholders and proxy variables.
-	 */
-	env?: ProviderEnv;
-	/**
-	 * Optional callback for inspecting or replacing provider payloads before sending.
-	 * Return undefined to keep the payload unchanged.
-	 */
-	onPayload?: (payload: unknown, model: ImagesModel<ImagesApi>) => unknown | undefined | Promise<unknown | undefined>;
-	/**
-	 * Optional callback invoked after an HTTP response is received.
-	 */
-	onResponse?: (response: ProviderResponse, model: ImagesModel<ImagesApi>) => void | Promise<void>;
-	/**
-	 * Optional custom HTTP headers to include in API requests.
-	 * Merged with provider defaults; can override default headers.
-	 * A null value suppresses a provider/API default header with the same name.
-	 */
-	headers?: ProviderHeaders;
-	/**
-	 * HTTP request timeout in milliseconds for providers/SDKs that support it.
-	 */
-	timeoutMs?: number;
-	/**
-	 * Maximum retry attempts for providers/SDKs that support client-side retries.
-	 */
-	maxRetries?: number;
-	/**
-	 * Maximum delay in milliseconds to wait for a retry when the server requests a long wait.
-	 * If the server's requested delay exceeds this value, the request fails immediately
-	 * with an error containing the requested delay, allowing higher-level retry logic
-	 * to handle it with user visibility.
-	 * Default: 60000 (60 seconds). Set to 0 to disable the cap.
-	 */
-	maxRetryDelayMs?: number;
+export interface ImagesOptions extends ProviderRequestOptions<ImagesModel<ImagesApi>> {
 	/**
 	 * Optional metadata to include in API requests.
 	 * Providers extract the fields they understand and ignore the rest.
@@ -362,19 +310,22 @@ export interface ImagesOptions {
 	metadata?: Record<string, unknown>;
 }
 
-// 宽化的图片选项
 export type ProviderImagesOptions = ImagesOptions & Record<string, unknown>;
 
+export interface AnthropicAllowedFallbackModel {
+	provider: ProviderId;
+	model: string;
+	cost: ModelCost;
+}
+
 // Unified options with reasoning passed to streamSimple() and completeSimple()
-/**
- * 简化流式选项（中文说明）：在基础选项上补充思考强度与各级 token 预算，
- * 供 streamSimple/completeSimple 使用。
- */
 export interface SimpleStreamOptions extends StreamOptions {
+	/** Provider-neutral tool selection for simple requests. When omitted, adapters use provider-specific behavior. */
+	toolChoice?: ToolChoice;
 	reasoning?: ThinkingLevel;
-	// 思考强度（不含 off；off 通过省略字段表达）
+	/** Ask a capable provider to return a durable handle and continue the request asynchronously. */
+	deferred?: boolean | { window?: "15m" | "1h" | "24h" };
 	/** Custom token budgets for thinking levels (token-based providers only) */
-	// 各思考级别的自定义 token 预算（仅按 token 计费的供应商）
 	thinkingBudgets?: ThinkingBudgets;
 }
 
@@ -386,95 +337,71 @@ export interface SimpleStreamOptions extends StreamOptions {
 //   returned stream, not thrown.
 // - Error termination must produce an AssistantMessage with stopReason
 //   "error" or "aborted" and errorMessage, emitted via the stream protocol.
-/**
- * 泛型流式函数（中文说明）：契约——必须返回 AssistantMessageEventStream；
- * 请求/模型/运行时失败必须编码进流而非抛出；错误终止需以 stopReason
- * "error"/"aborted" 与 errorMessage 的助手消息结束。
- */
 export type StreamFunction<TApi extends Api = Api, TOptions extends StreamOptions = StreamOptions> = (
 	model: Model<TApi>,
 	context: Context,
 	options?: TOptions,
 ) => AssistantMessageEventStream;
 
-// 泛型图片生成函数：返回 Promise<AssistantImages>
 export type ImagesFunction<TApi extends ImagesApi = ImagesApi, TOptions extends ImagesOptions = ImagesOptions> = (
 	model: ImagesModel<TApi>,
 	context: ImagesContext,
 	options?: TOptions,
 ) => Promise<AssistantImages>;
 
-/** 文本签名 V1（中文说明）：OpenAI responses 消息元数据（旧 ID 字符串或此 JSON）。 */
 export interface TextSignatureV1 {
 	v: 1;
 	id: string;
-	// 模型 ID
 	phase?: "commentary" | "final_answer";
 }
 
-/** 文本内容块（中文说明）：text 正文；textSignature 可选签名（供多轮连续性回传）。 */
 export interface TextContent {
 	type: "text";
 	text: string;
 	textSignature?: string; // e.g., for OpenAI responses, message metadata (legacy id string or TextSignatureV1 JSON)
 }
 
-/** 思考内容块（中文说明）：thinking 思考文本；redacted 为 true 表示被安全过滤、
- * 密文存于 thinkingSignature 供多轮回传。 */
 export interface ThinkingContent {
 	type: "thinking";
 	thinking: string;
-	thinkingSignature?: string; // e.g., for OpenAI responses, the reasoning item ID
+	thinkingSignature?: string; // Provider-specific opaque or serialized reasoning replay data
 	/** When true, the thinking content was redacted by safety filters. The opaque
 	 *  encrypted payload is stored in `thinkingSignature` so it can be passed back
 	 *  to the API for multi-turn continuity. */
 	redacted?: boolean;
 }
 
-/** 图片内容块（中文说明）：data 为 base64 编码图片；mimeType 类型。 */
 export interface ImageContent {
 	type: "image";
 	data: string; // base64 encoded image data
 	mimeType: string; // e.g., "image/jpeg", "image/png"
 }
 
-/** 工具调用块（中文说明）：id 调用 ID；name 工具名；arguments 参数对象；
- * thoughtSignature 为 Google 专属的思考上下文复用签名。 */
 export interface ToolCall {
 	type: "toolCall";
 	id: string;
 	name: string;
-	// 模型名称
 	arguments: Record<string, any>;
 	thoughtSignature?: string; // Google-specific: opaque signature for reusing thought context
+	/** OpenAI Responses namespace for calls to dynamically loaded or namespaced tools. */
+	namespace?: string;
 }
 
-/** 用量统计（中文说明）：input/output/cacheRead/cacheWrite 为 token 数；
- * cacheWrite1h 为 1h 保留的写入子集（仅 Anthropic 上报）；reasoning 为推理 token
- * （output 的子集）；cost 为按模型费率计算的成本。 */
 export interface Usage {
 	input: number;
-	// 输入 token 数
 	output: number;
-	// 输出 token 数
 	cacheRead: number;
-	// 缓存读取 token 数
 	cacheWrite: number;
-	// 缓存写入 token 数
 	/** Subset of `cacheWrite` written with 1h retention. Only Anthropic reports this split. */
 	cacheWrite1h?: number;
-	// 1h 保留写入的子集（仅 Anthropic 上报该拆分）
 	/**
 	 * Reasoning/thinking tokens, when the provider reports them. This is a subset of
 	 * `output`: `output` already includes these tokens. Set to a number (possibly 0) by
 	 * providers that expose a reasoning breakdown; left undefined by providers that don't.
 	 */
 	reasoning?: number;
-	// 推理/思考 token（output 的子集；供应商上报时才有）
 	totalTokens: number;
-	// 总 token 数
 	cost: {
-	// 成本明细（按模型费率计算）
 		input: number;
 		output: number;
 		cacheRead: number;
@@ -483,36 +410,50 @@ export interface Usage {
 	};
 }
 
-// 停止原因：正常结束/达长度上限/请求工具/错误/被中止
-export type StopReason = "stop" | "length" | "toolUse" | "error" | "aborted";
+export type StopReason = "pending" | "stop" | "length" | "toolUse" | "error" | "aborted" | "deferred";
 
-/** 用户消息（中文说明）：role 固定 user；content 为文本或文本/图片块数组。 */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+export interface DeferredHandle {
+	provider: string;
+	modelId: string;
+	api: string;
+	/** Provider token, such as a response id or batch id plus row id. */
+	id: string;
+	expiresAt?: number;
+	pollAfterMs?: number;
+	/** Provider conversion data required to reconstruct the final assistant message. */
+	data?: JsonValue;
+}
+
 export interface UserMessage {
 	role: "user";
 	content: string | (TextContent | ImageContent)[];
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
-/** 助手消息（中文说明）：content 为文本/思考/工具调用块；含 api/provider/model 溯源、
- * 用量、停止原因、错误信息与诊断；responseModel/responseId 为上游返回的实际模型与响应 ID。 */
 export interface AssistantMessage {
 	role: "assistant";
 	content: (TextContent | ThinkingContent | ToolCall)[];
 	api: Api;
 	provider: ProviderId;
-	// 所属供应商
 	model: string;
 	responseModel?: string; // Concrete `chunk.model` when different from the requested `model` (e.g. OpenRouter `auto` -> `anthropic/...`)
 	responseId?: string; // Provider-specific response/message identifier when the upstream API exposes one
 	diagnostics?: AssistantMessageDiagnostic[]; // Redacted provider/runtime diagnostics for failures and recoveries.
 	usage: Usage;
 	stopReason: StopReason;
+	deferred?: DeferredHandle;
 	errorMessage?: string;
+	rawStopReason?: string;
+	/**
+	 * Provider indication of whether the model explicitly ended its turn.
+	 * Preserved for debugging and does not currently affect agent control flow.
+	 */
+	endTurn?: boolean;
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
-/** 工具结果消息（中文说明）：content 支持文本与图片；usage 仅作参考不计入主对话核算；
- * addedToolNames 标记从此处起新可用的工具；isError 标记错误。 */
 export interface ToolResultMessage<TDetails = any> {
 	role: "toolResult";
 	toolCallId: string;
@@ -531,23 +472,17 @@ export interface ToolResultMessage<TDetails = any> {
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
-// 标准消息联合
 export type Message = UserMessage | AssistantMessage | ToolResultMessage;
 
-// 图片输入内容块
 export type ImagesInputContent = TextContent | ImageContent;
 export type ImagesOutputContent = TextContent | ImageContent;
-// 图片输出内容块
 
-/** 图片生成上下文（中文说明）：input 为输入内容块数组。 */
 export interface ImagesContext {
 	input: ImagesInputContent[];
 }
 
-// 图片停止原因
 export type ImagesStopReason = "stop" | "error" | "aborted";
 
-/** 图片生成结果（中文说明）：output 生成内容；用法与错误信息同助手消息。 */
 export interface AssistantImages {
 	api: ImagesApi;
 	provider: ImagesProviderId;
@@ -563,11 +498,9 @@ export interface AssistantImages {
 import type { TSchema } from "typebox";
 
 /** OpenAI grammar variants for constrained sampling. */
-// 受约束采样语法格式（OpenAI 的 Lark/正则）
 export type GrammarFormat = "openai_lark" | "openai_regex";
 
 export type GrammarVariants = Partial<Record<GrammarFormat, string>>;
-// 各供应商语法的变体编码
 
 /**
  * Optional provider-side constrained sampling configs for a tool.
@@ -575,10 +508,6 @@ export type GrammarVariants = Partial<Record<GrammarFormat, string>>;
  * The `json_schema` value roughly maps to the concept of `strict` in APIs which is
  * implemented as json-schema constrained sampling by APIs. Grammar variants let
  * callers provide provider-specific encodings of the same intended language.
- */
-/**
- * 工具的可选供应商端受约束采样配置（中文说明）：json_schema 大体对应 API 的 strict；
- * grammar 让调用方为同一意图语言提供供应商专属编码。
  */
 export type ConstrainedSamplingConfig =
 	| {
@@ -590,8 +519,6 @@ export type ConstrainedSamplingConfig =
 			variants: GrammarVariants;
 	  };
 
-/** 工具定义（中文说明）：name/description/parameters（typebox schema）；
- * constrainedSampling 可选开启受约束采样。 */
 export interface Tool<TParameters extends TSchema = TSchema> {
 	name: string;
 	description: string;
@@ -599,7 +526,6 @@ export interface Tool<TParameters extends TSchema = TSchema> {
 	constrainedSampling?: false | ConstrainedSamplingConfig;
 }
 
-/** 模型请求上下文（中文说明）：可选系统提示词 + 消息 + 可选工具。 */
 export interface Context {
 	systemPrompt?: string;
 	messages: Message[];
@@ -614,10 +540,6 @@ export interface Context {
  * - `error` carrying the final AssistantMessage with stopReason "error" or "aborted"
  *   and errorMessage.
  */
-/**
- * 流事件协议（中文说明）：流先发 start，随后是各增量事件，
- * 最终以 done（成功）或 error（aborted/error）终止。
- */
 export type AssistantMessageEvent =
 	| { type: "start"; partial: AssistantMessage }
 	| { type: "text_start"; contentIndex: number; partial: AssistantMessage }
@@ -629,14 +551,17 @@ export type AssistantMessageEvent =
 	| { type: "toolcall_start"; contentIndex: number; partial: AssistantMessage }
 	| { type: "toolcall_delta"; contentIndex: number; delta: string; partial: AssistantMessage }
 	| { type: "toolcall_end"; contentIndex: number; toolCall: ToolCall; partial: AssistantMessage }
-	| { type: "done"; reason: Extract<StopReason, "stop" | "length" | "toolUse">; message: AssistantMessage }
+	| {
+			type: "done";
+			reason: Extract<StopReason, "stop" | "length" | "toolUse" | "deferred">;
+			message: AssistantMessage;
+	  }
 	| { type: "error"; reason: Extract<StopReason, "aborted" | "error">; error: AssistantMessage };
 
 /**
  * Compatibility settings for OpenAI-compatible completions APIs.
  * Use this to override URL-based auto-detection for custom providers.
  */
-/** OpenAI 兼容补全 API 的兼容设置（中文说明）：覆盖基于 URL 的自动探测。 */
 export interface OpenAICompletionsCompat {
 	/** Whether the provider supports the `store` field. Default: auto-detected from URL. */
 	supportsStore?: boolean;
@@ -646,6 +571,8 @@ export interface OpenAICompletionsCompat {
 	supportsReasoningEffort?: boolean;
 	/** Whether the provider supports `stream_options: { include_usage: true }` for token usage in streaming responses. Default: true. */
 	supportsUsageInStreaming?: boolean;
+	/** Whether streamed responses include `finish_reason`. When false, pi infers `stop` or `toolUse` when the stream ends. Default: true. */
+	supportsFinishReason?: boolean;
 	/** Which field to use for max tokens. Default: auto-detected from URL. */
 	maxTokensField?: "max_completion_tokens" | "max_tokens";
 	/** Whether tool results require the `name` field. Default: auto-detected from URL. */
@@ -656,26 +583,39 @@ export interface OpenAICompletionsCompat {
 	requiresThinkingAsText?: boolean;
 	/** Whether all replayed assistant messages must include an empty reasoning_content field when reasoning is enabled. Default: auto-detected from URL. */
 	requiresReasoningContentOnAssistantMessages?: boolean;
-	/** Format for reasoning/thinking parameter. "openai" uses reasoning_effort, "openrouter" uses reasoning: { effort }, "deepseek" uses thinking: { type } plus reasoning_effort when supported, "together" uses reasoning: { enabled } plus reasoning_effort when supported, "zai" uses thinking: { type }, "qwen" uses top-level enable_thinking: boolean, "qwen-chat-template" uses chat_template_kwargs.enable_thinking and preserve_thinking, "chat-template" uses configurable chat_template_kwargs, "string-thinking" uses top-level thinking: string, and "ant-ling" uses reasoning: { effort } only when the mapped effort is non-null. Default: "openai". */
+	/** Format for reasoning/thinking parameter. "openai" uses reasoning_effort, "openrouter" uses reasoning: { effort }, "deepseek" uses thinking: { type } plus reasoning_effort when supported, "together" uses reasoning: { enabled } plus reasoning_effort when supported, "baseten" uses configurable chat_template_args plus reasoning_effort when supported, "zai" uses thinking: { type }, "qwen" uses top-level enable_thinking: boolean, "qwen-chat-template" uses chat_template_kwargs.enable_thinking and preserve_thinking, "chat-template" uses configurable chat_template_kwargs, "string-thinking" uses top-level thinking: string, and "ant-ling" uses reasoning: { effort } only when the mapped effort is non-null. Default: "openai". */
 	thinkingFormat?:
 		| "openai"
 		| "openrouter"
 		| "deepseek"
 		| "together"
+		| "baseten"
 		| "zai"
 		| "qwen"
 		| "chat-template"
 		| "qwen-chat-template"
 		| "string-thinking"
 		| "ant-ling";
-	/** Kwargs to send as `chat_template_kwargs` when `thinkingFormat` is `chat-template`. Use `{ "$var": "thinking.enabled" }` or `{ "$var": "thinking.effort" }` for pi-controlled thinking values. */
+	/** Kwargs to send as `chat_template_kwargs` when `thinkingFormat` is `chat-template`. Use `{ "$var": "thinking.enabled" }`, `{ "$var": "thinking.effort" }`, or `{ "$var": "thinking.budget" }` for pi-controlled thinking values. */
 	chatTemplateKwargs?: Record<string, ChatTemplateKwargValue>;
+	/** Arguments to send as `chat_template_args` when `thinkingFormat` is `baseten`. Use `{ "$var": "thinking.enabled" }`, `{ "$var": "thinking.effort" }`, or `{ "$var": "thinking.budget" }` for pi-controlled thinking values. */
+	chatTemplateArgs?: Record<string, ChatTemplateKwargValue>;
 	/** OpenRouter-compatible routing preferences sent as the `provider` request field. */
 	openRouterRouting?: OpenRouterRouting;
 	/** Vercel AI Gateway routing preferences. Only used when baseUrl points to Vercel AI Gateway. */
 	vercelGatewayRouting?: VercelGatewayRouting;
 	/** Whether z.ai supports top-level `tool_stream: true` for streaming tool call deltas. Default: false. */
 	zaiToolStream?: boolean;
+	/**
+	 * Top-level request field used to cap reasoning tokens from `thinkingBudgets`.
+	 * Reasoning and the answer share `max_tokens` on these endpoints, so without a budget a
+	 * reasoning-heavy turn can consume the whole response and emit no answer.
+	 * `"thinking_token_budget"` is vLLM, `"thinking_budget"` is Qwen/DashScope/SGLang,
+	 * `"thinking_budget_tokens"` is llama.cpp. Off by default; not set on the generated catalog.
+	 */
+	thinkingTokenBudgetField?: ThinkingTokenBudgetField;
+	/** Alias for `thinkingTokenBudgetField: "thinking_token_budget"` (vLLM). Prefer `thinkingTokenBudgetField`. Default: false. */
+	supportsThinkingTokenBudget?: boolean;
 	/** Whether the provider supports OpenAI custom tools with Lark/regex grammar formats. When false, grammar-constrained tools fall back to normal function tools. Default: false; the generated model catalog enables it for capable models. */
 	supportsOpenAIGrammarTools?: boolean;
 	/** Whether the provider supports the `strict` field in tool definitions. Default: true. */
@@ -693,7 +633,6 @@ export interface OpenAICompletionsCompat {
 }
 
 /** Compatibility settings for OpenAI Responses APIs. */
-/** OpenAI Responses API 的兼容设置（中文说明）。 */
 export interface OpenAIResponsesCompat {
 	/** Whether the provider supports the `developer` role (vs `system`). Default: true. */
 	supportsDeveloperRole?: boolean;
@@ -705,6 +644,8 @@ export interface OpenAIResponsesCompat {
 	supportsStrictMode?: boolean;
 	/** Whether to emit OpenAI custom tools with Lark/regex grammar formats. When false, grammar-constrained tools fall back to normal function tools. Default: false; the generated model catalog enables it for capable models. */
 	supportsOpenAIGrammarTools?: boolean;
+	/** Whether the model supports message-anchored `additional_tools` input items. Default: false. */
+	supportsAdditionalTools?: boolean;
 	/** Whether the model supports client-executed tool search for deferred tools. Default: false. */
 	supportsToolSearch?: boolean;
 	/** Whether the model accepts `prompt_cache_options` (OpenAI GPT-5.6+ explicit prompt caching). Older OpenAI models reject the parameter. Default: false. */
@@ -712,7 +653,6 @@ export interface OpenAIResponsesCompat {
 }
 
 /** Compatibility settings for Anthropic Messages-compatible APIs. */
-/** Anthropic Messages 兼容 API 的设置（中文说明）：工具流式/缓存/思考格式等开关。 */
 export interface AnthropicMessagesCompat {
 	/**
 	 * Whether the provider accepts per-tool `eager_input_streaming`.
@@ -761,6 +701,13 @@ export interface AnthropicMessagesCompat {
 	/** Whether the provider supports Anthropic strict tool schemas. Default: false; generated Anthropic models enable it explicitly. */
 	supportsStrictTools?: boolean;
 	/**
+	 * Models Anthropic accepts in `fallbacks` for server-side refusal fallback,
+	 * with local pricing metadata for returned fallback responses. When absent or
+	 * empty, callers must omit `fallbacks`; Anthropic rejects the field for models
+	 * with no permitted fallback targets.
+	 */
+	allowedFallbackModels?: AnthropicAllowedFallbackModel[];
+	/**
 	 * Whether the provider supports deferred tools loaded by `tool_reference`
 	 * blocks in tool results. Default: true for first-party Anthropic models
 	 * except Haiku and models older than Claude 4.5; false for other providers.
@@ -769,7 +716,6 @@ export interface AnthropicMessagesCompat {
 }
 
 /** Compatibility settings for Amazon Bedrock models. */
-/** Amazon Bedrock 模型兼容设置（中文说明）。 */
 export interface BedrockCompat {
 	/** Whether the model supports Bedrock strict tool schemas. Default: false. */
 	supportsStrictMode?: boolean;
@@ -780,10 +726,6 @@ export interface BedrockCompat {
  * Controls which upstream providers OpenRouter routes requests to.
  * Sent as the `provider` field in the OpenRouter API request body.
  * @see https://openrouter.ai/docs/guides/routing/provider-selection
- */
-/**
- * OpenRouter 路由偏好（中文说明）：作为请求体的 provider 字段发送，
- * 控制路由到哪些上游供应商及排序/过滤策略。
  */
 export interface OpenRouterRouting {
 	/** Whether to allow backup providers to serve requests. Default: true. */
@@ -859,7 +801,6 @@ export interface OpenRouterRouting {
  * Controls which upstream providers the gateway routes requests to.
  * @see https://vercel.com/docs/ai-gateway/models-and-providers/provider-options
  */
-/** Vercel AI Gateway 路由偏好（中文说明）：限制/排序上游供应商。 */
 export interface VercelGatewayRouting {
 	/** List of provider slugs to exclusively use for this request (e.g., ["bedrock", "anthropic"]). */
 	only?: string[];
@@ -867,64 +808,45 @@ export interface VercelGatewayRouting {
 	order?: string[];
 }
 
-/** 模型成本费率（中文说明）：$/百万 token。 */
 export interface ModelCostRates {
 	input: number; // $/million tokens
-	// 输入费率（$/百万 token）
 	output: number; // $/million tokens
-	// 输出费率
 	cacheRead: number; // $/million tokens
-	// 缓存读取费率
 	cacheWrite: number; // $/million tokens
-	// 缓存写入费率
 }
 
-/** 阶梯费率（中文说明）：输入用量超过 inputTokensAbove 时整请求采用此档。 */
 export interface ModelCostTier extends ModelCostRates {
 	/** Use this tier for requests whose total input usage exceeds this token count. */
 	inputTokensAbove: number;
 }
 
-/** 模型成本（中文说明）：基础费率 + 可选阶梯。 */
 export interface ModelCost extends ModelCostRates {
 	/** Request-wide pricing tiers. The highest matching input threshold applies to the full request. */
 	tiers?: ModelCostTier[];
 }
 
 // Model interface for the unified model system
-/**
- * 模型接口（中文说明）：统一模型系统的核心——
- * id/name/api/provider/baseUrl/reasoning/输入输出能力/成本/窗口/上限/头/compat。
- */
 export interface Model<TApi extends Api> {
 	id: string;
 	name: string;
 	api: TApi;
-	// 所属 API（决定流实现与选项类型）
 	provider: ProviderId;
 	baseUrl: string;
-	// API 基础地址
 	reasoning: boolean;
-	// 是否支持推理
 	/**
 	 * Maps pi thinking levels to provider/model-specific values.
 	 * Missing keys use provider defaults. null marks a level as unsupported.
 	 */
 	thinkingLevelMap?: ThinkingLevelMap;
-	// 思考级别映射：缺省键用供应商默认；null 表示不支持
 	input: ("text" | "image")[];
-	// 支持的输入模态
 	cost: ModelCost;
-	// 成本费率
 	contextWindow: number;
-	// 上下文窗口（token）
 	maxTokens: number;
-	// 最大输出 token
+	/** Default sampling parameters for this model. See {@link StreamOptions.samplingParams}; per-request keys override these. */
+	samplingParams?: Record<string, unknown>;
 	headers?: Record<string, string>;
-	// 模型级请求头
 	/** Compatibility overrides for OpenAI-compatible APIs. If not set, auto-detected from baseUrl. */
 	compat?: TApi extends "openai-completions"
-	// 兼容配置：按 api 条件收窄到对应 Compat 类型
 		? OpenAICompletionsCompat
 		: TApi extends "openai-responses" | "azure-openai-responses" | "openai-codex-responses"
 			? OpenAIResponsesCompat
@@ -935,11 +857,9 @@ export interface Model<TApi extends Api> {
 					: never;
 }
 
-/** 图片模型接口（中文说明）：在 Model 基础上替换 api/provider 类型并增加输出模态。 */
 export interface ImagesModel<TApi extends ImagesApi>
 	extends Omit<Model<Api>, "api" | "provider" | "reasoning" | "contextWindow" | "maxTokens" | "compat"> {
 	api: TApi;
 	provider: ImagesProviderId;
 	output: ("text" | "image")[];
-	// 支持的输出模态
 }

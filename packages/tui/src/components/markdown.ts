@@ -1,12 +1,19 @@
-import { Marked, type Token, Tokenizer, type Tokens } from "marked";
+/**
+ * 【文件职责】实现 `@earendil-works/pi-tui` 包中的 `components/markdown` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `marked`、`../latex.ts`、`../terminal-image.ts`、`../tui.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为文本应用提供基于差分渲染的终端界面能力；本文件负责其中与 `components/markdown` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `DefaultTextStyle`、`MarkdownTheme`、`MarkdownOptions`、`Markdown`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `DefaultTextStyle`、`MarkdownTheme`、`MarkdownOptions`、`Markdown` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+import { Marked, type Token, Tokenizer, type TokenizerExtension, type Tokens } from "marked";
+import { renderLatex } from "../latex.ts";
 import { getCapabilities, hyperlink, isImageLine } from "../terminal-image.ts";
 import type { Component } from "../tui.ts";
 import { applyBackgroundToLine, visibleWidth, wrapTextWithAnsi } from "../utils.ts";
 
-// 严格删除线正则：要求 ~~ 成对且内容不以空白/波浪线开头结尾（比 marked 默认更严格）
 const STRICT_STRIKETHROUGH_REGEX = /^(~~)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/;
 
-// 严格删除线分词器（私有）：覆写 del 方法用上面的严格正则替代默认行为
 class StrictStrikethroughTokenizer extends Tokenizer {
 	override del(src: string): Tokens.Del | undefined {
 		const match = STRICT_STRIKETHROUGH_REGEX.exec(src);
@@ -24,11 +31,126 @@ class StrictStrikethroughTokenizer extends Tokenizer {
 	}
 }
 
-/**
- * 裁剪流式输出中未写完的代码块闭合围栏（私有）：
- * 递归进入列表/引用块找末尾 code 令牌，若其最后一行是“部分围栏”则从文本中移除，
- * 防止最终围栏字符到达时代码块高度抖动。
- */
+interface LatexToken extends Tokens.Generic {
+	type: "latex" | "latexBlock";
+	text: string;
+	pending?: boolean;
+}
+
+function isEscaped(source: string, index: number): boolean {
+	let backslashes = 0;
+	for (let position = index - 1; position >= 0 && source[position] === "\\"; position--) {
+		backslashes++;
+	}
+	return backslashes % 2 === 1;
+}
+
+function findClosingDelimiter(source: string, closing: string, start: number): number {
+	let index = source.indexOf(closing, start);
+	while (index >= 0 && isEscaped(source, index)) {
+		index = source.indexOf(closing, index + closing.length);
+	}
+	return index;
+}
+
+function looksLikePendingDollarMath(source: string): boolean {
+	return /\\[A-Za-z]+|[_^=+*/<>()[\]|±≤≥≠≈∈→⇒∞∫∑√-]/.test(source);
+}
+
+function tokenizeInlineLatex(source: string): LatexToken | undefined {
+	let opening = "";
+	let closing = "";
+	if (source.startsWith("$$")) {
+		opening = "$$";
+		closing = "$$";
+	} else if (source.startsWith("\\(")) {
+		opening = "\\(";
+		closing = "\\)";
+	} else if (source.startsWith("\\[")) {
+		opening = "\\[";
+		closing = "\\]";
+	} else if (source.startsWith("$") && !/^\$\s/.test(source)) {
+		opening = "$";
+		closing = "$";
+	} else {
+		return undefined;
+	}
+
+	const closingIndex = findClosingDelimiter(source, closing, opening.length);
+	if (
+		closingIndex >= 0 &&
+		opening === "$" &&
+		(/\s$/.test(source.slice(opening.length, closingIndex)) ||
+			/^\d/.test(source.slice(closingIndex + 1)) ||
+			(/^[A-Z_][A-Z0-9_]*(?:[^A-Za-z0-9_\s])?$/.test(source.slice(opening.length, closingIndex)) &&
+				/^[A-Za-z_][A-Za-z0-9_]*/.test(source.slice(closingIndex + 1))) ||
+			source.slice(opening.length, closingIndex).includes("`"))
+	) {
+		return undefined;
+	}
+
+	if (closingIndex < 0) {
+		const pendingSource = source.slice(opening.length);
+		if (opening.startsWith("\\") || looksLikePendingDollarMath(pendingSource)) {
+			return { type: "latex", raw: source, text: pendingSource, pending: true };
+		}
+		return undefined;
+	}
+
+	const text = source.slice(opening.length, closingIndex);
+	if (!text || text.includes("\n")) {
+		return undefined;
+	}
+
+	const raw = source.slice(0, closingIndex + closing.length);
+	return { type: "latex", raw, text };
+}
+
+function tokenizeBlockLatex(source: string): LatexToken | undefined {
+	const dollarMatch = /^ {0,3}\$\$[ \t]*(?:\n)?([\s\S]*?)\$\$[ \t]*(?:\n|$)/.exec(source);
+	if (dollarMatch?.[1]) {
+		return { type: "latexBlock", raw: dollarMatch[0], text: dollarMatch[1].trim() };
+	}
+
+	const bracketMatch = /^ {0,3}\\\[[ \t]*(?:\n)?([\s\S]*?)\\\][ \t]*(?:\n|$)/.exec(source);
+	if (bracketMatch?.[1]) {
+		return { type: "latexBlock", raw: bracketMatch[0], text: bracketMatch[1].trim() };
+	}
+
+	const pendingBracket = /^ {0,3}\\\[[ \t]*(?:\n)?([\s\S]*)$/.exec(source);
+	if (pendingBracket) {
+		return { type: "latexBlock", raw: pendingBracket[0], text: pendingBracket[1], pending: true };
+	}
+	const pendingDollar = /^ {0,3}\$\$[ \t]*(?:\n)?([\s\S]*)$/.exec(source);
+	if (pendingDollar?.[1] && looksLikePendingDollarMath(pendingDollar[1])) {
+		return { type: "latexBlock", raw: pendingDollar[0], text: pendingDollar[1], pending: true };
+	}
+	return undefined;
+}
+
+const LATEX_MARKDOWN_EXTENSIONS: readonly TokenizerExtension[] = [
+	{
+		name: "latexBlock",
+		level: "block",
+		start(source) {
+			const match = /(?:^|\n) {0,3}(?:\$\$|\\\[)/.exec(source);
+			return match ? match.index + (match[0].startsWith("\n") ? 1 : 0) : undefined;
+		},
+		tokenizer: tokenizeBlockLatex,
+	},
+	{
+		name: "latex",
+		level: "inline",
+		start(source) {
+			const indices = [source.indexOf("$"), source.indexOf("\\("), source.indexOf("\\[")].filter(
+				(index) => index >= 0,
+			);
+			return indices.length > 0 ? Math.min(...indices) : undefined;
+		},
+		tokenizer: tokenizeInlineLatex,
+	},
+];
+
 function trimPartialClosingFences(tokens: readonly Token[]): void {
 	const token = tokens[tokens.length - 1];
 	if (token?.type === "list") {
@@ -54,23 +176,20 @@ function trimPartialClosingFences(tokens: readonly Token[]): void {
 	token.text = token.text.slice(0, -lastLine.length).replace(/\n$/, "");
 }
 
-// 共享的 Markdown 解析器实例：注入严格删除线分词器
 const markdownParser = new Marked();
 markdownParser.setOptions({
 	tokenizer: new StrictStrikethroughTokenizer(),
 });
+markdownParser.use({ extensions: [...LATEX_MARKDOWN_EXTENSIONS] });
 
 /**
  * Default text styling for markdown content.
  * Applied to all text unless overridden by markdown formatting.
  */
-/** 默认文本样式（中文说明）：应用于所有未被 Markdown 格式覆盖的文字。 */
 export interface DefaultTextStyle {
 	/** Foreground color function */
-	// 前景着色函数
 	color?: (text: string) => string;
 	/** Background color function */
-	// 背景着色函数（在边距阶段整行应用）
 	bgColor?: (text: string) => string;
 	/** Bold text */
 	bold?: boolean;
@@ -86,8 +205,6 @@ export interface DefaultTextStyle {
  * Theme functions for markdown elements.
  * Each function takes text and returns styled text with ANSI codes.
  */
-/** Markdown 元素主题（中文说明）：每个函数接收原文返回带 ANSI 的着色文本；
- * highlightCode 可选提供语法高亮；codeBlockIndent 控制代码块缩进前缀。 */
 export interface MarkdownTheme {
 	heading: (text: string) => string;
 	link: (text: string) => string;
@@ -108,26 +225,23 @@ export interface MarkdownTheme {
 	codeBlockIndent?: string;
 }
 
-/** 解析选项（中文说明）：两个 preserve 开关用于保留源文的有序列表编号与反斜杠转义。 */
 export interface MarkdownOptions {
 	/** Preserve source list markers instead of normalizing them. */
 	preserveOrderedListMarkers?: boolean;
 	/** Preserve source backslash escapes instead of normalizing escaped punctuation. */
 	preserveBackslashEscapes?: boolean;
+	/** Transform source Markdown before parsing, with the exact width available for content. */
+	transform?: (markdown: string, availableWidth: number) => string;
+	/** Render supported LaTeX math expressions as Unicode text (default: true). */
+	renderLatex?: boolean;
 }
 
-// 行内样式上下文（私有）：applyText 统一着色入口；stylePrefix 用于在嵌套着色复位后重放前缀
 interface InlineStyleContext {
 	applyText: (text: string) => string;
 	stylePrefix: string;
 }
 
-/**
- * Markdown 组件（中文说明）：把 Markdown 文本渲染为终端友好输出。
- * 支持标题/段落/代码块/列表/表格/引用块/分隔线/链接等元素，带缓存与内边距/背景。
- */
 export class Markdown implements Component {
-	// 当前 Markdown 源文本
 	private text: string;
 	private paddingX: number; // Left/right padding
 	private paddingY: number; // Top/bottom padding
@@ -157,20 +271,17 @@ export class Markdown implements Component {
 		this.options = options ? { ...options } : {};
 	}
 
-	// 更新文本并失效缓存
 	setText(text: string): void {
 		this.text = text;
 		this.invalidate();
 	}
 
-	// 外部触发的缓存失效
 	invalidate(): void {
 		this.cachedText = undefined;
 		this.cachedWidth = undefined;
 		this.cachedLines = undefined;
 	}
 
-	// 渲染主流程（公开）：缓存判定 → tab 归一化 → 词法解析 → 逐令牌渲染 → 折行 → 加边距/背景 → 写缓存
 	render(width: number): string[] {
 		// Check cache
 		if (this.cachedLines && this.cachedText === this.text && this.cachedWidth === width) {
@@ -179,9 +290,10 @@ export class Markdown implements Component {
 
 		// Calculate available width for content (subtract horizontal padding)
 		const contentWidth = Math.max(1, width - this.paddingX * 2);
+		const text = this.options.transform?.(this.text, contentWidth) ?? this.text;
 
 		// Don't render anything if there's no actual text
-		if (!this.text || this.text.trim() === "") {
+		if (!text || text.trim() === "") {
 			const result: string[] = [];
 			// Update cache
 			this.cachedText = this.text;
@@ -191,10 +303,9 @@ export class Markdown implements Component {
 		}
 
 		// Replace tabs with 3 spaces for consistent rendering
-		const normalizedText = this.text.replace(/\t/g, "   ");
+		const normalizedText = text.replace(/\t/g, "   ");
 
 		// Parse markdown to HTML-like tokens
-		// 解析为令牌流并裁剪流式未闭合围栏
 		const tokens = markdownParser.lexer(normalizedText);
 		trimPartialClosingFences(tokens);
 
@@ -271,8 +382,6 @@ export class Markdown implements Component {
 	 * NOTE: Background color is NOT applied here - it's applied at the padding stage
 	 * to ensure it extends to the full line width.
 	 */
-	// 应用默认文本样式（私有）：前景色 + 粗体/斜体/删除线/下划线按开关叠加；
-	// 注意背景色在边距阶段才整行应用
 	private applyDefaultStyle(text: string): string {
 		if (!this.defaultTextStyle) {
 			return text;
@@ -302,7 +411,6 @@ export class Markdown implements Component {
 		return styled;
 	}
 
-	// 计算默认样式的 ANSI 前缀（私有）：用哨兵字符探测着色函数插入的前缀部分并缓存
 	private getDefaultStylePrefix(): string {
 		if (!this.defaultTextStyle) {
 			return "";
@@ -337,7 +445,6 @@ export class Markdown implements Component {
 		return this.defaultStylePrefix;
 	}
 
-	// 计算任意着色函数的 ANSI 前缀（私有）：同样基于哨兵探测
 	private getStylePrefix(styleFn: (text: string) => string): string {
 		const sentinel = "\u0000";
 		const styled = styleFn(sentinel);
@@ -352,7 +459,6 @@ export class Markdown implements Component {
 		};
 	}
 
-	// 渲染单个块级令牌（私有）：按 heading/paragraph/text/code/list/table/blockquote/hr/html/space 分派
 	private renderToken(
 		token: Token,
 		width: number,
@@ -362,7 +468,6 @@ export class Markdown implements Component {
 		const lines: string[] = [];
 
 		switch (token.type) {
-				// 标题：构造标题专属样式上下文，使行内令牌复位后能恢复标题样式而非退回默认样式
 			case "heading": {
 				const headingLevel = token.depth;
 				const headingPrefix = `${"#".repeat(headingLevel)} `;
@@ -405,7 +510,21 @@ export class Markdown implements Component {
 				lines.push(this.renderInlineTokens([token], styleContext));
 				break;
 
-				// 代码块：围栏行 + 高亮或逐行着色 + 围栏收尾；非相邻 space 时补空行
+			case "latexBlock": {
+				const latexToken = token as LatexToken;
+				const rendered =
+					!latexToken.pending && this.options.renderLatex !== false
+						? (renderLatex(latexToken.text, { display: true }) ?? latexToken.raw.trim())
+						: latexToken.raw.trim();
+				for (const line of rendered.split("\n")) {
+					lines.push(this.applyDefaultStyle(line));
+				}
+				if (nextTokenType && nextTokenType !== "space") {
+					lines.push("");
+				}
+				break;
+			}
+
 			case "code": {
 				const indent = this.theme.codeBlockIndent ?? "  ";
 				lines.push(this.theme.codeBlockBorder(`\`\`\`${token.lang || ""}`));
@@ -442,8 +561,6 @@ export class Markdown implements Component {
 				break;
 			}
 
-				// 引用块：子内容以块级方式渲染后加 │ 边框前缀；
-				// applyQuoteStyle 在每行 ANSI 复位处重放引用样式前缀保持连续着色
 			case "blockquote": {
 				const quoteStyle = (text: string) => this.theme.quote(this.theme.italic(text));
 				const quoteStylePrefix = this.getStylePrefix(quoteStyle);
@@ -522,8 +639,6 @@ export class Markdown implements Component {
 		return lines;
 	}
 
-	// 渲染行内令牌序列（私有）：escape/text/strong/em/codespan/link/br/del/html 等；
-	// 结尾剥离多余的样式前缀防止重复
 	private renderInlineTokens(tokens: Token[], styleContext?: InlineStyleContext): string {
 		let result = "";
 		const resolvedStyleContext = styleContext ?? this.getDefaultInlineStyleContext();
@@ -535,6 +650,16 @@ export class Markdown implements Component {
 
 		for (const token of tokens) {
 			switch (token.type) {
+				case "latex": {
+					const latexToken = token as LatexToken;
+					const rendered =
+						!latexToken.pending && this.options.renderLatex !== false
+							? (renderLatex(latexToken.text) ?? latexToken.raw)
+							: latexToken.raw;
+					result += applyTextWithNewlines(rendered);
+					break;
+				}
+
 				case "escape":
 					result += applyTextWithNewlines(this.options.preserveBackslashEscapes ? token.raw : token.text);
 					break;
@@ -569,8 +694,6 @@ export class Markdown implements Component {
 					result += this.theme.code(token.text) + stylePrefix;
 					break;
 
-					// 链接：终端支持 OSC8 时渲染为可点击超链接；
-					// 否则当文字与 href 不同时在括号中附注 URL（mailto: 前缀先剥除再比较）
 				case "link": {
 					const linkText = this.renderInlineTokens(token.tokens || [], resolvedStyleContext);
 					const styledLink = this.theme.link(this.theme.underline(linkText));
@@ -625,13 +748,11 @@ export class Markdown implements Component {
 		return result;
 	}
 
-// 从原始文本提取有序列表标记（如 "1. "）；无匹配返回 undefined
 	private getOrderedListMarker(item: Tokens.ListItem): string | undefined {
 		const match = /^(?: {0,3})(\d{1,9}[.)])[ \t]+/.exec(item.raw);
 		return match ? `${match[1]} ` : undefined;
 	}
 
-// 从原始文本提取无序列表标记（如 "- "）；无匹配返回 undefined
 	private getUnorderedListMarker(item: Tokens.ListItem): string | undefined {
 		const match = /^(?: {0,3})([-+*])(?:[ \t]+|(?=\r?\n|$))/.exec(item.raw);
 		return match ? `${match[1]} ` : undefined;
@@ -640,8 +761,6 @@ export class Markdown implements Component {
 	/**
 	 * Render a list with proper nesting support
 	 */
-	// 渲染列表（私有，支持嵌套）：首行用项目符号前缀、续行用对齐空格前缀；
-	 // 任务列表追加 [x]/[ ] 标记；松散列表项间补空行
 	private renderList(token: Tokens.List, depth: number, width: number, styleContext?: InlineStyleContext): string[] {
 		const lines: string[] = [];
 		const indent = "    ".repeat(depth);
@@ -697,7 +816,6 @@ export class Markdown implements Component {
 	/**
 	 * Get the visible width of the longest word in a string.
 	 */
-// 取文本中最长单词的可见宽（私有）：供表格最小列宽计算；maxWidth 限制上限
 	private getLongestWordWidth(text: string, maxWidth?: number): number {
 		const words = text.split(/\s+/).filter((word) => word.length > 0);
 		let longest = 0;
@@ -716,17 +834,19 @@ export class Markdown implements Component {
 	 * Delegates to wrapTextWithAnsi() so ANSI codes + long tokens are handled
 	 * consistently with the rest of the renderer.
 	 */
-// 折行单元格文本（私有）：委托 wrapTextWithAnsi 保持与整体渲染一致的 ANSI/长词处理
-	private wrapCellText(text: string, maxWidth: number): string[] {
-		return wrapTextWithAnsi(text, Math.max(1, maxWidth));
+	private wrapCellText(text: string, maxWidth: number, stylePrefix = ""): string[] {
+		const lines = wrapTextWithAnsi(text, Math.max(1, maxWidth));
+		return lines.map((line, index) => {
+			// Reset text styles after each non-final fragment, then restore the surrounding style before padding and borders.
+			const styleReset = index < lines.length - 1 ? "\x1b[22;23;24;25;27;28;29;39m" : "";
+			return `${line}${styleReset}${stylePrefix}`;
+		});
 	}
 
 	/**
 	 * Render a table with width-aware cell wrapping.
 	 * Cells that don't fit are wrapped to multiple lines.
 	 */
-	// 渲染表格（私有）：三步——统计自然列宽与最小列宽 → 按可用宽度分配（过窄时降级为原始文本）→
-	// 用框线字符绘制表头/分隔线/数据行/底边，单元格自动折行补齐
 	private renderTable(
 		token: Tokens.Table,
 		availableWidth: number,
@@ -851,7 +971,7 @@ export class Markdown implements Component {
 		// Render header with wrapping
 		const headerCellLines: string[][] = token.header.map((cell, i) => {
 			const text = this.renderInlineTokens(cell.tokens || [], styleContext);
-			return this.wrapCellText(text, columnWidths[i]);
+			return this.wrapCellText(text, columnWidths[i], styleContext?.stylePrefix);
 		});
 		const headerLineCount = Math.max(...headerCellLines.map((c) => c.length));
 
@@ -874,7 +994,7 @@ export class Markdown implements Component {
 			const row = token.rows[rowIndex];
 			const rowCellLines: string[][] = row.map((cell, i) => {
 				const text = this.renderInlineTokens(cell.tokens || [], styleContext);
-				return this.wrapCellText(text, columnWidths[i]);
+				return this.wrapCellText(text, columnWidths[i], styleContext?.stylePrefix);
 			});
 			const rowLineCount = Math.max(...rowCellLines.map((c) => c.length));
 

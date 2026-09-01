@@ -1,19 +1,14 @@
 /**
- * 【文件职责】懒加载流式机制：在同步返回事件流的同时于后台执行异步初始化
- *              （认证解析/模块加载），初始化失败以错误事件终止流。
- * 【技术维度】外层 EventStream 立即返回；setup Promise 链转发内层事件；
- *              初始化失败合成带 stopReason:"error" 的助手消息。
- * 【产品维度】让 API 模块（尤其含 Node 专属依赖者）按需加载，加速启动并保持摇树友好。
- * 【逻辑维度】createSetupErrorMessage 合成失败消息 → forwardStream 转发事件与结果 →
- *              lazyStream 编排 → lazyApi 包装动态导入模块为 ProviderStreams。
- * 【关键边界】setup 失败绝不抛出（编码进流）；内层有 result() 时转发时一并结算；
- *              动态导入走宿主 import 缓存去重。
- * 【新手阅读建议】先读 lazyStream 的 then/catch 编排 → 再看 lazyApi 的 stream/streamSimple 包装。
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `api/lazy` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `../types.ts`、`../utils/event-stream.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `api/lazy` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `lazyStream`、`LazyApiCapabilities`、`lazyApi`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `lazyStream`、`LazyApiCapabilities`、`lazyApi` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { Api, AssistantMessage, AssistantMessageEvent, Model, ProviderStreams } from "../types.ts";
 import { AssistantMessageEventStream } from "../utils/event-stream.ts";
 
-// 合成初始化失败消息（私有）：空内容 + stopReason:"error" + 错误信息 + 全零用量
 function createSetupErrorMessage(model: Model<Api>, error: unknown): AssistantMessage {
 	return {
 		role: "assistant",
@@ -35,14 +30,12 @@ function createSetupErrorMessage(model: Model<Api>, error: unknown): AssistantMe
 	};
 }
 
-// 类型守卫：源是否有 result()（私有）
 function hasResult(
 	source: AsyncIterable<AssistantMessageEvent>,
 ): source is AsyncIterable<AssistantMessageEvent> & { result(): Promise<AssistantMessage> } {
 	return typeof (source as { result?: unknown }).result === "function";
 }
 
-// 转发内层事件到外层流（私有）：结束时把内层结果（若有）传给 end
 async function forwardStream(
 	target: AssistantMessageEventStream,
 	source: AsyncIterable<AssistantMessageEvent>,
@@ -58,7 +51,6 @@ async function forwardStream(
  * lazy module loading) behind it. Setup failures terminate the stream with an
  * error event.
  */
-// 懒流（公开）：同步返回流，后台执行 setup；失败以错误事件终止
 export function lazyStream(
 	model: Model<Api>,
 	setup: () => Promise<AsyncIterable<AssistantMessageEvent>>,
@@ -81,13 +73,34 @@ export function lazyStream(
  * The module loads on first stream call; the host's import cache deduplicates
  * loads. Load failures terminate the returned stream with an error event.
  */
-// 懒 API 包装（公开）：把动态导入的 API 模块包装为 ProviderStreams；
-// 首次流调用时才加载模块（宿主 import 缓存去重）；加载失败以错误事件终止流
-export function lazyApi(load: () => Promise<ProviderStreams>): ProviderStreams {
-	return {
+export interface LazyApiCapabilities {
+	fetchDeferred?: boolean;
+	cancelDeferred?: boolean;
+}
+
+export function lazyApi(load: () => Promise<ProviderStreams>, capabilities?: LazyApiCapabilities): ProviderStreams {
+	const api: ProviderStreams = {
 		stream: (model, context, options) =>
 			lazyStream(model, async () => (await load()).stream(model, context, options)),
 		streamSimple: (model, context, options) =>
 			lazyStream(model, async () => (await load()).streamSimple(model, context, options)),
 	};
+
+	if (capabilities?.fetchDeferred) {
+		api.fetchDeferred = (model, handle, options) =>
+			lazyStream(model, async () => {
+				const implementation = await load();
+				if (!implementation.fetchDeferred) throw new Error("API does not support deferred responses");
+				return implementation.fetchDeferred(model, handle, options);
+			});
+	}
+	if (capabilities?.cancelDeferred) {
+		api.cancelDeferred = async (model, handle, options) => {
+			const implementation = await load();
+			if (!implementation.cancelDeferred) throw new Error("API cannot cancel deferred responses");
+			await implementation.cancelDeferred(model, handle, options);
+		};
+	}
+
+	return api;
 }

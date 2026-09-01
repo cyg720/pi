@@ -1,4 +1,12 @@
 /**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/oauth/kimi-coding` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `../../utils/provider-env.ts`、`../../utils/sleep.ts`、`../types.ts`、`./device-code.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/oauth/kimi-coding` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `kimiCodingOAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `kimiCodingOAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+/**
  * Kimi Code (subscription) OAuth flow
  *
  * RFC 8628 device authorization grant against https://auth.kimi.com with JSON
@@ -9,7 +17,8 @@
  */
 
 import { getProviderEnvValue } from "../../utils/provider-env.ts";
-import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
+import { sleep } from "../../utils/sleep.ts";
+import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
 import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
 
 // Kimi 客户端 ID
@@ -42,8 +51,8 @@ function getOauthHost(): string {
 	return (override || DEFAULT_OAUTH_HOST).replace(/\/+$/, "");
 }
 
-function requestSignal(signal?: AbortSignal): AbortSignal {
-	return AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), ...(signal ? [signal] : [])]);
+function requestSignal(signal: AbortSignal): AbortSignal {
+	return AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), signal]);
 }
 
 function formUrlEncode(fields: Record<string, string>): string {
@@ -71,7 +80,7 @@ function trustedHttpUrl(value: unknown): string | null {
 	}
 }
 
-async function startDeviceAuthorization(oauthHost: string, signal?: AbortSignal): Promise<DeviceAuthorization> {
+async function startDeviceAuthorization(oauthHost: string, signal: AbortSignal): Promise<DeviceAuthorization> {
 	const response = await fetch(`${oauthHost}/api/oauth/device_authorization`, {
 		method: "POST",
 		headers: {
@@ -146,7 +155,7 @@ function parseTokenResponse(json: Record<string, unknown> | null, operation: str
 async function pollForToken(
 	oauthHost: string,
 	device: DeviceAuthorization,
-	signal?: AbortSignal,
+	signal: AbortSignal,
 ): Promise<TokenResponse> {
 	return pollOAuthDeviceCodeFlow<TokenResponse>({
 		intervalSeconds: device.intervalSeconds,
@@ -211,25 +220,17 @@ async function pollForToken(
 	});
 }
 
-function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function isRetryableRefreshFailure(response: Response): boolean {
 	return response.status === 429 || response.status >= 500;
 }
 
-async function refreshToken(
-	oauthHost: string,
-	refreshTokenValue: string,
-	signal?: AbortSignal,
-): Promise<TokenResponse> {
+async function refreshToken(oauthHost: string, refreshTokenValue: string, signal: AbortSignal): Promise<TokenResponse> {
 	let lastError: Error | undefined;
 	for (let attempt = 0; attempt <= REFRESH_MAX_RETRIES; attempt++) {
 		if (attempt > 0) {
-			await sleep(1000 * 2 ** (attempt - 1));
+			await sleep(1000 * 2 ** (attempt - 1), signal);
 		}
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			throw new Error("Kimi Code token refresh aborted");
 		}
 
@@ -276,7 +277,7 @@ async function refreshToken(
 	throw lastError ?? new Error("Kimi Code token refresh failed");
 }
 
-async function loginKimiCoding(interaction: AuthInteraction): Promise<OAuthCredential> {
+async function loginKimiCoding(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const oauthHost = getOauthHost();
 	const device = await startDeviceAuthorization(oauthHost, interaction.signal);
 	interaction.notify({
@@ -292,6 +293,7 @@ async function loginKimiCoding(interaction: AuthInteraction): Promise<OAuthCrede
 
 export const kimiCodingOAuth: OAuthAuth = {
 	name: "Kimi Code (subscription)",
+	isSubscription: true,
 	loginLabel: "Sign in with Kimi Code",
 
 	login: loginKimiCoding,

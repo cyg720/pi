@@ -74,7 +74,9 @@ This is a test skill.
 			getThemes: () => ({ themes: [], diagnostics: [] }),
 			getAgentsFiles: () => ({ agentsFiles: [] }),
 			getSystemPrompt: () => undefined,
+			getSystemPromptSource: () => undefined,
 			getAppendSystemPrompt: () => [],
+			getAppendSystemPromptSources: () => [],
 			extendResources: () => {},
 			reload: async () => {},
 		};
@@ -110,7 +112,9 @@ This is a test skill.
 			getThemes: () => ({ themes: [], diagnostics: [] }),
 			getAgentsFiles: () => ({ agentsFiles: [] }),
 			getSystemPrompt: () => undefined,
+			getSystemPromptSource: () => undefined,
 			getAppendSystemPrompt: () => [],
+			getAppendSystemPromptSources: () => [],
 			extendResources: () => {},
 			reload: async () => {},
 		};

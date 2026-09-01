@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME } from "../config.ts";
 import { canonicalizePath, resolvePath } from "../utils/paths.ts";
+import { stripBom } from "../utils/text.ts";
 
 /**
  * 【文件职责】信任管理器：项目/命令信任状态的管理（提示、持久化、检查）。
@@ -106,7 +107,7 @@ function readTrustFile(path: string): TrustFile {
 
 	let parsed: unknown;
 	try {
-		parsed = JSON.parse(readFileSync(path, "utf-8"));
+		parsed = JSON.parse(stripBom(readFileSync(path, "utf-8")));
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		throw new Error(`Failed to read trust store ${path}: ${message}`);

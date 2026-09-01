@@ -136,7 +136,7 @@ describe("createAgentSession session manager defaults", () => {
 		});
 		expect(session.sessionFile).toBeTruthy();
 		expect(session.systemPrompt).toContain(
-			"Inspect PI_* environment variables for current model and session details.",
+			"You can inspect PI_* environment variables for current model and session details.",
 		);
 
 		// 将读取 PI_* 环境变量的内置 Bash 工具。

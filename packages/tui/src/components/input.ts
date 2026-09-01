@@ -426,7 +426,7 @@ export class Input implements Component, Focusable {
 		let cursorDisplay = this.cursor;
 		const totalWidth = visibleWidth(this.value);
 
-			// 全部内容放得下：无需滚动
+		// 全部内容放得下：无需滚动
 		if (totalWidth < availableWidth) {
 			// Everything fits (leave room for cursor at end)
 			visibleText = this.value;
@@ -445,7 +445,7 @@ export class Input implements Component, Focusable {
 				if (cursorCol < halfWidth) {
 					// Cursor near start
 					startCol = 0;
-				// 光标靠近终点：窗口贴住末端
+					// 光标靠近终点：窗口贴住末端
 				} else if (cursorCol > totalWidth - halfWidth) {
 					// Cursor near end
 					startCol = Math.max(0, totalWidth - scrollWidth);

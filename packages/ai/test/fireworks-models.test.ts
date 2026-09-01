@@ -1,24 +1,14 @@
-/**
- * 文件职责：验证 Fireworks 内置模型元数据、环境认证、Anthropic 兼容选项及实际请求头/工具字段。
- * 技术维度：使用 Vitest、本地 HTTP/SSE 服务器、TypeBox 工具和真实 Anthropic Messages 适配器。
- * 产品维度：确保 Fireworks 模型目录准确，并让会话亲和与工具缓存字段符合其兼容接口限制。
- * 逻辑维度：先检查静态模型注册和密钥，再构造本地请求捕获器，对比 Fireworks 与原生 Anthropic。
- * 关键边界：本地服务器只返回空 SSE；模型 baseUrl 会临时覆盖；环境变量必须在用例后恢复。
- * 新手阅读建议：先读静态目录用例理解 compat，再看 captureAnthropicRequest，最后比较两个提供商请求。
- */
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import { stream as streamAnthropic } from "../src/api/anthropic-messages.ts";
-import { getModel, getModels } from "../src/compat.ts";
+import { getModel, streamSimple } from "../src/compat.ts";
 import { findEnvKeys, getEnvApiKey } from "../src/env-api-keys.ts";
 import type { Context, Model, Tool } from "../src/types.ts";
 
-/** 测试前已有的 Fireworks API Key。 */
 const originalFireworksApiKey = process.env.FIREWORKS_API_KEY;
 
-/** 每个用例后恢复 Fireworks API Key。 */
 afterEach(() => {
 	if (originalFireworksApiKey === undefined) {
 		delete process.env.FIREWORKS_API_KEY;
@@ -27,10 +17,8 @@ afterEach(() => {
 	}
 });
 
-/** 覆盖 Fireworks 模型目录、认证和兼容能力元数据。 */
 describe("Fireworks models", () => {
 	it("registers the default Kimi K2.6 model via Anthropic-compatible Messages API", () => {
-		/** 默认 Kimi K2.6 模型。 */
 		const model = getModel("fireworks", "accounts/fireworks/models/kimi-k2p6");
 
 		expect(model).toBeDefined();
@@ -49,28 +37,88 @@ describe("Fireworks models", () => {
 		});
 	});
 
-	it("registers the Fire Pass turbo router model", () => {
-		/** Fire Pass turbo 路由模型。 */
-		const model = getModels("fireworks").find(
-			(candidate) => candidate.id.startsWith("accounts/fireworks/routers/") && candidate.id.endsWith("-turbo"),
-		);
-
-		expect(model).toBeDefined();
-		expect(model?.api).toBe("anthropic-messages");
-		expect(model?.baseUrl).toBe("https://api.fireworks.ai/inference");
-		expect(model?.input).toEqual(["text", "image"]);
-	});
-
 	it("aligns GLM 5.2 Fast with GLM 5.2's OpenAI-compatible config", () => {
-		/** 标准 GLM 5.2 模型。 */
 		const base = getModel("fireworks", "accounts/fireworks/models/glm-5p2");
-		/** GLM 5.2 Fast 路由模型。 */
 		const fast = getModel("fireworks", "accounts/fireworks/routers/glm-5p2-fast");
 
 		expect(fast.api).toBe(base.api);
 		expect(fast.baseUrl).toBe(base.baseUrl);
 		expect(fast.compat).toEqual(base.compat);
 		expect(fast.thinkingLevelMap).toEqual(base.thinkingLevelMap);
+	});
+
+	it.each(["accounts/fireworks/models/glm-5p2", "accounts/fireworks/routers/glm-5p2-fast"] as const)(
+		"omits unsupported long cache retention for %s",
+		async (modelId) => {
+			const model = getModel("fireworks", modelId);
+			let payload: Record<string, unknown> | undefined;
+			const response = streamSimple(
+				model,
+				{ messages: [{ role: "user", content: "test", timestamp: 0 }] },
+				{
+					apiKey: "test-fireworks-key",
+					cacheRetention: "long",
+					sessionId: "test-fireworks-session",
+					onPayload: (value) => {
+						payload = value as Record<string, unknown>;
+						throw new Error("payload captured");
+					},
+				},
+			);
+			await response.result();
+
+			expect(payload).toBeDefined();
+			expect(payload?.prompt_cache_retention).toBeUndefined();
+		},
+	);
+
+	it("routes Kimi K3 through the OpenAI-compatible API with native effort controls", async () => {
+		const base = getModel("fireworks", "accounts/fireworks/models/kimi-k3");
+		const fast = getModel("fireworks", "accounts/fireworks/routers/kimi-k3-fast");
+		const compat = {
+			supportsStore: false,
+			supportsDeveloperRole: false,
+			requiresReasoningContentOnAssistantMessages: true,
+			thinkingFormat: "openai",
+			deferredToolsMode: "kimi",
+			sendSessionAffinityHeaders: true,
+			supportsLongCacheRetention: false,
+		};
+		const thinkingLevelMap = {
+			off: null,
+			minimal: null,
+			low: "low",
+			medium: "medium",
+			high: "high",
+			xhigh: null,
+			max: "max",
+		};
+
+		expect(base.api).toBe("openai-completions");
+		expect(base.baseUrl).toBe("https://api.fireworks.ai/inference/v1");
+		expect(base.compat).toEqual(compat);
+		expect(base.thinkingLevelMap).toEqual(thinkingLevelMap);
+		expect(fast.api).toBe(base.api);
+		expect(fast.baseUrl).toBe(base.baseUrl);
+		expect(fast.compat).toEqual(compat);
+		expect(fast.thinkingLevelMap).toEqual(thinkingLevelMap);
+
+		let payload: Record<string, unknown> | undefined;
+		const response = streamSimple(
+			base,
+			{ messages: [{ role: "user", content: "test", timestamp: 0 }] },
+			{
+				apiKey: "test-fireworks-key",
+				reasoning: "max",
+				onPayload: (value) => {
+					payload = value as Record<string, unknown>;
+					throw new Error("payload captured");
+				},
+			},
+		);
+		await response.result();
+
+		expect(payload?.reasoning_effort).toBe("max");
 	});
 
 	it("resolves FIREWORKS_API_KEY from the environment", () => {
@@ -81,7 +129,6 @@ describe("Fireworks models", () => {
 	});
 
 	it("sets Fireworks-specific compat for session affinity and unsupported tool fields", () => {
-		/** 具有 Fireworks 特定兼容配置的 Kimi 模型。 */
 		const model = getModel("fireworks", "accounts/fireworks/models/kimi-k2p6");
 
 		expect(model.compat).toBeDefined();
@@ -93,22 +140,18 @@ describe("Fireworks models", () => {
 });
 
 // --- Integration tests for Fireworks Anthropic session affinity and tool compat ---
-// --- Fireworks Anthropic 会话亲和与工具兼容集成测试。---
 
-/** 本地服务器捕获的请求头与 JSON 正文。 */
 interface CapturedRequest {
 	headers: IncomingMessage["headers"];
 	body: Record<string, unknown>;
 }
 
-/** 请求转换使用的 lookup 工具。 */
 const tool: Tool = {
 	name: "lookup",
 	description: "Look up a value",
 	parameters: Type.Object({ value: Type.String() }),
 };
 
-/** Fireworks Anthropic 接口的固定兼容能力。 */
 const FIREWORKS_ANTHROPIC_COMPAT = {
 	sendSessionAffinityHeaders: true,
 	supportsEagerToolInputStreaming: false,
@@ -116,11 +159,6 @@ const FIREWORKS_ANTHROPIC_COMPAT = {
 	supportsLongCacheRetention: false,
 } satisfies NonNullable<Model<"anthropic-messages">["compat"]>;
 
-/**
- * 创建带可覆盖兼容配置的 Fireworks Anthropic 模型。
- * @param compat 会话亲和、工具字段与缓存能力。
- * @returns 本地捕获器可覆盖 baseUrl 的测试模型。
- */
 function createFireworksModel(
 	compat: Model<"anthropic-messages">["compat"] = FIREWORKS_ANTHROPIC_COMPAT,
 ): Model<"anthropic-messages"> {
@@ -130,7 +168,6 @@ function createFireworksModel(
 		api: "anthropic-messages",
 		provider: "fireworks",
 		baseUrl: "http://127.0.0.1:0", // overridden by captureAnthropicRequest
-		// captureAnthropicRequest 会把占位地址覆盖为真实本地端口。
 		reasoning: true,
 		input: ["text", "image"],
 		cost: { input: 0.95, output: 4, cacheRead: 0.16, cacheWrite: 0 },
@@ -140,10 +177,6 @@ function createFireworksModel(
 	};
 }
 
-/**
- * 创建用于对照的原生 Anthropic 模型。
- * @returns 本地捕获器可覆盖 baseUrl 的 Claude 模型。
- */
 function createAnthropicModel(): Model<"anthropic-messages"> {
 	return {
 		id: "claude-opus-4-8",
@@ -151,7 +184,6 @@ function createAnthropicModel(): Model<"anthropic-messages"> {
 		api: "anthropic-messages",
 		provider: "anthropic",
 		baseUrl: "http://127.0.0.1:0", // overridden by captureAnthropicRequest
-		// captureAnthropicRequest 会把占位地址覆盖为真实本地端口。
 		reasoning: true,
 		input: ["text"],
 		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
@@ -160,11 +192,6 @@ function createAnthropicModel(): Model<"anthropic-messages"> {
 	};
 }
 
-/**
- * 创建请求使用的最小用户上下文。
- * @param tools 工具列表，空列表时省略 tools 字段。
- * @returns 请求使用的统一 Context。
- */
 function createContext(tools: Tool[] = [tool]): Context {
 	return {
 		messages: [{ role: "user", content: "Use the tool", timestamp: Date.now() }],
@@ -172,47 +199,26 @@ function createContext(tools: Tool[] = [tool]): Context {
 	};
 }
 
-/**
- * 读取并解析 Node HTTP 请求正文。
- * @param request 正在接收的请求。
- * @returns JSON 对象正文。
- */
 async function readRequestBody(request: IncomingMessage): Promise<Record<string, unknown>> {
-	/** 按到达顺序收集的请求字节块。 */
 	const chunks: Buffer[] = [];
-	/** chunk 是 HTTP 请求正文的当前字节块；字符串块会统一转为 Buffer。 */
 	for await (const chunk of request) {
 		chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
 	}
 	return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
 }
 
-/**
- * 写入成功但不含事件的 SSE 响应。
- * @param response Node HTTP 响应。
- * @returns 无返回值。
- */
 function writeEmptySseResponse(response: ServerResponse): void {
 	response.writeHead(200, { "content-type": "text/event-stream" });
 	response.end();
 }
 
-/**
- * 启动本地服务器并捕获一次 Anthropic 适配器请求。
- * @param model 被测模型。
- * @param context 会话上下文。
- * @param options 会话 ID 与缓存保留覆盖。
- * @returns 捕获的请求头和正文。
- */
 async function captureAnthropicRequest(
 	model: Model<"anthropic-messages">,
 	context: Context,
 	options?: { sessionId?: string; cacheRetention?: string },
 ): Promise<CapturedRequest> {
-	/** 本地服务器收到的请求，发送前为空。 */
 	let capturedRequest: CapturedRequest | undefined;
 
-	/** 读取请求后返回空 SSE 的本地服务器。 */
 	const server = createServer(async (request, response) => {
 		capturedRequest = {
 			headers: request.headers,
@@ -222,23 +228,18 @@ async function captureAnthropicRequest(
 	});
 
 	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-	/** 服务器随机监听端口信息。 */
 	const address = server.address() as AddressInfo;
 
 	try {
 		// Override the model's baseUrl to point to the local test server
-		// 将模型 baseUrl 指向本地测试服务器。
-		/** 指向本地随机端口的模型副本。 */
 		const localModel = { ...model, baseUrl: `http://127.0.0.1:${address.port}` };
 
-		/** 发出捕获请求的 Anthropic 消息流。 */
 		const stream = streamAnthropic(localModel, context, {
 			apiKey: "test-key",
 			cacheRetention: (options?.cacheRetention as "none" | "short" | "long") ?? "short",
 			sessionId: options?.sessionId,
 		});
 
-		/** event 是本地适配器流当前事件；收到完成或错误终止事件后停止等待。 */
 		for await (const event of stream) {
 			if (event.type === "done" || event.type === "error") break;
 		}
@@ -254,13 +255,7 @@ async function captureAnthropicRequest(
 	return capturedRequest;
 }
 
-/**
- * 从请求正文安全取得工具数组。
- * @param body 捕获的请求正文。
- * @returns 工具对象数组，字段缺失时抛错。
- */
 function getTools(body: Record<string, unknown>): Record<string, unknown>[] {
-	/** 未缩窄的 tools 字段。 */
 	const tools = body.tools;
 	if (!Array.isArray(tools)) {
 		throw new Error("Expected tools in request body");
@@ -268,13 +263,10 @@ function getTools(body: Record<string, unknown>): Record<string, unknown>[] {
 	return tools as Record<string, unknown>[];
 }
 
-/** 对比 Fireworks 与原生 Anthropic 的会话亲和和工具兼容字段。 */
 describe("Fireworks Anthropic session affinity and tool compat", () => {
 	it("sends x-session-affinity header for Fireworks models", async () => {
-		/** model 是启用 Fireworks 兼容设置的测试模型。 */
 		const model = createFireworksModel();
 		// Need a real port, capture will assign one
-		/** request 是带会话 ID 的 Fireworks 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "fireworks-session-1",
 		});
@@ -283,9 +275,7 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits x-session-affinity header for native Anthropic models", async () => {
-		/** model 是原生 Anthropic 测试模型，不应采用 Fireworks 亲和头。 */
 		const model = createAnthropicModel();
-		/** request 是带会话 ID 的原生 Anthropic 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "anthropic-session-1",
 		});
@@ -294,9 +284,7 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits x-session-affinity header when cacheRetention is none", async () => {
-		/** model 是 Fireworks 测试模型，用于验证关闭缓存时禁用亲和头。 */
 		const model = createFireworksModel();
-		/** request 是 cacheRetention 为 none 时捕获的 Fireworks 请求。 */
 		const request = await captureAnthropicRequest(model, createContext(), {
 			sessionId: "fireworks-session-2",
 			cacheRetention: "none",
@@ -306,53 +294,38 @@ describe("Fireworks Anthropic session affinity and tool compat", () => {
 	});
 
 	it("omits cache_control on tools for Fireworks models", async () => {
-		/** model 是 Fireworks 测试模型，用于验证工具缓存字段兼容性。 */
 		const model = createFireworksModel();
-		/** request 是包含工具定义的 Fireworks 请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
-		/** tools 是请求正文中的工具定义数组。 */
 		const tools = getTools(request.body);
-		/** lastTool 是最后一个工具，短缓存标记通常附着在该项。 */
 		const lastTool = tools[tools.length - 1];
 		expect(lastTool.cache_control).toBeUndefined();
 	});
 
 	it("omits eager_input_streaming on tools for Fireworks models", async () => {
-		/** model 是 Fireworks 测试模型，用于检查不兼容的 eager_input_streaming 字段。 */
 		const model = createFireworksModel();
-		/** request 是包含多项工具定义的 Fireworks 请求。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
-		/** tools 是请求正文中的全部工具定义。 */
 		const tools = getTools(request.body);
-		/** t 是当前工具定义；每项都不应包含 eager_input_streaming。 */
 		for (const t of tools) {
 			expect(t.eager_input_streaming).toBeUndefined();
 		}
 	});
 
 	it("sends cache_control on tools for native Anthropic models", async () => {
-		/** model 是原生 Anthropic 测试模型，应保留工具缓存控制字段。 */
 		const model = createAnthropicModel();
-		/** request 是原生 Anthropic 工具请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
-		/** tools 是原生请求中的工具定义数组。 */
 		const tools = getTools(request.body);
-		/** lastTool 是应带 ephemeral 缓存控制的最后一项工具。 */
 		const lastTool = tools[tools.length - 1];
 		expect(lastTool.cache_control).toBeDefined();
 		expect((lastTool.cache_control as { type: string }).type).toBe("ephemeral");
 	});
 
 	it("sends eager_input_streaming on tools for native Anthropic models", async () => {
-		/** model 是原生 Anthropic 测试模型，应支持工具参数提前流式输入。 */
 		const model = createAnthropicModel();
-		/** request 是原生 Anthropic 工具请求捕获结果。 */
 		const request = await captureAnthropicRequest(model, createContext());
 
-		/** tools 是请求正文中的工具定义数组，用首项验证提前流式标记。 */
 		const tools = getTools(request.body);
 		expect(tools[0].eager_input_streaming).toBe(true);
 	});

@@ -1,70 +1,75 @@
 /**
- * 【文件职责】默认内存凭据存储：按供应商 ID 存储单条凭据，写操作经 Promise 链按供应商串行化；
- *              应用可注入持久化存储替代。
- * 【技术维度】Map 存储 + Promise 链互斥；modify 为唯一写路径（读-改-写）。
- * 【产品维度】提供开箱即用的凭据存储语义（登录/刷新互斥），持久化由应用自行接入。
- * 【逻辑维度】enqueue 按供应商串行排队 → read/list 直读 → modify 串行读改写 → delete 串行删除。
- * 【关键边界】modify 返回写后凭据（fn 返回 undefined 表示不改动并返回当前值）；
- *              内存数据不跨进程/重启持久化。
- * 【新手阅读建议】重点理解 enqueue 的串行化机制与 modify 的"返回当前值"语义。
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/credential-store` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `../utils/abort.ts`、`./types.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/credential-store` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `InMemoryCredentialStore`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `InMemoryCredentialStore` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
-import type { Credential, CredentialInfo, CredentialStore } from "./types.ts";
+import { operationSignal, raceWithAbortSignal } from "../utils/abort.ts";
+import type { AuthOperationOptions, Credential, CredentialInfo, CredentialStore } from "./types.ts";
 
 /**
  * Default in-memory credential store. Apps inject persistent stores.
  * Keyed by `Provider.id`, one credential per provider; see `CredentialStore`.
  * Writes are serialized per provider through a promise chain.
  */
-// 默认内存凭据存储（中文说明）：应用可注入持久化存储；
-// 按 Provider.id 键控、每供应商一条；写入经 Promise 链按供应商串行化。
 export class InMemoryCredentialStore implements CredentialStore {
-	// 凭据表：供应商 ID → 凭据
 	private credentials = new Map<string, Credential>();
-	// 各供应商的写链（串行化用）
 	private chains = new Map<string, Promise<unknown>>();
 
-	/** Serialize tasks per provider id. */
-	// 按供应商 ID 串行化任务（私有）：排队等前一任务完成
-	private enqueue<T>(providerId: string, task: () => Promise<T>): Promise<T> {
+	/** Serialize tasks per provider id without releasing the chain before active work settles. */
+	private enqueue<T>(providerId: string, task: () => Promise<T>, options?: AuthOperationOptions): Promise<T> {
+		const signal = operationSignal(options?.signal);
 		const previous = this.chains.get(providerId) ?? Promise.resolve();
-		const next = (async () => {
+		const queued = (async () => {
 			await previous.catch(() => {});
+			signal.throwIfAborted();
 			return task();
 		})();
-		this.chains.set(
-			providerId,
-			next.catch(() => {}),
-		);
-		return next;
+		const tail = queued.catch(() => {});
+		this.chains.set(providerId, tail);
+		void tail.then(() => {
+			if (this.chains.get(providerId) === tail) this.chains.delete(providerId);
+		});
+		return raceWithAbortSignal(queued, signal);
 	}
 
-	// 读取凭据
-	async read(providerId: string): Promise<Credential | undefined> {
+	async read(providerId: string, options?: AuthOperationOptions): Promise<Credential | undefined> {
+		options?.signal?.throwIfAborted();
 		return this.credentials.get(providerId);
 	}
 
-	// 列出凭据元信息（不含密钥）
-	async list(): Promise<readonly CredentialInfo[]> {
+	async list(options?: AuthOperationOptions): Promise<readonly CredentialInfo[]> {
+		options?.signal?.throwIfAborted();
 		return [...this.credentials].map(([providerId, credential]) => ({ providerId, type: credential.type }));
 	}
 
-	// 序列化读改写：fn 返回新凭据则写入；undefined 不改动；返回写后（或当前）凭据
 	modify(
 		providerId: string,
 		fn: (current: Credential | undefined) => Promise<Credential | undefined>,
+		options?: AuthOperationOptions,
 	): Promise<Credential | undefined> {
-		return this.enqueue(providerId, async () => {
-			const current = this.credentials.get(providerId);
-			const next = await fn(current);
-			if (next !== undefined) this.credentials.set(providerId, next);
-			return next ?? current;
-		});
+		return this.enqueue(
+			providerId,
+			async () => {
+				const current = this.credentials.get(providerId);
+				const next = await fn(current);
+				options?.signal?.throwIfAborted();
+				if (next !== undefined) this.credentials.set(providerId, next);
+				return next ?? current;
+			},
+			options,
+		);
 	}
 
-	// 删除凭据（与 modify 串行化）
-	delete(providerId: string): Promise<void> {
-		return this.enqueue(providerId, async () => {
-			this.credentials.delete(providerId);
-		});
+	delete(providerId: string, options?: AuthOperationOptions): Promise<void> {
+		return this.enqueue(
+			providerId,
+			async () => {
+				this.credentials.delete(providerId);
+			},
+			options,
+		);
 	}
 }

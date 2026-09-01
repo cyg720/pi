@@ -69,7 +69,7 @@ export function repairJson(json: string): string {
 		}
 
 		if (char === "\\") {
-		// 遇到反斜杠：检查后继是否构成合法转义
+			// 遇到反斜杠：检查后继是否构成合法转义
 			const nextChar = json[index + 1];
 			if (nextChar === undefined) {
 				repaired += "\\\\";
@@ -77,7 +77,7 @@ export function repairJson(json: string): string {
 			}
 
 			if (nextChar === "u") {
-			// \u 序列：校验 4 位十六进制
+				// \u 序列：校验 4 位十六进制
 				const unicodeDigits = json.slice(index + 2, index + 6);
 				if (/^[0-9a-fA-F]{4}$/.test(unicodeDigits)) {
 					repaired += `\\u${unicodeDigits}`;
@@ -87,7 +87,7 @@ export function repairJson(json: string): string {
 			}
 
 			if (VALID_JSON_ESCAPES.has(nextChar)) {
-			// 合法转义：保留
+				// 合法转义：保留
 				repaired += `\\${nextChar}`;
 				index += 1;
 				continue;
@@ -127,7 +127,7 @@ export function parseJsonWithRepair<T>(json: string): T {
 export function parseStreamingJson<T = Record<string, unknown>>(partialJson: string | undefined): T {
 	if (!partialJson || partialJson.trim() === "") {
 		return {} as T;
-	// 空输入返回空对象
+		// 空输入返回空对象
 	}
 
 	try {

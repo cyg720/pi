@@ -1,4 +1,12 @@
-import { execSync, spawn } from "child_process";
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `utils/clipboard` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `child_process`、`os`、`./clipboard-image.ts`、`./clipboard-native.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `utils/clipboard` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `readClipboardText`、`copyToClipboard`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `readClipboardText`、`copyToClipboard` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+import { type ExecFileSyncOptionsWithStringEncoding, execFileSync, execSync, spawn } from "child_process";
 import { platform } from "os";
 import { isWaylandSession } from "./clipboard-image.ts";
 import { clipboard } from "./clipboard-native.ts";
@@ -32,12 +40,32 @@ function emitOsc52(text: string): boolean {
 	return true;
 }
 
-/** Read plain text from the system clipboard, if native clipboard access is available. */
-/**
- * 【文件职责】剪贴板统一入口：读写文本/图片，自动选择实现与清理。
- * 【新手阅读建议】看主入口与清理注册。
- */
+type ClipboardReadResult = { ok: true; text: string | null } | { ok: false };
+
+const READ_CLIPBOARD_OPTIONS: ExecFileSyncOptionsWithStringEncoding = {
+	encoding: "utf8",
+	maxBuffer: 50 * 1024 * 1024,
+	timeout: 5000,
+};
+
+function readWaylandClipboardText(): ClipboardReadResult {
+	try {
+		const text = execFileSync("wl-paste", ["--no-newline", "--type", "text"], READ_CLIPBOARD_OPTIONS);
+		return { ok: true, text: text || null };
+	} catch {
+		return { ok: false };
+	}
+}
+
+/** Read plain text from the system clipboard. */
 export async function readClipboardText(): Promise<string | null> {
+	if (platform() === "linux" && isWaylandSession() && process.env.WAYLAND_DISPLAY) {
+		const result = readWaylandClipboardText();
+		if (result.ok) {
+			return result.text;
+		}
+	}
+
 	if (!clipboard) {
 		return null;
 	}

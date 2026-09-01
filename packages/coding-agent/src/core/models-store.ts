@@ -1,27 +1,52 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/models-store` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:path`、`@earendil-works/pi-ai`、`../config.ts`、`../utils/abort.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/models-store` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `InMemoryCodingAgentModelsStore`、`FileModelsStore`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `InMemoryCodingAgentModelsStore`、`FileModelsStore` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import { join } from "node:path";
-import type { ModelsStore, ModelsStoreEntry } from "@earendil-works/pi-ai";
+import type { ModelsStore, ModelsStoreEntry, ModelsStoreOperationOptions } from "@earendil-works/pi-ai";
 import { getAgentDir } from "../config.ts";
+import { raceWithAbortSignal } from "../utils/abort.ts";
+import { getFileRevision, normalizePath } from "../utils/paths.ts";
+import { stripBom } from "../utils/text.ts";
 import { type AuthStorageBackend, FileAuthStorageBackend } from "./auth-storage.ts";
 
 type StoredModels = Record<string, ModelsStoreEntry>;
 
-/**
- * 【文件职责】模型目录持久化存储：把动态模型目录缓存到磁盘（含元信息与过期策略）。
- * 【产品维度】离线启动可用缓存模型目录。
- * 【新手阅读建议】看读写/过期逻辑。
- */
+type ModelsFileReload = {
+	controller: AbortController;
+	promise: Promise<StoredModels>;
+	readers: number;
+};
+
+type ModelsFileReadState = {
+	data: StoredModels;
+	revision?: string;
+	reload?: ModelsFileReload;
+};
+
+// Optimize the common path without retaining an unbounded set of custom paths.
+let sharedModelsFileReadState: { path: string; readState: ModelsFileReadState } | undefined;
+
 export class InMemoryCodingAgentModelsStore implements ModelsStore {
 	private readonly entries = new Map<string, ModelsStoreEntry>();
 
-	async read(providerId: string): Promise<ModelsStoreEntry | undefined> {
-		return this.entries.get(providerId);
+	async read(providerId: string, options?: ModelsStoreOperationOptions): Promise<ModelsStoreEntry | undefined> {
+		options?.signal?.throwIfAborted();
+		const entry = this.entries.get(providerId);
+		return entry ? structuredClone(entry) : undefined;
 	}
 
-	async write(providerId: string, entry: ModelsStoreEntry): Promise<void> {
-		this.entries.set(providerId, entry);
+	async write(providerId: string, entry: ModelsStoreEntry, options?: ModelsStoreOperationOptions): Promise<void> {
+		options?.signal?.throwIfAborted();
+		this.entries.set(providerId, structuredClone(entry));
 	}
 
-	async delete(providerId: string): Promise<void> {
+	async delete(providerId: string, options?: ModelsStoreOperationOptions): Promise<void> {
+		options?.signal?.throwIfAborted();
 		this.entries.delete(providerId);
 	}
 }
@@ -29,34 +54,102 @@ export class InMemoryCodingAgentModelsStore implements ModelsStore {
 /** Locked JSON-backed storage for dynamically refreshed provider catalogs. */
 export class FileModelsStore implements ModelsStore {
 	private readonly storage: AuthStorageBackend;
+	private readonly path: string;
+	private readonly readState: ModelsFileReadState;
 
 	constructor(path: string = join(getAgentDir(), "models-store.json")) {
-		this.storage = new FileAuthStorageBackend(path);
+		this.path = normalizePath(path);
+		this.storage = new FileAuthStorageBackend(this.path);
+		this.readState =
+			sharedModelsFileReadState?.path === this.path ? sharedModelsFileReadState.readState : { data: {} };
+		if (!sharedModelsFileReadState) {
+			sharedModelsFileReadState = { path: this.path, readState: this.readState };
+		}
 	}
 
 	private parse(content: string | undefined): StoredModels {
-		return content ? (JSON.parse(content) as StoredModels) : {};
+		return content ? (JSON.parse(stripBom(content)) as StoredModels) : {};
 	}
 
-	async read(providerId: string): Promise<ModelsStoreEntry | undefined> {
-		return this.storage.withLock((content) => ({
-			result: structuredClone(this.parse(content)[providerId]),
-		}));
+	private updateReadState(readState: ModelsFileReadState, data: StoredModels, revision?: string): void {
+		readState.data = data;
+		readState.revision = revision;
 	}
 
-	async write(providerId: string, entry: ModelsStoreEntry): Promise<void> {
+	private reloadFromStorage(
+		readState: ModelsFileReadState,
+		options?: ModelsStoreOperationOptions,
+	): Promise<StoredModels> {
+		return this.storage.withLockAsync(async (content) => {
+			const data = this.parse(content);
+			this.updateReadState(readState, data, getFileRevision(this.path));
+			return { result: data };
+		}, options);
+	}
+
+	private async readLatest(
+		readState: ModelsFileReadState,
+		options?: ModelsStoreOperationOptions,
+	): Promise<StoredModels> {
+		options?.signal?.throwIfAborted();
+		const revision = getFileRevision(this.path);
+		if (revision !== undefined && revision === readState.revision) return readState.data;
+		if (!readState.reload) {
+			const controller = new AbortController();
+			const reload: ModelsFileReload = {
+				controller,
+				promise: this.reloadFromStorage(readState, { signal: controller.signal }),
+				readers: 0,
+			};
+			readState.reload = reload;
+			void reload.promise.then(
+				() => {
+					if (readState.reload === reload) readState.reload = undefined;
+				},
+				() => {
+					if (readState.reload === reload) readState.reload = undefined;
+				},
+			);
+		}
+
+		const reload = readState.reload;
+		reload.readers++;
+		try {
+			return await raceWithAbortSignal(reload.promise, options?.signal);
+		} finally {
+			reload.readers--;
+			if (reload.readers === 0 && readState.reload === reload) {
+				readState.reload = undefined;
+				reload.controller.abort();
+			}
+		}
+	}
+
+	async read(providerId: string, options?: ModelsStoreOperationOptions): Promise<ModelsStoreEntry | undefined> {
+		const entry = (await this.readLatest(this.readState, options))[providerId];
+		options?.signal?.throwIfAborted();
+		return entry ? structuredClone(entry) : undefined;
+	}
+
+	async write(providerId: string, entry: ModelsStoreEntry, options?: ModelsStoreOperationOptions): Promise<void> {
+		let latest: StoredModels | undefined;
 		await this.storage.withLockAsync(async (content) => {
 			const current = this.parse(content);
 			current[providerId] = structuredClone(entry);
+			latest = current;
 			return { result: undefined, next: JSON.stringify(current, null, 2) };
-		});
+		}, options);
+		if (latest) this.updateReadState(this.readState, latest);
 	}
 
-	async delete(providerId: string): Promise<void> {
+	async delete(providerId: string, options?: ModelsStoreOperationOptions): Promise<void> {
+		let latest: StoredModels | undefined;
 		await this.storage.withLockAsync(async (content) => {
 			const current = this.parse(content);
 			delete current[providerId];
+			latest = current;
 			return { result: undefined, next: JSON.stringify(current, null, 2) };
-		});
+		}, options);
+		if (latest) this.updateReadState(this.readState, latest);
 	}
 }

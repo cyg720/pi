@@ -1,4 +1,12 @@
 /**
+ * 【文件职责】实现 `@earendil-works/pi-agent-core` 包中的 `proxy` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `@earendil-works/pi-ai`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为通用智能体提供传输抽象、状态管理与附件能力；本文件负责其中与 `proxy` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `ProxyAssistantMessageEvent`、`ProxyStreamOptions`、`streamProxy`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `ProxyAssistantMessageEvent`、`ProxyStreamOptions`、`streamProxy` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+/**
  * Proxy stream function for apps that route LLM calls through a server.
  * The server manages auth and proxies requests to LLM providers.
  */
@@ -56,7 +64,7 @@ export type ProxyAssistantMessageEvent =
 	| { type: "thinking_end"; contentIndex: number; contentSignature?: string }
 	| { type: "toolcall_start"; contentIndex: number; id: string; toolName: string }
 	| { type: "toolcall_delta"; contentIndex: number; delta: string }
-	| { type: "toolcall_end"; contentIndex: number }
+	| { type: "toolcall_end"; contentIndex: number; toolCall: ToolCall }
 	| {
 			type: "done";
 			reason: Extract<StopReason, "stop" | "length" | "toolUse">;
@@ -73,6 +81,7 @@ export type ProxyAssistantMessageEvent =
 type ProxySerializableStreamOptions = Pick<
 	SimpleStreamOptions,
 	| "temperature"
+	| "samplingParams"
 	| "maxTokens"
 	| "reasoning"
 	| "cacheRetention"
@@ -119,6 +128,7 @@ export interface ProxyStreamOptions extends ProxySerializableStreamOptions {
 function buildProxyRequestOptions(options: ProxyStreamOptions): ProxySerializableStreamOptions {
 	return {
 		temperature: options.temperature,
+		samplingParams: options.samplingParams,
 		maxTokens: options.maxTokens,
 		reasoning: options.reasoning,
 		cacheRetention: options.cacheRetention,
@@ -142,7 +152,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 		/** 由精简代理事件逐步重建的助手消息。 */
 		const partial: AssistantMessage = {
 			role: "assistant",
-			stopReason: "stop",
+			stopReason: "pending",
 			content: [],
 			api: model.api,
 			provider: model.provider,
@@ -382,6 +392,7 @@ function processProxyEvent(
 			/** 指定索引处即将完成的工具调用内容块。 */
 			const content = partial.content[proxyEvent.contentIndex];
 			if (content?.type === "toolCall") {
+				Object.assign(content, proxyEvent.toolCall);
 				delete (content as any).partialJson;
 				return {
 					type: "toolcall_end",

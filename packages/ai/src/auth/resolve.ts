@@ -1,4 +1,14 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/resolve` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `../types.ts`、`../utils/abort.ts`、`../utils/diagnostics.ts`、`./types.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/resolve` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `ModelsErrorCode`、`AuthResolutionOverrides`、`ModelsError`、`resolveProviderAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `ModelsErrorCode`、`AuthResolutionOverrides`、`ModelsError`、`resolveProviderAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import type { ProviderEnv } from "../types.ts";
+import { operationSignal, raceWithAbortSignal } from "../utils/abort.ts";
+import { formatThrownValue } from "../utils/diagnostics.ts";
 import type {
 	ApiKeyAuth,
 	ApiKeyCredential,
@@ -11,39 +21,32 @@ import type {
 	ProviderAuth,
 } from "./types.ts";
 
-/**
- * 【文件职责】认证解析核心（resolveProviderAuth）：统一 Models 与 ImagesModels 的认证解析——
- *              已存凭据优先，否则查环境凭据源；OAuth 过期时加锁全局刷新。
- * 【技术维度】双层检查锁（乐观过期检查 + 锁内权威检查）；凭据存储 modify 串行化；
- *              ModelsError 统一错误分类。
- * 【产品维度】保证登录/刷新/请求认证的一致性与并发安全，错误码可程序化处理。
- * 【逻辑维度】overrides 优先（显式 apiKey/env）→ 已存凭据（OAuth 刷新 / apiKey 解析）→
- *              环境凭据源兜底。
- * 【关键边界】已存凭据拥有供应商认证（无静默环境回退）；刷新失败抛 ModelsError(oauth)；
- *              凭据类型无对应处理器时返回 undefined。
- * 【新手阅读建议】先读 ModelsError 与 resolveProviderAuth 主流程 → 再精读
- *              resolveStoredOAuth 的双层检查锁。
- */
-// 模型系统错误码：模型来源/校验/供应商/流/认证/OAuth
 export type ModelsErrorCode = "model_source" | "model_validation" | "provider" | "stream" | "auth" | "oauth";
 
-/** 认证解析覆盖项（中文说明）：显式密钥与环境变量覆盖。 */
 export interface AuthResolutionOverrides {
 	apiKey?: string;
-	// 显式 API 密钥
 	env?: ProviderEnv;
-	// 显式环境变量覆盖
+	/** Require this much remaining OAuth-token validity; defaults to five minutes. */
+	minOAuthValidityMs?: number;
+	signal?: AbortSignal;
 }
 
-/** 模型系统统一错误（中文说明）：code 分类 + 可选 cause。 */
 export class ModelsError extends Error {
 	readonly code: ModelsErrorCode;
 
 	constructor(code: ModelsErrorCode, message: string, options?: { cause?: unknown }) {
-		super(message, options);
+		super(withCauseDetail(message, options?.cause), options);
 		this.name = "ModelsError";
 		this.code = code;
 	}
+}
+
+/** Callers surface `error.message` only, so keep the underlying reason in it. */
+function withCauseDetail(message: string, cause: unknown): string {
+	if (cause === undefined || cause === null) return message;
+	const detail = formatThrownValue(cause).trim();
+	if (!detail || message.includes(detail)) return message;
+	return `${message}: ${detail}`;
 }
 
 /**
@@ -52,47 +55,68 @@ export class ModelsError extends Error {
  * nothing is stored. No silent env fallback after a failed refresh or for a
  * credential type without a matching handler.
  */
-/**
- * 解析供应商认证（公开）：显式 apiKey 覆盖优先；否则读已存凭据（OAuth 需刷新、
- * apiKey 走 resolve）；无凭据时查环境凭据源（env 变量/AWS 配置/ADC）。
- * 已存凭据拥有供应商：无静默环境回退。
- */
-export async function resolveProviderAuth(
+export function resolveProviderAuth(
 	provider: { id: string; auth: ProviderAuth },
 	credentials: CredentialStore,
 	authContext: AuthContext,
 	overrides?: AuthResolutionOverrides,
 ): Promise<AuthResult | undefined> {
+	const signal = operationSignal(overrides?.signal);
+	return raceWithAbortSignal(
+		resolveProviderAuthWithSignal(provider, credentials, authContext, overrides, signal),
+		signal,
+	);
+}
+
+async function resolveProviderAuthWithSignal(
+	provider: { id: string; auth: ProviderAuth },
+	credentials: CredentialStore,
+	authContext: AuthContext,
+	overrides: AuthResolutionOverrides | undefined,
+	signal: AbortSignal,
+): Promise<AuthResult | undefined> {
+	signal.throwIfAborted();
 	const requestAuthContext = overrides?.env ? overlayEnvAuthContext(authContext, overrides.env) : authContext;
 
 	if (overrides?.apiKey !== undefined && provider.auth.apiKey) {
-		return resolveApiKey(requestAuthContext, provider.auth.apiKey, provider.id, {
-			type: "api_key",
-			key: overrides.apiKey,
-			env: overrides.env,
-		});
+		return resolveApiKey(
+			requestAuthContext,
+			provider.auth.apiKey,
+			provider.id,
+			{
+				type: "api_key",
+				key: overrides.apiKey,
+				env: overrides.env,
+			},
+			signal,
+		);
 	}
 
-	const stored = await readCredential(credentials, provider.id);
+	const stored = await readCredential(credentials, provider.id, signal);
 	if (stored) {
 		if (stored.type === "oauth" && provider.auth.oauth) {
-			return resolveStoredOAuth(credentials, provider.id, provider.auth.oauth, stored);
+			return resolveStoredOAuth(
+				credentials,
+				provider.id,
+				provider.auth.oauth,
+				stored,
+				signal,
+				overrides?.minOAuthValidityMs,
+			);
 		}
 		if (stored.type === "api_key" && provider.auth.apiKey) {
 			const credential = overrides?.env ? { ...stored, env: { ...stored.env, ...overrides.env } } : stored;
-			return resolveApiKey(requestAuthContext, provider.auth.apiKey, provider.id, credential);
+			return resolveApiKey(requestAuthContext, provider.auth.apiKey, provider.id, credential, signal);
 		}
 		return undefined;
 	}
 
 	// Ambient (env vars, AWS profiles, ADC files).
-	// 环境凭据源兜底（环境变量/AWS 配置/ADC 文件）
 	return provider.auth.apiKey
-		? resolveApiKey(requestAuthContext, provider.auth.apiKey, provider.id, undefined)
+		? resolveApiKey(requestAuthContext, provider.auth.apiKey, provider.id, undefined, signal)
 		: undefined;
 }
 
-// 叠加环境覆盖的认证上下文（私有）：env 覆盖优先，fileExists 透传
 function overlayEnvAuthContext(base: AuthContext, env: ProviderEnv): AuthContext {
 	return {
 		env: async (name) => env[name] || (await base.env(name)),
@@ -100,44 +124,59 @@ function overlayEnvAuthContext(base: AuthContext, env: ProviderEnv): AuthContext
 	};
 }
 
+const DEFAULT_OAUTH_MINIMUM_VALIDITY_MS = 5 * 60 * 1000;
+const DEFAULT_OAUTH_REFRESH_TIMEOUT_MS = 15_000;
+
 /**
- * OAuth resolution with double-checked locking (same pattern as today's
- * AuthStorage): valid tokens cost zero locks; expired tokens lock, re-check
- * expiry under the lock, refresh once globally, and persist the rotated
- * credential before release.
- */
-/**
- * OAuth 解析（私有）：有效令牌零锁；过期时加锁、锁内复检、全局仅刷新一次并持久化后释放。
- * 登出竞态（当前非 oauth）与并发刷新均安全。
+ * OAuth resolution with double-checked locking: tokens with less than five
+ * minutes remaining lock, re-check expiry under the lock, refresh once
+ * globally, and persist the rotated credential before release.
  */
 async function resolveStoredOAuth(
 	credentials: CredentialStore,
 	providerId: string,
 	oauth: OAuthAuth,
 	stored: OAuthCredential,
+	signal: AbortSignal,
+	minOAuthValidityMs?: number,
 ): Promise<AuthResult | undefined> {
+	const minimumValidityMs = Math.max(DEFAULT_OAUTH_MINIMUM_VALIDITY_MS, minOAuthValidityMs ?? 0);
+	const expiresSoon = (credential: OAuthCredential) => Date.now() + minimumValidityMs >= credential.expires;
 	let credential = stored;
 
-	if (Date.now() >= credential.expires) {
+	if (expiresSoon(credential)) {
 		// Optimistic check said expired; the authoritative check runs under the lock.
-		// 乐观检查认为已过期；权威检查在锁内执行
 		let post: Credential | undefined;
 		try {
-			post = await credentials.modify(providerId, async (current) => {
-				if (current?.type !== "oauth") return undefined; // logged out meanwhile
-				if (Date.now() < current.expires) return undefined; // another process/request refreshed
-				try {
-					return await oauth.refresh(current);
-				} catch (error) {
-					throw new ModelsError("oauth", `OAuth refresh failed for ${providerId}`, { cause: error });
-				}
-			});
+			post = await credentials.modify(
+				providerId,
+				async (current) => {
+					if (current?.type !== "oauth") return undefined; // logged out meanwhile
+					if (!expiresSoon(current)) return undefined; // another process/request refreshed
+					try {
+						const refreshSignal = AbortSignal.any([
+							signal,
+							AbortSignal.timeout(DEFAULT_OAUTH_REFRESH_TIMEOUT_MS),
+						]);
+						return await oauth.refresh(current, refreshSignal);
+					} catch (error) {
+						throw new ModelsError("oauth", `OAuth refresh failed for ${providerId}`, { cause: error });
+					}
+				},
+				{ signal },
+			);
 		} catch (error) {
 			if (error instanceof ModelsError) throw error;
 			throw new ModelsError("auth", `Credential store modify failed for ${providerId}`, { cause: error });
 		}
 		if (post?.type !== "oauth") return undefined; // logged out meanwhile
 		credential = post;
+		// The normal five-minute window triggers a refresh but does not impose a
+		// provider contract. Explicit callers (such as bearer-token export) do
+		// require the requested minimum after the refresh.
+		if (minOAuthValidityMs !== undefined && expiresSoon(credential)) {
+			throw new ModelsError("oauth", `OAuth refresh returned a token that expires too soon for ${providerId}`);
+		}
 	}
 
 	try {
@@ -147,24 +186,27 @@ async function resolveStoredOAuth(
 	}
 }
 
-// apiKey 解析（私有）：委托认证方法的 resolve，失败包装为 ModelsError(auth)
 async function resolveApiKey(
 	authContext: AuthContext,
 	apiKey: ApiKeyAuth,
 	providerId: string,
 	credential: ApiKeyCredential | undefined,
+	signal: AbortSignal,
 ): Promise<AuthResult | undefined> {
 	try {
-		return await apiKey.resolve({ ctx: authContext, credential });
+		return await apiKey.resolve({ ctx: authContext, credential, signal });
 	} catch (error) {
 		throw new ModelsError("auth", `API key auth failed for provider ${providerId}`, { cause: error });
 	}
 }
 
-// 读取凭据（私有）：存储失败包装为 ModelsError(auth)
-async function readCredential(credentials: CredentialStore, providerId: string): Promise<Credential | undefined> {
+async function readCredential(
+	credentials: CredentialStore,
+	providerId: string,
+	signal: AbortSignal,
+): Promise<Credential | undefined> {
 	try {
-		return await credentials.read(providerId);
+		return await credentials.read(providerId, { signal });
 	} catch (error) {
 		throw new ModelsError("auth", `Credential store read failed for ${providerId}`, { cause: error });
 	}

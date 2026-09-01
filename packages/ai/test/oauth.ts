@@ -110,7 +110,9 @@ export async function resolveApiKey(provider: string): Promise<string | undefine
 		// credential 保存当前或刷新后的 OAuth 凭据。
 		let credential = entry;
 		try {
-			if (Date.now() >= credential.expires) credential = await oauth.refresh(credential);
+			if (Date.now() >= credential.expires) {
+				credential = await oauth.refresh(credential, new AbortController().signal);
+			}
 		} catch (error) {
 			// error 是刷新过程中抛出的未知错误，仅记录后返回无密钥结果。
 			console.log(JSON.stringify(error));

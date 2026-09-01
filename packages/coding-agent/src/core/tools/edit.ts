@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/tools/edit` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `@earendil-works/pi-agent-core`、`@earendil-works/pi-tui`、`fs`、`fs/promises`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/tools/edit` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `editToolSystemPromptContribution`、`EditToolInput`、`EditToolDetails`、`EditOperations`、`EditToolOptions`、`createEditToolDefinition`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `editToolSystemPromptContribution`、`EditToolInput`、`EditToolDetails`、`EditOperations`、`EditToolOptions`、`createEditToolDefinition` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { Box, Container, Spacer, Text } from "@earendil-works/pi-tui";
 import { constants } from "fs";
@@ -5,7 +13,9 @@ import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } 
 import { type Static, Type } from "typebox";
 import { renderDiff } from "../../modes/interactive/components/diff.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
-import type { ToolDefinition } from "../extensions/types.ts";
+import { splitBom } from "../../utils/text.ts";
+import { getExperimentalToolSampling } from "../experimental.ts";
+import type { ExtensionContext, ToolDefinition } from "../extensions/types.ts";
 import {
 	applyEditsToNormalizedContent,
 	computeEditsDiff,
@@ -17,7 +27,6 @@ import {
 	generateUnifiedPatch,
 	normalizeToLF,
 	restoreLineEndings,
-	stripBom,
 } from "./edit-diff.ts";
 import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
@@ -52,15 +61,32 @@ const editSchema = Type.Object(
 	{},
 );
 
-/**
- * 【文件职责】edit 工具：精确文本替换（与 agent 包 createEditTool 对齐）。
- * 【新手阅读建议】对照 agent 包同名文件阅读。
- */
+export const editToolSystemPromptContribution = {
+	snippet: "Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
+	guidelines: [
+		"Use edit for precise changes (edits[].oldText must match exactly)",
+		"When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
+		"Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
+		"Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
+	],
+} as const;
+
 export type EditToolInput = Static<typeof editSchema>;
 type LegacyEditToolInput = EditToolInput & {
 	oldText?: unknown;
 	newText?: unknown;
 };
+
+type SingleEditInput = { oldText: string; newText: string };
+
+function isSingleEditInput(value: unknown): value is SingleEditInput {
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
+		return false;
+	}
+
+	const edit = value as Record<string, unknown>;
+	return typeof edit.oldText === "string" && typeof edit.newText === "string";
+}
 
 export interface EditToolDetails {
 	/** Display-oriented diff of the changes made */
@@ -102,12 +128,19 @@ function prepareEditArguments(input: unknown): EditToolInput {
 
 	const args = input as Record<string, unknown>;
 
-	// Some models (Opus 4.6, GLM-5.1) send edits as a JSON string instead of an array
+	// Some models (Opus 4.6, GLM-5.1) send edits as a JSON string instead of an array.
+	// Others send a single edit object instead of a one-element edits array.
 	if (typeof args.edits === "string") {
 		try {
 			const parsed = JSON.parse(args.edits);
-			if (Array.isArray(parsed)) args.edits = parsed;
+			if (Array.isArray(parsed)) {
+				args.edits = parsed;
+			} else if (isSingleEditInput(parsed)) {
+				args.edits = [parsed];
+			}
 		} catch {}
+	} else if (isSingleEditInput(args.edits)) {
+		args.edits = [args.edits];
 	}
 
 	const legacy = args as LegacyEditToolInput;
@@ -298,20 +331,15 @@ export function createEditToolDefinition(
 		label: "edit",
 		description:
 			"Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.",
-		promptSnippet:
-			"Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
-		promptGuidelines: [
-			"Use edit for precise changes (edits[].oldText must match exactly)",
-			"When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
-			"Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
-			"Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
-		],
+		promptSnippet: editToolSystemPromptContribution.snippet,
+		promptGuidelines: [...editToolSystemPromptContribution.guidelines],
 		parameters: editSchema,
+		constrainedSampling: getExperimentalToolSampling(),
 		renderShell: "self",
 		prepareArguments: prepareEditArguments,
-		async execute(_toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, _ctx?) {
+		async execute(_toolCallId, input: EditToolInput, signal?: AbortSignal, _onUpdate?, ctx?: ExtensionContext) {
 			const { path, edits } = validateEditInput(input);
-			const absolutePath = resolveToCwd(path, cwd);
+			const absolutePath = resolveToCwd(path, ctx?.cwd || cwd);
 
 			return withFileMutationQueue(absolutePath, async () => {
 				// Do not reject from an abort event listener here: that would release the
@@ -341,7 +369,7 @@ export function createEditToolDefinition(
 				throwIfAborted();
 
 				// Strip BOM before matching. The model will not include an invisible BOM in oldText.
-				const { bom, text: content } = stripBom(rawContent);
+				const { bom, text: content } = splitBom(rawContent);
 				const originalEnding = detectLineEnding(content);
 				const normalizedContent = normalizeToLF(content);
 				const { baseContent, newContent } = applyEditsToNormalizedContent(normalizedContent, edits, path);

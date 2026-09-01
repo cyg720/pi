@@ -27,7 +27,7 @@ if (typeof process !== "undefined" && (process.versions?.node || process.version
 }
 
 import { normalizeRadiusGatewayUrl } from "../../providers/radius-config.ts";
-import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
+import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
 import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
 import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
 import { generatePKCE } from "./pkce.ts";
@@ -55,9 +55,10 @@ type DeviceAuthorizationResponse = {
 	interval?: number;
 };
 
-async function loadRadiusOAuthDiscovery(gateway: string): Promise<RadiusOAuthDiscovery> {
+async function loadRadiusOAuthDiscovery(gateway: string, signal: AbortSignal): Promise<RadiusOAuthDiscovery> {
 	const response = await fetch(new URL("/v1/oauth", gateway), {
 		headers: { accept: "application/json" },
+		signal,
 	});
 
 	if (!response.ok) {
@@ -110,7 +111,7 @@ async function readOAuthResponseError(response: Response, message: string): Prom
 async function requestOAuthToken(
 	gateway: string,
 	body: URLSearchParams,
-	signal?: AbortSignal,
+	signal: AbortSignal,
 ): Promise<OAuthCredential> {
 	let response: Response;
 	try {
@@ -121,7 +122,7 @@ async function requestOAuthToken(
 			signal,
 		});
 	} catch (error) {
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			throw new Error("Login cancelled");
 		}
 		throw error;
@@ -152,10 +153,7 @@ type OAuthCallbackServer = {
 	close(): void;
 };
 
-function startOAuthCallbackServer(
-	expectedState: string,
-	signal: AbortSignal | undefined,
-): Promise<OAuthCallbackServer> {
+function startOAuthCallbackServer(expectedState: string, signal: AbortSignal): Promise<OAuthCallbackServer> {
 	if (!_http) {
 		throw new Error("Radius OAuth is only available in Node.js environments");
 	}
@@ -170,11 +168,11 @@ function startOAuthCallbackServer(
 			return;
 		}
 		settled = true;
-		signal?.removeEventListener("abort", onAbort);
+		signal.removeEventListener("abort", onAbort);
 		settle(code);
 	};
 	const onAbort = () => finish(null);
-	signal?.addEventListener("abort", onAbort, { once: true });
+	signal.addEventListener("abort", onAbort, { once: true });
 
 	const sendPage = (response: import("node:http").ServerResponse, status: number, html: string) => {
 		response.statusCode = status;
@@ -231,7 +229,7 @@ function startOAuthCallbackServer(
 async function loginWithBrowser(
 	gateway: string,
 	authorizationEndpoint: string,
-	interaction: AuthInteraction,
+	interaction: ProviderAuthInteraction,
 ): Promise<OAuthCredential> {
 	const { verifier, challenge } = await generatePKCE();
 	const state = crypto.randomUUID();
@@ -258,7 +256,7 @@ async function loginWithBrowser(
 	try {
 		const code = await callbackServer.waitForCode();
 		if (!code) {
-			if (interaction.signal?.aborted) {
+			if (interaction.signal.aborted) {
 				throw new Error("Login cancelled");
 			}
 			throw new Error("OAuth callback did not complete.");
@@ -279,10 +277,7 @@ async function loginWithBrowser(
 	}
 }
 
-async function requestDeviceAuthorization(
-	gateway: string,
-	signal: AbortSignal | undefined,
-): Promise<DeviceAuthorizationResponse> {
+async function requestDeviceAuthorization(gateway: string, signal: AbortSignal): Promise<DeviceAuthorizationResponse> {
 	let response: Response;
 	try {
 		response = await fetch(new URL("/v1/oauth/device", gateway), {
@@ -292,7 +287,7 @@ async function requestDeviceAuthorization(
 			signal,
 		});
 	} catch (error) {
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			throw new Error("Login cancelled");
 		}
 		throw error;
@@ -316,7 +311,7 @@ async function requestDeviceAuthorization(
 	};
 }
 
-async function loginWithDeviceCode(gateway: string, interaction: AuthInteraction): Promise<OAuthCredential> {
+async function loginWithDeviceCode(gateway: string, interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const device = await requestDeviceAuthorization(gateway, interaction.signal);
 	interaction.notify({
 		type: "device_code",
@@ -391,7 +386,7 @@ export function createRadiusOAuth(options: RadiusOAuthOptions): OAuthAuth {
 				return loginWithDeviceCode(gateway, interaction);
 			}
 			if (loginMethod === LOGIN_METHOD_BROWSER) {
-				const discovery = await loadRadiusOAuthDiscovery(gateway);
+				const discovery = await loadRadiusOAuthDiscovery(gateway, interaction.signal);
 				return loginWithBrowser(gateway, discovery.authorizationEndpoint, interaction);
 			}
 			throw new Error(`Unknown ${options.name} sign-in method: ${loginMethod}`);

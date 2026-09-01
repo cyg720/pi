@@ -1,18 +1,140 @@
-/**
- * 文件职责：验证交互模式处理压缩完成事件和刷新压缩期间排队消息的行为。
- * 技术维度：使用 Vitest、Reflect 访问私有原型方法和最小 this 模拟对象隔离界面逻辑。
- * 产品维度：保证压缩后聊天区显示摘要，并让用户在压缩期间输入的转向消息正确续接。
- * 逻辑维度：第一例调用 handleEvent 重建聊天，第二例调用 flushCompactionQueue 检查 steer 分派。
- * 关键边界：测试依赖两个内部方法及其最小上下文形状；不启动真实 TUI 或模型请求。
- * 新手阅读建议：先看 fakeThis 中哪些方法被断言，再对照 Reflect.get 的事件和选项类型。
- */
+import type { Usage } from "@earendil-works/pi-ai";
+import { Container } from "@earendil-works/pi-tui";
 import { describe, expect, test, vi } from "vitest";
+import type { SessionEntry } from "../src/core/session-manager.ts";
 import { InteractiveMode } from "../src/modes/interactive/interactive-mode.ts";
+import { initTheme } from "../src/modes/interactive/theme/theme.ts";
+import { stripAnsi } from "../src/utils/ansi.ts";
 
 describe("InteractiveMode compaction events", () => {
-	// 验证压缩结束会重建聊天并在底部追加合成摘要；无参数，无返回值。
-	test("rebuilds chat and appends a synthetic compaction summary at the bottom", async () => {
-		// fakeThis 是 handleEvent 压缩分支所需的最小交互模式上下文。
+	test("uses the cache miss notice setting for compaction and branch summary costs", () => {
+		const usage: Usage = {
+			input: 10,
+			output: 20,
+			cacheRead: 30,
+			cacheWrite: 40,
+			totalTokens: 100,
+			cost: { input: 0.01, output: 0.02, cacheRead: 0.03, cacheWrite: 0.065, total: 0.125 },
+		};
+		const addCompactionCostNotice = Reflect.get(InteractiveMode.prototype, "addCompactionCostNotice") as (
+			this: { chatContainer: Container; settingsManager: { getShowCacheMissNotices(): boolean } },
+			notice: {
+				type: "compaction_cost";
+				kind: "compaction" | "branch_summary";
+				usage: Usage;
+			},
+		) => void;
+
+		initTheme("dark");
+		const enabled = {
+			chatContainer: new Container(),
+			settingsManager: { getShowCacheMissNotices: () => true },
+		};
+		addCompactionCostNotice.call(enabled, { type: "compaction_cost", kind: "compaction", usage });
+		addCompactionCostNotice.call(enabled, {
+			type: "compaction_cost",
+			kind: "branch_summary",
+			usage,
+		});
+		const output = stripAnsi(enabled.chatContainer.render(120).join("\n"));
+		expect(output).toContain("Compaction: 100 tokens billed (~$0.13)");
+		expect(output).toContain("Branch summary: 100 tokens billed (~$0.13)");
+
+		const disabled = {
+			chatContainer: new Container(),
+			settingsManager: { getShowCacheMissNotices: () => false },
+		};
+		addCompactionCostNotice.call(disabled, { type: "compaction_cost", kind: "compaction", usage });
+		expect(disabled.chatContainer.children).toHaveLength(0);
+	});
+
+	test("renders each compaction cost after its summary", () => {
+		const currentUsage: Usage = {
+			input: 10,
+			output: 20,
+			cacheRead: 30,
+			cacheWrite: 40,
+			totalTokens: 100,
+			cost: { input: 0.01, output: 0.02, cacheRead: 0.03, cacheWrite: 0.04, total: 0.1 },
+		};
+		const previousUsage: Usage = {
+			input: 1,
+			output: 2,
+			cacheRead: 3,
+			cacheWrite: 4,
+			totalTokens: 10,
+			cost: { input: 0.001, output: 0.002, cacheRead: 0.003, cacheWrite: 0.004, total: 0.01 },
+		};
+		const entries: SessionEntry[] = [
+			{
+				type: "compaction",
+				id: "current",
+				parentId: "previous",
+				timestamp: "2025-01-02T00:00:00Z",
+				summary: "current summary",
+				firstKeptEntryId: "kept",
+				tokensBefore: 200,
+				usage: currentUsage,
+			},
+			{
+				type: "compaction",
+				id: "previous",
+				parentId: null,
+				timestamp: "2025-01-01T00:00:00Z",
+				summary: "previous summary",
+				firstKeptEntryId: "kept",
+				tokensBefore: 100,
+				usage: previousUsage,
+			},
+		];
+		const fakeThis = { renderSessionItems: vi.fn() };
+		const renderSessionEntries = Reflect.get(InteractiveMode.prototype, "renderSessionEntries") as (
+			this: typeof fakeThis,
+			entries: SessionEntry[],
+		) => void;
+
+		renderSessionEntries.call(fakeThis, entries);
+
+		expect(fakeThis.renderSessionItems).toHaveBeenCalledWith(
+			[
+				expect.objectContaining({ role: "compactionSummary", summary: "current summary" }),
+				{ type: "compaction_cost", kind: "compaction", usage: currentUsage },
+				expect.objectContaining({ role: "compactionSummary", summary: "previous summary" }),
+				{ type: "compaction_cost", kind: "compaction", usage: previousUsage },
+			],
+			{},
+		);
+	});
+
+	test("renders retained entries and appends the latest summary cost at the bottom", async () => {
+		const usage: Usage = {
+			input: 10,
+			output: 20,
+			cacheRead: 30,
+			cacheWrite: 40,
+			totalTokens: 100,
+			cost: { input: 0.01, output: 0.02, cacheRead: 0.03, cacheWrite: 0.065, total: 0.125 },
+		};
+		const latestCompaction: SessionEntry = {
+			type: "compaction",
+			id: "latest",
+			parentId: "previous",
+			timestamp: "2025-01-02T00:00:00Z",
+			summary: "summary",
+			firstKeptEntryId: "kept",
+			tokensBefore: 123,
+			usage,
+		};
+		const previousCompaction: SessionEntry = {
+			type: "compaction",
+			id: "previous",
+			parentId: null,
+			timestamp: "2025-01-01T00:00:00Z",
+			summary: "previous summary",
+			firstKeptEntryId: "kept",
+			tokensBefore: 100,
+			usage,
+		};
 		const fakeThis = {
 			isInitialized: true,
 			footer: { invalidate: vi.fn() },
@@ -21,8 +143,10 @@ describe("InteractiveMode compaction events", () => {
 			defaultEditor: {},
 			statusContainer: { clear: vi.fn() },
 			chatContainer: { clear: vi.fn() },
-			rebuildChatFromMessages: vi.fn(),
+			sessionManager: { buildContextEntries: vi.fn().mockReturnValue([latestCompaction, previousCompaction]) },
+			renderSessionEntries: vi.fn(),
 			addMessageToChat: vi.fn(),
+			addCompactionCostNotice: vi.fn(),
 			showError: vi.fn(),
 			showStatus: vi.fn(),
 			clearStatusIndicator: vi.fn(),
@@ -31,13 +155,12 @@ describe("InteractiveMode compaction events", () => {
 			ui: { requestRender: vi.fn(), terminal: { setProgress: vi.fn() } },
 		};
 
-		// handleEvent 是从原型取得并按 fakeThis 事件形状声明的私有异步方法。
 		const handleEvent = Reflect.get(InteractiveMode.prototype, "handleEvent") as (
 			this: typeof fakeThis,
 			event: {
 				type: "compaction_end";
 				reason: "manual" | "threshold" | "overflow";
-				result: { tokensBefore: number; summary: string } | undefined;
+				result: { tokensBefore: number; summary: string; usage?: Usage } | undefined;
 				aborted: boolean;
 				willRetry: boolean;
 				errorMessage?: string;
@@ -50,13 +173,14 @@ describe("InteractiveMode compaction events", () => {
 			result: {
 				tokensBefore: 123,
 				summary: "summary",
+				usage,
 			},
 			aborted: false,
 			willRetry: false,
 		});
 
 		expect(fakeThis.chatContainer.clear).toHaveBeenCalledTimes(1);
-		expect(fakeThis.rebuildChatFromMessages).toHaveBeenCalledTimes(1);
+		expect(fakeThis.renderSessionEntries).toHaveBeenCalledWith([previousCompaction]);
 		expect(fakeThis.addMessageToChat).toHaveBeenCalledTimes(1);
 		expect(fakeThis.addMessageToChat).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -65,12 +189,46 @@ describe("InteractiveMode compaction events", () => {
 				summary: "summary",
 			}),
 		);
+		expect(fakeThis.addCompactionCostNotice).toHaveBeenCalledWith({
+			type: "compaction_cost",
+			kind: "compaction",
+			usage,
+		});
 		expect(fakeThis.flushCompactionQueue).toHaveBeenCalledWith({ willRetry: false });
 	});
 
-	// 验证活动代理运行中刷新 steer 消息会保留转向语义；无参数，无返回值。
+	test("updates the working state when the same agent run resumes after compaction", async () => {
+		const fakeThis = {
+			isInitialized: true,
+			footer: { invalidate: vi.fn() },
+			activeStatusIndicator: undefined,
+			workingVisible: true,
+			showWorkingStatusIndicator: vi.fn(),
+			clearStatusIndicator: vi.fn(),
+			settingsManager: { getShowTerminalProgress: () => true },
+			ui: { requestRender: vi.fn(), terminal: { setProgress: vi.fn() } },
+		};
+		const handleEvent = Reflect.get(InteractiveMode.prototype, "handleEvent") as (
+			this: typeof fakeThis,
+			event: { type: "turn_start" },
+		) => Promise<void>;
+
+		await handleEvent.call(fakeThis, { type: "turn_start" });
+
+		expect(fakeThis.ui.terminal.setProgress).toHaveBeenCalledWith(true);
+		expect(fakeThis.showWorkingStatusIndicator).toHaveBeenCalledTimes(1);
+		expect(fakeThis.clearStatusIndicator).not.toHaveBeenCalled();
+		expect(fakeThis.ui.requestRender).toHaveBeenCalledTimes(1);
+
+		fakeThis.workingVisible = false;
+		await handleEvent.call(fakeThis, { type: "turn_start" });
+
+		expect(fakeThis.showWorkingStatusIndicator).toHaveBeenCalledTimes(1);
+		expect(fakeThis.clearStatusIndicator).toHaveBeenCalledTimes(1);
+		expect(fakeThis.ui.requestRender).toHaveBeenCalledTimes(2);
+	});
+
 	test("preserves steering behavior when flushing into an active agent run", async () => {
-		// fakeThis 是含一条 steer 排队消息和会话模拟方法的最小上下文。
 		const fakeThis = {
 			compactionQueuedMessages: [{ text: "change direction", mode: "steer" as const }],
 			session: {
@@ -84,7 +242,6 @@ describe("InteractiveMode compaction events", () => {
 			showError: vi.fn(),
 		};
 
-		// flushCompactionQueue 是从原型取得并绑定到第二个 fakeThis 的私有方法。
 		const flushCompactionQueue = Reflect.get(InteractiveMode.prototype, "flushCompactionQueue") as (
 			this: typeof fakeThis,
 			options?: { willRetry?: boolean },

@@ -1,13 +1,10 @@
 /**
- * 【文件职责】标准认证构造辅助：envApiKeyAuth 生成"存储密钥优先 + 环境变量兜底"的 apiKey 认证；
- *              lazyOAuth 包装动态导入的 OAuth 实现（首用加载）。
- * 【技术维度】闭包惰性加载（promise 缓存）；变量说明符动态导入（打包器不解析）。
- * 【产品维度】让供应商定义以最小样板声明认证，同时把 Node 专属流程代码挡在包外。
- * 【逻辑维度】envApiKeyAuth：login 提示密钥、resolve 依次尝试存储密钥与环境变量；
- *              lazyOAuth：首次调用时加载实现并缓存，转发四个方法。
- * 【关键边界】envApiKeyAuth 非标准解析（IAM/ADC 等）需自定义 ApiKeyAuth；
- *              lazyOAuth 的 load 失败在首次调用时暴露。
- * 【新手阅读建议】先读 envApiKeyAuth 的 resolve 顺序，再看 lazyOAuth 的惰性加载。
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/helpers` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `./types.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/helpers` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `envApiKeyAuth`、`lazyOAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `envApiKeyAuth`、`lazyOAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { ApiKeyAuth, OAuthAuth } from "./types.ts";
 
@@ -17,21 +14,23 @@ import type { ApiKeyAuth, OAuthAuth } from "./types.ts";
  * Providers with non-standard resolution (provider env, ambient files, IAM)
  * write their own `ApiKeyAuth`.
  */
-// 标准 api-key 认证（公开）：已存密钥优先，否则首个已设置的环境变量；
-// 附带提示输入密钥的 login。非标准解析（IAM/ADC 等）的供应商需自定义。
 export function envApiKeyAuth(name: string, envVars: readonly string[]): ApiKeyAuth {
 	return {
 		name,
 		login: async (interaction) => {
+			interaction.signal.throwIfAborted();
 			const key = await interaction.prompt({ type: "secret", message: `Enter ${name}` });
+			interaction.signal.throwIfAborted();
 			return { type: "api_key", key };
 		},
-		resolve: async ({ ctx, credential }) => {
+		resolve: async ({ ctx, credential, signal }) => {
+			signal.throwIfAborted();
 			if (credential?.key) {
 				return { auth: { apiKey: credential.key }, env: credential.env, source: "stored credential" };
 			}
 			for (const envVar of envVars) {
 				const value = await ctx.env(envVar);
+				signal.throwIfAborted();
 				if (value) return { auth: { apiKey: value }, source: envVar };
 			}
 			return undefined;
@@ -46,9 +45,12 @@ export function envApiKeyAuth(name: string, envVars: readonly string[]): ApiKeyA
  * of bundles by loading through a bundler-opaque dynamic import (variable
  * specifier, see the bedrock lazy wrapper).
  */
-// 懒 OAuth 包装（公开）：让供应商可声明 OAuth 而不必静态导入实现；
-// 首次 login/refresh/toAuth 时经打包器不透明的动态导入加载并缓存
-export function lazyOAuth(input: { name: string; loginLabel?: string; load: () => Promise<OAuthAuth> }): OAuthAuth {
+export function lazyOAuth(input: {
+	name: string;
+	isSubscription?: boolean;
+	loginLabel?: string;
+	load: () => Promise<OAuthAuth>;
+}): OAuthAuth {
 	let promise: Promise<OAuthAuth> | undefined;
 	const loaded = () => {
 		promise ??= input.load();
@@ -56,9 +58,10 @@ export function lazyOAuth(input: { name: string; loginLabel?: string; load: () =
 	};
 	return {
 		name: input.name,
+		isSubscription: input.isSubscription,
 		loginLabel: input.loginLabel,
 		login: async (interaction) => (await loaded()).login(interaction),
-		refresh: async (credential) => (await loaded()).refresh(credential),
+		refresh: async (credential, signal) => (await loaded()).refresh(credential, signal),
 		toAuth: async (credential) => (await loaded()).toAuth(credential),
 	};
 }

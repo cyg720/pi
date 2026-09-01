@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/tools/find` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:readline`、`@earendil-works/pi-agent-core`、`@earendil-works/pi-tui`、`child_process`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/tools/find` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `relativizeFindResultPath`、`findToolSystemPromptContribution`、`FindToolInput`、`FindToolDetails`、`FindOperations`、`FindToolOptions`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `relativizeFindResultPath`、`findToolSystemPromptContribution`、`FindToolInput`、`FindToolDetails`、`FindOperations`、`FindToolOptions` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { Text } from "@earendil-works/pi-tui";
@@ -7,14 +15,23 @@ import { type Static, Type } from "typebox";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
 import { ensureTool } from "../../utils/tools-manager.ts";
-import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
+import type { ExtensionContext, ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
 import { pathExists, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, invalidArgText, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
 import { DEFAULT_MAX_BYTES, formatSize, type TruncationResult, truncateHead } from "./truncate.ts";
 
-function toPosixPath(value: string): string {
-	return value.split(path.sep).join("/");
+/** Relativize a find result against the search root and normalize it to posix separators. */
+export function relativizeFindResultPath(
+	resultPath: string,
+	searchPath: string,
+	pathModule: path.PlatformPath = path,
+): string {
+	const hadTrailingSeparator =
+		resultPath.endsWith(pathModule.sep) || (pathModule.sep === "\\" && resultPath.endsWith("/"));
+	const relativePath = pathModule.isAbsolute(resultPath) ? pathModule.relative(searchPath, resultPath) : resultPath;
+	const posixPath = relativePath.split(pathModule.sep).join("/");
+	return hadTrailingSeparator && !posixPath.endsWith("/") ? `${posixPath}/` : posixPath;
 }
 
 const findSchema = Type.Object({
@@ -25,10 +42,11 @@ const findSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of results (default: 1000)" })),
 });
 
-/**
- * 【文件职责】find 工具：按条件递归查找文件/目录（含符号链接与忽略规则）。
- * 【新手阅读建议】看参数与过滤逻辑。
- */
+export const findToolSystemPromptContribution = {
+	snippet: "Find files by glob pattern (respects .gitignore)",
+	guidelines: [],
+} as const;
+
 export type FindToolInput = Static<typeof findSchema>;
 
 const DEFAULT_LIMIT = 1000;
@@ -119,14 +137,14 @@ export function createFindToolDefinition(
 		name: "find",
 		label: "find",
 		description: `Search for files by glob pattern. Returns matching file paths relative to the search directory. Respects .gitignore. Output is truncated to ${DEFAULT_LIMIT} results or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first).`,
-		promptSnippet: "Find files by glob pattern (respects .gitignore)",
+		promptSnippet: findToolSystemPromptContribution.snippet,
 		parameters: findSchema,
 		async execute(
 			_toolCallId,
 			{ pattern, path: searchDir, limit }: { pattern: string; path?: string; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
+			ctx?: ExtensionContext,
 		) {
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
@@ -151,7 +169,7 @@ export function createFindToolDefinition(
 
 				(async () => {
 					try {
-						const searchPath = resolveToCwd(searchDir || ".", cwd);
+						const searchPath = resolveToCwd(searchDir || ".", ctx?.cwd || cwd);
 						const effectiveLimit = limit ?? DEFAULT_LIMIT;
 						const ops = customOps ?? defaultFindOperations;
 
@@ -184,10 +202,7 @@ export function createFindToolDefinition(
 							}
 
 							// Relativize paths against the search root for stable output.
-							const relativized = results.map((p) => {
-								if (p.startsWith(searchPath)) return toPosixPath(p.slice(searchPath.length + 1));
-								return toPosixPath(path.relative(searchPath, p));
-							});
+							const relativized = results.map((p) => relativizeFindResultPath(p, searchPath));
 							const resultLimitReached = relativized.length >= effectiveLimit;
 							const rawOutput = relativized.join("\n");
 							const truncation = truncateHead(rawOutput, { maxLines: Number.MAX_SAFE_INTEGER });
@@ -215,7 +230,7 @@ export function createFindToolDefinition(
 						}
 
 						// Default implementation uses fd.
-						const fdPath = await ensureTool("fd", true);
+						const fdPath = await ensureTool("fd");
 						if (signal?.aborted) {
 							settle(() => reject(new Error("Operation aborted")));
 							return;
@@ -253,6 +268,9 @@ export function createFindToolDefinition(
 							if (!pattern.startsWith("/") && !pattern.startsWith("**/") && pattern !== "**") {
 								effectivePattern = `**/${pattern}`;
 							}
+							// fd matches full paths using native separators on Windows.
+							if (process.platform === "win32")
+								effectivePattern = effectivePattern.replaceAll("/", String.raw`[/\\]`);
 						}
 						args.push("--", effectivePattern, searchPath);
 
@@ -312,15 +330,7 @@ export function createFindToolDefinition(
 							for (const rawLine of lines) {
 								const line = rawLine.replace(/\r$/, "").trim();
 								if (!line) continue;
-								const hadTrailingSlash = line.endsWith("/") || line.endsWith("\\");
-								let relativePath = line;
-								if (line.startsWith(searchPath)) {
-									relativePath = line.slice(searchPath.length + 1);
-								} else {
-									relativePath = path.relative(searchPath, line);
-								}
-								if (hadTrailingSlash && !relativePath.endsWith("/")) relativePath += "/";
-								relativized.push(toPosixPath(relativePath));
+								relativized.push(relativizeFindResultPath(line, searchPath));
 							}
 
 							const resultLimitReached = relativized.length >= effectiveLimit;

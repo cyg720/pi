@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/tools/read` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:path`、`@earendil-works/pi-agent-core`、`@earendil-works/pi-ai`、`@earendil-works/pi-tui`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/tools/read` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `readToolSystemPromptContribution`、`ReadToolInput`、`ReadToolDetails`、`ReadOperations`、`ReadToolOptions`、`createReadToolDefinition`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `readToolSystemPromptContribution`、`ReadToolInput`、`ReadToolDetails`、`ReadOperations`、`ReadToolOptions`、`createReadToolDefinition` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import { basename, dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { Api, ImageContent, Model, TextContent } from "@earendil-works/pi-ai";
@@ -11,7 +19,8 @@ import { getLanguageFromPath, highlightCode, type Theme } from "../../modes/inte
 import { processImage } from "../../utils/image-process.ts";
 import { detectSupportedImageMimeTypeFromFile } from "../../utils/mime.ts";
 import { formatPathRelativeToCwdOrAbsolute } from "../../utils/paths.ts";
-import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
+import { getExperimentalToolSampling } from "../experimental.ts";
+import type { ExtensionContext, ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
 import { resolveReadPathAsync, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, renderToolPath, replaceTabs, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
@@ -23,10 +32,11 @@ const readSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of lines to read" })),
 });
 
-/**
- * 【文件职责】read 工具：读取文本/图片（与 agent 包 createReadTool 对齐，含图片处理注入）。
- * 【新手阅读建议】对照 agent 包同名文件阅读。
- */
+export const readToolSystemPromptContribution = {
+	snippet: "Read file contents",
+	guidelines: ["Use read to examine files instead of cat or sed."],
+} as const;
+
 export type ReadToolInput = Static<typeof readSchema>;
 
 export interface ReadToolDetails {
@@ -38,7 +48,7 @@ interface CompactReadClassification {
 	label: string;
 }
 
-const COMPACT_RESOURCE_FILE_NAMES = new Set(["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"]);
+const COMPACT_RESOURCE_FILE_NAMES = new Set(["AGENTS.override.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"]);
 
 /**
  * Pluggable operations for the read tool.
@@ -214,15 +224,16 @@ export function createReadToolDefinition(
 		name: "read",
 		label: "read",
 		description: `Read the contents of a file. Supports text files and images (jpg, png, gif, webp, bmp). Images are sent as attachments. For text files, output is truncated to ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). Use offset/limit for large files. When you need the full file, continue with offset until complete.`,
-		promptSnippet: "Read file contents",
-		promptGuidelines: ["Use read to examine files instead of cat or sed."],
+		promptSnippet: readToolSystemPromptContribution.snippet,
+		promptGuidelines: [...readToolSystemPromptContribution.guidelines],
 		parameters: readSchema,
+		constrainedSampling: getExperimentalToolSampling(),
 		async execute(
 			_toolCallId,
 			{ path, offset, limit }: { path: string; offset?: number; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			ctx?,
+			ctx?: ExtensionContext,
 		) {
 			return new Promise<{ content: (TextContent | ImageContent)[]; details: ReadToolDetails | undefined }>(
 				(resolve, reject) => {
@@ -239,7 +250,7 @@ export function createReadToolDefinition(
 
 					(async () => {
 						try {
-							const absolutePath = await resolveReadPathAsync(path, cwd);
+							const absolutePath = await resolveReadPathAsync(path, ctx?.cwd || cwd);
 							if (aborted) return;
 							// Check if file exists and is readable.
 							await ops.access(absolutePath);

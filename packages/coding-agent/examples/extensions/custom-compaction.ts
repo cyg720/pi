@@ -18,7 +18,6 @@
  * 【新手阅读建议】看压缩钩子。
  */
 import { uuidv7 } from "@earendil-works/pi-ai";
-import { complete } from "@earendil-works/pi-ai/compat";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { convertToLlm, serializeConversation } from "@earendil-works/pi-coding-agent";
 
@@ -33,17 +32,6 @@ export default function (pi: ExtensionAPI) {
 		const model = ctx.modelRegistry.find("google", "gemini-2.5-flash");
 		if (!model) {
 			ctx.ui.notify(`Could not find Gemini Flash model, using default compaction`, "warning");
-			return;
-		}
-
-		// Resolve request auth for the summarization model
-		const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
-		if (!auth.ok) {
-			ctx.ui.notify(`Compaction auth failed: ${auth.error}`, "warning");
-			return;
-		}
-		if (!auth.apiKey) {
-			ctx.ui.notify(`No API key for ${model.provider}, using default compaction`, "warning");
 			return;
 		}
 
@@ -92,13 +80,10 @@ ${conversationText}
 
 		try {
 			// Pass signal to honor abort requests (e.g., user cancels compaction)
-			const response = await complete(
+			const response = await ctx.modelRegistry.complete(
 				model,
 				{ messages: summaryMessages },
 				{
-					apiKey: auth.apiKey,
-					headers: auth.headers,
-					env: auth.env,
 					maxTokens: 8192,
 					signal,
 					cacheRetention: "none",

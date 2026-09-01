@@ -52,7 +52,10 @@ const schemaCompatibilityTool: Tool = {
 // strictTool 显式偏好 JSON Schema 严格采样，应保留完整输入 Schema 并发送 strict。
 const strictTool: Tool = {
 	...tool,
-	parameters: Type.Object({ value: Type.String() }, { additionalProperties: false, title: "StrictLookupInput" }),
+	parameters: Type.Object(
+		{ value: Type.String(), optional: Type.Optional(Type.Number()) },
+		{ title: "StrictLookupInput" },
+	),
 	constrainedSampling: { type: "json_schema", strict: "prefer" },
 };
 
@@ -203,6 +206,8 @@ describe("Anthropic eager tool input streaming compatibility", () => {
 		expect(getFirstTool(strictRequest.body).strict).toBe(true);
 		expect(getFirstToolInputSchema(strictRequest.body)).toMatchObject({
 			additionalProperties: false,
+			required: ["value", "optional"],
+			properties: { optional: { anyOf: [{ type: "number" }, { type: "null" }] } },
 			title: "StrictLookupInput",
 		});
 	});

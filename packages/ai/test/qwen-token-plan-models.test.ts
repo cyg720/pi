@@ -1,15 +1,44 @@
-/**
- * 文件职责：验证 Qwen Token Plan 国内外提供方包含全部文本模型并排除图片模型。
- * 技术维度：使用 Vitest 参数化测试、生成模型目录和数组包含关系断言。
- * 产品维度：确保订阅套餐的聊天模型选择完整，同时避免不可由文本接口调用的图片模型混入。
- * 逻辑维度：维护文本与图片期望清单，分别遍历两个提供方检查应包含与应排除项。
- * 关键边界：清单随产品目录变化需同步更新；只验证本地目录，不请求真实套餐服务。
- * 新手阅读建议：先比较 TEXT_MODELS 与 IMAGE_MODELS，再看两个 it.each 的相反断言。
- */
-import { describe, expect, it } from "vitest";
-import { getModels } from "../src/compat.ts";
+import { describe, expect, it, vi } from "vitest";
+import { getModels, streamSimple } from "../src/compat.ts";
+import { findEnvKeys } from "../src/env-api-keys.ts";
 
-/** 两个 Qwen Token Plan 提供方都应公开的文本生成模型 ID 清单。 */
+vi.mock("openai", () => {
+	class FakeOpenAI {
+		chat = {
+			completions: {
+				create: () => {
+					const stream = {
+						async *[Symbol.asyncIterator]() {
+							yield {
+								choices: [{ delta: {}, finish_reason: "stop" }],
+								usage: {
+									prompt_tokens: 1,
+									completion_tokens: 1,
+									prompt_tokens_details: { cached_tokens: 0 },
+									completion_tokens_details: { reasoning_tokens: 0 },
+								},
+							};
+						},
+					};
+					const promise = Promise.resolve(stream) as Promise<typeof stream> & {
+						withResponse: () => Promise<{
+							data: typeof stream;
+							response: { status: number; headers: Headers };
+						}>;
+					};
+					promise.withResponse = async () => ({
+						data: stream,
+						response: { status: 200, headers: new Headers() },
+					});
+					return promise;
+				},
+			},
+		};
+	}
+
+	return { default: FakeOpenAI };
+});
+
 const TEXT_MODELS = [
 	"MiniMax-M2.5",
 	"deepseek-v3.2",
@@ -25,31 +54,231 @@ const TEXT_MODELS = [
 	"qwen3.6-plus",
 	"qwen3.7-max",
 	"qwen3.7-plus",
-	"qwen3.8-max-preview",
+	"qwen3.8-max",
 ];
 
-/** 必须从文本模型目录排除的图片生成模型 ID 清单。 */
+const INDIVIDUAL_TEXT_MODELS = [
+	"deepseek-v4-flash-0731",
+	"deepseek-v4-pro",
+	"deepseek-v4-pro-0813",
+	"glm-5.2",
+	"qwen3.6-flash",
+	"qwen3.7-max",
+	"qwen3.7-plus",
+	"qwen3.8-max",
+];
+
 const IMAGE_MODELS = ["qwen-image-2.0", "qwen-image-2.0-pro", "wan2.7-image", "wan2.7-image-pro"];
 
-/** Qwen Token Plan 模型目录归属测试组。 */
+const QWEN_THINKING_MODELS = [
+	"deepseek-v3.2",
+	"deepseek-v4-flash",
+	"deepseek-v4-pro",
+	"glm-5",
+	"glm-5.1",
+	"glm-5.2",
+	"kimi-k2.5",
+	"kimi-k2.6",
+	"kimi-k2.7-code",
+	"qwen3.6-flash",
+	"qwen3.6-plus",
+	"qwen3.7-max",
+	"qwen3.7-plus",
+	"qwen3.8-max",
+] as const;
+
+type QwenTokenPlanProvider = "qwen-token-plan" | "qwen-token-plan-cn" | "qwen-token-plan-individual";
+type QwenTokenPlanModelCase = { provider: QwenTokenPlanProvider; modelId: string };
+
+const QWEN_THINKING_MODEL_CASES: QwenTokenPlanModelCase[] = [
+	...(["qwen-token-plan", "qwen-token-plan-cn"] as const).flatMap((provider) =>
+		QWEN_THINKING_MODELS.map((modelId) => ({ provider, modelId })),
+	),
+	...INDIVIDUAL_TEXT_MODELS.map((modelId) => ({ provider: "qwen-token-plan-individual" as const, modelId })),
+];
+
+const QWEN_REASONING_EFFORT_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro", "glm-5", "glm-5.1", "glm-5.2"] as const;
+
+const QWEN_REASONING_EFFORT_MODEL_CASES: QwenTokenPlanModelCase[] = [
+	...(["qwen-token-plan", "qwen-token-plan-cn"] as const).flatMap((provider) =>
+		QWEN_REASONING_EFFORT_MODELS.map((modelId) => ({ provider, modelId })),
+	),
+	...["deepseek-v4-flash-0731", "deepseek-v4-pro", "deepseek-v4-pro-0813", "glm-5.2"].map((modelId) => ({
+		provider: "qwen-token-plan-individual" as const,
+		modelId,
+	})),
+];
+
 describe("Qwen Token Plan models", () => {
-	/** provider 是国际或国内套餐键；逐项验证全部文本模型都存在。 */
+	it("exposes exactly the documented Individual text models", () => {
+		const modelIds = getModels("qwen-token-plan-individual")
+			.map((model) => model.id)
+			.sort();
+
+		expect(modelIds).toEqual([...INDIVIDUAL_TEXT_MODELS].sort());
+	});
+
+	it("reuses the international Token Plan environment variable", () => {
+		expect(findEnvKeys("qwen-token-plan-individual", { QWEN_TOKEN_PLAN_API_KEY: "test" })).toEqual([
+			"QWEN_TOKEN_PLAN_API_KEY",
+		]);
+	});
+
 	it.each(["qwen-token-plan", "qwen-token-plan-cn"] as const)("exposes all text models on %s", (provider) => {
-		/** 当前提供方公开的全部模型 ID。 */
 		const modelIds = getModels(provider).map((model) => model.id);
-		// expected 是文本模型期望清单中的一个 ID。
 		for (const expected of TEXT_MODELS) {
 			expect(modelIds, `${provider} should include ${expected}`).toContain(expected);
 		}
 	});
 
-	/** provider 是国际或国内套餐键；逐项验证图片模型均不存在。 */
 	it.each(["qwen-token-plan", "qwen-token-plan-cn"] as const)("omits image models from %s", (provider) => {
-		/** 当前提供方公开的全部模型 ID。 */
 		const modelIds = getModels(provider).map((model) => model.id);
-		// excluded 是图片模型排除清单中的一个 ID。
 		for (const excluded of IMAGE_MODELS) {
 			expect(modelIds, `${provider} should not include ${excluded}`).not.toContain(excluded);
 		}
 	});
+
+	// docs: https://modelstudio.console.alibabacloud.com/ap-southeast-1?tab=api&commonbuy=1#/api/?type=model&url=3016807
+	it.each(QWEN_THINKING_MODEL_CASES)(
+		"sends Qwen thinking fields for $provider/$modelId",
+		async ({ provider, modelId }) => {
+			const model = getModels(provider).find((candidate) => candidate.id === modelId);
+			expect(model).toBeDefined();
+			if (!model) throw new Error(`Missing model: ${provider}/${modelId}`);
+
+			let payload: unknown;
+			await streamSimple(
+				model,
+				{
+					messages: [
+						{
+							role: "user",
+							content: "Hi",
+							timestamp: Date.now(),
+						},
+					],
+				},
+				{
+					apiKey: "test",
+					reasoning: "high",
+					onPayload: (params) => {
+						payload = params;
+					},
+				},
+			).result();
+
+			expect(payload).toHaveProperty("enable_thinking", true);
+			expect(payload).not.toHaveProperty("thinking");
+		},
+	);
+
+	it.each(QWEN_REASONING_EFFORT_MODEL_CASES)(
+		"exposes Qwen reasoning_effort levels for $provider/$modelId",
+		({ provider, modelId }) => {
+			const model = getModels(provider).find((candidate) => candidate.id === modelId);
+			expect(model).toBeDefined();
+			if (!model) throw new Error(`Missing model: ${provider}/${modelId}`);
+
+			expect(model.thinkingLevelMap).toMatchObject({
+				minimal: null,
+				low: null,
+				medium: null,
+				high: "high",
+				xhigh: null,
+				max: "max",
+			});
+		},
+	);
+
+	it.each(["qwen-token-plan", "qwen-token-plan-cn", "qwen-token-plan-individual"] as const)(
+		"exposes qwen3.8 reasoning_effort levels on %s",
+		(provider) => {
+			const model = getModels(provider).find((candidate) => candidate.id === "qwen3.8-max");
+			expect(model).toBeDefined();
+			if (!model) throw new Error(`Missing model: ${provider}/qwen3.8-max`);
+
+			expect(model.thinkingLevelMap).toMatchObject({
+				minimal: null,
+				low: "low",
+				medium: "medium",
+				high: null,
+				xhigh: "xhigh",
+				max: null,
+			});
+		},
+	);
+
+	it.each(["qwen-token-plan", "qwen-token-plan-cn", "qwen-token-plan-individual"] as const)(
+		"omits retired qwen3.8-max-preview on %s",
+		(provider) => {
+			const modelIds = getModels(provider).map((model) => model.id);
+			expect(modelIds).not.toContain("qwen3.8-max-preview");
+		},
+	);
+
+	it.each(QWEN_REASONING_EFFORT_MODEL_CASES)(
+		"sends Qwen reasoning_effort for $provider/$modelId",
+		async ({ provider, modelId }) => {
+			const model = getModels(provider).find((candidate) => candidate.id === modelId);
+			expect(model).toBeDefined();
+			if (!model) throw new Error(`Missing model: ${provider}/${modelId}`);
+
+			let payload: unknown;
+			await streamSimple(
+				model,
+				{
+					messages: [
+						{
+							role: "user",
+							content: "Hi",
+							timestamp: Date.now(),
+						},
+					],
+				},
+				{
+					apiKey: "test",
+					reasoning: "high",
+					onPayload: (params) => {
+						payload = params;
+					},
+				},
+			).result();
+
+			expect(payload).toHaveProperty("reasoning_effort", "high");
+		},
+	);
+
+	it.each(["qwen-token-plan", "qwen-token-plan-cn", "qwen-token-plan-individual"] as const)(
+		"sends qwen3.8 max reasoning_effort on %s",
+		async (provider) => {
+			const model = getModels(provider).find((candidate) => candidate.id === "qwen3.8-max");
+			expect(model).toBeDefined();
+			if (!model) throw new Error(`Missing model: ${provider}/qwen3.8-max`);
+
+			let payload: unknown;
+			await streamSimple(
+				model,
+				{
+					messages: [
+						{
+							role: "user",
+							content: "Hi",
+							timestamp: Date.now(),
+						},
+					],
+				},
+				{
+					apiKey: "test",
+					reasoning: "xhigh",
+					onPayload: (params) => {
+						payload = params;
+					},
+				},
+			).result();
+
+			expect(payload).toHaveProperty("enable_thinking", true);
+			expect(payload).toHaveProperty("reasoning_effort", "xhigh");
+			expect(payload).not.toHaveProperty("thinking");
+		},
+	);
 });

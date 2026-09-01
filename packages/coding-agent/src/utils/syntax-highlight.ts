@@ -1,11 +1,80 @@
-import hljs from "highlight.js/lib/index.js";
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `utils/syntax-highlight` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `highlight.js/lib/core.js`、`highlight.js/lib/languages/bash.js`、`highlight.js/lib/languages/c.js`、`highlight.js/lib/languages/cpp.js`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `utils/syntax-highlight` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `loadAllHighlightLanguages`、`HighlightFormatter`、`HighlightTheme`、`HighlightOptions`、`renderHighlightedHtml`、`highlight`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `loadAllHighlightLanguages`、`HighlightFormatter`、`HighlightTheme`、`HighlightOptions`、`renderHighlightedHtml`、`highlight` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+import hljs from "highlight.js/lib/core.js";
+import bash from "highlight.js/lib/languages/bash.js";
+import c from "highlight.js/lib/languages/c.js";
+import cpp from "highlight.js/lib/languages/cpp.js";
+import csharp from "highlight.js/lib/languages/csharp.js";
+import dart from "highlight.js/lib/languages/dart.js";
+import go from "highlight.js/lib/languages/go.js";
+import groovy from "highlight.js/lib/languages/groovy.js";
+import java from "highlight.js/lib/languages/java.js";
+import javascript from "highlight.js/lib/languages/javascript.js";
+import kotlin from "highlight.js/lib/languages/kotlin.js";
+import lua from "highlight.js/lib/languages/lua.js";
+import nix from "highlight.js/lib/languages/nix.js";
+import perl from "highlight.js/lib/languages/perl.js";
+import php from "highlight.js/lib/languages/php.js";
+import python from "highlight.js/lib/languages/python.js";
+import ruby from "highlight.js/lib/languages/ruby.js";
+import rust from "highlight.js/lib/languages/rust.js";
+import scala from "highlight.js/lib/languages/scala.js";
+import swift from "highlight.js/lib/languages/swift.js";
+import typescript from "highlight.js/lib/languages/typescript.js";
 import { decodeHtmlEntityAt } from "./html.ts";
 
-/**
- * 【文件职责】语法高亮：把代码转为 ANSI 高亮（hljs 按需加载）。
- * 【产品维度】终端里展示高亮代码块。
- * 【新手阅读建议】看高亮入口。
- */
+const eagerLanguages = {
+	python,
+	java,
+	go,
+	javascript,
+	cpp,
+	typescript,
+	php,
+	ruby,
+	c,
+	csharp,
+	nix,
+	bash,
+	rust,
+	scala,
+	kotlin,
+	swift,
+	dart,
+	groovy,
+	perl,
+	lua,
+};
+
+for (const [name, language] of Object.entries(eagerLanguages)) {
+	hljs.registerLanguage(name, language);
+}
+
+let allLanguagesPromise: Promise<void> | undefined;
+
+export function loadAllHighlightLanguages(): Promise<void> {
+	if (!allLanguagesPromise) {
+		allLanguagesPromise = new Promise((resolve) => {
+			setImmediate(() => {
+				void import("highlight.js/lib/index.js").then(
+					() => resolve(),
+					() => {
+						// Eager languages and plaintext fallback remain available.
+						resolve();
+					},
+				);
+			});
+		});
+	}
+	return allLanguagesPromise;
+}
+
 export type HighlightFormatter = (text: string) => string;
 export type HighlightTheme = Partial<Record<string, HighlightFormatter>>;
 

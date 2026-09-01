@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { stripBom } from "../../utils/text.ts";
 
 /**
  * 【文件职责】外部编辑器：把当前输入交给系统编辑器编辑后回填。
@@ -39,7 +40,7 @@ export async function editInExternalEditor(options: ExternalEditorOptions): Prom
 			return { status: "failed" };
 		}
 
-		return { status: "complete", content: readFileSync(filePath, "utf-8").replace(/\n$/, "") };
+		return { status: "complete", content: stripBom(readFileSync(filePath, "utf-8")).replace(/\n$/, "") };
 	} finally {
 		try {
 			rmSync(directory, { recursive: true, force: true });

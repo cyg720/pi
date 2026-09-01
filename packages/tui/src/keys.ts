@@ -627,7 +627,7 @@ function parseEventType(eventTypeStr: string | undefined): KeyEventType {
 }
 
 // 解析 Kitty CSI-u 序列（私有）：格式 ESC [ codepoint:alt:base;modifier:event u；
- // 非该格式返回 null
+// 非该格式返回 null
 function parseKittySequence(data: string): ParsedKittySequence | null {
 	// CSI u format with alternate keys (flag 4):
 	// \x1b[<codepoint>u
@@ -1409,7 +1409,7 @@ const KITTY_PRINTABLE_ALLOWED_MODIFIERS = MODIFIERS.shift | LOCK_MASK;
  * @returns The printable character, or undefined if not a printable CSI-u sequence
  */
 // 解码 Kitty CSI-u 可打印字符（公开）：仅允许无 ctrl/alt 修饰的可打印字符；
- // 返回对应的明文字符或 undefined
+// 返回对应的明文字符或 undefined
 export function decodeKittyPrintable(data: string): string | undefined {
 	const match = data.match(KITTY_CSI_U_REGEX);
 	if (!match) return undefined;

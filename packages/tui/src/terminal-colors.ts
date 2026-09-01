@@ -1,28 +1,19 @@
 /**
- * 【文件职责】终端颜色环境探测：解析 OSC 11 背景色响应与 CSI 997 配色方案上报，
- *              让应用知晓终端是深色还是浅色主题并拿到背景 RGB。
- * 【技术维度】手写正则匹配 ANSI/OSC 转义响应；十六进制/rgba 两种颜色格式解析；通道宽度自适应归一化。
- * 【产品维度】启动时自动适配终端明暗主题（如浅色终端下切换更合适的配色），提升可读性与美观度。
- * 【逻辑维度】hexToRgb/parseOscHexChannel 两个解析基元 → 两个响应模式常量 →
- *              isOsc11BackgroundColorResponse 判定 / parseOsc11BackgroundColor 取色 /
- *              parseTerminalColorSchemeReport 判明暗。
- * 【关键边界】仅识别 #rrggbb、#rrrrggggbbbb 与 rgb(a):r/g/b 三种格式；非法输入一律返回 undefined；
- *              997 上报中 1=dark、2=light。
- * 【新手阅读建议】先看两个导出 parse 函数的用途 → 再回看两个 PATTERN 正则理解响应长什么样。
+ * 【文件职责】实现 `@earendil-works/pi-tui` 包中的 `terminal-colors` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 语言内建能力与本文件声明，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为文本应用提供基于差分渲染的终端界面能力；本文件负责其中与 `terminal-colors` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `RgbColor`、`TerminalColorScheme`、`isOsc11BackgroundColorResponse`、`parseOsc11BackgroundColor`、`parseTerminalColorSchemeReport`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `RgbColor`、`TerminalColorScheme`、`isOsc11BackgroundColorResponse`、`parseOsc11BackgroundColor`、`parseTerminalColorSchemeReport` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 export interface RgbColor {
-	// 红色分量（0-255）
 	r: number;
-	// 绿色分量（0-255）
 	g: number;
-	// 蓝色分量（0-255）
 	b: number;
 }
 
-// 终端配色方案：深色或浅色
 export type TerminalColorScheme = "dark" | "light";
 
-// 六位十六进制（可带 #）转 RGB（私有）
 function hexToRgb(hex: string): RgbColor {
 	const normalized = hex.startsWith("#") ? hex.slice(1) : hex;
 	const r = parseInt(normalized.slice(0, 2), 16);
@@ -31,7 +22,6 @@ function hexToRgb(hex: string): RgbColor {
 	return { r, g, b };
 }
 
-// 解析 OSC 十六进制颜色通道（私有）：按位数求满值后比例折算到 0-255；非十六进制返回 undefined
 function parseOscHexChannel(channel: string): number | undefined {
 	if (!/^[0-9a-f]+$/i.test(channel)) {
 		return undefined;
@@ -43,18 +33,13 @@ function parseOscHexChannel(channel: string): number | undefined {
 	return Math.round((parseInt(channel, 16) / max) * 255);
 }
 
-// OSC 11 背景色响应模式：形如 ESC ]11;<颜色值> BEL 或 ESC \
 const OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN = /^\x1b\]11;([^\x07\x1b]*)(?:\x07|\x1b\\)$/i;
-// CSI 997 配色方案上报模式：1=深色，2=浅色
-const COLOR_SCHEME_REPORT_PATTERN = /^\x1b\[\?997;(1|2)n$/;
+const COLOR_SCHEME_REPORT_PATTERN = /^(?:\x1b\[\?997;(1|2)n)+$/;
 
-// 判断一段终端输出是否为 OSC 11 背景色响应（公开）
 export function isOsc11BackgroundColorResponse(data: string): boolean {
 	return OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN.test(data);
 }
 
-// 从 OSC 11 响应中解析背景色 RGB（公开）：支持 #rrggbb、16 位十六进制与 rgb(a):r/g/b 三种写法；
-// 无法解析返回 undefined
 export function parseOsc11BackgroundColor(data: string): RgbColor | undefined {
 	const match = data.match(OSC11_BACKGROUND_COLOR_RESPONSE_PATTERN);
 	if (!match) {
@@ -87,7 +72,6 @@ export function parseOsc11BackgroundColor(data: string): RgbColor | undefined {
 	return r !== undefined && g !== undefined && b !== undefined ? { r, g, b } : undefined;
 }
 
-// 从 CSI 997 上报中解析配色方案（公开）：2 视为浅色，其余视为深色；非该格式返回 undefined
 export function parseTerminalColorSchemeReport(data: string): TerminalColorScheme | undefined {
 	const match = data.match(COLOR_SCHEME_REPORT_PATTERN);
 	if (!match) {

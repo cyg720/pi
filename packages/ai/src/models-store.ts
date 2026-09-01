@@ -1,75 +1,53 @@
 /**
- * 【文件职责】模型目录持久化存储接口与内存实现：按供应商 ID 保存远程模型目录的快照
- *              （含 Last-Modified/ETag/检查时间），供动态模型目录的离线恢复与条件刷新。
- * 【技术维度】纯接口 + 内存实现；structuredClone 深拷贝避免外部引用篡改。
- * 【产品维度】支持“缓存友好”的模型目录更新：启动时先用缓存模型，再按条件刷新网络目录。
- * 【逻辑维度】ModelsStore 定义三方法契约 → ProviderModelsStore 是单供应商作用域视图 →
- *              InMemoryModelsStore 用 Map 实现并做克隆读写。
- * 【关键边界】read/write/delete 均为异步；读取会返回克隆（修改不影响存储）；
- *              内存实现数据不跨进程持久化。
- * 【新手阅读建议】半分钟读完：理解三个接口的关系（全局 vs 单供应商）与克隆语义即可。
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `models-store` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `./types.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `models-store` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `ModelsStoreEntry`、`ModelsStoreOperationOptions`、`ModelsStore`、`InMemoryModelsStore`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `ModelsStoreEntry`、`ModelsStoreOperationOptions`、`ModelsStore`、`InMemoryModelsStore` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { Api, Model } from "./types.ts";
 
-/** 模型目录存储条目（中文说明）：models 模型列表；lastModified 远端目录 Last-Modified 时间戳；
- * checkedAt 上次完成远端检查的时间；etag 远端 ETag（原样保存、回显为 If-None-Match）。 */
 export interface ModelsStoreEntry {
-	// 模型列表
 	models: readonly Model<Api>[];
 	/** Unix timestamp from the remote catalog's Last-Modified header. */
-	// 来自远端目录 Last-Modified 头的 Unix 时间戳
 	lastModified?: number;
 	/** Unix timestamp of the last completed remote check. */
-	// 上次完成远端检查的 Unix 时间戳
 	checkedAt?: number;
 	/**
 	 * Opaque validator from the remote catalog's ETag header, stored verbatim
 	 * (quotes included) and echoed back as If-None-Match.
 	 */
-	// 远端目录 ETag 头的原样校验值（含引号），请求时回显为 If-None-Match
 	etag?: string;
 }
 
+export interface ModelsStoreOperationOptions {
+	signal?: AbortSignal;
+}
+
 /** Persistent model catalogs keyed by provider ID. */
-/** 按供应商 ID 键控的持久模型目录存储接口（中文说明）。 */
 export interface ModelsStore {
-	// 读取某供应商的目录条目
-	read(providerId: string): Promise<ModelsStoreEntry | undefined>;
-	// 写入某供应商的目录条目
-	write(providerId: string, entry: ModelsStoreEntry): Promise<void>;
-	// 删除某供应商的目录条目
-	delete(providerId: string): Promise<void>;
+	read(providerId: string, options?: ModelsStoreOperationOptions): Promise<ModelsStoreEntry | undefined>;
+	write(providerId: string, entry: ModelsStoreEntry, options?: ModelsStoreOperationOptions): Promise<void>;
+	delete(providerId: string, options?: ModelsStoreOperationOptions): Promise<void>;
 }
 
-/** ModelsStore scoped to one provider. Providers cannot access other providers' catalogs. */
-/** 单供应商作用域的模型存储视图（中文说明）：供应商只能访问自己的目录。 */
-export interface ProviderModelsStore {
-	// 读取本供应商的目录条目
-	read(): Promise<ModelsStoreEntry | undefined>;
-	// 写入本供应商的目录条目
-	write(entry: ModelsStoreEntry): Promise<void>;
-	// 删除本供应商的目录条目
-	delete(): Promise<void>;
-}
-
-/** 内存模型存储实现（中文说明）：条目存于 Map，读写均做结构化克隆。 */
 export class InMemoryModelsStore implements ModelsStore {
-	// 供应商 ID → 目录条目
 	private readonly entries = new Map<string, ModelsStoreEntry>();
 
-	// 读取：返回克隆（不存在则 undefined）
-	async read(providerId: string): Promise<ModelsStoreEntry | undefined> {
+	async read(providerId: string, options?: ModelsStoreOperationOptions): Promise<ModelsStoreEntry | undefined> {
+		options?.signal?.throwIfAborted();
 		const entry = this.entries.get(providerId);
 		return entry ? structuredClone(entry) : undefined;
 	}
 
-	// 写入：保存克隆，隔离外部引用
-	async write(providerId: string, entry: ModelsStoreEntry): Promise<void> {
+	async write(providerId: string, entry: ModelsStoreEntry, options?: ModelsStoreOperationOptions): Promise<void> {
+		options?.signal?.throwIfAborted();
 		this.entries.set(providerId, structuredClone(entry));
 	}
 
-	// 删除
-	async delete(providerId: string): Promise<void> {
+	async delete(providerId: string, options?: ModelsStoreOperationOptions): Promise<void> {
+		options?.signal?.throwIfAborted();
 		this.entries.delete(providerId);
 	}
 }

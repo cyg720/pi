@@ -1,9 +1,19 @@
 /**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/oauth/openrouter` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:http`、`../../utils/provider-env.ts`、`../types.ts`、`./oauth-page.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/oauth/openrouter` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `openRouterOAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `openRouterOAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+/**
  * OpenRouter OAuth PKCE flow.
  *
  * OpenRouter exchanges an authorization code for a permanent, user-controlled
  * API key rather than an expiring access/refresh token pair. The callback is
- * handled by a one-shot loopback server on an ephemeral port.
+ * handled by a one-shot loopback server on an ephemeral port, raced against a
+ * manual prompt so remote/headless sessions can paste the redirect URL when
+ * the browser cannot reach the loopback server.
  *
  * NOTE: This module uses Node.js http.createServer for the OAuth callback server.
  *【中文说明】OpenRouter OAuth PKCE 流程：授权码换取永久 API 密钥（非过期令牌对），
@@ -13,7 +23,7 @@
 
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { getProviderEnvValue } from "../../utils/provider-env.ts";
-import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
+import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
 import { oauthErrorHtml, oauthSuccessHtml } from "./oauth-page.ts";
 import { generatePKCE } from "./pkce.ts";
 
@@ -32,8 +42,16 @@ type JsonObject = Record<string, unknown>;
 
 type OpenRouterCallbackServer = {
 	callbackUrl: string;
-	credential: Promise<OAuthCredential>;
-	close(): void;
+	/** Stop listening and release timers without settling `waitForCredential`. */
+	close: () => void;
+	/** Hand the login over to manual code entry unless a callback already claimed the exchange. */
+	cancelWait: () => void;
+	/**
+	 * Resolves with the credential once a browser callback completes the key
+	 * exchange, or with null once `cancelWait` hands the login over to manual
+	 * code entry. Rejects on timeout, cancellation, or a failed exchange.
+	 */
+	waitForCredential: () => Promise<OAuthCredential | null>;
 };
 
 function sendHtml(response: ServerResponse, status: number, html: string): void {
@@ -41,6 +59,23 @@ function sendHtml(response: ServerResponse, status: number, html: string): void 
 	response.setHeader("content-type", "text/html; charset=utf-8");
 	response.setHeader("cache-control", "no-store");
 	response.end(html);
+}
+
+function parseAuthorizationInput(input: string): string | undefined {
+	const value = input.trim();
+	if (!value) return undefined;
+
+	try {
+		return new URL(value).searchParams.get("code") ?? undefined;
+	} catch {
+		// not a URL
+	}
+
+	if (value.includes("code=")) {
+		return new URLSearchParams(value).get("code") ?? undefined;
+	}
+
+	return value;
 }
 
 function errorDetail(body: JsonObject): string | undefined {
@@ -57,12 +92,12 @@ function errorDetail(body: JsonObject): string | undefined {
 async function exchangeAuthorizationCode(
 	code: string,
 	verifier: string,
-	signal?: AbortSignal,
+	signal: AbortSignal,
 ): Promise<OAuthCredential> {
-	if (signal?.aborted) throw new Error("Login cancelled");
+	if (signal.aborted) throw new Error("Login cancelled");
 	const controller = new AbortController();
-	const onAbort = () => controller.abort(signal?.reason);
-	signal?.addEventListener("abort", onAbort, { once: true });
+	const onAbort = () => controller.abort(signal.reason);
+	signal.addEventListener("abort", onAbort, { once: true });
 	const timeout = setTimeout(
 		() => controller.abort(new Error("OpenRouter OAuth token exchange timed out")),
 		TOKEN_EXCHANGE_TIMEOUT_MS,
@@ -84,12 +119,12 @@ async function exchangeAuthorizationCode(
 			if (response.ok) throw new Error("OpenRouter OAuth returned invalid JSON");
 		}
 	} catch (error) {
-		if (signal?.aborted) throw new Error("Login cancelled");
+		if (signal.aborted) throw new Error("Login cancelled");
 		if (controller.signal.aborted) throw new Error("OpenRouter OAuth token exchange timed out");
 		throw error;
 	} finally {
 		clearTimeout(timeout);
-		signal?.removeEventListener("abort", onAbort);
+		signal.removeEventListener("abort", onAbort);
 	}
 
 	if (!response.ok) {
@@ -112,13 +147,13 @@ async function exchangeAuthorizationCode(
 async function startCallbackServer(
 	callbackPath: string,
 	verifier: string,
-	signal?: AbortSignal,
+	signal: AbortSignal,
 ): Promise<OpenRouterCallbackServer> {
-	if (signal?.aborted) throw new Error("Login cancelled");
+	if (signal.aborted) throw new Error("Login cancelled");
 	const callbackHost = getCallbackHost();
-	let resolveCredential: (credential: OAuthCredential) => void = () => {};
+	let resolveCredential: (credential: OAuthCredential | null) => void = () => {};
 	let rejectCredential: (error: Error) => void = () => {};
-	const credential = new Promise<OAuthCredential>((resolve, reject) => {
+	const credential = new Promise<OAuthCredential | null>((resolve, reject) => {
 		resolveCredential = resolve;
 		rejectCredential = reject;
 	});
@@ -129,12 +164,16 @@ async function startCallbackServer(
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 	let onAbort: (() => void) | undefined;
 
-	const finish = (result: { credential: OAuthCredential } | { error: Error }): void => {
+	const close = (): void => {
+		if (timeout) clearTimeout(timeout);
+		if (onAbort) signal.removeEventListener("abort", onAbort);
+		server.close();
+	};
+
+	const finish = (result: { credential: OAuthCredential | null } | { error: Error }): void => {
 		if (settled) return;
 		settled = true;
-		if (timeout) clearTimeout(timeout);
-		if (onAbort) signal?.removeEventListener("abort", onAbort);
-		server.close();
+		close();
 		if ("credential" in result) resolveCredential(result.credential);
 		else rejectCredential(result.error);
 	};
@@ -188,51 +227,85 @@ async function startCallbackServer(
 
 	server.on("error", (error) => finish({ error }));
 	onAbort = () => finish({ error: new Error("Login cancelled") });
-	signal?.addEventListener("abort", onAbort, { once: true });
-	if (signal?.aborted) {
-		signal.removeEventListener("abort", onAbort);
-		server.close();
+	signal.addEventListener("abort", onAbort, { once: true });
+	if (signal.aborted) {
+		close();
 		throw new Error("Login cancelled");
 	}
 	timeout = setTimeout(() => finish({ error: new Error("OpenRouter OAuth login timed out") }), LOGIN_TIMEOUT_MS);
 
 	const address = server.address();
 	if (!address || typeof address === "string") {
-		finish({ error: new Error("Could not determine the OpenRouter OAuth callback port") });
+		close();
 		throw new Error("Could not determine the OpenRouter OAuth callback port");
 	}
 
 	return {
 		callbackUrl: `http://${callbackHost}:${address.port}${callbackPath}`,
-		credential,
-		close: () => finish({ error: new Error("Login cancelled") }),
+		close,
+		// A claimed callback is already exchanging its code; let that exchange settle the login.
+		cancelWait: () => {
+			if (!claimed) finish({ credential: null });
+		},
+		waitForCredential: () => credential,
 	};
 }
 
-async function loginOpenRouter(interaction: AuthInteraction): Promise<OAuthCredential> {
+async function loginOpenRouter(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const { verifier, challenge } = await generatePKCE();
 	const callbackPath = `/oauth/callback/${crypto.randomUUID()}`;
 	const callback = await startCallbackServer(callbackPath, verifier, interaction.signal);
-	const authorizeUrl = new URL(AUTHORIZE_URL);
-	authorizeUrl.search = new URLSearchParams({
-		callback_url: callback.callbackUrl,
-		code_challenge: challenge,
-		code_challenge_method: "S256",
-	}).toString();
-
-	interaction.notify({
-		type: "progress",
-		message: `Listening for OpenRouter OAuth callback on ${callback.callbackUrl}`,
-	});
-	interaction.notify({
-		type: "auth_url",
-		url: authorizeUrl.toString(),
-		instructions: "Complete sign-in in your browser.",
-	});
+	const manualAbort = new AbortController();
+	let manualInput: string | undefined;
+	let manualError: Error | undefined;
 
 	try {
-		return await callback.credential;
+		const authorizeUrl = new URL(AUTHORIZE_URL);
+		authorizeUrl.search = new URLSearchParams({
+			callback_url: callback.callbackUrl,
+			code_challenge: challenge,
+			code_challenge_method: "S256",
+		}).toString();
+
+		interaction.notify({
+			type: "progress",
+			message: `Listening for OpenRouter OAuth callback on ${callback.callbackUrl}`,
+		});
+		interaction.notify({
+			type: "auth_url",
+			url: authorizeUrl.toString(),
+			instructions:
+				"Complete sign-in in your browser. If the browser is on another machine, paste the final redirect URL here.",
+		});
+
+		const manualPromise = interaction
+			.prompt({
+				type: "manual_code",
+				message: "Complete sign-in in your browser, or paste the authorization code / redirect URL here:",
+				placeholder: callback.callbackUrl,
+				signal: manualAbort.signal,
+			})
+			.then((input) => {
+				manualInput = input;
+				callback.cancelWait();
+			})
+			.catch((error) => {
+				manualError = error instanceof Error ? error : new Error(String(error));
+				callback.cancelWait();
+			});
+
+		const credential = await callback.waitForCredential();
+		if (manualError) throw manualError;
+		if (credential) return credential;
+
+		await manualPromise;
+		if (manualError) throw manualError;
+		const code = manualInput ? parseAuthorizationInput(manualInput) : undefined;
+		if (!code) throw new Error("Missing authorization code");
+		interaction.notify({ type: "progress", message: "Exchanging authorization code for an API key..." });
+		return await exchangeAuthorizationCode(code, verifier, interaction.signal);
 	} finally {
+		manualAbort.abort();
 		callback.close();
 	}
 }
@@ -241,7 +314,7 @@ export const openRouterOAuth: OAuthAuth = {
 	name: "OpenRouter OAuth",
 	loginLabel: "Sign in with OpenRouter",
 	login: loginOpenRouter,
-	async refresh(credential) {
+	async refresh(credential, _signal) {
 		return credential;
 	},
 	async toAuth(credential) {

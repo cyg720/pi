@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/tools/grep` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:fs/promises`、`node:readline`、`@earendil-works/pi-agent-core`、`@earendil-works/pi-tui`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/tools/grep` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `grepToolSystemPromptContribution`、`GrepToolInput`、`GrepToolDetails`、`GrepOperations`、`GrepToolOptions`、`createGrepToolDefinition`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `grepToolSystemPromptContribution`、`GrepToolInput`、`GrepToolDetails`、`GrepOperations`、`GrepToolOptions`、`createGrepToolDefinition` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import { readFile as fsReadFile, stat as fsStat } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
@@ -8,7 +16,7 @@ import { type Static, Type } from "typebox";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
 import { ensureTool } from "../../utils/tools-manager.ts";
-import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
+import type { ExtensionContext, ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
 import { resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, invalidArgText, shortenPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
@@ -35,10 +43,11 @@ const grepSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of matches to return (default: 100)" })),
 });
 
-/**
- * 【文件职责】grep 工具：按正则/字面量搜索文件内容，输出带行号与截断的匹配。
- * 【新手阅读建议】看匹配与输出截断。
- */
+export const grepToolSystemPromptContribution = {
+	snippet: "Search file contents for patterns (respects .gitignore)",
+	guidelines: [],
+} as const;
+
 export type GrepToolInput = Static<typeof grepSchema>;
 const DEFAULT_LIMIT = 100;
 
@@ -133,7 +142,7 @@ export function createGrepToolDefinition(
 		name: "grep",
 		label: "grep",
 		description: `Search file contents for a pattern. Returns matching lines with file paths and line numbers. Respects .gitignore. Output is truncated to ${DEFAULT_LIMIT} matches or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). Long lines are truncated to ${GREP_MAX_LINE_LENGTH} chars.`,
-		promptSnippet: "Search file contents for patterns (respects .gitignore)",
+		promptSnippet: grepToolSystemPromptContribution.snippet,
 		parameters: grepSchema,
 		async execute(
 			_toolCallId,
@@ -156,7 +165,7 @@ export function createGrepToolDefinition(
 			},
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
+			ctx?: ExtensionContext,
 		) {
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
@@ -173,13 +182,13 @@ export function createGrepToolDefinition(
 
 				(async () => {
 					try {
-						const rgPath = await ensureTool("rg", true);
+						const rgPath = await ensureTool("rg");
 						if (!rgPath) {
 							settle(() => reject(new Error("ripgrep (rg) is not available and could not be downloaded")));
 							return;
 						}
 
-						const searchPath = resolveToCwd(searchDir || ".", cwd);
+						const searchPath = resolveToCwd(searchDir || ".", ctx?.cwd || cwd);
 						const ops = customOps ?? defaultGrepOperations;
 						let isDirectory: boolean;
 						try {

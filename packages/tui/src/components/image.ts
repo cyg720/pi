@@ -8,6 +8,7 @@ import {
 	renderImage,
 } from "../terminal-image.ts";
 import type { Component } from "../tui.ts";
+import { truncateToWidth } from "../utils.ts";
 
 /**
  * 【文件职责】实现 Image 图片组件：在支持图片协议（Kitty/iTerm2）的终端中内嵌渲染图片，
@@ -109,7 +110,7 @@ export class Image implements Component {
 
 		// 终端支持图片协议
 		if (caps.images) {
-				// Kitty 协议且尚未分配 ID：先分配
+			// Kitty 协议且尚未分配 ID：先分配
 			if (caps.images === "kitty" && this.imageId === undefined) {
 				this.imageId = allocateImageId();
 			}
@@ -122,7 +123,7 @@ export class Image implements Component {
 
 			if (result) {
 				// Store the image ID for later cleanup
-					// 记录渲染器返回的图片 ID，供后续清理/更新
+				// 记录渲染器返回的图片 ID，供后续清理/更新
 				if (result.imageId) {
 					this.imageId = result.imageId;
 				}
@@ -150,13 +151,13 @@ export class Image implements Component {
 					lines.push(moveUp + result.sequence);
 				}
 			} else {
-			// 渲染失败或终端不支持：生成降级占位文本并着色
+				// 渲染失败或终端不支持：生成降级占位文本并着色
 				const fallback = imageFallback(this.mimeType, this.dimensions, this.options.filename);
-				lines = [this.theme.fallbackColor(fallback)];
+				lines = [truncateToWidth(this.theme.fallbackColor(fallback), width)];
 			}
 		} else {
 			const fallback = imageFallback(this.mimeType, this.dimensions, this.options.filename);
-			lines = [this.theme.fallbackColor(fallback)];
+			lines = [truncateToWidth(this.theme.fallbackColor(fallback), width)];
 		}
 
 		// 写入缓存

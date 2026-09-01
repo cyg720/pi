@@ -89,7 +89,7 @@ function hasVertexAdcCredentials(env?: ProviderEnv): boolean {
 			cachedVertexAdcCredentialsExists = _existsSync(gacPath);
 		} else {
 			// Fall back to default ADC path (lazy evaluation)
-		// 回退到默认 ADC 路径（懒求值）
+			// 回退到默认 ADC 路径（懒求值）
 			cachedVertexAdcCredentialsExists = _existsSync(
 				_join(_homedir(), ".config", "gcloud", "application_default_credentials.json"),
 			);
@@ -116,6 +116,7 @@ function getApiKeyEnvVars(provider: string): readonly string[] | undefined {
 		"ant-ling": "ANT_LING_API_KEY",
 		"qwen-token-plan": "QWEN_TOKEN_PLAN_API_KEY",
 		"qwen-token-plan-cn": "QWEN_TOKEN_PLAN_CN_API_KEY",
+		"qwen-token-plan-individual": "QWEN_TOKEN_PLAN_API_KEY",
 		openai: "OPENAI_API_KEY",
 		"azure-openai-responses": "AZURE_OPENAI_API_KEY",
 		nvidia: "NVIDIA_API_KEY",
@@ -138,6 +139,7 @@ function getApiKeyEnvVars(provider: string): readonly string[] | undefined {
 		huggingface: "HF_TOKEN",
 		fireworks: "FIREWORKS_API_KEY",
 		together: "TOGETHER_API_KEY",
+		baseten: "BASETEN_API_KEY",
 		opencode: "OPENCODE_API_KEY",
 		"opencode-go": "OPENCODE_API_KEY",
 		"kimi-coding": "KIMI_API_KEY",
@@ -209,8 +211,8 @@ export function getEnvApiKey(provider: string, env?: ProviderEnv): string | unde
 
 	if (provider === "amazon-bedrock") {
 		// Amazon Bedrock supports multiple credential sources:
-	// Amazon Bedrock 支持多种凭据来源：AWS_PROFILE / IAM 密钥对 /
-	// AWS_BEARER_TOKEN_BEDROCK / ECS 任务角色（相对/完整 URI）/ IRSA 身份令牌文件
+		// Amazon Bedrock 支持多种凭据来源：AWS_PROFILE / IAM 密钥对 /
+		// AWS_BEARER_TOKEN_BEDROCK / ECS 任务角色（相对/完整 URI）/ IRSA 身份令牌文件
 		// 1. AWS_PROFILE - named profile from ~/.aws/credentials
 		// 2. AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY - standard IAM keys
 		// 3. AWS_BEARER_TOKEN_BEDROCK - Bedrock bearer token

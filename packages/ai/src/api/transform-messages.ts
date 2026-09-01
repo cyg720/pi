@@ -214,12 +214,12 @@ export function transformMessages<TApi extends Api>(
 
 		if (msg.role === "assistant") {
 			// If we have pending orphaned tool calls from a previous assistant, insert synthetic results now
-		// 上一助手消息有未闭合工具调用：现在补插合成结果
+			// 上一助手消息有未闭合工具调用：现在补插合成结果
 			insertSyntheticToolResults();
 
 			// Skip errored/aborted assistant messages entirely.
-		// 整条跳过 error/aborted 助手消息：这些是不完整轮次，不应重放
-		// （可能含半截内容/未完成工具调用；重放会触发 API 错误，模型应从最后合法状态重试）
+			// 整条跳过 error/aborted 助手消息：这些是不完整轮次，不应重放
+			// （可能含半截内容/未完成工具调用；重放会触发 API 错误，模型应从最后合法状态重试）
 			// These are incomplete turns that shouldn't be replayed:
 			// - May have partial content (reasoning without message, incomplete tool calls)
 			// - Replaying them can cause API errors (e.g., OpenAI "reasoning without following item")
@@ -230,7 +230,7 @@ export function transformMessages<TApi extends Api>(
 			}
 
 			// Track tool calls from this assistant message
-		// 记录本条助手消息的工具调用（供后续合成）
+			// 记录本条助手消息的工具调用（供后续合成）
 			const toolCalls = assistantMsg.content.filter((b) => b.type === "toolCall") as ToolCall[];
 			if (toolCalls.length > 0) {
 				pendingToolCalls = toolCalls;
@@ -243,7 +243,7 @@ export function transformMessages<TApi extends Api>(
 			result.push(msg);
 		} else if (msg.role === "user") {
 			// User message interrupts tool flow - insert synthetic results for orphaned calls
-		// 用户消息打断工具流：为孤立调用补插合成结果
+			// 用户消息打断工具流：为孤立调用补插合成结果
 			insertSyntheticToolResults();
 			result.push(msg);
 		} else {

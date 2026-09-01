@@ -23,7 +23,7 @@ type FakeExtensionRunner = {
 // runPrintMode 会访问的会话最小结构。
 type FakeSession = {
 	sessionManager: { getHeader: () => object | undefined };
-	agent: { waitForIdle: () => Promise<void> };
+	agent: { waitForIdle: () => Promise<void>; subscribe: ReturnType<typeof vi.fn> };
 	state: { messages: AssistantMessage[] };
 	extensionRunner: FakeExtensionRunner;
 	bindExtensions: ReturnType<typeof vi.fn>;
@@ -82,7 +82,7 @@ function createRuntimeHost(assistantMessage: AssistantMessage): FakeRuntimeHost 
 	// 打印模式所需方法均为无副作用模拟的会话替身。
 	const session: FakeSession = {
 		sessionManager: { getHeader: () => undefined },
-		agent: { waitForIdle: async () => {} },
+		agent: { waitForIdle: async () => {}, subscribe: vi.fn(() => () => {}) },
 		state,
 		extensionRunner,
 		bindExtensions: vi.fn(async () => {}),

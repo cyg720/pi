@@ -1,9 +1,17 @@
 /**
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/oauth/xai` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `../types.ts`、`./device-code.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/oauth/xai` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `xaiOAuth`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `xaiOAuth` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
+/**
  *【中文说明】xAI OAuth 设备码流程：经 auth.x.ai 设备授权 + 令牌轮询。
  * xAI OAuth device-code flow.
  */
 
-import type { AuthInteraction, OAuthAuth, OAuthCredential } from "../types.ts";
+import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
 import { pollOAuthDeviceCodeFlow } from "./device-code.ts";
 
 // xAI 客户端 ID
@@ -64,7 +72,7 @@ function validateVerificationUri(raw: string): string {
 	return url.href;
 }
 
-async function postForm(url: string, fields: Record<string, string>, signal?: AbortSignal): Promise<OAuthHttpResponse> {
+async function postForm(url: string, fields: Record<string, string>, signal: AbortSignal): Promise<OAuthHttpResponse> {
 	let response: Response;
 	try {
 		response = await fetch(url, {
@@ -77,7 +85,7 @@ async function postForm(url: string, fields: Record<string, string>, signal?: Ab
 			signal,
 		});
 	} catch (error) {
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			throw new Error("Login cancelled");
 		}
 		throw error;
@@ -88,7 +96,7 @@ async function postForm(url: string, fields: Record<string, string>, signal?: Ab
 		const parsed = (await response.json()) as unknown;
 		body = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as JsonObject) : {};
 	} catch {
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			throw new Error("Login cancelled");
 		}
 		throw new Error(`xAI OAuth returned invalid JSON (HTTP ${response.status})`);
@@ -145,7 +153,7 @@ function credentialsFromTokenResponse(body: JsonObject, previousRefreshToken?: s
 	};
 }
 
-async function requestDeviceCode(signal?: AbortSignal): Promise<XaiDeviceCode> {
+async function requestDeviceCode(signal: AbortSignal): Promise<XaiDeviceCode> {
 	const response = await postForm(
 		XAI_DEVICE_CODE_URL,
 		{
@@ -161,7 +169,7 @@ async function requestDeviceCode(signal?: AbortSignal): Promise<XaiDeviceCode> {
 	return parseDeviceCode(response.body);
 }
 
-async function pollForTokens(device: XaiDeviceCode, signal?: AbortSignal): Promise<OAuthCredential> {
+async function pollForTokens(device: XaiDeviceCode, signal: AbortSignal): Promise<OAuthCredential> {
 	return pollOAuthDeviceCodeFlow<OAuthCredential>({
 		intervalSeconds: device.intervalSeconds,
 		expiresInSeconds: device.expiresInSeconds,
@@ -201,7 +209,7 @@ async function pollForTokens(device: XaiDeviceCode, signal?: AbortSignal): Promi
 	});
 }
 
-async function loginXai(interaction: AuthInteraction): Promise<OAuthCredential> {
+async function loginXai(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const device = await requestDeviceCode(interaction.signal);
 	interaction.notify({
 		type: "device_code",
@@ -213,7 +221,7 @@ async function loginXai(interaction: AuthInteraction): Promise<OAuthCredential> 
 	return pollForTokens(device, interaction.signal);
 }
 
-async function refreshXaiToken(refreshToken: string, signal?: AbortSignal): Promise<OAuthCredential> {
+async function refreshXaiToken(refreshToken: string, signal: AbortSignal): Promise<OAuthCredential> {
 	const response = await postForm(
 		XAI_TOKEN_URL,
 		{
@@ -231,6 +239,7 @@ async function refreshXaiToken(refreshToken: string, signal?: AbortSignal): Prom
 
 export const xaiOAuth: OAuthAuth = {
 	name: "xAI (Grok/X subscription)",
+	isSubscription: true,
 	loginLabel: "Sign in with SuperGrok or X Premium",
 	login: loginXai,
 	refresh: (credential, signal) => refreshXaiToken(credential.refresh, signal),

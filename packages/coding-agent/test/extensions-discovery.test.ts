@@ -459,6 +459,9 @@ describe("extensions discovery", () => {
 		/** 变量 extCode：当前场景写入磁盘的扩展源码；仅在当前测试作用域内有效。 */
 		const extCode = `
 			export default function(pi) {
+				pi.registerMarkdownTransformer((markdown) => {
+					return markdown;
+				});
 				pi.registerMessageRenderer("my-custom-type", (message, options, theme) => {
 					return null; // Use default rendering
 // 中文说明：以上英文注释说明该扩展目录布局、发现边界或预期注册结果。
@@ -475,6 +478,7 @@ describe("extensions discovery", () => {
 
 		expect(result.errors).toHaveLength(0);
 		expect(result.extensions).toHaveLength(1);
+		expect(result.extensions[0].markdownTransformer).toBeDefined();
 		expect(result.extensions[0].messageRenderers.has("my-custom-type")).toBe(true);
 		expect(result.extensions[0].entryRenderers?.has("my-entry-type")).toBe(true);
 	});

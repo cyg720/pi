@@ -1,20 +1,15 @@
 /**
- * 【文件职责】tui 包的总出口（barrel 文件）：集中导出终端 UI 框架的全部公开能力——
- *              TUI 核心（组件/容器/覆盖层）、编辑器与输入组件、自动补全、快捷键体系、
- *              键盘输入解析、stdin 缓冲、终端接口、颜色/图片支持与文本工具函数。
- * 【技术维度】纯 TypeScript ESM 再导出，无实现逻辑。
- * 【产品维度】为上层应用（如 coding-agent 的交互模式）提供一套可复用的终端界面积木；
- *              二次开发自定义 TUI 界面时从这里取用所有构件。
- * 【逻辑维度】按“自动补全 → 组件 → 编辑器接口 → 模糊匹配 → 快捷键 → 按键解析 → 输入缓冲 →
- *              终端 → 颜色 → 图片 → TUI 核心 → 工具”分组导出。
- * 【关键边界】本文件只做转发；新增公开模块必须在此登记；注意避免导出名冲突。
- * 【新手阅读建议】第一站读本文件建立能力清单认知，再顺着导出跳转到感兴趣的源文件精读。
+ * 【文件职责】实现 `@earendil-works/pi-tui` 包中的 `index` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `marked`、`./autocomplete.ts`、`./components/box.ts`、`./components/cancellable-loader.ts`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为文本应用提供基于差分渲染的终端界面能力；本文件负责其中与 `index` 对应的子能力。
+ * 【逻辑维度】本文件通过重导出汇总相邻模块的公开符号，使调用方可以从稳定入口访问各项能力。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看各条重导出语句，再进入对应子模块阅读具体类型与实现。
  */
 // Core TUI interfaces and classes
-// 核心 TUI 接口与类
 
+export { Marked, type Token, type Tokens } from "marked";
 // Autocomplete support
-// 自动补全支持
 export {
 	type AutocompleteItem,
 	type AutocompleteProvider,
@@ -23,14 +18,20 @@ export {
 	type SlashCommand,
 } from "./autocomplete.ts";
 // Components
-// 通用组件
 export { Box } from "./components/box.ts";
 export { CancellableLoader } from "./components/cancellable-loader.ts";
 export { Editor, type EditorOptions, type EditorTheme } from "./components/editor.ts";
+export { HStack } from "./components/h-stack.ts";
 export { Image, type ImageOptions, type ImageTheme } from "./components/image.ts";
 export { Input } from "./components/input.ts";
 export { Loader, type LoaderIndicatorOptions } from "./components/loader.ts";
 export { type DefaultTextStyle, Markdown, type MarkdownOptions, type MarkdownTheme } from "./components/markdown.ts";
+export {
+	ScrollView,
+	type ScrollViewOptions,
+	type ScrollViewScrollbar,
+	type ScrollViewScrollToOptions,
+} from "./components/scroll-view.ts";
 export {
 	type SelectItem,
 	SelectList,
@@ -42,14 +43,18 @@ export { type SettingItem, SettingsList, type SettingsListTheme } from "./compon
 export { Spacer } from "./components/spacer.ts";
 export { Text } from "./components/text.ts";
 export { TruncatedText } from "./components/truncated-text.ts";
+export {
+	type StackChild,
+	type StackEntry,
+	type StackEntryOptions,
+	type StackOptions,
+	VStack,
+} from "./components/v-stack.ts";
 // Editor component interface (for custom editors)
-// 编辑器组件接口（用于自定义编辑器）
 export type { EditorComponent } from "./editor-component.ts";
 // Fuzzy matching
-// 模糊匹配
 export { type FuzzyMatch, fuzzyFilter, fuzzyMatch } from "./fuzzy.ts";
 // Keybindings
-// 快捷键绑定
 export {
 	getKeybindings,
 	type Keybinding,
@@ -63,7 +68,6 @@ export {
 	TUI_KEYBINDINGS,
 } from "./keybindings.ts";
 // Keyboard input handling
-// 键盘输入解析
 export {
 	decodeKittyPrintable,
 	isKeyRelease,
@@ -76,14 +80,13 @@ export {
 	parseKey,
 	setKittyProtocolActive,
 } from "./keys.ts";
+// LaTeX rendering
+export { type RenderLatexOptions, renderLatex } from "./latex.ts";
 // Input buffering for batch splitting
-// stdin 输入缓冲与批量切分
 export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./stdin-buffer.ts";
 // Terminal interface and implementations
-// 终端接口与实现
 export { ProcessTerminal, type Terminal } from "./terminal.ts";
 // Terminal colors
-// 终端颜色
 export {
 	parseOsc11BackgroundColor,
 	parseTerminalColorSchemeReport,
@@ -91,7 +94,6 @@ export {
 	type TerminalColorScheme,
 } from "./terminal-colors.ts";
 // Terminal image support
-// 终端图片显示支持
 export {
 	allocateImageId,
 	type CellDimensions,
@@ -116,24 +118,39 @@ export {
 	renderImage,
 	resetCapabilitiesCache,
 	setCapabilities,
+	setCapabilityOverrides,
 	setCellDimensions,
 	type TerminalCapabilities,
 } from "./terminal-image.ts";
-// TUI 核心框架：组件契约、容器、覆盖层管理
 export {
 	type Component,
 	Container,
 	CURSOR_MARKER,
+	compositeTuiLine,
 	type Focusable,
 	isFocusable,
+	isViewportTUI,
 	type OverlayAnchor,
 	type OverlayHandle,
 	type OverlayMargin,
 	type OverlayOptions,
 	type OverlayUnfocusOptions,
 	type SizeValue,
-	TUI,
+	type TUI,
+	type TuiInputListener,
+	type TuiInputListenerResult,
+	type TuiMode,
+	type TuiStopOptions,
+	type ViewportTUI,
 } from "./tui.ts";
+export { TuiAltScreen, type TuiAltScreenOptions } from "./tui-alt-screen.ts";
+export { TuiMainScreen, type TuiMainScreenRenderState } from "./tui-main-screen.ts";
 // Utilities
-// 文本工具函数
-export { sliceByColumn, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "./utils.ts";
+export {
+	getOsc8LinkAtColumn,
+	sliceByColumn,
+	stripTerminalSequences,
+	truncateToWidth,
+	visibleWidth,
+	wrapTextWithAnsi,
+} from "./utils.ts";

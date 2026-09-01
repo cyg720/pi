@@ -1,50 +1,39 @@
 /**
- * 【文件职责】RFC 8628 设备码轮询流程：按间隔轮询授权状态直至完成/超时/取消，
- *              处理 slow_down 增距与中止信号。
- * 【技术维度】可中止睡眠；状态机（pending/slow_down/failed/complete）。
- * 【产品维度】为设备码类 OAuth（Kimi/xAI/Copilot）提供统一轮询实现。
- * 【逻辑维度】首次轮询延迟（可选）→ 循环：poll → 分支处理（complete/slow_down/
- *              pending/failed）→ 超时/取消退出。
- * 【关键边界】服务端省略 interval 时按 5 秒轮询（RFC 8628 §3.2）；
- *              slow_down 每次增加 5 秒（§3.5）；WSL/VM 时钟漂移会超时报错。
- * 【新手阅读建议】先看 OAuthDeviceCodePollResult 状态联合，再读主轮询循环。
+ * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `auth/oauth/device-code` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 语言内建能力与本文件声明，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为不同大模型提供统一 API、模型发现和供应商配置能力；本文件负责其中与 `auth/oauth/device-code` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `OAuthDeviceCodePollResult`、`OAuthDeviceCodePollOptions`、`abortableSleep`、`pollOAuthDeviceCodeFlow`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `OAuthDeviceCodePollResult`、`OAuthDeviceCodePollOptions`、`abortableSleep`、`pollOAuthDeviceCodeFlow` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
-// 取消提示文案
 const CANCEL_MESSAGE = "Login cancelled";
 const TIMEOUT_MESSAGE = "Device flow timed out";
 const SLOW_DOWN_TIMEOUT_MESSAGE =
 	"Device flow timed out after one or more slow_down responses. This is often caused by clock drift in WSL or VM environments. Please sync or restart the VM clock and try again.";
 const MINIMUM_INTERVAL_MS = 1000;
-// 最小轮询间隔
 // RFC 8628 section 3.2: if the authorization server omits `interval`, the client must use 5 seconds.
-// 默认轮询间隔（秒）：服务端省略 interval 时使用
 const DEFAULT_POLL_INTERVAL_SECONDS = 5;
 // RFC 8628 section 3.5: `slow_down` means the polling interval must increase by 5 seconds.
 const SLOW_DOWN_INTERVAL_INCREMENT_MS = 5000;
-// slow_down 的间隔增量（秒）
 
 type OAuthDeviceCodeIncompletePollResult =
 	| { status: "pending" }
 	| { status: "slow_down"; intervalSeconds?: number }
 	| { status: "failed"; message: string };
 
-// 设备码轮询结果（公开）：pending/slow_down/failed/complete
 export type OAuthDeviceCodePollResult<T> = OAuthDeviceCodeIncompletePollResult | { status: "complete"; value: T };
 
-/** 轮询选项（中文说明）：intervalSeconds 间隔；expiresInSeconds 超时；
- * waitBeforeFirstPoll 首轮前是否等待；poll 轮询回调；signal 中止信号。 */
 export type OAuthDeviceCodePollOptions<T> = {
 	intervalSeconds?: number;
 	expiresInSeconds?: number;
 	waitBeforeFirstPoll?: boolean;
 	poll: () => Promise<OAuthDeviceCodePollResult<T>>;
-	signal?: AbortSignal;
+	signal: AbortSignal;
 };
 
-// 可中止睡眠（私有）：中止时以取消文案 reject
-function abortableSleep(ms: number, signal: AbortSignal | undefined, cancelMessage: string): Promise<void> {
+export function abortableSleep(ms: number, signal: AbortSignal, cancelMessage: string): Promise<void> {
 	return new Promise((resolve, reject) => {
-		if (signal?.aborted) {
+		if (signal.aborted) {
 			reject(new Error(cancelMessage));
 			return;
 		}
@@ -54,11 +43,11 @@ function abortableSleep(ms: number, signal: AbortSignal | undefined, cancelMessa
 			reject(new Error(cancelMessage));
 		};
 		const timeout = setTimeout(() => {
-			signal?.removeEventListener("abort", onAbort);
+			signal.removeEventListener("abort", onAbort);
 			resolve();
 		}, ms);
 
-		signal?.addEventListener("abort", onAbort, { once: true });
+		signal.addEventListener("abort", onAbort, { once: true });
 	});
 }
 
@@ -81,7 +70,7 @@ export async function pollOAuthDeviceCodeFlow<T>(options: OAuthDeviceCodePollOpt
 	}
 
 	while (Date.now() < deadline) {
-		if (options.signal?.aborted) {
+		if (options.signal.aborted) {
 			throw new Error(CANCEL_MESSAGE);
 		}
 

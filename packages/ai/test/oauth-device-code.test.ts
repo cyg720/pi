@@ -9,6 +9,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { pollOAuthDeviceCodeFlow } from "../src/auth/oauth/device-code.ts";
 
+const neverAbortedSignal = new AbortController().signal;
+
 describe("OAuth device-code polling", () => {
 	// 功能：恢复真实定时器；参数：无；返回：无。示例：Vitest 每个用例后自动调用。
 	afterEach(() => {
@@ -34,6 +36,7 @@ describe("OAuth device-code polling", () => {
 			intervalSeconds: 2,
 			expiresInSeconds: 30,
 			poll,
+			signal: neverAbortedSignal,
 		});
 
 		await vi.advanceTimersByTimeAsync(0);
@@ -65,6 +68,7 @@ describe("OAuth device-code polling", () => {
 				pollTimes.push(Date.now());
 				return { status: "complete" as const, value: "token" };
 			},
+			signal: neverAbortedSignal,
 		});
 
 		await vi.advanceTimersByTimeAsync(1999);
@@ -96,6 +100,7 @@ describe("OAuth device-code polling", () => {
 				if (!result) throw new Error("Unexpected extra poll");
 				return result;
 			},
+			signal: neverAbortedSignal,
 		});
 
 		await vi.advanceTimersByTimeAsync(0);
@@ -133,6 +138,7 @@ describe("OAuth device-code polling", () => {
 				if (!result) throw new Error("Unexpected extra poll");
 				return result;
 			},
+			signal: neverAbortedSignal,
 		});
 
 		await vi.advanceTimersByTimeAsync(0);

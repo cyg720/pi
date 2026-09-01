@@ -54,7 +54,7 @@ describe("Branch summary extensions", () => {
 		const targetId = harness.sessionManager.appendMessage(userMsg("first branch"));
 		harness.sessionManager.appendMessage(assistantMsg("first reply"));
 		harness.sessionManager.appendMessage(userMsg("abandoned branch work"));
-		harness.sessionManager.appendMessage(assistantMsg("abandoned reply"));
+		const sourceId = harness.sessionManager.appendMessage(assistantMsg("abandoned reply"));
 
 		/** 导航和摘要结果。 */
 		const result = await harness.session.navigateTree(targetId, { summarize: true });
@@ -62,6 +62,8 @@ describe("Branch summary extensions", () => {
 		const summaryEntry = result.summaryEntry;
 
 		expect(summaryEntry?.type).toBe("branch_summary");
+		expect(summaryEntry?.parentId).toBeNull();
+		expect(summaryEntry?.fromId).toBe(sourceId);
 		expect(summaryEntry?.fromHook).toBe(true);
 		expect(summaryEntry?.summary).toBe("Summary provided by extension");
 		expect(summaryEntry?.usage).toEqual(usage);

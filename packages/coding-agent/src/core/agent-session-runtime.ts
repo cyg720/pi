@@ -174,6 +174,9 @@ export class AgentSessionRuntime {
 	}
 
 	private async teardownCurrent(reason: SessionShutdownEvent["reason"], targetSessionFile?: string): Promise<void> {
+		// Settle any active response first so the aborted turn (including tool
+		// results) is persisted to the outgoing session before it is replaced.
+		await this.session.abort();
 		await emitSessionShutdownEvent(this.session.extensionRunner, {
 			type: "session_shutdown",
 			reason,
@@ -339,12 +342,12 @@ export class AgentSessionRuntime {
 		}
 
 		const sessionManager = this.session.sessionManager;
+		await this.teardownCurrent("fork", sessionManager.getSessionFile());
 		if (!targetLeafId) {
-			sessionManager.newSession({ parentSession: this.session.sessionFile });
+			sessionManager.newSession({ parentSession: previousSessionFile });
 		} else {
 			sessionManager.createBranchedSession(targetLeafId);
 		}
-		await this.teardownCurrent("fork", sessionManager.getSessionFile());
 		this.apply(
 			await this.createRuntime({
 				cwd: this.cwd,

@@ -1,3 +1,11 @@
+/**
+ * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/tools/ls` 模块，集中维护该模块的类型、状态与操作入口。
+ * 【技术维度】主要依赖 `node:fs/promises`、`@earendil-works/pi-agent-core`、`@earendil-works/pi-tui`、`path`，并通过 TypeScript 模块边界组织实现。
+ * 【产品维度】为具备读取、命令执行、编辑、写入和会话管理能力的编码代理 CLI 提供实现；本文件负责其中与 `core/tools/ls` 对应的子能力。
+ * 【逻辑维度】对外入口包括 `lsToolSystemPromptContribution`、`LsToolInput`、`LsToolDetails`、`LsOperations`、`LsToolOptions`、`createLsToolDefinition`；内部辅助逻辑围绕这些入口完成数据转换与流程控制。
+ * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
+ * 【新手阅读建议】先查看 `lsToolSystemPromptContribution`、`LsToolInput`、`LsToolDetails`、`LsOperations`、`LsToolOptions`、`createLsToolDefinition` 的签名，再沿导入依赖和内部调用链理解具体实现。
+ */
 import { readdir as fsReaddir, stat as fsStat } from "node:fs/promises";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { Text } from "@earendil-works/pi-tui";
@@ -5,7 +13,7 @@ import nodePath from "path";
 import { type Static, Type } from "typebox";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "../../modes/interactive/theme/theme.ts";
-import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
+import type { ExtensionContext, ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
 import { pathExists, resolveToCwd } from "./path-utils.ts";
 import { getTextOutput, renderToolPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
@@ -16,10 +24,11 @@ const lsSchema = Type.Object({
 	limit: Type.Optional(Type.Number({ description: "Maximum number of entries to return (default: 500)" })),
 });
 
-/**
- * 【文件职责】ls 工具：列出目录内容（含权限/大小/符号链接标注）。
- * 【新手阅读建议】看条目格式化。
- */
+export const lsToolSystemPromptContribution = {
+	snippet: "List directory contents",
+	guidelines: [],
+} as const;
+
 export type LsToolInput = Static<typeof lsSchema>;
 
 const DEFAULT_LIMIT = 500;
@@ -105,14 +114,14 @@ export function createLsToolDefinition(
 		name: "ls",
 		label: "ls",
 		description: `List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles. Output is truncated to ${DEFAULT_LIMIT} entries or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first).`,
-		promptSnippet: "List directory contents",
+		promptSnippet: lsToolSystemPromptContribution.snippet,
 		parameters: lsSchema,
 		async execute(
 			_toolCallId,
 			{ path, limit }: { path?: string; limit?: number },
 			signal?: AbortSignal,
 			_onUpdate?,
-			_ctx?,
+			ctx?: ExtensionContext,
 		) {
 			return new Promise((resolve, reject) => {
 				if (signal?.aborted) {
@@ -125,7 +134,7 @@ export function createLsToolDefinition(
 
 				(async () => {
 					try {
-						const dirPath = resolveToCwd(path || ".", cwd);
+						const dirPath = resolveToCwd(path || ".", ctx?.cwd || cwd);
 						const effectiveLimit = limit ?? DEFAULT_LIMIT;
 
 						// Check if path exists.

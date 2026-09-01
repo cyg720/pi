@@ -22,60 +22,41 @@
 #     pi-linux-arm64.tar.gz
 #     pi-windows-x64.zip
 #     pi-windows-arm64.zip
-#
-# 文件职责：在本地为六个目标平台构建 pi Bun 可执行文件，复制运行资源并生成发布压缩包。
-# 技术维度：使用 Bash 严格模式、npm、Bun 交叉编译、平台原生依赖、tar/zip 与文件复制命令。
-# 产品维度：产出可直接发布和本地冒烟测试的 macOS、Linux、Windows 二进制归档。
-# 逻辑维度：解析选项，安装依赖和构建包，逐平台编译，复制共享/原生资源，归档并重新解压。
-# 关键边界：脚本会删除 OUTPUT_DIR；输出必须是明确目录；跨平台依赖安装使用 --force 绕过 os/cpu 检查。
-# 新手阅读建议：先看选项解析和平台列表，再按“编译—复制—归档—解压”四个循环阅读。
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# 是否跳过 npm ci。
 SKIP_INSTALL=false
-# 是否跳过跨平台原生依赖安装。
 SKIP_DEPS=false
-# 是否跳过工作区包构建。
 SKIP_BUILD=false
-# 是否使用仓库内置模型数据离线构建。
 OFFLINE_MODEL_DATA=false
-# 只构建的目标平台；空串表示全部平台。
 PLATFORM=""
-# 最终归档与解压目录；空串稍后使用默认值。
 OUTPUT_DIR=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-install)
-			# SKIP_INSTALL 由该选项切换为 true，禁止执行 npm ci。
             SKIP_INSTALL=true
             shift
             ;;
         --skip-deps)
-			# SKIP_DEPS 由该选项切换为 true，跳过跨平台原生依赖安装。
             SKIP_DEPS=true
             shift
             ;;
         --skip-build)
-			# SKIP_BUILD 由该选项切换为 true，复用已有包构建结果。
             SKIP_BUILD=true
             shift
             ;;
         --offline-model-data)
-			# OFFLINE_MODEL_DATA 由该选项切换为 true，构建时只使用仓库内置模型数据。
             OFFLINE_MODEL_DATA=true
             shift
             ;;
         --platform)
-			# PLATFORM 保存 --platform 后的目标平台名，稍后会校验其是否在六个平台内。
             PLATFORM="$2"
             shift 2
             ;;
         --out)
-			# OUTPUT_DIR 保存 --out 后的输出目录，参数解析后会转换为绝对路径。
             OUTPUT_DIR="$2"
             shift 2
             ;;
@@ -87,7 +68,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate platform if specified
-# 若指定平台，限制为脚本支持的六个目标。
 if [[ -n "$PLATFORM" ]]; then
     case "$PLATFORM" in
         darwin-arm64|darwin-x64|linux-x64|linux-arm64|windows-x64|windows-arm64)
@@ -101,11 +81,9 @@ if [[ -n "$PLATFORM" ]]; then
 fi
 
 if [[ -z "$OUTPUT_DIR" ]]; then
-	# OUTPUT_DIR 未指定时采用 coding-agent 包内的默认 binaries 目录。
     OUTPUT_DIR="packages/coding-agent/binaries"
 fi
 if [[ "$OUTPUT_DIR" != /* ]]; then
-	# OUTPUT_DIR 为相对路径时，以仓库根目录为基准转换为绝对路径。
     OUTPUT_DIR="$(pwd)/$OUTPUT_DIR"
 fi
 
@@ -118,14 +96,18 @@ fi
 
 if [[ "$SKIP_DEPS" == "false" ]]; then
     echo "==> Installing cross-platform native bindings..."
-# clipboard 可选依赖的精确版本，所有平台绑定必须保持一致。
     CLIPBOARD_VERSION=$(node -p "require('./packages/coding-agent/package.json').optionalDependencies['@mariozechner/clipboard']")
-    # npm ci only installs optional deps for the current platform
-    # We need the base clipboard package and all platform bindings for bun cross-compilation
-    # Use --force to bypass platform checks (os/cpu restrictions in package.json)
-    # Install all in one command to avoid npm removing packages from previous installs
-    # npm ci 只安装当前平台可选依赖；Bun 交叉编译需要基础包和全部绑定，因此一次强制安装以免互相移除。
-    npm install --include=optional --no-save --package-lock=false --force --ignore-scripts \
+    # npm ci only installs optional deps for the current platform. Install the
+    # cross-platform packages in isolation so npm does not re-resolve and mutate
+    # the workspace dependency graph, which can trigger npm/arborist failures.
+    NATIVE_DEPS_DIR=$(mktemp -d)
+    cleanup_native_deps() {
+        rm -rf "$NATIVE_DEPS_DIR"
+    }
+    trap cleanup_native_deps EXIT
+    printf '%s\n' '{"private":true}' > "$NATIVE_DEPS_DIR/package.json"
+    # Use --force to bypass platform checks (os/cpu restrictions in package.json).
+    npm install --prefix "$NATIVE_DEPS_DIR" --include=optional --no-save --package-lock=false --force --ignore-scripts \
         @mariozechner/clipboard@"$CLIPBOARD_VERSION" \
         @mariozechner/clipboard-darwin-arm64@"$CLIPBOARD_VERSION" \
         @mariozechner/clipboard-darwin-x64@"$CLIPBOARD_VERSION" \
@@ -133,6 +115,20 @@ if [[ "$SKIP_DEPS" == "false" ]]; then
         @mariozechner/clipboard-linux-arm64-gnu@"$CLIPBOARD_VERSION" \
         @mariozechner/clipboard-win32-x64-msvc@"$CLIPBOARD_VERSION" \
         @mariozechner/clipboard-win32-arm64-msvc@"$CLIPBOARD_VERSION"
+    mkdir -p node_modules/@mariozechner
+    for package in \
+        clipboard \
+        clipboard-darwin-arm64 \
+        clipboard-darwin-x64 \
+        clipboard-linux-x64-gnu \
+        clipboard-linux-arm64-gnu \
+        clipboard-win32-x64-msvc \
+        clipboard-win32-arm64-msvc; do
+        rm -rf "node_modules/@mariozechner/$package"
+        cp -R "$NATIVE_DEPS_DIR/node_modules/@mariozechner/$package" node_modules/@mariozechner/
+    done
+    cleanup_native_deps
+    trap - EXIT
 else
     echo "==> Skipping cross-platform native bindings (--skip-deps)"
 fi
@@ -153,38 +149,68 @@ echo "==> Building binaries..."
 cd packages/coding-agent
 
 # Clean previous builds
-# 清除旧输出并创建全部平台子目录；OUTPUT_DIR 已被规范为绝对路径。
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"/{darwin-arm64,darwin-x64,linux-x64,linux-arm64,windows-x64,windows-arm64}
 
 # Determine which platforms to build
-# 根据 --platform 选择单个平台，否则构建六个平台。
-# 实际要编译和打包的平台数组。
 if [[ -n "$PLATFORM" ]]; then
-	# PLATFORMS 只包含命令行指定且已校验的单个平台。
     PLATFORMS=("$PLATFORM")
 else
-	# PLATFORMS 未指定筛选条件时包含全部六个发布目标。
     PLATFORMS=(darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64 windows-arm64)
 fi
 
+set_clipboard_target() {
+    case "$1" in
+        darwin-arm64)
+            clipboard_native_package="clipboard-darwin-arm64"
+            clipboard_native_file="clipboard.darwin-arm64.node"
+            ;;
+        darwin-x64)
+            clipboard_native_package="clipboard-darwin-x64"
+            clipboard_native_file="clipboard.darwin-x64.node"
+            ;;
+        linux-x64)
+            clipboard_native_package="clipboard-linux-x64-gnu"
+            clipboard_native_file="clipboard.linux-x64-gnu.node"
+            ;;
+        linux-arm64)
+            clipboard_native_package="clipboard-linux-arm64-gnu"
+            clipboard_native_file="clipboard.linux-arm64-gnu.node"
+            ;;
+        windows-x64)
+            clipboard_native_package="clipboard-win32-x64-msvc"
+            clipboard_native_file="clipboard.win32-x64-msvc.node"
+            ;;
+        windows-arm64)
+            clipboard_native_package="clipboard-win32-arm64-msvc"
+            clipboard_native_file="clipboard.win32-arm64-msvc.node"
+            ;;
+    esac
+}
+
 for platform in "${PLATFORMS[@]}"; do
     echo "Building for $platform..."
+    bun_target="bun-$platform"
+    if [[ "$platform" == *-x64 ]]; then
+        bun_target="${bun_target}-baseline"
+    fi
+
     # Bun compiled executables only embed worker scripts when they are passed as
     # explicit build entrypoints. The runtime can still use new URL(...), but the
     # worker must be present in the compiled executable.
-    # Bun 只有在 worker 脚本作为显式入口时才会将其嵌入可执行文件。
+    #
+    # Disable cwd bunfig.toml autoload so project preload scripts cannot crash the
+    # standalone binary before pi starts (see #7684).
     if [[ "$platform" == windows-* ]]; then
-        bun build --compile --target=bun-$platform ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile "$OUTPUT_DIR/$platform/pi.exe"
+        bun build --compile --no-compile-autoload-bunfig --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile "$OUTPUT_DIR/$platform/pi.exe"
     else
-        bun build --compile --target=bun-$platform ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile "$OUTPUT_DIR/$platform/pi"
+        bun build --compile --no-compile-autoload-bunfig --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile "$OUTPUT_DIR/$platform/pi"
     fi
 done
 
 echo "==> Creating release archives..."
 
 # Copy shared files to each platform directory
-# 为每个平台复制包元数据、主题、资产、文档、Photon 与 clipboard 原生绑定。
 for platform in "${PLATFORMS[@]}"; do
     cp package.json "$OUTPUT_DIR/$platform/"
     cp README.md "$OUTPUT_DIR/$platform/"
@@ -198,61 +224,19 @@ for platform in "${PLATFORMS[@]}"; do
     cp -r docs "$OUTPUT_DIR/$platform/"
     cp -r examples "$OUTPUT_DIR/$platform/"
 
-# 当前平台对应的 clipboard 原生包名。
-# 当前平台对应的 clipboard .node 文件名。
-    case "$platform" in
-        darwin-arm64)
-			# clipboard_native_package 是 macOS ARM64 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-darwin-arm64"
-			# clipboard_native_file 是 macOS ARM64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.darwin-arm64.node"
-            ;;
-        darwin-x64)
-			# clipboard_native_package 是 macOS x64 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-darwin-x64"
-			# clipboard_native_file 是 macOS x64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.darwin-x64.node"
-            ;;
-        linux-x64)
-			# clipboard_native_package 是 Linux x64 GNU 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-linux-x64-gnu"
-			# clipboard_native_file 是 Linux x64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.linux-x64-gnu.node"
-            ;;
-        linux-arm64)
-			# clipboard_native_package 是 Linux ARM64 GNU 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-linux-arm64-gnu"
-			# clipboard_native_file 是 Linux ARM64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.linux-arm64-gnu.node"
-            ;;
-        windows-x64)
-			# clipboard_native_package 是 Windows x64 MSVC 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-win32-x64-msvc"
-			# clipboard_native_file 是 Windows x64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.win32-x64-msvc.node"
-            ;;
-        windows-arm64)
-			# clipboard_native_package 是 Windows ARM64 MSVC 对应的 clipboard 包名。
-            clipboard_native_package="clipboard-win32-arm64-msvc"
-			# clipboard_native_file 是 Windows ARM64 对应的原生模块文件名。
-            clipboard_native_file="clipboard.win32-arm64-msvc.node"
-            ;;
-    esac
+    set_clipboard_target "$platform"
     mkdir -p "$OUTPUT_DIR/$platform/node_modules/@mariozechner"
     cp -r ../../node_modules/@mariozechner/clipboard "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
-    cp -r ../../node_modules/@mariozechner/$clipboard_native_package "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
     cp "../../node_modules/@mariozechner/$clipboard_native_package/$clipboard_native_file" \
         "$OUTPUT_DIR/$platform/node_modules/@mariozechner/clipboard/"
 
     # Copy terminal input native helpers next to compiled binaries.
-    # 将终端输入原生辅助模块放到编译后二进制旁的约定目录。
     if [[ "$platform" == darwin-* ]]; then
         mkdir -p "$OUTPUT_DIR/$platform/native/darwin/prebuilds/$platform"
         cp ../tui/native/darwin/prebuilds/$platform/darwin-modifiers.node "$OUTPUT_DIR/$platform/native/darwin/prebuilds/$platform/"
     fi
     if [[ "$platform" == windows-* ]]; then
         if [[ "$platform" == "windows-arm64" ]]; then
-# Windows TUI 原生模块使用的架构目录名。
             win32_arch_dir="win32-arm64"
         else
             win32_arch_dir="win32-x64"
@@ -263,25 +247,21 @@ for platform in "${PLATFORMS[@]}"; do
 done
 
 # Create archives
-# Windows 生成 zip，Unix 平台生成包含 pi 包装目录的 tar.gz。
 cd "$OUTPUT_DIR"
 
 for platform in "${PLATFORMS[@]}"; do
     if [[ "$platform" == windows-* ]]; then
         # Windows (zip)
-        # Windows 发布物使用 zip。
         echo "Creating pi-$platform.zip..."
         (cd "$platform" && zip -r ../pi-$platform.zip .)
     else
         # Unix platforms (tar.gz) - use wrapper directory for mise compatibility
-        # Unix 发布物使用 pi 包装目录以兼容 mise。
         echo "Creating pi-$platform.tar.gz..."
         mv "$platform" pi && tar -czf pi-$platform.tar.gz pi && mv pi "$platform"
     fi
 done
 
 # Extract archives for easy local testing
-# 删除平台暂存目录后重新解压归档，便于直接执行本地冒烟测试。
 echo "==> Extracting archives for testing..."
 for platform in "${PLATFORMS[@]}"; do
     rm -rf "$platform"

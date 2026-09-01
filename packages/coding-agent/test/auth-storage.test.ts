@@ -1,56 +1,34 @@
-/**
- * 文件职责：验证 AuthStorage 对 API Key/OAuth 凭据的解析、并发修改、文件锁、删除和损坏文件保护。
- * 技术维度：使用 Vitest、临时 auth.json、proper-lockfile mock 和 pi-ai 模型认证刷新流程。
- * 产品维度：保证用户凭据可安全解析和更新，不覆盖其他进程改动，也不会在锁异常时破坏认证文件。
- * 逻辑维度：每个用例创建临时认证文件，覆盖读取、修改、并发、删除、内存实现和 OAuth 锁恢复。
- * 关键边界：命令型密钥会执行本地命令；环境变量需恢复；文件修改必须持锁；畸形 JSON 不得被覆盖。
- * 新手阅读建议：先看 writeAuthJson 与基本读取用例，再读并发/锁用例，最后理解 OAuth 刷新如何复用存储。
- */
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createModels, type Provider } from "@earendil-works/pi-ai";
+import { type CredentialStore, createModels, type Provider } from "@earendil-works/pi-ai";
 import lockfile from "proper-lockfile";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { AuthStorage } from "../src/core/auth-storage.ts";
+import { AuthStorage, FileAuthStorageBackend } from "../src/core/auth-storage.ts";
 
-/** 覆盖文件与内存认证存储的读取、写入、锁定和恢复契约。 */
 describe("AuthStorage", () => {
-	/** 当前用例独立使用的临时目录。 */
-	let tempDir: string;
-	/** 当前用例 auth.json 的绝对路径。 */
-	let authJsonPath: string;
+	const tempDir = join(tmpdir(), `pi-test-auth-storage-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+	const authJsonPath = join(tempDir, "auth.json");
 
-	/** 每个用例前创建唯一临时目录和认证文件路径。 */
 	beforeEach(() => {
-		tempDir = join(tmpdir(), `pi-test-auth-storage-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		if (existsSync(tempDir)) rmSync(tempDir, { recursive: true });
 		mkdirSync(tempDir, { recursive: true });
-		authJsonPath = join(tempDir, "auth.json");
 	});
 
-	/** 每个用例后删除临时目录并恢复所有 mock。 */
 	afterEach(() => {
 		if (existsSync(tempDir)) rmSync(tempDir, { recursive: true });
 		vi.restoreAllMocks();
 	});
 
-	/**
-	 * 将对象序列化写入当前用例 auth.json。
-	 * @param data 提供商标识到原始凭据的映射。
-	 * @returns 无返回值。
-	 * @example writeAuthJson({ anthropic: { type: "api_key", key: "x" } });
-	 */
 	function writeAuthJson(data: Record<string, unknown>): void {
 		writeFileSync(authJsonPath, JSON.stringify(data));
 	}
 
 	test("reads and resolves stored API-key credentials", async () => {
-		/** 测试前已有的环境密钥，finally 中原样恢复。 */
 		const original = process.env.TEST_AUTH_STORAGE_KEY;
 		process.env.TEST_AUTH_STORAGE_KEY = "environment-key";
 		try {
 			writeAuthJson({ anthropic: { type: "api_key", key: "$TEST_AUTH_STORAGE_KEY" } });
-			/** 从临时 auth.json 读取凭据的文件存储。 */
 			const storage = AuthStorage.create(authJsonPath);
 			expect(await storage.read("anthropic")).toEqual({ type: "api_key", key: "environment-key" });
 		} finally {
@@ -61,20 +39,17 @@ describe("AuthStorage", () => {
 
 	test("resolves command-backed API-key credentials", async () => {
 		writeAuthJson({ anthropic: { type: "api_key", key: "!printf 'command-key'" } });
-		/** 解析命令型密钥的文件认证存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		expect(await storage.read("anthropic")).toEqual({ type: "api_key", key: "command-key" });
 	});
 
 	test("returns OAuth credentials unchanged", async () => {
-		/** 不经转换即可返回的 OAuth 凭据。 */
 		const credential = {
 			type: "oauth" as const,
 			access: "access-token",
 			refresh: "refresh-token",
 			expires: Date.now() + 60_000,
 		};
-		/** 预置 OAuth 凭据的内存存储。 */
 		const storage = AuthStorage.inMemory({ anthropic: credential });
 		expect(await storage.read("anthropic")).toEqual(credential);
 	});
@@ -87,7 +62,6 @@ describe("AuthStorage", () => {
 				env: { SCOPED_KEY: "scoped-value", REGION: "test-region" },
 			},
 		});
-		/** 带凭据级环境变量的文件存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		expect(await storage.read("anthropic")).toMatchObject({
 			key: "scoped-value",
@@ -95,9 +69,94 @@ describe("AuthStorage", () => {
 		});
 	});
 
+	test("coalesces file reloads across concurrent readers and storage instances", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "old" } });
+		const first = AuthStorage.create(authJsonPath);
+		const second = AuthStorage.create(authJsonPath);
+		const lockSpy = vi.spyOn(lockfile, "lock");
+
+		writeAuthJson({
+			anthropic: { type: "api_key", key: "new" },
+			openai: { type: "api_key", key: "openai-key" },
+		});
+
+		const [anthropic, openai, credentials] = await Promise.all([
+			first.read("anthropic", { signal: new AbortController().signal }),
+			second.read("openai", { signal: new AbortController().signal }),
+			first.list({ signal: new AbortController().signal }),
+		]);
+		expect(anthropic).toEqual({ type: "api_key", key: "new" });
+		expect(openai).toEqual({ type: "api_key", key: "openai-key" });
+		expect(credentials).toEqual([
+			{ providerId: "anthropic", type: "api_key" },
+			{ providerId: "openai", type: "api_key" },
+		]);
+		expect(lockSpy).toHaveBeenCalledTimes(1);
+
+		await expect(second.read("anthropic")).resolves.toEqual({ type: "api_key", key: "new" });
+		expect(lockSpy).toHaveBeenCalledTimes(1);
+
+		const otherPath = join(tempDir, "other-auth.json");
+		writeFileSync(otherPath, JSON.stringify({ other: { type: "api_key", key: "other-key" } }));
+		const otherFirst = AuthStorage.create(otherPath);
+		const otherSecond = AuthStorage.create(otherPath);
+		await otherFirst.read("other");
+		await otherSecond.read("other");
+		await otherFirst.list();
+		expect(lockSpy).toHaveBeenCalledTimes(1);
+
+		const third = AuthStorage.create(authJsonPath);
+		writeAuthJson({ anthropic: { type: "api_key", key: "newest" } });
+		const [firstReload, thirdReload] = await Promise.all([first.read("anthropic"), third.read("anthropic")]);
+		expect(firstReload).toEqual({ type: "api_key", key: "newest" });
+		expect(thirdReload).toEqual({ type: "api_key", key: "newest" });
+		expect(lockSpy).toHaveBeenCalledTimes(2);
+	});
+
+	test("keeps a coalesced reload alive while another credential reader is waiting", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "old" } });
+		const storage = AuthStorage.create(authJsonPath);
+		writeAuthJson({ anthropic: { type: "api_key", key: "new" } });
+		let grantLock: (() => void) | undefined;
+		const lockGranted = new Promise<void>((resolve) => {
+			grantLock = resolve;
+		});
+		const release = vi.fn(async () => {});
+		const lockSpy = vi.spyOn(lockfile, "lock").mockImplementation(async () => {
+			await lockGranted;
+			return release;
+		});
+		const firstController = new AbortController();
+		const secondController = new AbortController();
+		const first = storage.read("anthropic", { signal: firstController.signal });
+		const second = storage.read("anthropic", { signal: secondController.signal });
+
+		firstController.abort();
+		await expect(first).rejects.toMatchObject({ name: "AbortError" });
+		grantLock?.();
+		await expect(second).resolves.toEqual({ type: "api_key", key: "new" });
+		expect(lockSpy).toHaveBeenCalledTimes(1);
+		expect(release).toHaveBeenCalledTimes(1);
+	});
+
+	test.skipIf(process.platform === "win32")("creates new auth files with owner-only permissions", () => {
+		AuthStorage.create(authJsonPath);
+
+		expect(statSync(authJsonPath).mode & 0o777).toBe(0o600);
+	});
+
+	test.skipIf(process.platform === "win32")("preserves the mode of an existing auth file", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "old" } });
+		chmodSync(authJsonPath, 0o660);
+		const storage = AuthStorage.create(authJsonPath);
+
+		await storage.modify("anthropic", async () => ({ type: "api_key", key: "new" }));
+
+		expect(statSync(authJsonPath).mode & 0o777).toBe(0o660);
+	});
+
 	test("modify persists a credential while preserving unrelated external edits", async () => {
 		writeAuthJson({ anthropic: { type: "api_key", key: "old" } });
-		/** 修改前先存在 anthropic 凭据的文件存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		writeAuthJson({
 			anthropic: { type: "api_key", key: "old" },
@@ -114,7 +173,6 @@ describe("AuthStorage", () => {
 
 	test("modify with undefined leaves the current credential unchanged", async () => {
 		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
-		/** 验证 undefined 修改结果的文件存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		expect(await storage.modify("anthropic", async () => undefined)).toEqual({ type: "api_key", key: "stored" });
 		expect(await storage.read("anthropic")).toEqual({ type: "api_key", key: "stored" });
@@ -122,9 +180,7 @@ describe("AuthStorage", () => {
 
 	test("serializes concurrent modifications", async () => {
 		writeAuthJson({});
-		/** 并发修改 auth.json 的第一个存储实例。 */
 		const first = AuthStorage.create(authJsonPath);
-		/** 并发修改同一文件的第二个存储实例。 */
 		const second = AuthStorage.create(authJsonPath);
 		await Promise.all([
 			first.modify("anthropic", async () => ({ type: "api_key", key: "anthropic-key" })),
@@ -141,7 +197,6 @@ describe("AuthStorage", () => {
 			anthropic: { type: "api_key", key: "anthropic-key" },
 			openai: { type: "api_key", key: "openai-key" },
 		});
-		/** 删除单个提供商凭据的文件存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		writeAuthJson({
 			anthropic: { type: "api_key", key: "anthropic-key" },
@@ -159,7 +214,6 @@ describe("AuthStorage", () => {
 	});
 
 	test("in-memory storage implements the same credential-store behavior", async () => {
-		/** 与文件实现共享相同操作契约的内存存储。 */
 		const storage = AuthStorage.inMemory({ anthropic: { type: "api_key", key: "initial" } });
 		expect(await storage.read("anthropic")).toEqual({ type: "api_key", key: "initial" });
 		await storage.modify("anthropic", async () => ({ type: "api_key", key: "updated" }));
@@ -170,9 +224,7 @@ describe("AuthStorage", () => {
 
 	test("does not write after lock acquisition failure and recovers on retry", async () => {
 		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
-		/** 锁失败和重试场景的文件存储。 */
 		const storage = AuthStorage.create(authJsonPath);
-		/** 首次拒绝 lock 调用的监视器。 */
 		const lockSpy = vi.spyOn(lockfile, "lock").mockRejectedValueOnce(new Error("lock unavailable"));
 
 		await expect(storage.modify("openai", async () => ({ type: "api_key", key: "new" }))).rejects.toThrow(
@@ -190,10 +242,253 @@ describe("AuthStorage", () => {
 		});
 	});
 
-	test("surfaces a compromised OAuth refresh lock and allows a later retry", async () => {
-		/** OAuth 凭据所属的测试提供商标识。 */
+	test("retries a briefly contended file lock", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const release = vi.fn(async () => {});
+		const lockSpy = vi
+			.spyOn(lockfile, "lock")
+			.mockRejectedValueOnce(Object.assign(new Error("locked"), { code: "ELOCKED" }))
+			.mockResolvedValueOnce(release);
+		vi.spyOn(Math, "random").mockReturnValue(0);
+		const update = vi.fn(async () => ({ result: undefined }));
+
+		await backend.withLockAsync(update);
+
+		expect(lockSpy).toHaveBeenCalledTimes(2);
+		expect(update).toHaveBeenCalledTimes(1);
+		expect(release).toHaveBeenCalledTimes(1);
+	});
+
+	test("surfaces a compromised file storage lock", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const update = vi.fn(async () => ({ result: undefined, next: JSON.stringify({}) }));
+		const compromised = new Error("lock compromised");
+		vi.spyOn(lockfile, "lock").mockImplementation(async (_file, options) => {
+			options?.onCompromised?.(compromised);
+			return async () => {};
+		});
+
+		await expect(backend.withLockAsync(update)).rejects.toThrow(compromised);
+		expect(update).not.toHaveBeenCalled();
+		expect(JSON.parse(readFileSync(authJsonPath, "utf8"))).toEqual({
+			anthropic: { type: "api_key", key: "stored" },
+		});
+	});
+
+	test("pre-aborted file operations do not create the backing file or run the mutation", async () => {
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const controller = new AbortController();
+		controller.abort();
+		const update = vi.fn(async () => ({ result: undefined, next: JSON.stringify({}) }));
+
+		await expect(backend.withLockAsync(update, { signal: controller.signal })).rejects.toMatchObject({
+			name: "AbortError",
+		});
+		expect(update).not.toHaveBeenCalled();
+		expect(existsSync(authJsonPath)).toBe(false);
+	});
+
+	test("aborts while waiting for a held file lock without running the mutation later", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
+		const release = await lockfile.lock(authJsonPath, { realpath: false });
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const controller = new AbortController();
+		const update = vi.fn(async () => ({ result: undefined, next: JSON.stringify({}) }));
+		const pending = backend.withLockAsync(update, { signal: controller.signal });
+
+		await new Promise((resolve) => setTimeout(resolve, 10));
+		controller.abort();
+		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+		expect(update).not.toHaveBeenCalled();
+
+		await release();
+		await new Promise((resolve) => setTimeout(resolve, 150));
+		expect(update).not.toHaveBeenCalled();
+		expect(JSON.parse(readFileSync(authJsonPath, "utf8"))).toEqual({
+			anthropic: { type: "api_key", key: "stored" },
+		});
+	});
+
+	test("releases a file lock acquired concurrently with cancellation before mutation", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const controller = new AbortController();
+		const release = vi.fn(async () => {});
+		vi.spyOn(lockfile, "lock").mockImplementation(async () => {
+			controller.abort();
+			return release;
+		});
+		const update = vi.fn(async () => ({ result: undefined, next: JSON.stringify({}) }));
+
+		await expect(backend.withLockAsync(update, { signal: controller.signal })).rejects.toMatchObject({
+			name: "AbortError",
+		});
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(update).not.toHaveBeenCalled();
+		expect(release).toHaveBeenCalledTimes(1);
+	});
+
+	test("holds the file lock until a cancelled active callback settles without committing it", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
+		const backend = new FileAuthStorageBackend(authJsonPath);
+		const controller = new AbortController();
+		let markStarted: (() => void) | undefined;
+		let finish: (() => void) | undefined;
+		const started = new Promise<void>((resolve) => {
+			markStarted = resolve;
+		});
+		const blocked = new Promise<void>((resolve) => {
+			finish = resolve;
+		});
+		const pending = backend.withLockAsync(
+			async () => {
+				markStarted?.();
+				await blocked;
+				return { result: undefined, next: JSON.stringify({ openai: { type: "api_key", key: "cancelled" } }) };
+			},
+			{ signal: controller.signal },
+		);
+
+		await started;
+		controller.abort();
+		const competingMutation = vi.fn(async () => ({
+			result: undefined,
+			next: JSON.stringify({ google: { type: "api_key", key: "committed" } }),
+		}));
+		const competing = backend.withLockAsync(competingMutation);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(competingMutation).not.toHaveBeenCalled();
+
+		finish?.();
+		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+		await competing;
+		expect(competingMutation).toHaveBeenCalledTimes(1);
+		expect(JSON.parse(readFileSync(authJsonPath, "utf8"))).toEqual({
+			google: { type: "api_key", key: "committed" },
+		});
+	});
+
+	test("cancels a signalled credential read waiting for a held file lock", async () => {
+		writeAuthJson({ anthropic: { type: "api_key", key: "old" } });
+		const storage = AuthStorage.create(authJsonPath);
+		writeAuthJson({ anthropic: { type: "api_key", key: "new-value" } });
+		const release = await lockfile.lock(authJsonPath, { realpath: false });
+		const lockSpy = vi.spyOn(lockfile, "lock");
+		const controller = new AbortController();
+		const pending = storage.read("anthropic", { signal: controller.signal });
+
+		await new Promise((resolve) => setTimeout(resolve, 10));
+		controller.abort();
+		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+		await release();
+		await new Promise((resolve) => setTimeout(resolve, 150));
+		expect(lockSpy).toHaveBeenCalledTimes(1);
+		await expect(storage.read("anthropic")).resolves.toEqual({ type: "api_key", key: "new-value" });
+	});
+
+	test("serializes in-memory mutations across providers", async () => {
+		const storage = AuthStorage.inMemory();
+		let markStarted: (() => void) | undefined;
+		let finish: (() => void) | undefined;
+		const started = new Promise<void>((resolve) => {
+			markStarted = resolve;
+		});
+		const blocked = new Promise<void>((resolve) => {
+			finish = resolve;
+		});
+		const first = storage.modify("anthropic", async () => {
+			markStarted?.();
+			await blocked;
+			return { type: "api_key", key: "anthropic-key" };
+		});
+		await started;
+		const secondMutation = vi.fn(async () => ({ type: "api_key" as const, key: "openai-key" }));
+		const second = storage.modify("openai", secondMutation);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(secondMutation).not.toHaveBeenCalled();
+
+		finish?.();
+		await Promise.all([first, second]);
+		expect(await storage.read("anthropic")).toEqual({ type: "api_key", key: "anthropic-key" });
+		expect(await storage.read("openai")).toEqual({ type: "api_key", key: "openai-key" });
+	});
+
+	test("cancels a queued in-memory mutation without running it later", async () => {
+		const storage = AuthStorage.inMemory();
+		let markStarted: (() => void) | undefined;
+		let finish: (() => void) | undefined;
+		const started = new Promise<void>((resolve) => {
+			markStarted = resolve;
+		});
+		const blocked = new Promise<void>((resolve) => {
+			finish = resolve;
+		});
+		const first = storage.modify("anthropic", async () => {
+			markStarted?.();
+			await blocked;
+			return { type: "api_key", key: "anthropic-key" };
+		});
+		await started;
+		const controller = new AbortController();
+		const secondMutation = vi.fn(async () => ({ type: "api_key" as const, key: "openai-key" }));
+		const second = storage.modify("openai", secondMutation, { signal: controller.signal });
+
+		controller.abort();
+		await expect(second).rejects.toMatchObject({ name: "AbortError" });
+		expect(secondMutation).not.toHaveBeenCalled();
+		finish?.();
+		await first;
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(secondMutation).not.toHaveBeenCalled();
+		expect(await storage.read("openai")).toBeUndefined();
+	});
+
+	test("preserves the stored credential after cancelling an active refresh mutation", async () => {
+		const previous = {
+			type: "oauth" as const,
+			access: "expired",
+			refresh: "refresh-token",
+			expires: 0,
+		};
+		const storage = AuthStorage.inMemory({ oauth: previous });
+		const controller = new AbortController();
+		let markStarted: (() => void) | undefined;
+		let finish: (() => void) | undefined;
+		const started = new Promise<void>((resolve) => {
+			markStarted = resolve;
+		});
+		const blocked = new Promise<void>((resolve) => {
+			finish = resolve;
+		});
+		const pending = storage.modify(
+			"oauth",
+			async () => {
+				markStarted?.();
+				await blocked;
+				return { ...previous, access: "refreshed", expires: Date.now() + 60_000 };
+			},
+			{ signal: controller.signal },
+		);
+
+		await started;
+		controller.abort();
+		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+		const competingMutation = vi.fn(async () => ({ type: "api_key" as const, key: "other" }));
+		const competing = storage.modify("other", competingMutation);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(competingMutation).not.toHaveBeenCalled();
+
+		finish?.();
+		await competing;
+		expect(competingMutation).toHaveBeenCalledTimes(1);
+		expect(await storage.read("oauth")).toEqual(previous);
+	});
+
+	test("translates a credential-store refresh failure and allows a later retry", async () => {
 		const providerId = "oauth-provider";
-		writeAuthJson({
+		const base = AuthStorage.inMemory({
 			[providerId]: {
 				type: "oauth",
 				access: "expired-access",
@@ -201,9 +496,19 @@ describe("AuthStorage", () => {
 				expires: 0,
 			},
 		});
-		/** 保存已过期 OAuth 凭据的文件存储。 */
-		const storage = AuthStorage.create(authJsonPath);
-		/** 支持 OAuth 刷新但不提供真实模型的测试提供商。 */
+		let failNextModify = true;
+		const credentials: CredentialStore = {
+			read: (id) => base.read(id),
+			list: () => base.list(),
+			modify: (id, fn) => {
+				if (failNextModify) {
+					failNextModify = false;
+					return Promise.reject(new Error("credential store unavailable"));
+				}
+				return base.modify(id, fn);
+			},
+			delete: (id) => base.delete(id),
+		};
 		const provider: Provider = {
 			id: providerId,
 			name: "OAuth Provider",
@@ -229,26 +534,15 @@ describe("AuthStorage", () => {
 				throw new Error("not used");
 			},
 		};
-		/** 使用 AuthStorage 作为凭据后端的模型注册表。 */
-		const models = createModels({ credentials: storage });
+		const models = createModels({ credentials });
 		models.setProvider(provider);
 
-		/** proper-lockfile 的真实 lock 方法，第二次认证重试时恢复使用。 */
-		const realLock = lockfile.lock.bind(lockfile);
-		/** 首次锁定后立即报告 compromised 的 lock mock。 */
-		const lockSpy = vi.spyOn(lockfile, "lock").mockImplementationOnce(async (file, options) => {
-			options?.onCompromised?.(new Error("lock compromised"));
-			return realLock(file, options);
-		});
 		await expect(models.getAuth(providerId)).rejects.toMatchObject({ code: "auth" });
-
-		lockSpy.mockRestore();
 		await expect(models.getAuth(providerId)).resolves.toMatchObject({ auth: { apiKey: "refreshed-access" } });
 	});
 
 	test("does not overwrite malformed auth files", async () => {
 		writeAuthJson({ anthropic: { type: "api_key", key: "stored" } });
-		/** 验证畸形文件保护的认证存储。 */
 		const storage = AuthStorage.create(authJsonPath);
 		writeFileSync(authJsonPath, "{invalid-json", "utf8");
 		await expect(storage.modify("openai", async () => ({ type: "api_key", key: "new" }))).rejects.toThrow();

@@ -1,16 +1,9 @@
-/**
- * 文件职责：验证 InteractiveMode 的状态消息、工具展开、主题持久化、自定义 UI 焦点、自动补全和资源展示。
- * 技术维度：使用 Vitest、虚拟终端、伪 this 对象与原型方法调用隔离测试大型交互模式的局部行为。
- * 产品维度：保证终端用户看到稳定状态、正确焦点与清晰资源列表，并让扩展自动补全和主题设置即时生效。
- * 逻辑维度：先定义渲染与焦点夹具，再按状态、主题、自定义界面、自动补全及资源标签分组测试。
- * 关键边界：大量用例绕过构造函数直接调用原型，伪对象字段必须与实现同步；快照还依赖路径平台和主题初始化。
- * 新手阅读建议：先读 TestFocusableComponent 和渲染辅助函数，再看短小状态用例，最后阅读资源标签与跨平台路径快照。
- */
 import { homedir } from "node:os";
 import * as path from "node:path";
 import { type AutocompleteProvider, CombinedAutocompleteProvider } from "@earendil-works/pi-tui";
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import { type Component, Container, type Focusable, TUI } from "../../tui/src/tui.ts";
+import { type Component, Container, type Focusable, type TUI } from "../../tui/src/tui.ts";
+import { TuiMainScreen } from "../../tui/src/tui-main-screen.ts";
 import { VirtualTerminal } from "../../tui/test/virtual-terminal.ts";
 import type { AutocompleteProviderFactory } from "../src/core/extensions/types.ts";
 import type { SourceInfo } from "../src/core/source-info.ts";
@@ -18,67 +11,51 @@ import type { AuthSelectorProvider } from "../src/modes/interactive/components/o
 import { InteractiveMode } from "../src/modes/interactive/interactive-mode.ts";
 import { initTheme } from "../src/modes/interactive/theme/theme.ts";
 
-/** renderLastLine 执行当前测试辅助步骤；参数 container、width  按签名提供输入，返回值供调用方断言。示例：renderLastLine(..., ...)。 */
 function renderLastLine(container: Container, width = 120): string {
-	/** 常量 last 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 	const last = container.children[container.children.length - 1];
 	if (!last) return "";
 	return last.render(width).join("\n");
 }
 
-/** renderAll 执行当前测试辅助步骤；参数 container、width  按签名提供输入，返回值供调用方断言。示例：renderAll(..., ...)。 */
 function renderAll(container: Container, width = 120): string {
 	return container.children.flatMap((child) => child.render(width)).join("\n");
 }
 
-/** TestFocusableComponent 模拟可聚焦输入组件，记录按键并提供可读写文本，供覆盖层焦点回归测试使用。 */
 class TestFocusableComponent implements Component, Focusable {
-	/** focused 表示当前组件是否持有输入焦点，由 TUI 更新。 */
 	focused = false;
-	/** inputs 保存组件收到的原始输入序列，仅供用例断言。 */
 	inputs: string[] = [];
-	/** label 是 render 返回的固定可见文本，构造后不变。 */
 	private readonly label: string;
-	/** text 保存组件的可编辑文本，初始为空字符串。 */
 	private text = "";
 
-	/** 初始化组件；参数 label 为显示标签，无返回值。例如：new TestFocusableComponent("EDITOR")。 */
 	constructor(label: string) {
 		this.label = label;
 	}
 
-	/** 记录输入；参数 data 为终端输入文本，无返回值。例如：component.handleInput("x")。 */
 	handleInput(data: string): void {
 		this.inputs.push(data);
 	}
 
-	/** 返回当前编辑文本；无参数。例如：component.getText()。 */
 	getText(): string {
 		return this.text;
 	}
 
-	/** 更新编辑文本；参数 text 为完整新内容，无返回值。例如：component.setText("value")。 */
 	setText(text: string): void {
 		this.text = text;
 	}
 
-	/** 返回固定标签行；无参数，返回单行字符串数组。例如：component.render()。 */
 	render(): string[] {
 		return [this.label];
 	}
 
-	/** 标记组件失效；本夹具没有缓存，因此无参数、无返回值。例如：component.invalidate()。 */
 	invalidate(): void {}
 }
 
-/** flushTui 执行当前测试辅助步骤；参数 tui、terminal 按签名提供输入，返回值供调用方断言。示例：flushTui(..., ...)。 */
 async function flushTui(tui: TUI, terminal: VirtualTerminal): Promise<void> {
 	tui.requestRender(true);
 	await Promise.resolve();
 	await terminal.waitForRender();
 }
 
-/** normalizeRenderedOutput 执行当前测试辅助步骤；参数 container、width  按签名提供输入，返回值供调用方断言。示例：normalizeRenderedOutput(..., ...)。 */
 function normalizeRenderedOutput(container: Container, width = 220): string {
 	return renderAll(container, width)
 		.replace(/\u001b\[[0-9;]*m/g, "")
@@ -94,17 +71,13 @@ type ExtensionFixture = {
 	sourceInfo?: SourceInfo;
 };
 
-// 用例分组：集中验证“InteractiveMode.showStatus”相关功能。
 describe("InteractiveMode.showStatus", () => {
 	beforeAll(() => {
 		// showStatus uses the global theme instance
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		initTheme("dark");
 	});
 
-	// 测试场景：验证“coalesces immediately-sequential status messages”对应的行为、结果与边界。
 	test("coalesces immediately-sequential status messages", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			chatContainer: new Container(),
 			ui: { requestRender: vi.fn() },
@@ -118,15 +91,12 @@ describe("InteractiveMode.showStatus", () => {
 
 		(InteractiveMode as any).prototype.showStatus.call(fakeThis, "STATUS_TWO");
 		// second status updates the previous line instead of appending
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(fakeThis.chatContainer.children).toHaveLength(2);
 		expect(renderLastLine(fakeThis.chatContainer)).toContain("STATUS_TWO");
 		expect(renderLastLine(fakeThis.chatContainer)).not.toContain("STATUS_ONE");
 	});
 
-	// 测试场景：验证“appends a new status line if something else was added in between”对应的行为、结果与边界。
 	test("appends a new status line if something else was added in between", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			chatContainer: new Container(),
 			ui: { requestRender: vi.fn() },
@@ -138,29 +108,45 @@ describe("InteractiveMode.showStatus", () => {
 		expect(fakeThis.chatContainer.children).toHaveLength(2);
 
 		// Something else gets added to the chat in between status updates
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		fakeThis.chatContainer.addChild({ render: () => ["OTHER"], invalidate: () => {} });
 		expect(fakeThis.chatContainer.children).toHaveLength(3);
 
 		(InteractiveMode as any).prototype.showStatus.call(fakeThis, "STATUS_TWO");
 		// adds spacer + text
-		// 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
 		expect(fakeThis.chatContainer.children).toHaveLength(5);
 		expect(renderLastLine(fakeThis.chatContainer)).toContain("STATUS_TWO");
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.setToolsExpanded”相关功能。
+describe("InteractiveMode.showManagedToolStatus", () => {
+	beforeAll(() => initTheme("dark"));
+
+	test("renders tool updates as one contiguous group", () => {
+		const fakeThis: any = {
+			chatContainer: new Container(),
+			ui: { requestRender: vi.fn() },
+			managedToolStatusStarted: false,
+			lastStatusSpacer: undefined,
+			lastStatusText: undefined,
+		};
+		const showManagedToolStatus = (InteractiveMode as any).prototype.showManagedToolStatus;
+
+		showManagedToolStatus.call(fakeThis, { type: "info", message: "fd downloading" });
+		showManagedToolStatus.call(fakeThis, { type: "info", message: "rg downloading" });
+		showManagedToolStatus.call(fakeThis, { type: "warning", message: "rg failed" });
+
+		expect(fakeThis.chatContainer.children).toHaveLength(4);
+		expect(normalizeRenderedOutput(fakeThis.chatContainer)).toBe(
+			"fd downloading\n rg downloading\n Warning: rg failed",
+		);
+	});
+});
+
 describe("InteractiveMode.setToolsExpanded", () => {
-	// 测试场景：验证“applies expansion state to the active header and chat entries”对应的行为、结果与边界。
 	test("applies expansion state to the active header and chat entries", () => {
-		/** 常量 header 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const header = { setExpanded: vi.fn() };
-		/** 常量 loadedResourcesChild 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const loadedResourcesChild = { setExpanded: vi.fn() };
-		/** 常量 chatChild 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const chatChild = { setExpanded: vi.fn() };
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			toolOutputExpanded: false,
 			customHeader: undefined,
@@ -168,6 +154,7 @@ describe("InteractiveMode.setToolsExpanded", () => {
 			loadedResourcesContainer: { children: [loadedResourcesChild] },
 			chatContainer: { children: [chatChild] },
 			ui: { requestRender: vi.fn() },
+			showStatus: vi.fn(),
 		};
 
 		(InteractiveMode as any).prototype.setToolsExpanded.call(fakeThis, true);
@@ -176,26 +163,21 @@ describe("InteractiveMode.setToolsExpanded", () => {
 		expect(header.setExpanded).toHaveBeenCalledWith(true);
 		expect(loadedResourcesChild.setExpanded).toHaveBeenCalledWith(true);
 		expect(chatChild.setExpanded).toHaveBeenCalledWith(true);
-		expect(fakeThis.ui.requestRender).toHaveBeenCalledTimes(1);
+		expect(fakeThis.showStatus).toHaveBeenCalledWith("Tool output: expanded");
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.createExtensionUIContext setTheme”相关功能。
 describe("InteractiveMode.createExtensionUIContext setTheme", () => {
-	// 测试场景：验证“persists theme changes to settings manager”对应的行为、结果与边界。
 	test("persists theme changes to settings manager", () => {
 		initTheme("dark");
 
-		/** 变量 currentTheme 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		let currentTheme = "dark";
-		/** 常量 settingsManager 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const settingsManager = {
 			getTheme: vi.fn(() => currentTheme),
 			setTheme: vi.fn((theme: string) => {
 				currentTheme = theme;
 			}),
 		};
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			session: { settingsManager },
 			settingsManager,
@@ -209,9 +191,7 @@ describe("InteractiveMode.createExtensionUIContext setTheme", () => {
 			ui: { requestRender: vi.fn() },
 		};
 
-		/** 常量 uiContext 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const uiContext = (InteractiveMode as any).prototype.createExtensionUIContext.call(fakeThis);
-		/** 常量 result 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const result = uiContext.setTheme("light");
 
 		expect(result.success).toBe(true);
@@ -221,16 +201,13 @@ describe("InteractiveMode.createExtensionUIContext setTheme", () => {
 		expect(fakeThis.ui.requestRender).toHaveBeenCalledTimes(1);
 	});
 
-	// 测试场景：验证“does not persist invalid theme names”对应的行为、结果与边界。
 	test("does not persist invalid theme names", () => {
 		initTheme("dark");
 
-		/** 常量 settingsManager 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const settingsManager = {
 			getTheme: vi.fn(() => "dark"),
 			setTheme: vi.fn(),
 		};
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			session: { settingsManager },
 			settingsManager,
@@ -241,9 +218,7 @@ describe("InteractiveMode.createExtensionUIContext setTheme", () => {
 			ui: { requestRender: vi.fn() },
 		};
 
-		/** 常量 uiContext 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const uiContext = (InteractiveMode as any).prototype.createExtensionUIContext.call(fakeThis);
-		/** 常量 result 保存当前场景的结果数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const result = uiContext.setTheme("__missing_theme__");
 
 		expect(result.success).toBe(false);
@@ -253,44 +228,32 @@ describe("InteractiveMode.createExtensionUIContext setTheme", () => {
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.showExtensionCustom”相关功能。
 describe("InteractiveMode.showExtensionCustom", () => {
 	beforeAll(() => {
 		initTheme("dark");
 	});
 
-	// 测试场景：验证“overlay custom UI reclaims input after non-overlay custom UI closes”对应的行为、结果与边界。
 	test("overlay custom UI reclaims input after non-overlay custom UI closes", async () => {
-		/** 常量 terminal 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const terminal = new VirtualTerminal(80, 24);
-		/** 常量 ui 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
-		const ui = new TUI(terminal);
-		/** 常量 editorContainer 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
+		const ui: TUI = new TuiMainScreen(terminal);
 		const editorContainer = new Container();
-		/** 常量 editor 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const editor = new TestFocusableComponent("EDITOR");
-		/** 常量 palette 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const palette = new TestFocusableComponent("PALETTE");
-		/** 常量 overlay 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const overlay = new TestFocusableComponent("OVERLAY");
-		/** 常量 replacement 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const replacement = new TestFocusableComponent("REPLACEMENT");
-		/** closeOverlay 是稍后由覆盖层回调赋值的关闭函数；参数 value 为关闭结果，无返回值。 */
 		let closeOverlay: (value: string) => void = () => {
 			throw new Error("closeOverlay was not initialized");
 		};
-		/** closeReplacement 是替换覆盖层的关闭函数；参数 value 为关闭结果，无返回值。 */
 		let closeReplacement: (value: string) => void = () => {
 			throw new Error("closeReplacement was not initialized");
 		};
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = {
 			editor,
 			editorContainer,
 			keybindings: {},
 			ui,
+			disposeActiveSelector: vi.fn(),
 		};
-		/** 常量 showExtensionCustom 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const showExtensionCustom = <T>(
 			factory: (tui: TUI, theme: unknown, keybindings: unknown, done: (result: T) => void) => Component,
 			options?: { overlay?: boolean },
@@ -303,7 +266,6 @@ describe("InteractiveMode.showExtensionCustom", () => {
 		ui.setFocus(palette);
 		ui.start();
 		try {
-			/** 常量 overlayPromise 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const overlayPromise = showExtensionCustom<string>(
 				(_tui, _theme, _keybindings, done) => {
 					closeOverlay = done;
@@ -314,7 +276,6 @@ describe("InteractiveMode.showExtensionCustom", () => {
 			await flushTui(ui, terminal);
 			expect(overlay.focused).toBe(true);
 
-			/** 常量 replacementPromise 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 			const replacementPromise = showExtensionCustom<string>((_tui, _theme, _keybindings, done) => {
 				closeReplacement = done;
 				return replacement;
@@ -340,19 +301,14 @@ describe("InteractiveMode.showExtensionCustom", () => {
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.createExtensionUIContext addAutocompleteProvider”相关功能。
 describe("InteractiveMode.createExtensionUIContext addAutocompleteProvider", () => {
-	// 测试场景：验证“stores wrapper factories and rebuilds autocomplete immediately”对应的行为、结果与边界。
 	test("stores wrapper factories and rebuilds autocomplete immediately", () => {
-		/** wrapper 封装当前回调或辅助步骤；参数 current 提供输入，返回值用于后续流程。示例：wrapper(...)。 */
 		const wrapper: AutocompleteProviderFactory = (current) => current;
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = {
 			autocompleteProviderWrappers: [] as AutocompleteProviderFactory[],
 			setupAutocompleteProvider: vi.fn(),
 		};
 
-		/** 常量 uiContext 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const uiContext = (InteractiveMode as any).prototype.createExtensionUIContext.call(fakeThis);
 		uiContext.addAutocompleteProvider(wrapper);
 
@@ -361,55 +317,41 @@ describe("InteractiveMode.createExtensionUIContext addAutocompleteProvider", () 
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.setupAutocompleteProvider”相关功能。
 describe("InteractiveMode.setupAutocompleteProvider", () => {
-	// 测试场景：验证“stacks wrapper factories over a fresh base provider”对应的行为、结果与边界。
 	test("stacks wrapper factories over a fresh base provider", () => {
-		/** 常量 defaultEditor 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const defaultEditor = { setAutocompleteProvider: vi.fn() };
-		/** 常量 customEditor 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const customEditor = { setAutocompleteProvider: vi.fn() };
-		/** 常量 calls 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const calls: string[] = [];
 
-		/** 常量 wrap1 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const wrap1: AutocompleteProviderFactory = (current): AutocompleteProvider => ({
-			/** 记录第一层调用后转发建议查询；参数为文本行、光标位置和选项，返回当前提供者的建议。 */
 			async getSuggestions(lines, cursorLine, cursorCol, options) {
 				calls.push("getSuggestions:wrap1");
 				return current.getSuggestions(lines, cursorLine, cursorCol, options);
 			},
-			/** 记录第一层调用后转发补全应用；参数描述编辑位置、候选项和前缀，返回更新后的文本与光标。 */
 			applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
 				calls.push("applyCompletion:wrap1");
 				return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
 			},
-			/** 记录第一层调用后判断是否触发文件补全；参数为文本行和光标位置，返回布尔值。 */
 			shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
 				calls.push("shouldTrigger:wrap1");
 				return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;
 			},
 		});
-		/** 常量 wrap2 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const wrap2: AutocompleteProviderFactory = (current): AutocompleteProvider => ({
-			/** 记录第二层调用后转发建议查询；参数为文本行、光标位置和选项，返回当前提供者的建议。 */
 			async getSuggestions(lines, cursorLine, cursorCol, options) {
 				calls.push("getSuggestions:wrap2");
 				return current.getSuggestions(lines, cursorLine, cursorCol, options);
 			},
-			/** 记录第二层调用后转发补全应用；参数描述编辑位置、候选项和前缀，返回更新后的文本与光标。 */
 			applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
 				calls.push("applyCompletion:wrap2");
 				return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
 			},
-			/** 记录第二层调用后判断是否触发文件补全；参数为文本行和光标位置，返回布尔值。 */
 			shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
 				calls.push("shouldTrigger:wrap2");
 				return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;
 			},
 		});
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = {
 			createBaseAutocompleteProvider: () => new CombinedAutocompleteProvider([], "/tmp/project", undefined),
 			defaultEditor,
@@ -421,20 +363,15 @@ describe("InteractiveMode.setupAutocompleteProvider", () => {
 
 		expect(defaultEditor.setAutocompleteProvider).toHaveBeenCalledTimes(1);
 		expect(customEditor.setAutocompleteProvider).toHaveBeenCalledTimes(1);
-		/** 常量 provider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const provider = defaultEditor.setAutocompleteProvider.mock.calls[0]?.[0] as AutocompleteProvider;
 		expect(provider).toBe(customEditor.setAutocompleteProvider.mock.calls[0]?.[0]);
 		expect(provider.shouldTriggerFileCompletion?.(["foo"], 0, 3)).toBe(true);
 		expect(calls).toEqual(["shouldTrigger:wrap2", "shouldTrigger:wrap1"]);
 	});
 
-	// 测试场景：验证“merges triggerCharacters from wrapper factories”对应的行为、结果与边界。
 	test("merges triggerCharacters from wrapper factories", () => {
-		/** 常量 defaultEditor 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const defaultEditor = { setAutocompleteProvider: vi.fn() };
-		/** 常量 customEditor 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const customEditor = { setAutocompleteProvider: vi.fn() };
-		/** 常量 passThrough 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const passThrough =
 			(triggerCharacters: string[]): AutocompleteProviderFactory =>
 			(current) => ({
@@ -445,7 +382,6 @@ describe("InteractiveMode.setupAutocompleteProvider", () => {
 					current.applyCompletion(lines, cursorLine, cursorCol, item, prefix),
 			});
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = {
 			createBaseAutocompleteProvider: () => new CombinedAutocompleteProvider([], "/tmp/project", undefined),
 			defaultEditor,
@@ -459,21 +395,18 @@ describe("InteractiveMode.setupAutocompleteProvider", () => {
 			}
 		).prototype.setupAutocompleteProvider.call(fakeThis);
 
-		/** 常量 provider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const provider = defaultEditor.setAutocompleteProvider.mock.calls[0]?.[0] as AutocompleteProvider;
 		expect(provider.triggerCharacters).toEqual(["$", "!"]);
 	});
 });
 
-// 用例分组：集中验证“InteractiveMode.createBaseAutocompleteProvider”相关功能。
 describe("InteractiveMode.createBaseAutocompleteProvider", () => {
-	// 测试场景：验证“matches model command arguments across provider/model order”对应的行为、结果与边界。
 	test("matches model command arguments across provider/model order", async () => {
 		type TestModel = { id: string; provider: string; name: string };
 		type FakeInteractiveMode = {
 			session: {
 				scopedModels: Array<{ model: TestModel }>;
-				modelRuntime: { getAvailable: () => TestModel[] };
+				modelRuntime: { getAvailableSnapshot: () => TestModel[] };
 				promptTemplates: [];
 				extensionRunner: { getRegisteredCommands: () => [] };
 				resourceLoader: { getSkills: () => { skills: [] } };
@@ -484,22 +417,19 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 			fdPath: null;
 		};
 
-		/** 常量 createBaseAutocompleteProvider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const createBaseAutocompleteProvider = (
 			InteractiveMode as unknown as {
 				prototype: { createBaseAutocompleteProvider(this: FakeInteractiveMode): AutocompleteProvider };
 			}
 		).prototype.createBaseAutocompleteProvider;
-		/** 常量 models 保存当前场景的模型数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const models = [
 			{ id: "gpt-5.2-codex", provider: "github-copilot", name: "GPT-5.2 Codex" },
 			{ id: "gpt-5.5", provider: "openai-codex", name: "GPT-5.5" },
 		];
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: FakeInteractiveMode = {
 			session: {
 				scopedModels: [],
-				modelRuntime: { getAvailable: () => models },
+				modelRuntime: { getAvailableSnapshot: () => models },
 				promptTemplates: [],
 				extensionRunner: { getRegisteredCommands: () => [] },
 				resourceLoader: { getSkills: () => ({ skills: [] }) },
@@ -510,11 +440,8 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 			fdPath: null,
 		};
 
-		/** 常量 provider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const provider = createBaseAutocompleteProvider.call(fakeThis);
-		/** 常量 line 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const line = "/model codexgpt";
-		/** 常量 suggestions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const suggestions = await provider.getSuggestions([line], 0, line.length, {
 			signal: new AbortController().signal,
 		});
@@ -525,12 +452,11 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 		]);
 	});
 
-	// 测试场景：验证“matches login command arguments by provider id and name”对应的行为、结果与边界。
 	test("matches login command arguments by provider id and name", async () => {
 		type FakeInteractiveMode = {
 			session: {
 				scopedModels: [];
-				modelRuntime: { getAvailable: () => [] };
+				modelRuntime: { getAvailableSnapshot: () => [] };
 				promptTemplates: [];
 				extensionRunner: { getRegisteredCommands: () => [] };
 				resourceLoader: { getSkills: () => { skills: [] } };
@@ -542,17 +468,15 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 			getLoginProviderOptions: () => AuthSelectorProvider[];
 		};
 
-		/** 常量 createBaseAutocompleteProvider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const createBaseAutocompleteProvider = (
 			InteractiveMode as unknown as {
 				prototype: { createBaseAutocompleteProvider(this: FakeInteractiveMode): AutocompleteProvider };
 			}
 		).prototype.createBaseAutocompleteProvider;
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: FakeInteractiveMode = {
 			session: {
 				scopedModels: [],
-				modelRuntime: { getAvailable: () => [] },
+				modelRuntime: { getAvailableSnapshot: () => [] },
 				promptTemplates: [],
 				extensionRunner: { getRegisteredCommands: () => [] },
 				resourceLoader: { getSkills: () => ({ skills: [] }) },
@@ -568,11 +492,8 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 			],
 		};
 
-		/** 常量 provider 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const provider = createBaseAutocompleteProvider.call(fakeThis);
-		/** 常量 line 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const line = "/login subscription anthrop";
-		/** 常量 suggestions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const suggestions = await provider.getSuggestions([line], 0, line.length, {
 			signal: new AbortController().signal,
 		});
@@ -586,25 +507,24 @@ describe("InteractiveMode.createBaseAutocompleteProvider", () => {
 		]);
 	});
 });
-// 用例分组：集中验证“InteractiveMode.showLoadedResources”相关功能。
 describe("InteractiveMode.showLoadedResources", () => {
 	beforeAll(() => {
 		initTheme("dark");
 	});
 
-	/** createShowLoadedResourcesThis 执行当前测试辅助步骤；参数 options 按签名提供输入，返回值供调用方断言。示例：createShowLoadedResourcesThis(...)。 */
 	function createShowLoadedResourcesThis(options: {
 		quietStartup: boolean;
 		verbose?: boolean;
 		toolOutputExpanded?: boolean;
 		cwd?: string;
 		contextFiles?: Array<{ path: string; content?: string }>;
+		systemPromptSource?: { path: string };
+		appendSystemPromptSources?: Array<{ path: string }>;
 		extensions?: ExtensionFixture[];
 		skills?: Array<{ filePath: string; name: string }>;
 		skillDiagnostics?: Array<{ type: "warning" | "error" | "collision"; message: string }>;
 		useRealScopeGroups?: boolean;
 	}) {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis: any = {
 			options: { verbose: options.verbose ?? false },
 			toolOutputExpanded: options.toolOutputExpanded ?? false,
@@ -625,6 +545,8 @@ describe("InteractiveMode.showLoadedResources", () => {
 				resourceLoader: {
 					getPathMetadata: () => new Map(),
 					getAgentsFiles: () => ({ agentsFiles: options.contextFiles ?? [] }),
+					getSystemPromptSource: () => options.systemPromptSource,
+					getAppendSystemPromptSources: () => options.appendSystemPromptSources ?? [],
 					getSkills: () => ({
 						skills: options.skills ?? [],
 						diagnostics: options.skillDiagnostics ?? [],
@@ -676,7 +598,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 		return fakeThis;
 	}
 
-	/** createSourceInfo 执行当前测试辅助步骤；参数 无 按签名提供输入，返回值供调用方断言。示例：createSourceInfo()。 */
 	function createSourceInfo(
 		filePath: string,
 		options: {
@@ -695,7 +616,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 		};
 	}
 
-	/** createExtensionFixtures 执行当前测试辅助步骤；参数 无 按签名提供输入，返回值供调用方断言。示例：createExtensionFixtures()。 */
 	function createExtensionFixtures(): ExtensionFixture[] {
 		return [
 			{
@@ -779,9 +699,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 		];
 	}
 
-	// 测试场景：验证“shows a compact resource listing by default”对应的行为、结果与边界。
 	test("shows a compact resource listing by default", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
@@ -791,16 +709,13 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer);
 		expect(output).toContain("[Skills]");
 		expect(output).toContain("commit");
 		expect(output).not.toContain("resource-list");
 	});
 
-	// 测试场景：验证“shows full resource listing when expanded”对应的行为、结果与边界。
 	test("shows full resource listing when expanded", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			toolOutputExpanded: true,
@@ -811,16 +726,13 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer);
 		expect(output).toContain("[Skills]");
 		expect(output).toContain("resource-list");
 		expect(output).not.toContain("commit");
 	});
 
-	// 测试场景：验证“shows full resource listing on verbose startup even when tool output is collapsed”对应的行为、结果与边界。
 	test("shows full resource listing on verbose startup even when tool output is collapsed", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: true,
 			verbose: true,
@@ -832,16 +744,13 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer);
 		expect(output).toContain("[Skills]");
 		expect(output).toContain("resource-list");
 		expect(output).not.toContain("commit");
 	});
 
-	// 测试场景：验证“abbreviates extensions in compact listing”对应的行为、结果与边界。
 	test("abbreviates extensions in compact listing", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions: [{ path: "/tmp/extensions/answer.ts" }, { path: "/tmp/extensions/btw.ts" }],
@@ -851,16 +760,13 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer);
 		expect(output).toContain("[Extensions]");
 		expect(output).toContain("answer.ts, btw.ts");
 		expect(output).not.toContain("extensions/answer.ts");
 	});
 
-	// 测试场景：验证“captures mixed extension layouts in compact output”对应的行为、结果与边界。
 	test("captures mixed extension layouts in compact output", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions: createExtensionFixtures(),
@@ -876,9 +782,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   @scope/pi-scoped, answer.ts, cli-extension.ts, HazAT/pi-interactive-subagents, HazAT/pi-interactive-subagents:subagents, local-index, pi-markdown-preview, user-index"`);
 	});
 
-	// 测试场景：验证“adds more parent folders until local extension labels are unique”对应的行为、结果与边界。
 	test("adds more parent folders until local extension labels are unique", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/alpha/one/index.ts",
@@ -909,7 +813,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -925,9 +828,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   alpha/one, beta/one, gamma/one"`);
 	});
 
-	// 测试场景：验证“strips index.ts from local extension label, showing parent dir”对应的行为、结果与边界。
 	test("strips index.ts from local extension label, showing parent dir", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/extensions/plan-mode/index.ts",
@@ -940,7 +841,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -956,9 +856,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   plan-mode"`);
 	});
 
-	// 测试场景：验证“strips index.js from local extension label, showing parent dir”对应的行为、结果与边界。
 	test("strips index.js from local extension label, showing parent dir", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/extensions/plan-mode/index.js",
@@ -971,7 +869,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -987,9 +884,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   plan-mode"`);
 	});
 
-	// 测试场景：验证“mixed single-file and subdirectory index.ts extensions strip index.ts”对应的行为、结果与边界。
 	test("mixed single-file and subdirectory index.ts extensions strip index.ts", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/extensions/webfetch.ts",
@@ -1011,7 +906,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1027,9 +921,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   plan-mode, webfetch.ts"`);
 	});
 
-	// 测试场景：验证“multiple index.ts with unique parent dirs need no disambiguation”对应的行为、结果与边界。
 	test("multiple index.ts with unique parent dirs need no disambiguation", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/extensions/foo/index.ts",
@@ -1051,7 +943,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1067,9 +958,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   bar, foo"`);
 	});
 
-	// 测试场景：验证“multiple index.ts with same parent dir name disambiguated with grandparent”对应的行为、结果与边界。
 	test("multiple index.ts with same parent dir name disambiguated with grandparent", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/alpha/tools/index.ts",
@@ -1091,7 +980,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1107,9 +995,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   alpha/tools, beta/tools"`);
 	});
 
-	// 测试场景：验证“non-index file in subdirectory stays as filename”对应的行为、结果与边界。
 	test("non-index file in subdirectory stays as filename", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/extensions/my-ext/main.ts",
@@ -1122,7 +1008,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1138,9 +1023,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   main.ts"`);
 	});
 
-	// 测试场景：验证“package extensions still strip index.ts correctly (regression guard)”对应的行为、结果与边界。
 	test("package extensions still strip index.ts correctly (regression guard)", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/project/.pi/npm/node_modules/pi-markdown-preview/extensions/index.ts",
@@ -1153,7 +1036,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1169,9 +1051,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   pi-markdown-preview"`);
 	});
 
-	// 测试场景：验证“labels npm sibling extensions relative to the declaring package”对应的行为、结果与边界。
 	test("labels npm sibling extensions relative to the declaring package", () => {
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: "/tmp/project/.pi/npm/node_modules/primary-package/index.ts",
@@ -1193,7 +1073,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1209,15 +1088,10 @@ describe("InteractiveMode.showLoadedResources", () => {
   primary-package, primary-package:../sibling-package"`);
 	});
 
-	// 测试场景：验证“labels Windows npm sibling extensions relative to the declaring package”对应的行为、结果与边界。
 	test("labels Windows npm sibling extensions relative to the declaring package", () => {
-		/** 常量 primaryPath 保存当前场景的路径或文件数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const primaryPath = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\primary-package\\index.ts";
-		/** 常量 siblingPath 保存当前场景的路径或文件数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const siblingPath = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\sibling-package\\index.ts";
-		/** 常量 baseDir 保存当前场景的路径或文件数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const baseDir = "C:\\Users\\me\\.pi\\agent\\npm\\node_modules\\primary-package";
-		/** 常量 extensions 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const extensions: ExtensionFixture[] = [
 			{
 				path: primaryPath,
@@ -1239,7 +1113,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			},
 		];
 
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			extensions,
@@ -1255,9 +1128,7 @@ describe("InteractiveMode.showLoadedResources", () => {
   primary-package, primary-package:../sibling-package"`);
 	});
 
-	// 测试场景：验证“captures mixed extension layouts in expanded output”对应的行为、结果与边界。
 	test("captures mixed extension layouts in expanded output", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			toolOutputExpanded: true,
@@ -1287,13 +1158,9 @@ describe("InteractiveMode.showLoadedResources", () => {
     /tmp/temp/cli-extension.ts"`);
 	});
 
-	// 测试场景：验证“shows context paths relative to cwd while preserving full external paths”对应的行为、结果与边界。
 	test("shows context paths relative to cwd while preserving full external paths", () => {
-		/** 常量 home 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const home = homedir();
-		/** 常量 cwd 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const cwd = path.join(home, "Development", "pi-mono");
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			cwd,
@@ -1304,20 +1171,34 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
 		expect(output).toContain("[Context]");
 		expect(output).toContain("~/.pi/agent/AGENTS.md, AGENTS.md");
 		expect(output).not.toContain(`${cwd.replace(/\\/g, "/")}/AGENTS.md`);
 	});
 
-	// 测试场景：验证“shows full context paths when expanded”对应的行为、结果与边界。
+	test("shows system prompt context paths before project context files", () => {
+		const cwd = "/tmp/project";
+		const fakeThis = createShowLoadedResourcesThis({
+			quietStartup: false,
+			cwd,
+			systemPromptSource: { path: path.join(cwd, ".pi", "SYSTEM.md") },
+			appendSystemPromptSources: [{ path: path.join(cwd, ".pi", "APPEND_SYSTEM.md") }],
+			contextFiles: [{ path: path.join(cwd, "AGENTS.md") }],
+		});
+
+		(InteractiveMode as any).prototype.showLoadedResources.call(fakeThis, {
+			force: false,
+		});
+
+		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
+		expect(output).toContain("[Context]");
+		expect(output).toContain(".pi/SYSTEM.md, .pi/APPEND_SYSTEM.md, AGENTS.md");
+	});
+
 	test("shows full context paths when expanded", () => {
-		/** 常量 home 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const home = homedir();
-		/** 常量 cwd 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const cwd = path.join(home, "Development", "pi-mono");
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: false,
 			toolOutputExpanded: true,
@@ -1329,7 +1210,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			force: false,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer).replace(/\\/g, "/");
 		expect(output).toContain("[Context]");
 		expect(output).toContain("~/.pi/agent/AGENTS.md");
@@ -1337,9 +1217,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 		expect(output).not.toContain("~/.pi/agent/AGENTS.md, AGENTS.md");
 	});
 
-	// 测试场景：验证“does not show verbose listing on quiet startup during reload”对应的行为、结果与边界。
 	test("does not show verbose listing on quiet startup during reload", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: true,
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
@@ -1354,9 +1232,7 @@ describe("InteractiveMode.showLoadedResources", () => {
 		expect(fakeThis.loadedResourcesContainer.children).toHaveLength(0);
 	});
 
-	// 测试场景：验证“still shows diagnostics on quiet startup when requested”对应的行为、结果与边界。
 	test("still shows diagnostics on quiet startup when requested", () => {
-		/** 常量 fakeThis 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const fakeThis = createShowLoadedResourcesThis({
 			quietStartup: true,
 			skills: [{ filePath: "/tmp/skill/SKILL.md", name: "commit" }],
@@ -1368,7 +1244,6 @@ describe("InteractiveMode.showLoadedResources", () => {
 			showDiagnosticsWhenQuiet: true,
 		});
 
-		/** 常量 output 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
 		const output = renderAll(fakeThis.loadedResourcesContainer);
 		expect(output).toContain("[Skill conflicts]");
 		expect(output).not.toContain("[Skills]");
