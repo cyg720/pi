@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Pi 单次任务生命周期",
+    "locale": "zh-CN",
+    "output": "图架构/生命周期图/pi-task-lifecycle.html",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "viewBox": [1000, 640],
+    "views": [
+      {
+        "id": "normal-run",
+        "label": "正常主线",
+        "focus": ["ready", "preflight", "streaming", "evaluate", "completed"],
+        "note": "没有工具、错误或新消息时，任务沿最上方主线完成并重新进入空闲。"
+      },
+      {
+        "id": "continued-work",
+        "label": "继续运行的分支",
+        "focus": ["streaming", "tool_exec", "retry_wait", "compaction"],
+        "note": "排队消息、工具结果、自动重试和上下文压缩都会让任务继续，而不是立即结束。"
+      },
+      {
+        "id": "terminal-exits",
+        "label": "终止状态",
+        "focus": ["completed", "failed", "cancelled", "terminated"],
+        "note": "区分正常完成、不可恢复失败、用户取消，以及策略或工具要求的提前终止。"
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "主生命周期" },
+    { "id": "continuation", "label": "等待与恢复" },
+    { "id": "terminal", "label": "异常终态" }
+  ],
+  "states": [
+    {
+      "id": "ready",
+      "type": "start",
+      "label": "空闲",
+      "sublabel": "没有 activeRun",
+      "tag": "AgentSession.isIdle",
+      "step": "01",
+      "lane": "main",
+      "col": 0,
+      "width": 112
+    },
+    {
+      "id": "preflight",
+      "type": "active",
+      "label": "预检",
+      "sublabel": "模板 / 模型 / 鉴权",
+      "tag": "prompt()",
+      "step": "02",
+      "lane": "main",
+      "col": 1,
+      "width": 112
+    },
+    {
+      "id": "streaming",
+      "type": "active",
+      "label": "流式运行",
+      "sublabel": "生成模型响应",
+      "tag": "isStreaming = true",
+      "step": "03",
+      "lane": "main",
+      "col": 2,
+      "width": 112
+    },
+    {
+      "id": "evaluate",
+      "type": "decision",
+      "label": "回合判断",
+      "sublabel": "工具 / 队列 / 结束",
+      "tag": "turn_end",
+      "step": "04",
+      "lane": "main",
+      "col": 3,
+      "width": 112
+    },
+    {
+      "id": "completed",
+      "type": "success",
+      "label": "完成",
+      "sublabel": "agent_end → agent_settled",
+      "tag": "prompt() 返回",
+      "step": "05",
+      "lane": "main",
+      "col": 4,
+      "width": 118
+    },
+    {
+      "id": "tool_exec",
+      "type": "active",
+      "label": "工具执行",
+      "sublabel": "并行或顺序",
+      "tag": "toolCall",
+      "lane": "continuation",
+      "col": 1,
+      "width": 112
+    },
+    {
+      "id": "retry_wait",
+      "type": "failure",
+      "label": "退避重试",
+      "sublabel": "指数等待",
+      "tag": "可取消 / 有上限",
+      "lane": "continuation",
+      "col": 0,
+      "width": 112
+    },
+    {
+      "id": "compaction",
+      "type": "active",
+      "label": "上下文压缩",
+      "sublabel": "overflow / threshold",
+      "tag": "重建上下文",
+      "lane": "continuation",
+      "col": 2,
+      "width": 118
+    },
+    {
+      "id": "failed",
+      "type": "failure",
+      "label": "失败结束",
+      "sublabel": "预检失败或重试耗尽",
+      "tag": "terminal",
+      "lane": "terminal",
+      "col": 0,
+      "width": 112
+    },
+    {
+      "id": "cancelled",
+      "type": "failure",
+      "label": "用户取消",
+      "sublabel": "abort 后等待 idle",
+      "tag": "stopReason: aborted",
+      "lane": "terminal",
+      "col": 1,
+      "width": 112
+    },
+    {
+      "id": "terminated",
+      "type": "neutral",
+      "label": "提前终止",
+      "sublabel": "跳过自动下一轮",
+      "tag": "terminate / stop hook",
+      "lane": "terminal",
+      "col": 2,
+      "width": 118
+    }
+  ],
+  "transitions": [
+    {
+      "id": "needs-tool",
+      "from": "evaluate",
+      "to": "tool_exec",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "default"
+    },
+    {
+      "id": "tool-continues",
+      "from": "tool_exec",
+      "to": "streaming",
+      "route": "top-channel",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "channelY": 238,
+      "variant": "emphasis"
+    },
+    {
+      "id": "retryable-error",
+      "from": "streaming",
+      "to": "retry_wait",
+      "route": "left-channel",
+      "fromSide": "left",
+      "toSide": "left",
+      "channelX": 326,
+      "variant": "security"
+    },
+    {
+      "id": "retry-resumes",
+      "from": "retry_wait",
+      "to": "streaming",
+      "route": "right-channel",
+      "fromSide": "right",
+      "toSide": "right",
+      "channelX": 476,
+      "variant": "emphasis"
+    },
+    {
+      "id": "retry-exhausted",
+      "from": "retry_wait",
+      "to": "failed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "security"
+    },
+    {
+      "id": "context-pressure",
+      "from": "streaming",
+      "to": "compaction",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [[320, 157], [320, 90], [810, 90], [810, 238], [710, 238]],
+      "variant": "dashed"
+    },
+    {
+      "id": "compaction-resumes",
+      "from": "compaction",
+      "to": "streaming",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [[790, 307], [790, 104], [402, 104]],
+      "variant": "emphasis"
+    },
+    {
+      "id": "compaction-settles",
+      "from": "compaction",
+      "to": "completed",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "variant": "default"
+    },
+    {
+      "id": "preflight-failed",
+      "from": "preflight",
+      "to": "failed",
+      "variant": "security"
+    },
+    {
+      "id": "run-aborted",
+      "from": "streaming",
+      "to": "cancelled",
+      "variant": "security"
+    },
+    {
+      "id": "tool-terminated",
+      "from": "tool_exec",
+      "to": "terminated",
+      "variant": "security"
+    }
+  ]
+}

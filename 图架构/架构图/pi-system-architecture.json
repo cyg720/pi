@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Pi 项目架构：从用户输入到模型与工具",
+    "locale": "zh-CN",
+    "output": "pi-system-architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1380, 720],
+    "repository": {
+      "url": "https://github.com/cyg720/pi.git",
+      "revision": "ca65d6d63478ca862b6f5acb76373cc5fdc5b646"
+    },
+    "views": [
+      {
+        "id": "main-path",
+        "label": "先看主运行链",
+        "focus": ["user", "codingAgent", "agentCore", "aiGateway", "providers"],
+        "note": "一次请求从入口进入会话编排，经智能体循环和统一模型层，到达具体 LLM 服务。"
+      },
+      {
+        "id": "local-capabilities",
+        "label": "本机能力与扩展",
+        "focus": ["tui", "resources", "codingAgent", "tools", "sessionStore"],
+        "note": "界面、技能与扩展、工具执行、会话持久化都围绕 coding-agent 组织。"
+      },
+      {
+        "id": "remote-path",
+        "label": "实验性远程路径",
+        "focus": ["remoteClient", "remoteBoundary"],
+        "note": "client/protocol/server 是可选远程会话通道，不是本地 pi CLI 每次运行的必经路径。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "用户 / 宿主应用",
+      "sublabel": "输入任务，接收结果",
+      "pos": [30, 310],
+      "size": [150, 76],
+      "sources": [
+        { "path": "README.md", "label": "项目总览" }
+      ]
+    },
+    {
+      "id": "codingAgent",
+      "type": "backend",
+      "label": "coding-agent",
+      "sublabel": "入口模式 + AgentSession 编排",
+      "tag": "pi CLI / SDK / JSON / RPC",
+      "pos": [235, 300],
+      "size": [190, 96],
+      "sources": [
+        { "path": "packages/coding-agent/README.md", "label": "四种运行模式" },
+        { "path": "packages/coding-agent/package.json", "label": "包依赖" }
+      ]
+    },
+    {
+      "id": "agentCore",
+      "type": "backend",
+      "label": "agent-core",
+      "sublabel": "状态、事件、工具调用循环",
+      "tag": "Agent + agentLoop",
+      "pos": [500, 300],
+      "size": [180, 96],
+      "sources": [
+        { "path": "packages/agent/README.md", "label": "消息与事件流" },
+        { "path": "packages/agent/package.json", "label": "包依赖" }
+      ]
+    },
+    {
+      "id": "aiGateway",
+      "type": "backend",
+      "label": "pi-ai",
+      "sublabel": "统一模型、鉴权与流式事件",
+      "tag": "Models + Provider",
+      "pos": [755, 300],
+      "size": [185, 96],
+      "sources": [
+        { "path": "packages/ai/README.md", "label": "统一 LLM API" },
+        { "path": "packages/ai/package.json", "label": "Provider SDK" }
+      ]
+    },
+    {
+      "id": "providers",
+      "type": "external",
+      "label": "LLM / 图像模型服务",
+      "sublabel": "OpenAI、Anthropic、Google…",
+      "tag": "外部网络服务",
+      "pos": [1020, 300],
+      "size": [205, 96],
+      "sources": [
+        { "path": "packages/ai/README.md", "label": "支持的 Providers" }
+      ]
+    },
+    {
+      "id": "tui",
+      "type": "frontend",
+      "label": "pi-tui",
+      "sublabel": "终端组件与差分渲染",
+      "tag": "交互模式 UI",
+      "pos": [235, 90],
+      "size": [190, 86],
+      "sources": [
+        { "path": "packages/tui/README.md", "label": "TUI 设计" }
+      ]
+    },
+    {
+      "id": "resources",
+      "type": "cloud",
+      "label": "可扩展资源",
+      "sublabel": "Extensions / Skills / Prompts / Themes",
+      "tag": "用户级 + 项目级 + Pi Packages",
+      "pos": [500, 80],
+      "size": [215, 96],
+      "sources": [
+        { "path": "packages/coding-agent/README.md", "label": "Customization" }
+      ]
+    },
+    {
+      "id": "remoteClient",
+      "type": "frontend",
+      "label": "pi-client",
+      "sublabel": "远程会话客户端",
+      "tag": "ByteTransport",
+      "pos": [820, 84],
+      "size": [170, 88],
+      "sources": [
+        { "path": "packages/client/README.md", "label": "远程客户端" }
+      ]
+    },
+    {
+      "id": "remoteBoundary",
+      "type": "backend",
+      "label": "pi-protocol + pi-server",
+      "sublabel": "CBOR 帧 + 应用提供的 Session Service",
+      "tag": "Experimental",
+      "pos": [1065, 78],
+      "size": [230, 100],
+      "sources": [
+        { "path": "packages/protocol/README.md", "label": "协议与帧" },
+        { "path": "packages/server/README.md", "label": "服务端边界" }
+      ]
+    },
+    {
+      "id": "sessionStore",
+      "type": "database",
+      "label": "会话持久化",
+      "sublabel": "JSONL 会话树 / 可选 SQLite",
+      "tag": "恢复、分支、压缩",
+      "pos": [270, 515],
+      "size": [220, 96],
+      "sources": [
+        { "path": "packages/coding-agent/docs/session-format.md", "label": "JSONL 会话树" },
+        { "path": "packages/session-backends/sqlite-node/README.md", "label": "SQLite 后端" }
+      ]
+    },
+    {
+      "id": "tools",
+      "type": "security",
+      "label": "工具执行层",
+      "sublabel": "read / edit / write / shell + 自定义工具",
+      "tag": "直接使用宿主进程权限",
+      "pos": [585, 515],
+      "size": [225, 96],
+      "sources": [
+        { "path": "packages/coding-agent/README.md", "label": "内置工具" },
+        { "path": "README.md", "label": "权限与容器化" }
+      ]
+    },
+    {
+      "id": "telemetry",
+      "type": "cloud",
+      "label": "pi-telemetry",
+      "sublabel": "显式 Span 契约与类型化 Schema",
+      "tag": "不绑定具体观测厂商",
+      "pos": [900, 515],
+      "size": [215, 96],
+      "sources": [
+        { "path": "packages/telemetry/README.md", "label": "观测契约" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "交互与应用编排层",
+      "wraps": ["codingAgent", "tui", "resources"]
+    },
+    {
+      "kind": "region",
+      "label": "智能核心层",
+      "wraps": ["agentCore", "aiGateway", "telemetry"]
+    },
+    {
+      "kind": "region",
+      "label": "本机与外部 I/O 层",
+      "wraps": ["sessionStore", "tools", "providers"]
+    },
+    {
+      "kind": "region",
+      "label": "实验性远程会话路径（非主链）",
+      "wraps": ["remoteClient", "remoteBoundary"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-entry",
+      "from": "user",
+      "to": "codingAgent",
+      "label": "终端输入或 SDK 调用",
+      "variant": "emphasis",
+      "labelAt": [208, 410]
+    },
+    {
+      "id": "entry-core",
+      "from": "codingAgent",
+      "to": "agentCore",
+      "label": "创建会话并提交 prompt",
+      "variant": "emphasis",
+      "labelAt": [463, 410]
+    },
+    {
+      "id": "core-ai",
+      "from": "agentCore",
+      "to": "aiGateway",
+      "label": "标准 Context + Tool Schema",
+      "variant": "emphasis",
+      "labelAt": [718, 410]
+    },
+    {
+      "id": "ai-providers",
+      "from": "aiGateway",
+      "to": "providers",
+      "label": "按 provider / model 路由并流式返回",
+      "variant": "emphasis",
+      "labelAt": [980, 410]
+    },
+    {
+      "id": "entry-tui",
+      "from": "codingAgent",
+      "to": "tui",
+      "label": "事件驱动渲染",
+      "labelAt": [330, 225]
+    },
+    {
+      "id": "resources-entry",
+      "from": "resources",
+      "to": "codingAgent",
+      "label": "加载并注册能力",
+      "variant": "dashed"
+    },
+    {
+      "id": "entry-session",
+      "from": "codingAgent",
+      "to": "sessionStore",
+      "label": "追加、恢复、分支"
+      ,"fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "core-tools",
+      "from": "agentCore",
+      "to": "tools",
+      "label": "调用工具；结果回填上下文",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "ai-telemetry",
+      "from": "aiGateway",
+      "to": "telemetry",
+      "label": "传递诊断上下文",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "remote-wire",
+      "from": "remoteClient",
+      "to": "remoteBoundary",
+      "label": "有序字节流：长度前缀 + CBOR",
+      "variant": "dashed",
+      "labelAt": [1028, 192]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "小白先记住这条主链",
+      "items": [
+        "coding-agent 负责把产品能力组装起来",
+        "agent-core 负责让模型、工具和消息循环运转",
+        "pi-ai 负责把不同模型厂商统一成一种调用方式"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "扩展点",
+      "items": [
+        "Extensions 可注册工具、命令、事件和 UI",
+        "Skills 与 Prompt Templates 向模型提供工作方法",
+        "Themes 与 pi-tui 控制终端呈现"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "边界提醒",
+      "items": [
+        "工具默认拥有启动 pi 的进程权限，隔离需由容器或扩展提供",
+        "client / protocol / server 是实验性远程能力，不是主 CLI 必经路径",
+        "telemetry 只记录诊断，不承载业务状态"
+      ]
+    }
+  ]
+}

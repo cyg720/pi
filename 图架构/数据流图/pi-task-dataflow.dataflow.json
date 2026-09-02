@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Pi 一次任务的数据流",
+    "locale": "zh-CN",
+    "output": "图架构/数据流图/pi-task-dataflow.html",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560],
+    "views": [
+      {
+        "id": "input-to-answer",
+        "label": "主数据链",
+        "focus": ["sources", "session", "context", "model", "consumer"],
+        "note": "从用户输入开始，经过会话汇合和上下文转换，形成模型请求并流式返回。"
+      },
+      {
+        "id": "context-sources",
+        "label": "上下文从哪里来",
+        "focus": ["sources", "session", "context"],
+        "note": "当前输入、项目资源和活动会话分支组成任务输入包。"
+      },
+      {
+        "id": "tool-feedback",
+        "label": "工具数据回路",
+        "focus": ["model", "tool_host", "context", "transcript"],
+        "note": "toolCall 驱动工具读写；结构化 toolResult 回到上下文并参与下一轮模型请求。"
+      }
+    ]
+  },
+  "stages": [
+    { "label": "① 数据来源" },
+    { "label": "② 汇合入口" },
+    { "label": "③ 上下文加工" },
+    { "label": "④ 模型与工具" },
+    { "label": "⑤ 存储与消费" }
+  ],
+  "nodes": [
+    {
+      "id": "sources",
+      "type": "external",
+      "label": "任务数据源",
+      "sublabel": "输入 · 项目资源 · 会话历史",
+      "tag": "文本 / 图片 / AGENTS / JSONL",
+      "stage": 0,
+      "row": 1,
+      "width": 132
+    },
+    {
+      "id": "session",
+      "type": "backend",
+      "label": "AgentSession",
+      "sublabel": "展开、校验、合并输入",
+      "tag": "coding-agent",
+      "stage": 1,
+      "row": 1,
+      "width": 152
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "模型上下文",
+      "sublabel": "构建、裁剪、格式转换",
+      "tag": "agent-core",
+      "stage": 2,
+      "row": 1,
+      "width": 154
+    },
+    {
+      "id": "model",
+      "type": "cloud",
+      "label": "模型数据通道",
+      "sublabel": "Models → Provider → LLM",
+      "tag": "鉴权 + 路由 + 流式事件",
+      "stage": 3,
+      "row": 0,
+      "width": 162
+    },
+    {
+      "id": "tool_host",
+      "type": "messagebus",
+      "label": "工具与宿主环境",
+      "sublabel": "文件 / 进程 / API",
+      "tag": "toolCall → toolResult",
+      "stage": 4,
+      "row": 2,
+      "width": 164
+    },
+    {
+      "id": "consumer",
+      "type": "frontend",
+      "label": "结果消费者",
+      "sublabel": "交互 / JSON / RPC / SDK",
+      "tag": "实时事件",
+      "stage": 4,
+      "row": 0,
+      "width": 154
+    },
+    {
+      "id": "transcript",
+      "type": "database",
+      "label": "会话记录",
+      "sublabel": "user / assistant / toolResult",
+      "tag": "JSONL 树",
+      "stage": 4,
+      "row": 1,
+      "width": 160
+    }
+  ],
+  "flows": [
+    {
+      "id": "source-packet",
+      "from": "sources",
+      "to": "session",
+      "label": "输入包",
+      "variant": "emphasis"
+    },
+    {
+      "id": "agent-messages",
+      "from": "session",
+      "to": "context",
+      "label": "消息数组",
+      "variant": "emphasis"
+    },
+    {
+      "id": "llm-context",
+      "from": "context",
+      "to": "model",
+      "label": "Message[] + tools",
+      "variant": "emphasis"
+    },
+    {
+      "id": "live-output",
+      "from": "model",
+      "to": "consumer",
+      "label": "流式事件",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "id": "assistant-record",
+      "from": "model",
+      "to": "transcript",
+      "label": "AssistantMessage",
+      "variant": "dashed",
+      "route": "bottom-channel",
+      "labelDx": 55
+    },
+    {
+      "id": "tool-instruction",
+      "from": "model",
+      "to": "tool_host",
+      "label": "toolCall",
+      "variant": "security",
+      "labelDx": -60
+    },
+    {
+      "id": "tool-feedback",
+      "from": "tool_host",
+      "to": "context",
+      "label": "toolResult 回流",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tool-record",
+      "from": "tool_host",
+      "to": "transcript",
+      "label": "toolResult",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "读图方法",
+      "items": [
+        "先沿绿色主线看：任务数据源 → 会话 → 上下文 → 模型 → 结果消费者",
+        "每条箭头写的是数据，不是泛化的“调用”",
+        "虚线表示持久化记录，红色表示会接触宿主环境"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "数据最终去向",
+      "items": [
+        "流式事件进入交互界面、JSON、RPC 或 SDK",
+        "完整消息作为 JSONL 树保存，可恢复、压缩或分支",
+        "工具接触文件、进程或网络；toolResult 会回到下一轮模型上下文"
+      ]
+    }
+  ]
+}

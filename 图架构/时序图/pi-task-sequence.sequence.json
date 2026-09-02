@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Pi 单次任务调用时序",
+    "locale": "zh-CN",
+    "output": "图架构/时序图/pi-task-sequence.html",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1080, 1140],
+    "views": [
+      {
+        "id": "request-path",
+        "label": "主调用链",
+        "focus": ["user", "entry", "session", "runtime", "models", "provider", "llm"],
+        "note": "从用户提交任务，沿 coding-agent、agent-core 和 pi-ai 到达模型服务。"
+      },
+      {
+        "id": "tool-roundtrip",
+        "label": "工具回路",
+        "focus": ["runtime", "tool", "session", "store", "models"],
+        "note": "模型返回 toolCall 后，工具结果先写回上下文，再发起下一轮模型请求。"
+      },
+      {
+        "id": "return-path",
+        "label": "返回与落盘",
+        "focus": ["llm", "runtime", "session", "store", "entry", "user"],
+        "note": "流式事件持续向界面返回；消息结束时写入会话，agent_end 后任务才真正完成。"
+      }
+    ]
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "用户 / 宿主", "sublabel": "需求发起者" },
+    { "id": "entry", "type": "frontend", "label": "入口模式", "sublabel": "交互·JSON·RPC·SDK" },
+    { "id": "session", "type": "backend", "label": "AgentSession", "sublabel": "coding-agent" },
+    { "id": "runtime", "type": "backend", "label": "agentLoop", "sublabel": "Agent · agent-core" },
+    { "id": "models", "type": "backend", "label": "Models", "sublabel": "pi-ai 路由层" },
+    { "id": "provider", "type": "cloud", "label": "Provider", "sublabel": "鉴权与协议适配" },
+    { "id": "llm", "type": "cloud", "label": "LLM 服务", "sublabel": "外部模型 API" },
+    { "id": "tool", "type": "messagebus", "label": "Tool", "sublabel": "内置或扩展工具" },
+    { "id": "store", "type": "database", "label": "会话与界面", "sublabel": "JSONL + 事件订阅者" }
+  ],
+  "segments": [
+    { "from": 150, "to": 330, "label": "① 接收并启动" },
+    { "from": 344, "to": 586, "label": "② 请求模型并流式返回" },
+    { "from": 600, "to": 856, "label": "③ 工具回路（仅当存在 toolCall）" },
+    { "from": 870, "to": 1050, "label": "④ 结束并交付" }
+  ],
+  "messages": [
+    { "id": "submit", "from": "user", "to": "entry", "y": 178, "label": "提交任务", "variant": "emphasis" },
+    { "id": "prompt", "from": "entry", "to": "session", "y": 222, "label": "prompt(text)", "variant": "emphasis", "note": "四种入口最终汇合到同一个 AgentSession" },
+    { "id": "prepare", "from": "session", "to": "store", "y": 266, "label": "展开模板 / 扩展，检查模型与鉴权", "variant": "dashed" },
+    { "id": "start-agent", "from": "session", "to": "runtime", "y": 310, "label": "agent.prompt(messages)", "variant": "emphasis" },
+
+    { "id": "stream-model", "from": "runtime", "to": "models", "y": 372, "label": "streamFn(model, context)", "variant": "emphasis", "note": "agentLoop 先执行 transformContext 与 convertToLlm" },
+    { "id": "provider-stream", "from": "models", "to": "provider", "y": 416, "label": "resolve auth → provider.stream()", "variant": "security" },
+    { "id": "api-request", "from": "provider", "to": "llm", "y": 460, "label": "发送统一消息与工具定义", "variant": "default" },
+    { "id": "api-stream", "from": "llm", "to": "provider", "y": 504, "label": "文本 / 思考 / toolCall 流", "variant": "return" },
+    { "id": "assistant-stream", "from": "provider", "to": "runtime", "y": 548, "label": "AssistantMessageEventStream", "variant": "return" },
+    { "id": "live-events", "from": "runtime", "to": "store", "y": 580, "label": "message_update / message_end", "variant": "dashed" },
+
+    { "id": "tool-call", "from": "runtime", "to": "tool", "y": 628, "label": "校验参数 + beforeToolCall + execute()", "variant": "security" },
+    { "id": "tool-return", "from": "tool", "to": "runtime", "y": 672, "label": "ToolResult（成功或错误）", "variant": "return" },
+    { "id": "persist-tool", "from": "runtime", "to": "session", "y": 716, "label": "message_end(toolResult)", "variant": "dashed" },
+    { "id": "append-tool", "from": "session", "to": "store", "y": 760, "label": "SessionManager.appendMessage()", "variant": "dashed" },
+    { "id": "next-turn", "from": "runtime", "to": "models", "y": 804, "label": "带 toolResult 发起下一轮 stream", "variant": "emphasis" },
+    { "id": "next-answer", "from": "models", "to": "runtime", "y": 848, "label": "新的 AssistantMessage", "variant": "return" },
+
+    { "id": "agent-end", "from": "runtime", "to": "session", "y": 898, "label": "agent_end（无更多工具或排队消息）", "variant": "return" },
+    { "id": "persist-final", "from": "session", "to": "store", "y": 942, "label": "持久化最终消息并推送事件", "variant": "dashed" },
+    { "id": "settled", "from": "session", "to": "entry", "y": 986, "label": "agent_settled / prompt 返回", "variant": "return" },
+    { "id": "present", "from": "entry", "to": "user", "y": 1030, "label": "显示或返回最终结果", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "entry", "from": 172, "to": 1038, "type": "frontend" },
+    { "participant": "session", "from": 216, "to": 994, "type": "backend" },
+    { "participant": "runtime", "from": 304, "to": 906, "type": "backend" },
+    { "participant": "models", "from": 366, "to": 856, "type": "backend" },
+    { "participant": "provider", "from": 410, "to": 556, "type": "cloud" },
+    { "participant": "llm", "from": 454, "to": 512, "type": "cloud" },
+    { "participant": "tool", "from": 622, "to": 680, "type": "messagebus" },
+    { "participant": "store", "from": 260, "to": 950, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "谁先调用谁",
+      "items": [
+        "入口模式只负责接收与展示，业务入口统一是 AgentSession.prompt()",
+        "AgentSession 调 Agent；Agent 在 agentLoop 中调 pi-ai Models",
+        "Models 负责鉴权和 Provider 路由，Provider 再访问外部 LLM"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "何时返回",
+      "items": [
+        "模型内容通过流式事件边生成边返回，不必等完整回答",
+        "每条 user / assistant / toolResult 在 message_end 时写入会话",
+        "只有收到 agent_end 并完成收尾，prompt() 才真正返回"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "工具回路",
+      "items": [
+        "没有 toolCall：直接跳过第③段进入结束阶段",
+        "存在 toolCall：校验后并行或顺序执行工具",
+        "toolResult 写回上下文，再请求模型；可重复多轮"
+      ]
+    }
+  ]
+}

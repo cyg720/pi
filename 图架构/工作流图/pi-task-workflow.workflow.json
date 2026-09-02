@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Pi 一次任务由谁负责、如何完成",
+    "locale": "zh-CN",
+    "output": "图架构/工作流图/pi-task-workflow.html",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "viewBox": [1120, 720],
+    "views": [
+      {
+        "id": "main-request",
+        "label": "一次请求主线",
+        "focus": ["user", "interface", "preflight", "agent_loop", "provider", "turn_gate", "recovery", "settle", "output"],
+        "note": "从用户提交目标开始，经过会话预检、模型回合和收尾检查，最终由界面呈现结果。"
+      },
+      {
+        "id": "tool-cycle",
+        "label": "工具执行闭环",
+        "focus": ["turn_gate", "tools", "agent_loop"],
+        "note": "模型产生 toolCall 后，工具批次完成参数校验、扩展钩子和执行，再把 toolResult 送入下一回合。"
+      },
+      {
+        "id": "recovery-record",
+        "label": "恢复与会话记录",
+        "focus": ["provider", "turn_gate", "recovery", "settle"],
+        "note": "AgentSession 处理可重试错误、上下文压缩和排队消息；SessionManager 在 message_end 时追加记录。"
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "ui", "label": "用户与界面" },
+    { "id": "session", "label": "AgentSession｜会话编排" },
+    { "id": "runtime", "label": "pi-agent-core｜回合循环" },
+    { "id": "execution", "label": "Provider、工具与记录" }
+  ],
+  "phases": [
+    { "id": "intake", "label": "接收与预检", "fromCol": 0, "toCol": 1 },
+    { "id": "reasoning", "label": "模型回合", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "completion", "label": "执行、恢复与收尾", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "session_control", "label": "会话编排责任", "lane": "session", "fromCol": 1, "toCol": 5, "variant": "emphasis" },
+    { "id": "external_work", "label": "外部调用与持久化", "lane": "execution", "fromCol": 3, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["user", "interface", "preflight", "agent_loop", "provider", "turn_gate", "recovery", "settle", "output"],
+  "semanticChecks": {
+    "allowedRoots": ["user"],
+    "allowedTerminals": ["output"],
+    "requiredPaths": [
+      { "from": "user", "to": "output" },
+      { "from": "turn_gate", "to": "agent_loop" }
+    ],
+    "requiredEdges": [
+      { "from": "turn_gate", "to": "tools" },
+      { "from": "tools", "to": "agent_loop" },
+      { "from": "recovery", "to": "agent_loop" }
+    ]
+  },
+  "nodes": [
+    { "id": "user", "lane": "ui", "col": 0, "type": "external", "label": "用户", "sublabel": "提出目标或补充指令", "width": 138 },
+    { "id": "interface", "lane": "ui", "col": 1, "type": "frontend", "label": "TUI / RPC 界面", "sublabel": "接收输入、展示事件", "width": 146 },
+    { "id": "output", "lane": "ui", "col": 5, "type": "frontend", "label": "呈现最终结果", "sublabel": "文本、工具结果与错误", "width": 146 },
+    { "id": "preflight", "lane": "session", "col": 1, "type": "backend", "label": "输入预检", "sublabel": "扩展、模板、模型、鉴权", "tag": "AgentSession.prompt()", "width": 150 },
+    { "id": "recovery", "lane": "session", "col": 4, "type": "backend", "label": "会话续跑检查", "sublabel": "retry / compact / queued", "tag": "AgentSession", "width": 154 },
+    { "id": "settle", "lane": "session", "col": 5, "type": "database", "label": "记录并结算", "sublabel": "JSONL 追加 / agent_settled", "tag": "SessionManager + AgentSession", "width": 158 },
+    { "id": "agent_loop", "lane": "runtime", "col": 2, "type": "backend", "label": "Agent 回合循环", "sublabel": "转换上下文并发起回合", "tag": "agentLoop()", "width": 154 },
+    { "id": "turn_gate", "lane": "runtime", "col": 3, "type": "backend", "label": "回合结果判断", "sublabel": "工具、队列还是结束？", "tag": "turn_end", "width": 150 },
+    { "id": "provider", "lane": "execution", "col": 3, "type": "cloud", "label": "ModelRuntime / Provider", "sublabel": "鉴权并流式生成响应", "width": 164 },
+    { "id": "tools", "lane": "execution", "col": 4, "type": "external", "label": "工具执行批次", "sublabel": "校验 → hooks → execute → 结果", "tag": "并行或顺序", "width": 164 }
+  ],
+  "edges": [
+    { "id": "submit-intent", "from": "user", "to": "interface", "label": "任务目标", "variant": "default", "role": "main" },
+    { "id": "dispatch-prompt", "from": "interface", "to": "preflight", "label": "prompt / steer / followUp", "variant": "emphasis", "role": "main" },
+    { "id": "start-agent", "from": "preflight", "to": "agent_loop", "label": "AgentMessage[] + system prompt", "variant": "emphasis", "role": "main" },
+    { "id": "call-provider", "from": "agent_loop", "to": "provider", "label": "Message[] + tools", "variant": "default", "role": "main" },
+    { "id": "stream-response", "from": "provider", "to": "turn_gate", "variant": "emphasis", "role": "main" },
+    { "id": "finish-turn", "from": "turn_gate", "to": "recovery", "label": "agent_end / 错误 / 无工具", "variant": "default", "role": "main" },
+    { "id": "settle-session", "from": "recovery", "to": "settle", "label": "没有待办", "variant": "default", "role": "main" },
+    { "id": "show-output", "from": "settle", "to": "output", "label": "agent_settled", "variant": "emphasis", "role": "main" },
+    { "id": "request-tools", "from": "turn_gate", "to": "tools", "label": "toolCall[]", "variant": "default", "role": "branch" },
+    { "id": "continue-after-tools", "from": "tools", "to": "agent_loop", "label": "toolResult[] → 下一模型回合", "variant": "emphasis" },
+    { "id": "continue-session", "from": "recovery", "to": "agent_loop", "label": "重试 / 压缩后继续 / 排队消息", "variant": "dashed", "role": "return" }
+  ]
+}
