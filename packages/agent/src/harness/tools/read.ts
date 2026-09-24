@@ -13,6 +13,7 @@
  */
 import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
 import { type Static, Type } from "typebox";
+import type { Context } from "../context.ts";
 import type { AgentHarnessTool } from "../types.ts";
 import { getOrThrow } from "../types.ts";
 import {
@@ -57,6 +58,7 @@ export type ReadImageProcessor = (
 	bytes: Uint8Array,
 	mimeType: string,
 	options: { autoResizeImages: boolean },
+	context: Context,
 ) => Promise<ReadImageProcessorResult>;
 
 /** read 工具选项（中文说明）：autoResizeImages 控制注入的处理器是否缩放图片（默认 true）。 */
@@ -79,6 +81,7 @@ export function createReadTool<TContext extends ExecutionToolContext = Execution
 		label: "read",
 		description: `Read the contents of a file. Supports text files and images (jpg, png, gif, webp, bmp). Images are sent as attachments. For text files, output is truncated to ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). Use offset/limit for large files. When you need the full file, continue with offset until complete.`,
 		parameters: readSchema,
+<<<<<<< HEAD
 		async execute(_toolCallId, { path, offset, limit }, signal, _onUpdate, { env }) {
 			// 带容错的路径解析（多变体探测）
 			const absolutePath = await resolveReadToolPath(env, path, signal);
@@ -91,6 +94,20 @@ export function createReadTool<TContext extends ExecutionToolContext = Execution
 					const processed = await options.imageProcessor(bytes, mimeType, {
 						autoResizeImages: options.autoResizeImages ?? true,
 					});
+=======
+		async execute(_toolCallId, { path, offset, limit }, _onUpdate, { env }, _invocation, context) {
+			const absolutePath = await resolveReadToolPath(env, path, context);
+			const bytes = getOrThrow(await env.readBinaryFile(absolutePath, context));
+			const mimeType = detectSupportedImageMimeType(bytes);
+			if (mimeType) {
+				if (options?.imageProcessor) {
+					const processed = await options.imageProcessor(
+						bytes,
+						mimeType,
+						{ autoResizeImages: options.autoResizeImages ?? true },
+						context,
+					);
+>>>>>>> main
 					if (!processed.ok) {
 						// 处理失败：以文本说明代替图片
 						return {

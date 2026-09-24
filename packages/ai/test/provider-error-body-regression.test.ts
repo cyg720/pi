@@ -23,7 +23,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { streamSimple as streamSimpleBedrock } from "../src/api/bedrock-converse-stream.ts";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
 import { stream as streamOpenAIResponses } from "../src/api/openai-responses.ts";
-import type { Context, Model } from "../src/types.ts";
+import type { Model } from "../src/types.ts";
 
 // openai SDK APIError shape: "<status> status code (no body)" message, the
 // parsed body kept on `.error`.
@@ -121,14 +121,18 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
 	};
 });
 
-import { getModel } from "../src/compat.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
 
+<<<<<<< HEAD
 /** 所有提供商用例共享的最小用户上下文。 */
 const context: Context = {
+=======
+const context = normalizeContext({
+>>>>>>> main
 	systemPrompt: "",
 	messages: [{ role: "user", content: [{ type: "text", text: "hi" }], timestamp: 0 }],
 	tools: [],
-};
+});
 
 /** 用于覆盖 OpenAI-compatible Completions 错误路径的模型。 */
 const completionsModel: Model<"openai-completions"> = {
@@ -230,8 +234,14 @@ describe("provider error body passthrough (per-tier regression)", () => {
 
 		/** Bedrock 测试使用的内置模型。 */
 		const model = getModel("amazon-bedrock", "us.anthropic.claude-opus-4-8");
+<<<<<<< HEAD
 		/** Bedrock 网关错误流消费后的结果。 */
 		const output = await drainResult(streamSimpleBedrock(model, { messages: context.messages }, {}));
+=======
+		const output = await drainResult(
+			streamSimpleBedrock(model, normalizeContext({ messages: context.messages }), {}),
+		);
+>>>>>>> main
 
 		expect(output.stopReason).toBe("error");
 		expect(output.errorMessage).toContain("403");
@@ -256,8 +266,14 @@ describe("provider error body passthrough (per-tier regression)", () => {
 
 		/** 不支持按需吞吐场景的 Bedrock 模型。 */
 		const model = getModel("amazon-bedrock", "global.anthropic.claude-opus-5");
+<<<<<<< HEAD
 		/** 响应体为流对象时的 Bedrock 错误结果。 */
 		const output = await drainResult(streamSimpleBedrock(model, { messages: context.messages }, {}));
+=======
+		const output = await drainResult(
+			streamSimpleBedrock(model, normalizeContext({ messages: context.messages }), {}),
+		);
+>>>>>>> main
 
 		expect(output.stopReason).toBe("error");
 		expect(output.errorMessage).toContain("on-demand throughput isn't supported");

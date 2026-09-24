@@ -12,8 +12,19 @@
  */
 
 import values from "./data/zai.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const ZAI_MODELS: ModelCatalog<typeof values, "zai"> =
 	flattenModelCatalog("zai", values);
+=======
+export const ZAI_MODELS: ChatModelCatalog<typeof values, "zai"> =
+	flattenChatModelCatalog("zai", values);
+
+export const ZAI_IMAGE_MODELS: ImageModelCatalog<typeof values, "zai"> =
+	flattenImageModelCatalog("zai", values);
+
+export const ZAI_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "zai"> =
+	flattenClassifierModelCatalog("zai", values);
+>>>>>>> main

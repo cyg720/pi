@@ -21,11 +21,13 @@ function parseTimestamp(uuid: string): number {
 
 /** 每例后恢复所有全局替身。 */
 afterEach(() => {
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 });
 
 /** UUIDv7 格式与单调性测试组。 */
 describe("uuidv7", () => {
+<<<<<<< HEAD
 	/** 验证固定时间下随机尾部递增，溢出后时间戳增加一毫秒。 */
 	it("uses the RFC 9562 layout and preserves monotonic order", () => {
 		/** 三次 crypto 调用依次使用的确定字节数组。 */
@@ -50,21 +52,46 @@ describe("uuidv7", () => {
 			const second = uuidv7();
 			/** 尾部溢出并把时间推进一毫秒的第三个 UUID。 */
 			const third = uuidv7();
+=======
+	it("generates ordered UUIDv7s while preserving follower timestamps", () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(TIMESTAMP);
 
-			expect(first).toBe("01234567-89ab-7fff-bfff-f91122334455");
-			expect(second).toBe("01234567-89ab-7fff-bfff-fc0000000000");
-			expect(third).toBe("01234567-89ac-7000-8000-000000000000");
-			expect(first).toMatch(UUID_V7_RE);
-			expect(second).toMatch(UUID_V7_RE);
-			expect(third).toMatch(UUID_V7_RE);
-			expect(parseTimestamp(first)).toBe(TIMESTAMP);
-			expect(parseTimestamp(second)).toBe(TIMESTAMP);
-			expect(parseTimestamp(third)).toBe(TIMESTAMP + 1);
-			expect(first < second).toBe(true);
-			expect(second < third).toBe(true);
-			expect(getRandomValues).toHaveBeenCalledTimes(3);
-		} finally {
-			dateNow.mockRestore();
-		}
+		const first = uuidv7();
+		const second = uuidv7();
+		vi.setSystemTime(TIMESTAMP - 1);
+		const afterRollback = uuidv7();
+		vi.setSystemTime(TIMESTAMP + 1);
+		const afterAdvance = uuidv7();
+		const ordinaryIds = [first, second, afterRollback, afterAdvance];
+		const followerTimestamp = TIMESTAMP - 1_000;
+		const followers = [uuidv7(followerTimestamp), uuidv7(followerTimestamp)];
+
+		for (const id of [...ordinaryIds, ...followers]) expect(id).toMatch(UUID_V7_RE);
+		expect(ordinaryIds).toEqual([...ordinaryIds].sort());
+		expect(new Set(ordinaryIds)).toHaveLength(ordinaryIds.length);
+		expect(ordinaryIds.map(parseTimestamp)).toEqual([TIMESTAMP, TIMESTAMP, TIMESTAMP, TIMESTAMP + 1]);
+		expect(followers.map(parseTimestamp)).toEqual([followerTimestamp, followerTimestamp]);
+		expect(new Set(followers)).toHaveLength(followers.length);
+	});
+
+	it("uses fresh randomness for every UUID tail", () => {
+		let randomByte = 0;
+		vi.stubGlobal("crypto", {
+			getRandomValues(bytes: Uint8Array) {
+				return bytes.fill(++randomByte);
+			},
+		});
+
+		expect([uuidv7(TIMESTAMP).slice(-8), uuidv7(TIMESTAMP).slice(-8)]).toEqual(["01010101", "02020202"]);
+	});
+>>>>>>> main
+
+	it.each([0, 2 ** 48 - 1])("accepts timestamp boundary %s", (timestamp) => {
+		expect(parseTimestamp(uuidv7(timestamp))).toBe(timestamp);
+	});
+
+	it.each([-1, 2 ** 48, 1.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid timestamp %s", (timestamp) => {
+		expect(() => uuidv7(timestamp)).toThrow(RangeError);
 	});
 });

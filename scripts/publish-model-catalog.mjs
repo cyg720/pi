@@ -20,13 +20,27 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { isDeepStrictEqual } from "node:util";
+import {
+	compareModelCatalogPiVersions,
+	getModelCatalogArtifactKey,
+	getModelCatalogProviderKey,
+	MODEL_CATALOG_INDEX_KEY,
+	MODEL_CATALOG_PREFIX,
+	MODEL_CATALOG_SCHEMA_VERSION,
+	parseModelCatalogIndex,
+} from "./model-catalog-protocol.ts";
 
+<<<<<<< HEAD
 /** 远程目录索引结构版本。 */
 const CATALOG_SCHEMA_VERSION = 1;
 /** 当前结构版本的对象键前缀。 */
 const CATALOG_PREFIX = `models/v${CATALOG_SCHEMA_VERSION}`;
 /** 可变目录索引对象键。 */
 const CATALOG_INDEX_KEY = `${CATALOG_PREFIX}/index.json`;
+=======
+// The storage layout, index format, and version ordering are defined in
+// model-catalog-protocol.ts, which pi.dev shares to serve these artifacts.
+>>>>>>> main
 // Bump this only when generated model metadata requires behavior unavailable in older pi clients.
 // 只有模型元数据依赖旧客户端不具备的行为时才提高最低版本。
 /** 能消费本目录元数据的最低 pi 版本。 */
@@ -41,6 +55,7 @@ const INDEX_CACHE_CONTROL = "no-store";
 const REQUIRED_PROVIDERS = ["anthropic", "openai", "openrouter"];
 /** 防止错误发布空目录的最低模型数。 */
 const MINIMUM_MODEL_COUNT = 500;
+const MODEL_TYPES = ["chat", "image", "classifier"];
 
 /**
  * 解析发布命令参数并验证必填项。
@@ -96,45 +111,79 @@ function readJson(path) {
 	return JSON.parse(readFileSync(path, "utf8"));
 }
 
+<<<<<<< HEAD
 /**
  * 完整校验模型目录包并计算内容 revision。
  * @param {string} inputDir 生成目录根路径。
  * @returns {object} 发布所需路径、计数和 SHA-256 revision。
  */
+=======
+function isObject(value) {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function chatProjection(providerModels) {
+	return Object.fromEntries(providerModels.filter((model) => model.type === "chat").map((model) => [model.id, model]));
+}
+
+>>>>>>> main
 function validateBundle(inputDir) {
 	/** 完整模型目录路径。 */
 	const modelsPath = join(inputDir, "models.json");
+<<<<<<< HEAD
 	/** 提供商索引路径。 */
+=======
+	const allModelsPath = join(inputDir, "models.all.json");
+>>>>>>> main
 	const providerIndexPath = join(inputDir, "providers.json");
 	/** 提供商分片目录。 */
 	const providersDir = join(inputDir, "providers");
 	/** models.json 原始字节，用于解析和摘要。 */
 	const modelsBytes = readFileSync(modelsPath);
+<<<<<<< HEAD
 	/** 完整提供商到模型映射。 */
 	const models = JSON.parse(modelsBytes.toString("utf8"));
 	/** providers.json 中的排序提供商标识。 */
+=======
+	const allModelsBytes = readFileSync(allModelsPath);
+	const models = JSON.parse(modelsBytes.toString("utf8"));
+	const allModels = JSON.parse(allModelsBytes.toString("utf8"));
+>>>>>>> main
 	const providerIds = readJson(providerIndexPath);
 
-	if (typeof models !== "object" || models === null || Array.isArray(models)) {
-		throw new Error("models.json must contain an object");
-	}
+	if (!isObject(models)) throw new Error("models.json must contain an object");
+	if (!isObject(allModels)) throw new Error("models.all.json must contain an object");
 	if (!Array.isArray(providerIds) || !providerIds.every((value) => typeof value === "string")) {
 		throw new Error("providers.json must contain an array of provider IDs");
 	}
 
+<<<<<<< HEAD
 	/** 从完整模型对象推导的期望提供商顺序。 */
 	const expectedProviderIds = Object.keys(models).sort();
+=======
+	const expectedProviderIds = Object.keys(allModels).sort();
+>>>>>>> main
 	if (!isDeepStrictEqual(providerIds, expectedProviderIds)) {
-		throw new Error("providers.json does not match the sorted providers in models.json");
+		throw new Error("providers.json does not match the sorted providers in models.all.json");
+	}
+	if (!isDeepStrictEqual(Object.keys(models).sort(), expectedProviderIds)) {
+		throw new Error("models.json and models.all.json list different providers");
 	}
 	/** providerId 是必须存在的提供商标识；循环逐一确认聚合目录没有漏项。 */
 	for (const providerId of REQUIRED_PROVIDERS) {
 		if (!Object.hasOwn(models, providerId)) throw new Error(`Required provider is missing: ${providerId}`);
 	}
 
+<<<<<<< HEAD
 	/** 跨所有提供商累计的模型数量。 */
+=======
+	// modelCount remains the legacy chat-catalog count for existing consumers.
+>>>>>>> main
 	let modelCount = 0;
+	let imageModelCount = 0;
+	let classifierModelCount = 0;
 	for (const providerId of providerIds) {
+<<<<<<< HEAD
 		/** 当前提供商在 models.json 中的模型映射。 */
 		const providerModels = models[providerId];
 		if (typeof providerModels !== "object" || providerModels === null || Array.isArray(providerModels)) {
@@ -142,9 +191,15 @@ function validateBundle(inputDir) {
 		}
 		/** 当前提供商分片文件内容。 */
 		const providerFile = readJson(join(providersDir, `${providerId}.json`));
+=======
+		const providerModels = allModels[providerId];
+		if (!Array.isArray(providerModels)) throw new Error(`Full provider catalog must be an array: ${providerId}`);
+		const providerFile = readJson(join(providersDir, `${providerId}.all.json`));
+>>>>>>> main
 		if (!isDeepStrictEqual(providerFile, providerModels)) {
-			throw new Error(`Provider shard does not match models.json: ${providerId}`);
+			throw new Error(`Provider shard does not match models.all.json: ${providerId}`);
 		}
+<<<<<<< HEAD
 		/** modelId 和 model 是当前分片中的模型标识与目录记录，用于执行字段级校验。 */
 		for (const [modelId, model] of Object.entries(providerModels)) {
 			if (
@@ -155,15 +210,42 @@ function validateBundle(inputDir) {
 				model.provider !== providerId
 			) {
 				throw new Error(`Invalid model entry: ${providerId}/${modelId}`);
+=======
+		const identities = new Set();
+		for (const model of providerModels) {
+			if (!isObject(model) || typeof model.id !== "string" || model.provider !== providerId) {
+				throw new Error(`Invalid model entry in provider catalog: ${providerId}`);
+>>>>>>> main
 			}
-			modelCount++;
+			if (!MODEL_TYPES.includes(model.type)) {
+				throw new Error(`Model entry has an unknown type: ${providerId}/${model.id} (${JSON.stringify(model.type)})`);
+			}
+			const identity = `${model.type}:${model.id}`;
+			if (identities.has(identity)) throw new Error(`Duplicate model entry: ${providerId}/${identity}`);
+			identities.add(identity);
+			if (model.type === "chat") modelCount++;
+			else if (model.type === "image") imageModelCount++;
+			else classifierModelCount++;
+		}
+
+		// The legacy variant must be exactly the chat projection of the full catalog.
+		const chatModels = chatProjection(providerModels);
+		if (!isDeepStrictEqual(models[providerId], chatModels)) {
+			throw new Error(`models.json is not the chat projection of models.all.json: ${providerId}`);
+		}
+		if (!isDeepStrictEqual(readJson(join(providersDir, `${providerId}.json`)), chatModels)) {
+			throw new Error(`Provider shard does not match models.json: ${providerId}`);
 		}
 	}
 
 	/** 磁盘上实际存在的提供商分片文件。 */
 	const shardFiles = readdirSync(providersDir).filter((name) => name.endsWith(".json")).sort();
+<<<<<<< HEAD
 	/** providers.json 推导的期望分片文件。 */
 	const expectedShardFiles = providerIds.map((providerId) => `${providerId}.json`).sort();
+=======
+	const expectedShardFiles = providerIds.flatMap((providerId) => [`${providerId}.json`, `${providerId}.all.json`]).sort();
+>>>>>>> main
 	if (!isDeepStrictEqual(shardFiles, expectedShardFiles)) {
 		throw new Error("Provider shard files do not match providers.json");
 	}
@@ -171,15 +253,26 @@ function validateBundle(inputDir) {
 		throw new Error(`Refusing to publish only ${modelCount} models; expected at least ${MINIMUM_MODEL_COUNT}`);
 	}
 
+<<<<<<< HEAD
 	/** models.json 原始字节的 SHA-256 十六进制摘要。 */
 	const digest = createHash("sha256").update(modelsBytes).digest("hex");
+=======
+	// The full catalog is a superset of the chat catalog, so hashing it alone
+	// changes the revision for chat-only and image-only updates alike.
+	const digest = createHash("sha256").update(allModelsBytes).digest("hex");
+>>>>>>> main
 	return {
 		modelsPath,
+		allModelsPath,
 		providerIndexPath,
 		providersDir,
 		providerIds,
 		providerCount: providerIds.length,
 		modelCount,
+		chatModelCount: modelCount,
+		imageModelCount,
+		classifierModelCount,
+		totalModelCount: modelCount + imageModelCount + classifierModelCount,
 		revision: `sha256-${digest}`,
 	};
 }
@@ -225,7 +318,7 @@ function downloadIndex(bucket, endpoint, outputPath) {
 		[
 			"s3",
 			"cp",
-			`s3://${bucket}/${CATALOG_INDEX_KEY}`,
+			`s3://${bucket}/${MODEL_CATALOG_INDEX_KEY}`,
 			outputPath,
 			"--endpoint-url",
 			endpoint,
@@ -252,6 +345,7 @@ function uploadJson(bucket, endpoint, sourcePath, key, cacheControl) {
 	]);
 }
 
+<<<<<<< HEAD
 /** 校验已有远程索引的结构和每个目录条目。 */
 function validateIndex(index) {
 	if (
@@ -303,6 +397,15 @@ function comparePiVersions(left, right) {
  * @param {object} publication 本次发布元数据。
  * @returns {object} 下一版索引。
  */
+=======
+// Validate with the same parser pi.dev uses, but keep the stored entries so
+// the publication metadata of existing revisions is preserved.
+function validateIndex(index) {
+	parseModelCatalogIndex(index);
+	return index;
+}
+
+>>>>>>> main
 function buildIndex(existingIndex, publication) {
 	/** 本次最低客户端版本对应的目录条目。 */
 	const entry = {
@@ -312,17 +415,22 @@ function buildIndex(existingIndex, publication) {
 		publishedAt: new Date().toISOString(),
 		providerCount: publication.providerCount,
 		modelCount: publication.modelCount,
+		chatModelCount: publication.chatModelCount,
+		imageModelCount: publication.imageModelCount,
+		classifierModelCount: publication.classifierModelCount,
+		totalModelCount: publication.totalModelCount,
+		modelTypes: publication.modelTypes,
 	};
 	/** 去掉同版本旧条目、加入新条目并按版本排序的目录列表。 */
 	const catalogs = (existingIndex?.catalogs || [])
 		.filter((catalog) => catalog.minimumPiVersion !== MINIMUM_PI_VERSION)
 		.concat(entry)
-		.sort((left, right) => comparePiVersions(left.minimumPiVersion, right.minimumPiVersion));
-	return {
-		schemaVersion: CATALOG_SCHEMA_VERSION,
+		.sort((left, right) => compareModelCatalogPiVersions(left.minimumPiVersion, right.minimumPiVersion));
+	return validateIndex({
+		schemaVersion: MODEL_CATALOG_SCHEMA_VERSION,
 		defaultRevision: publication.revision,
 		catalogs,
-	};
+	});
 }
 
 /** 执行校验、dry-run 或安全的分片后索引发布流程。 */
@@ -335,12 +443,19 @@ async function main() {
 	const bundle = validateBundle(inputDir);
 	/** 写入 publication.json 并加入远程索引的发布元数据。 */
 	const publication = {
-		schemaVersion: CATALOG_SCHEMA_VERSION,
+		schemaVersion: MODEL_CATALOG_SCHEMA_VERSION,
 		minimumPiVersion: MINIMUM_PI_VERSION,
 		revision: bundle.revision,
 		sourceCommit: options.sourceCommit || gitSourceCommit(),
 		providerCount: bundle.providerCount,
+		/** Legacy count for the chat-only `models.json` catalog. */
 		modelCount: bundle.modelCount,
+		chatModelCount: bundle.chatModelCount,
+		imageModelCount: bundle.imageModelCount,
+		classifierModelCount: bundle.classifierModelCount,
+		totalModelCount: bundle.totalModelCount,
+		/** Types present in the `.all` variant of this revision. */
+		modelTypes: MODEL_TYPES,
 	};
 	writeFileSync(join(inputDir, "publication.json"), `${JSON.stringify(publication, null, 2)}\n`);
 
@@ -368,6 +483,7 @@ async function main() {
 			return;
 		}
 
+<<<<<<< HEAD
 		/** 本次 revision 的不可变对象前缀。 */
 		const revisionPrefix = `${CATALOG_PREFIX}/revisions/${bundle.revision}`;
 		uploadJson(options.bucket, options.endpoint, bundle.modelsPath, `${revisionPrefix}/models.json`, IMMUTABLE_CACHE_CONTROL);
@@ -387,6 +503,20 @@ async function main() {
 				`${revisionPrefix}/providers/${providerId}.json`,
 				IMMUTABLE_CACHE_CONTROL,
 			);
+=======
+		const revision = bundle.revision;
+		const uploads = [
+			[bundle.modelsPath, getModelCatalogArtifactKey(revision, "models.json")],
+			[bundle.allModelsPath, getModelCatalogArtifactKey(revision, "models.all.json")],
+			[bundle.providerIndexPath, getModelCatalogArtifactKey(revision, "providers.json")],
+			...bundle.providerIds.flatMap((providerId) => [
+				[join(bundle.providersDir, `${providerId}.json`), getModelCatalogProviderKey(revision, providerId, "legacy")],
+				[join(bundle.providersDir, `${providerId}.all.json`), getModelCatalogProviderKey(revision, providerId, "typed")],
+			]),
+		];
+		for (const [sourcePath, key] of uploads) {
+			uploadJson(options.bucket, options.endpoint, sourcePath, key, IMMUTABLE_CACHE_CONTROL);
+>>>>>>> main
 		}
 
 		/** 包含本次 publication 的下一版索引。 */
@@ -394,8 +524,8 @@ async function main() {
 		/** 待上传的新索引临时文件。 */
 		const nextIndexPath = join(temporaryDir, "index-next.json");
 		writeFileSync(nextIndexPath, `${JSON.stringify(nextIndex, null, 2)}\n`);
-		uploadJson(options.bucket, options.endpoint, nextIndexPath, CATALOG_INDEX_KEY, INDEX_CACHE_CONTROL);
-		console.log(`Published ${bundle.revision} to s3://${options.bucket}/${revisionPrefix}`);
+		uploadJson(options.bucket, options.endpoint, nextIndexPath, MODEL_CATALOG_INDEX_KEY, INDEX_CACHE_CONTROL);
+		console.log(`Published ${revision} to s3://${options.bucket}/${MODEL_CATALOG_PREFIX}/revisions/${revision}`);
 	} finally {
 		rmSync(temporaryDir, { recursive: true, force: true });
 	}

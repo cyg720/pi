@@ -104,8 +104,8 @@ export function transformMessages<TApi extends Api>(
 	// First pass: transform messages (unsupported image downgrade, thinking blocks, tool call ID normalization)
 	// 第一遍：图片降级、思考块处理、工具调用 ID 归一化
 	const transformed = imageAwareMessages.map((msg) => {
-		// User messages pass through unchanged
-		if (msg.role === "user") {
+		// System and user messages pass through unchanged
+		if (msg.role === "system" || msg.role === "user") {
 			return msg;
 		}
 
@@ -190,7 +190,11 @@ export function transformMessages<TApi extends Api>(
 	const result: Message[] = [];
 	let pendingToolCalls: ToolCall[] = [];
 	let existingToolResultIds = new Set<string>();
-	const insertSyntheticToolResults = () => {
+	// System messages are transparent to tool-call accounting: one that lands between a tool
+	// call and its results is held back and emitted after the results (synthetic ones
+	// included), so it never causes a duplicate result for a call that is answered later.
+	const heldSystemMessages: Message[] = [];
+	const closePendingToolCalls = () => {
 		if (pendingToolCalls.length > 0) {
 			for (const tc of pendingToolCalls) {
 				if (!existingToolResultIds.has(tc.id)) {
@@ -207,6 +211,8 @@ export function transformMessages<TApi extends Api>(
 			pendingToolCalls = [];
 			existingToolResultIds = new Set();
 		}
+		result.push(...heldSystemMessages);
+		heldSystemMessages.length = 0;
 	};
 
 	for (let i = 0; i < transformed.length; i++) {
@@ -214,8 +220,12 @@ export function transformMessages<TApi extends Api>(
 
 		if (msg.role === "assistant") {
 			// If we have pending orphaned tool calls from a previous assistant, insert synthetic results now
+<<<<<<< HEAD
 			// 上一助手消息有未闭合工具调用：现在补插合成结果
 			insertSyntheticToolResults();
+=======
+			closePendingToolCalls();
+>>>>>>> main
 
 			// Skip errored/aborted assistant messages entirely.
 			// 整条跳过 error/aborted 助手消息：这些是不完整轮次，不应重放
@@ -241,10 +251,21 @@ export function transformMessages<TApi extends Api>(
 		} else if (msg.role === "toolResult") {
 			existingToolResultIds.add(msg.toolCallId);
 			result.push(msg);
+		} else if (msg.role === "system") {
+			if (pendingToolCalls.length > 0) {
+				heldSystemMessages.push(msg);
+			} else {
+				result.push(msg);
+			}
 		} else if (msg.role === "user") {
+<<<<<<< HEAD
 			// User message interrupts tool flow - insert synthetic results for orphaned calls
 			// 用户消息打断工具流：为孤立调用补插合成结果
 			insertSyntheticToolResults();
+=======
+			// A new user turn interrupts tool flow - insert synthetic results for orphaned calls
+			closePendingToolCalls();
+>>>>>>> main
 			result.push(msg);
 		} else {
 			result.push(msg);
@@ -252,8 +273,12 @@ export function transformMessages<TApi extends Api>(
 	}
 
 	// If the conversation ends with unresolved tool calls, synthesize results now.
+<<<<<<< HEAD
 	// 对话以未解决的工具调用结束时：立即合成结果
 	insertSyntheticToolResults();
+=======
+	closePendingToolCalls();
+>>>>>>> main
 
 	return result;
 }

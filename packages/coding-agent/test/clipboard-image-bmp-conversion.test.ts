@@ -14,6 +14,7 @@
  * 新手阅读建议：先按 BMP 文件头、DIB 头、像素数据三段读构造函数，再看两个模块模拟。
  */
 import { describe, expect, test, vi } from "vitest";
+import { readClipboardImage } from "../src/utils/clipboard-image.ts";
 
 /**
  * 构造最小的 1×1 红色 24 位 BMP。
@@ -62,6 +63,7 @@ function createTinyBmp1x1Red24bpp(): Uint8Array {
 }
 
 // Mock wl-paste to return BMP
+<<<<<<< HEAD
 
 // 模拟 wl-paste 返回 BMP 类型和字节内容。
 vi.mock("child_process", async () => {
@@ -115,5 +117,26 @@ describe("readClipboardImage BMP conversion", () => {
 		expect(image!.bytes[1]).toBe(0x50); // P
 		expect(image!.bytes[2]).toBe(0x4e); // N
 		expect(image!.bytes[3]).toBe(0x47); // G
+=======
+vi.mock("../src/utils/clipboard-command.ts", () => ({
+	runClipboardCommand: vi.fn(async (command: string, args: string[]) => {
+		if (command === "wl-paste" && args.includes("--list-types")) return Buffer.from("image/bmp\n");
+		if (command === "wl-paste" && args.includes("image/bmp")) return Buffer.from(createTinyBmp1x1Red24bpp());
+		return undefined;
+	}),
+}));
+
+vi.mock("@earendil-works/pi-tui", () => ({
+	getNativeClipboard: () => ({ getImage: async () => createTinyBmp1x1Red24bpp() }),
+}));
+
+describe("readClipboardImage BMP conversion", () => {
+	test.each(["linux", "win32"] as const)("%s: converts command/native BMP to PNG", async (platform) => {
+		const image = await readClipboardImage({ env: { WAYLAND_DISPLAY: "wayland-0" }, platform });
+
+		expect(image).not.toBeNull();
+		expect(image!.mimeType).toBe("image/png");
+		expect(Array.from(image!.bytes.slice(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47]);
+>>>>>>> main
 	});
 });

@@ -17,7 +17,6 @@ import {
 	type Api,
 	type AssistantMessageEventStream,
 	anthropicMessagesApi,
-	type Context,
 	createAssistantMessageEventStream,
 	type Model,
 	type OAuthCredentials,
@@ -25,6 +24,7 @@ import {
 	openAIResponsesApi,
 	type SimpleStreamOptions,
 	type ThinkingLevelMap,
+	type TranscriptContext,
 } from "@earendil-works/pi-ai/compat";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -310,7 +310,7 @@ async function refreshGitLabToken(credentials: OAuthCredentials, signal: AbortSi
 
 export function streamGitLabDuo(
 	model: Model<Api>,
-	context: Context,
+	context: TranscriptContext,
 	options?: SimpleStreamOptions,
 ): AssistantMessageEventStream {
 	const stream = createAssistantMessageEventStream();

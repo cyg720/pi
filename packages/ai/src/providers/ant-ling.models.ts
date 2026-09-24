@@ -12,8 +12,19 @@
  */
 
 import values from "./data/ant-ling.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const ANT_LING_MODELS: ModelCatalog<typeof values, "ant-ling"> =
 	flattenModelCatalog("ant-ling", values);
+=======
+export const ANT_LING_MODELS: ChatModelCatalog<typeof values, "ant-ling"> =
+	flattenChatModelCatalog("ant-ling", values);
+
+export const ANT_LING_IMAGE_MODELS: ImageModelCatalog<typeof values, "ant-ling"> =
+	flattenImageModelCatalog("ant-ling", values);
+
+export const ANT_LING_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "ant-ling"> =
+	flattenClassifierModelCatalog("ant-ling", values);
+>>>>>>> main

@@ -13,14 +13,41 @@
  */
 import type { AssistantMessage, AssistantMessageEvent } from "../types.ts";
 
+class FifoQueue<T> {
+	private incoming: T[] = [];
+	private outgoing: T[] = [];
+
+	get length(): number {
+		return this.incoming.length + this.outgoing.length;
+	}
+
+	enqueue(value: T): void {
+		this.incoming.push(value);
+	}
+
+	dequeue(): T | undefined {
+		if (this.outgoing.length === 0) {
+			while (this.incoming.length > 0) {
+				this.outgoing.push(this.incoming.pop()!);
+			}
+		}
+		return this.outgoing.pop();
+	}
+}
+
 // Generic event stream class for async iteration
 // 通用事件流（中文说明）：泛型 T 事件、R 最终结果；生产者 push/end，消费者异步迭代。
 export class EventStream<T, R = T> implements AsyncIterable<T> {
+<<<<<<< HEAD
 	// 已入队待消费的事件
 	private queue: T[] = [];
 	// 等待中的消费者（IteratorResult 解析器）
 	private waiting: ((value: IteratorResult<T>) => void)[] = [];
 	// 流是否已结束
+=======
+	private queue = new FifoQueue<T>();
+	private waiting = new FifoQueue<(value: IteratorResult<T>) => void>();
+>>>>>>> main
 	private done = false;
 	// 最终结果 Promise（end/终止事件时 resolve）
 	private finalResultPromise: Promise<R>;
@@ -50,12 +77,16 @@ export class EventStream<T, R = T> implements AsyncIterable<T> {
 		}
 
 		// Deliver to waiting consumer or queue it
+<<<<<<< HEAD
 		// 投递给等待者或入队
 		const waiter = this.waiting.shift();
+=======
+		const waiter = this.waiting.dequeue();
+>>>>>>> main
 		if (waiter) {
 			waiter({ value: event, done: false });
 		} else {
-			this.queue.push(event);
+			this.queue.enqueue(event);
 		}
 	}
 
@@ -68,7 +99,7 @@ export class EventStream<T, R = T> implements AsyncIterable<T> {
 		// Notify all waiting consumers that we're done
 		// 通知全部等待者结束
 		while (this.waiting.length > 0) {
-			const waiter = this.waiting.shift()!;
+			const waiter = this.waiting.dequeue()!;
 			waiter({ value: undefined as any, done: true });
 		}
 	}
@@ -77,11 +108,11 @@ export class EventStream<T, R = T> implements AsyncIterable<T> {
 	async *[Symbol.asyncIterator](): AsyncIterator<T> {
 		while (true) {
 			if (this.queue.length > 0) {
-				yield this.queue.shift()!;
+				yield this.queue.dequeue()!;
 			} else if (this.done) {
 				return;
 			} else {
-				const result = await new Promise<IteratorResult<T>>((resolve) => this.waiting.push(resolve));
+				const result = await new Promise<IteratorResult<T>>((resolve) => this.waiting.enqueue(resolve));
 				if (result.done) return;
 				yield result.value;
 			}

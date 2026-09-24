@@ -7,28 +7,28 @@
  * 【新手阅读建议】先查看 `JsonlSessionRepoFileSystem`、`JsonlSessionRepoOptions`、`JsonlSessionMetadata`、`JsonlSessionCreateOptions`、`JsonlSessionListOptions`、`JsonlV4Header` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { FileSystem } from "../../types.ts";
-import type { JsonValue, SessionCreateOptions, SessionMetadata } from "../types.ts";
+import type { SessionCreateOptions, SessionMetadata } from "../types.ts";
 
-export type JsonlSessionRepoFileSystem = Pick<
-	FileSystem,
-	| "absolutePath"
-	| "joinPath"
-	| "readTextFile"
-	| "readTextLines"
-	| "writeFile"
-	| "appendFile"
-	| "renameFile"
-	| "fileInfo"
-	| "listDir"
-	| "exists"
-	| "createDir"
-	| "remove"
->;
+export const JSONL_FORMAT_VERSION = 4;
+export const JSONL_STORAGE_VERSION = 1;
 
-export interface JsonlSessionRepoOptions {
-	fs: JsonlSessionRepoFileSystem;
-	/** Root containing coding-agent-compatible cwd-encoded session directories. */
-	sessionsRoot: string;
+export interface JsonlStorageHeader {
+	v: typeof JSONL_FORMAT_VERSION;
+	kind: "header";
+	id: string;
+	storageVersion: number;
+	createdAt: number;
+	cwd: string;
+	parentSessionId?: string;
+	legacyParentSessionPath?: string;
+	/** Sequence high-water mark written by snapshot rewrites. */
+	nextSeq?: number;
+}
+
+export interface JsonlStorageOptions {
+	fileSystem: FileSystem;
+	path: string;
+	now?: () => number;
 }
 
 export interface JsonlSessionMetadata extends SessionMetadata {
@@ -36,30 +36,18 @@ export interface JsonlSessionMetadata extends SessionMetadata {
 	path: string;
 	/** Filesystem modification time as milliseconds since Unix epoch. */
 	modifiedAt: number;
-	sourceFormat: 3 | 4;
-	/** Present only when a v3 parent path could not be resolved to a session id. */
-	legacyParentSessionPath?: string;
-	/** Opaque application-owned metadata. */
-	metadata?: Record<string, JsonValue>;
 }
 
 export interface JsonlSessionCreateOptions extends SessionCreateOptions {
 	cwd: string;
-	metadata?: Record<string, JsonValue>;
 }
 
 export interface JsonlSessionListOptions {
 	cwd?: string;
 }
 
-export interface JsonlV4Header {
-	kind: "header";
-	version: 4;
-	id: string;
-	createdAt: number;
-	cwd: string;
-	parentSessionId?: string;
-	/** Preserved only when a v3 parent path could not be resolved to a session id. */
-	legacyParentSessionPath?: string;
-	metadata?: Record<string, JsonValue>;
+export interface JsonlSessionRepoOptions {
+	fileSystem: FileSystem;
+	sessionsRoot: string;
+	now?: () => number;
 }

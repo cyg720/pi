@@ -8,7 +8,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { fauxAssistantMessage } from "../src/providers/faux.ts";
-import { isRetryableAssistantError, type RetryPolicy, retryAssistantCall } from "../src/utils/retry.ts";
+import { isRetryableAssistantError, type RetryPolicy, retryAssistantCall, retryDelayMs } from "../src/utils/retry.ts";
 
 /** OpenAI 明确提示用户可重试的错误文本。 */
 const openAIExplicitRetryMessage =
@@ -26,6 +26,8 @@ const openAIResponsesEarlyEofMessage = "OpenAI Responses stream ended before a t
 /** 被上层错误文本包裹的 DNS 查询失败。 */
 const wrappedDnsLookupError =
 	"The pending stream has been canceled (caused by: getaddrinfo ENOTFOUND bedrock-runtime.us-east-1.amazonaws.com)";
+const azurePeakLoadError =
+	"The system is currently experiencing high demand and cannot process your request. Your request exceeds the maximum usage size allowed during peak load. For improved capacity reliability, consider switching to Provisioned Throughput.";
 
 /** 覆盖不同提供商与传输层错误文本的重试分类。 */
 describe("provider retry classification", () => {
@@ -83,6 +85,13 @@ describe("provider retry classification", () => {
 		).toBe(true);
 	});
 
+	it("matches Azure peak-load capacity errors", () => {
+		// Regression for #9669.
+		expect(
+			isRetryableAssistantError(fauxAssistantMessage("", { stopReason: "error", errorMessage: azurePeakLoadError })),
+		).toBe(true);
+	});
+
 	it("keeps provider limit errors non-retryable", () => {
 		expect(
 			isRetryableAssistantError(
@@ -95,6 +104,12 @@ describe("provider retry classification", () => {
 		expect(
 			isRetryableAssistantError(fauxAssistantMessage("", { stopReason: "error", errorMessage: "overloaded_error" })),
 		).toBe(true);
+		// Regression for #9627.
+		expect(
+			isRetryableAssistantError(
+				fauxAssistantMessage("", { stopReason: "error", errorMessage: "520 status code (no body)" }),
+			),
+		).toBe(true);
 		expect(
 			isRetryableAssistantError(
 				fauxAssistantMessage("", { stopReason: "error", errorMessage: "524 status code (no body)" }),
@@ -104,7 +119,19 @@ describe("provider retry classification", () => {
 	});
 });
 
+<<<<<<< HEAD
 /** 覆盖重试执行器的策略开关、次数、回调和中止行为。 */
+=======
+describe("retryDelayMs", () => {
+	it("caps agent retry delay", () => {
+		// Regression for #8826.
+		expect(retryDelayMs({ baseDelayMs: 2000 }, 6)).toBe(60000);
+		expect(retryDelayMs({ baseDelayMs: 2000, maxAgentDelayMs: 5000 }, 5)).toBe(5000);
+		expect(retryDelayMs({ baseDelayMs: 2000, maxAgentDelayMs: 0 }, 5)).toBe(0);
+	});
+});
+
+>>>>>>> main
 describe("retryAssistantCall", () => {
 	/** 完全关闭重试的策略。 */
 	const disabled: RetryPolicy = { enabled: false, maxRetries: 3, baseDelayMs: 0 };
@@ -163,6 +190,23 @@ describe("retryAssistantCall", () => {
 		// 总计一次初始调用和三次重试。
 		expect(onRetryScheduled).toHaveBeenCalledTimes(3);
 		expect(onRetryFinished).toHaveBeenCalledWith(false, 3, "terminated");
+	});
+
+	it("reports capped retry delays", async () => {
+		// Regression for #8826.
+		let n = 0;
+		const policy: RetryPolicy = { enabled: true, maxRetries: 4, baseDelayMs: 10, maxAgentDelayMs: 15 };
+		const produce = vi.fn(async () => {
+			n++;
+			return n < 5
+				? fauxAssistantMessage("", { stopReason: "error", errorMessage: "terminated" })
+				: fauxAssistantMessage("recovered");
+		});
+		const onRetryScheduled = vi.fn();
+
+		await retryAssistantCall(produce, policy, undefined, { onRetryScheduled });
+
+		expect(onRetryScheduled.mock.calls.map((call) => call[2])).toEqual([10, 15, 15, 15]);
 	});
 
 	it("stops retrying once a call succeeds", async () => {

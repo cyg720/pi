@@ -11,10 +11,14 @@
 import "./providers/images/register-builtins.ts";
 
 import { getImagesApiProvider } from "./images-api-registry.ts";
-import type { AssistantImages, ImagesApi, ImagesContext, ImagesModel, ProviderImagesOptions } from "./types.ts";
+import type { AssistantImages, ImageApi, ImageModel, ImagesContext, ProviderImagesOptions } from "./types.ts";
 
+<<<<<<< HEAD
 // 按 api 查找已注册的图片实现（私有）：未注册抛错
 function resolveImagesApiProvider(api: ImagesApi) {
+=======
+function resolveImagesApiProvider(api: ImageApi) {
+>>>>>>> main
 	const provider = getImagesApiProvider(api);
 	if (!provider) {
 		throw new Error(`No API provider registered for api: ${api}`);
@@ -22,9 +26,19 @@ function resolveImagesApiProvider(api: ImagesApi) {
 	return provider;
 }
 
+<<<<<<< HEAD
 // 生成图片（公开）：泛型 TApi 保证模型与选项类型一致；委托给注册的图片实现
 export async function generateImages<TApi extends ImagesApi>(
 	model: ImagesModel<TApi>,
+=======
+/**
+ * Global image generation dispatched on `model.api` through the images api
+ * registry. Auth must be passed explicitly via `options.apiKey`; prefer
+ * `Models.generateImages()`, which resolves provider auth.
+ */
+export async function generateImages(
+	model: ImageModel<ImageApi>,
+>>>>>>> main
 	context: ImagesContext,
 	options?: ProviderImagesOptions,
 ): Promise<AssistantImages> {

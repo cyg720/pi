@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-client` 包中的 `index` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `./client.ts`、`./errors.ts`、`./session-handle.ts`、`./transport.ts`，并通过 TypeScript 模块边界组织实现。
@@ -15,12 +16,17 @@ export {
 	PiSessionOwnershipError,
 } from "./errors.ts";
 export type { AcquireSessionOptions, PiSessionHandle, SessionLease, SessionLeaseMode } from "./session-handle.ts";
+=======
+export { Client, createClientServiceTransport } from "./client.ts";
+export { ClientDisposedError, DisconnectedError, ServerError } from "./errors.ts";
+>>>>>>> main
 export type { ByteTransport, ByteTransportFactory, ByteTransportHandlers } from "./transport.ts";
 export type {
+	AttachmentChangeListener,
+	ClientOptions,
 	ConnectionState,
 	ConnectionStateChange,
-	CreateSessionOptions,
 	ListenerErrorHandler,
-	PiClientOptions,
+	ServiceSubscription,
 	Unsubscribe,
 } from "./types.ts";

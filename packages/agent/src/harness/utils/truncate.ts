@@ -76,11 +76,15 @@ const runtimeBuffer = (globalThis as { Buffer?: RuntimeBuffer }).Buffer;
 // 非 ASCII 字符匹配模式：用于快速判断是否含多字节字符
 const nonAsciiPattern = /[^\x00-\x7f]/;
 
+<<<<<<< HEAD
 /**
  * UTF-8 字节长度计算（私有）：优先用运行时 Buffer；否则先查首个非 ASCII 字符——
  * 全 ASCII 直接返回 length；否则按码位累加（1/2/3/4 字节），正确处理代理对（4 字节）。
  */
 function utf8ByteLength(content: string): number {
+=======
+export function utf8ByteLength(content: string): number {
+>>>>>>> main
 	if (runtimeBuffer) return runtimeBuffer.byteLength(content, "utf8");
 
 	const firstNonAscii = content.search(nonAsciiPattern);

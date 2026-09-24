@@ -12,8 +12,19 @@
  */
 
 import values from "./data/minimax.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const MINIMAX_MODELS: ModelCatalog<typeof values, "minimax"> =
 	flattenModelCatalog("minimax", values);
+=======
+export const MINIMAX_MODELS: ChatModelCatalog<typeof values, "minimax"> =
+	flattenChatModelCatalog("minimax", values);
+
+export const MINIMAX_IMAGE_MODELS: ImageModelCatalog<typeof values, "minimax"> =
+	flattenImageModelCatalog("minimax", values);
+
+export const MINIMAX_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "minimax"> =
+	flattenClassifierModelCatalog("minimax", values);
+>>>>>>> main

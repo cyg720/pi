@@ -23,7 +23,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { generateImages } from "../src/images.ts";
-import type { ImagesContext, ImagesModel } from "../src/types.ts";
+import type { ImageModel, ImagesContext } from "../src/types.ts";
 
 // Reproduce the openai SDK APIError shape: makeMessage(status, error, message)
 // returns `"403 status code (no body)"` when status is set but the parsed body
@@ -73,8 +73,13 @@ vi.mock("openai", () => {
 describe("provider error body passthrough", () => {
 	// 验证 OpenRouter 图片错误包含 403 与 WAF 原因，而非 SDK 模糊消息；无参数，无返回值。
 	it("surfaces the HTTP body reason instead of the opaque SDK message (openrouter images)", async () => {
+<<<<<<< HEAD
 		// model 是用于触发 OpenRouter 图片提供商路径的最小模型配置。
 		const model: ImagesModel<"openrouter-images"> = {
+=======
+		const model: ImageModel<"openrouter-images"> = {
+			type: "image",
+>>>>>>> main
 			id: "black-forest-labs/flux.2-pro",
 			name: "FLUX.2 Pro",
 			api: "openrouter-images",

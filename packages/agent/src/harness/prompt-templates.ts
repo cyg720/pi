@@ -7,6 +7,7 @@
  * 【新手阅读建议】先查看 `PromptTemplateDiagnosticCode`、`PromptTemplateDiagnostic`、`loadPromptTemplates`、`loadSourcedPromptTemplates`、`parseCommandArgs`、`substituteArgs` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import { parse } from "yaml";
+import type { Context } from "./context.ts";
 import { type ExecutionEnv, type FileInfo, type PromptTemplate, type Result, toError } from "./types.ts";
 
 export type PromptTemplateDiagnosticCode = "file_info_failed" | "list_failed" | "read_failed" | "parse_failed";
@@ -38,11 +39,12 @@ interface PromptTemplateFrontmatter {
 export async function loadPromptTemplates(
 	env: ExecutionEnv,
 	paths: string | string[],
+	context: Context,
 ): Promise<{ promptTemplates: PromptTemplate[]; diagnostics: PromptTemplateDiagnostic[] }> {
 	const promptTemplates: PromptTemplate[] = [];
 	const diagnostics: PromptTemplateDiagnostic[] = [];
 	for (const path of Array.isArray(paths) ? paths : [paths]) {
-		const infoResult = await env.fileInfo(path);
+		const infoResult = await env.fileInfo(path, context);
 		if (!infoResult.ok) {
 			if (infoResult.error.code !== "not_found") {
 				diagnostics.push({
@@ -55,13 +57,13 @@ export async function loadPromptTemplates(
 			continue;
 		}
 		const info = infoResult.value;
-		const kind = await resolveKind(env, info, diagnostics);
+		const kind = await resolveKind(env, info, diagnostics, context);
 		if (kind === "directory") {
-			const result = await loadTemplatesFromDir(env, info.path);
+			const result = await loadTemplatesFromDir(env, info.path, context);
 			promptTemplates.push(...result.promptTemplates);
 			diagnostics.push(...result.diagnostics);
 		} else if (kind === "file" && info.name.endsWith(".md")) {
-			const result = await loadTemplateFromFile(env, info.path, info.name);
+			const result = await loadTemplateFromFile(env, info.path, info.name, context);
 			if (result.promptTemplate) promptTemplates.push(result.promptTemplate);
 			diagnostics.push(...result.diagnostics);
 		}
@@ -78,7 +80,10 @@ export async function loadPromptTemplates(
 export async function loadSourcedPromptTemplates<TSource, TPromptTemplate extends PromptTemplate = PromptTemplate>(
 	env: ExecutionEnv,
 	inputs: Array<{ path: string; source: TSource }>,
-	mapPromptTemplate?: (promptTemplate: PromptTemplate, source: TSource) => TPromptTemplate,
+	mapPromptTemplate:
+		| ((promptTemplate: PromptTemplate, source: TSource, context: Context) => TPromptTemplate)
+		| undefined,
+	context: Context,
 ): Promise<{
 	promptTemplates: Array<{ promptTemplate: TPromptTemplate; source: TSource }>;
 	diagnostics: Array<PromptTemplateDiagnostic & { source: TSource }>;
@@ -86,11 +91,11 @@ export async function loadSourcedPromptTemplates<TSource, TPromptTemplate extend
 	const promptTemplates: Array<{ promptTemplate: TPromptTemplate; source: TSource }> = [];
 	const diagnostics: Array<PromptTemplateDiagnostic & { source: TSource }> = [];
 	for (const input of inputs) {
-		const result = await loadPromptTemplates(env, input.path);
+		const result = await loadPromptTemplates(env, input.path, context);
 		for (const promptTemplate of result.promptTemplates) {
 			promptTemplates.push({
 				promptTemplate: mapPromptTemplate
-					? mapPromptTemplate(promptTemplate, input.source)
+					? mapPromptTemplate(promptTemplate, input.source, context)
 					: (promptTemplate as TPromptTemplate),
 				source: input.source,
 			});
@@ -103,10 +108,11 @@ export async function loadSourcedPromptTemplates<TSource, TPromptTemplate extend
 async function loadTemplatesFromDir(
 	env: ExecutionEnv,
 	dir: string,
+	context: Context,
 ): Promise<{ promptTemplates: PromptTemplate[]; diagnostics: PromptTemplateDiagnostic[] }> {
 	const promptTemplates: PromptTemplate[] = [];
 	const diagnostics: PromptTemplateDiagnostic[] = [];
-	const entriesResult = await env.listDir(dir);
+	const entriesResult = await env.listDir(dir, context);
 	if (!entriesResult.ok) {
 		diagnostics.push({
 			type: "warning",
@@ -119,9 +125,9 @@ async function loadTemplatesFromDir(
 	const entries = entriesResult.value;
 
 	for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-		const kind = await resolveKind(env, entry, diagnostics);
+		const kind = await resolveKind(env, entry, diagnostics, context);
 		if (kind !== "file" || !entry.name.endsWith(".md")) continue;
-		const result = await loadTemplateFromFile(env, entry.path, entry.name);
+		const result = await loadTemplateFromFile(env, entry.path, entry.name, context);
 		if (result.promptTemplate) promptTemplates.push(result.promptTemplate);
 		diagnostics.push(...result.diagnostics);
 	}
@@ -132,9 +138,10 @@ async function loadTemplateFromFile(
 	env: ExecutionEnv,
 	filePath: string,
 	fileName: string,
+	context: Context,
 ): Promise<{ promptTemplate: PromptTemplate | null; diagnostics: PromptTemplateDiagnostic[] }> {
 	const diagnostics: PromptTemplateDiagnostic[] = [];
-	const rawContent = await env.readTextFile(filePath);
+	const rawContent = await env.readTextFile(filePath, context);
 	if (!rawContent.ok) {
 		diagnostics.push({
 			type: "warning",
@@ -177,9 +184,10 @@ async function resolveKind(
 	env: ExecutionEnv,
 	info: FileInfo,
 	diagnostics: PromptTemplateDiagnostic[],
+	context: Context,
 ): Promise<"file" | "directory" | undefined> {
 	if (info.kind === "file" || info.kind === "directory") return info.kind;
-	const canonicalPath = await env.canonicalPath(info.path);
+	const canonicalPath = await env.canonicalPath(info.path, context);
 	if (!canonicalPath.ok) {
 		if (canonicalPath.error.code !== "not_found") {
 			diagnostics.push({
@@ -191,7 +199,7 @@ async function resolveKind(
 		}
 		return undefined;
 	}
-	const target = await env.fileInfo(canonicalPath.value);
+	const target = await env.fileInfo(canonicalPath.value, context);
 	if (!target.ok) {
 		if (target.error.code !== "not_found") {
 			diagnostics.push({

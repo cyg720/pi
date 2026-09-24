@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 文件职责：验证 createAgentSession 把设置、单次请求和扩展 Header 钩子正确合并为提供商流选项。
  * 技术维度：使用真实 SDK 会话、临时配置目录、动态扩展源码和自定义 Provider 流函数捕获 SimpleStreamOptions。
@@ -7,6 +8,9 @@
  * 新手阅读建议：先看 captureStreamOptions 的依赖组装和捕获点，再比较 settings 与 requestOptions 的优先级。
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+=======
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+>>>>>>> main
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -14,14 +18,16 @@ import {
 	type AssistantMessage,
 	createAssistantMessageEventStream,
 	type Model,
+	normalizeContext,
 	type SimpleStreamOptions,
 } from "@earendil-works/pi-ai";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthStorage } from "../src/core/auth-storage.ts";
+import type { ExtensionFactory } from "../src/core/extensions/types.ts";
+import { DefaultResourceLoader } from "../src/core/resource-loader.ts";
 import { createAgentSession } from "../src/core/sdk.ts";
 import { SessionManager } from "../src/core/session-manager.ts";
 import { type Settings, SettingsManager } from "../src/core/settings-manager.ts";
-
 import { createModelRegistry, getModelRuntime } from "./model-runtime-test-utils.ts";
 
 // 验证 SDK 会话创建后传给实际提供商的最终流选项。
@@ -66,12 +72,17 @@ describe("createAgentSession stream options", () => {
 		};
 	}
 
+<<<<<<< HEAD
 	/** 创建立即产出 done 助手消息的事件流；参数 api 为消息协议；返回可消费流。 */
 	function createDoneStream(api: Api) {
 		// stream 是提供商桩返回的助手消息事件流。
 		const stream = createAssistantMessageEventStream();
 		// message 是结束该流的固定成功助手消息。
 		const message: AssistantMessage = {
+=======
+	function createDoneMessage(api: Api, promptTokens = 0): AssistantMessage {
+		return {
+>>>>>>> main
 			role: "assistant",
 			content: [{ type: "text", text: "ok" }],
 			api,
@@ -80,15 +91,19 @@ describe("createAgentSession stream options", () => {
 			usage: {
 				input: 0,
 				output: 0,
-				cacheRead: 0,
+				cacheRead: promptTokens,
 				cacheWrite: 0,
-				totalTokens: 0,
+				totalTokens: promptTokens,
 				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
 			},
 			stopReason: "stop",
 			timestamp: Date.now(),
 		};
-		stream.end(message);
+	}
+
+	function createDoneStream(api: Api, promptTokens = 0) {
+		const stream = createAssistantMessageEventStream();
+		stream.end(createDoneMessage(api, promptTokens));
 		return stream;
 	}
 
@@ -104,18 +119,29 @@ describe("createAgentSession stream options", () => {
 		api: Api,
 		settings: Partial<Settings>,
 		requestOptions: SimpleStreamOptions = {},
-		extensionSource?: string,
+		extensionFactory?: ExtensionFactory,
+		providerEvent?: unknown,
 	): Promise<SimpleStreamOptions | undefined> {
 		// model 是本次捕获使用的固定模型。
 		const model = createModel(api);
 		// settingsManager 保存待测试的会话级选项。
 		const settingsManager = SettingsManager.inMemory(settings);
+<<<<<<< HEAD
 		if (extensionSource) {
 			// extensionsDir 是写入动态 Header 扩展的临时目录。
 			const extensionsDir = join(agentDir, "extensions");
 			mkdirSync(extensionsDir, { recursive: true });
 			writeFileSync(join(extensionsDir, "headers.ts"), extensionSource);
 		}
+=======
+		const resourceLoader = new DefaultResourceLoader({
+			cwd,
+			agentDir,
+			settingsManager,
+			extensionFactories: extensionFactory ? [extensionFactory] : [],
+		});
+		await resourceLoader.reload();
+>>>>>>> main
 
 		// authStorage 为捕获提供商保存固定测试 API 密钥。
 		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
@@ -128,9 +154,16 @@ describe("createAgentSession stream options", () => {
 		modelRegistry.registerProvider(model.provider, {
 			api,
 			headers: { "x-provider": "provider" },
-			streamSimple: (_model, _context, providerOptions) => {
+			streamSimple: (requestModel, _context, providerOptions) => {
 				capturedOptions = providerOptions;
-				return createDoneStream(api);
+				if (providerEvent === undefined) return createDoneStream(api);
+
+				const stream = createAssistantMessageEventStream();
+				void (async () => {
+					await providerOptions?.onProviderStreamEvent?.(providerEvent, requestModel);
+					stream.end(createDoneMessage(api));
+				})();
+				return stream;
 			},
 		});
 
@@ -146,12 +179,26 @@ describe("createAgentSession stream options", () => {
 			modelRuntime,
 			settingsManager,
 			sessionManager,
+			resourceLoader,
 		});
 
 		try {
+<<<<<<< HEAD
 			// stream 是会话层合并选项后从捕获提供商获得的完成流。
 			const stream = await session.agent.streamFunction(model, { messages: [] }, requestOptions);
 			await stream.result();
+=======
+			if (providerEvent === undefined) {
+				const stream = await session.agent.streamFunction(
+					model,
+					normalizeContext({ messages: [] }),
+					requestOptions,
+				);
+				await stream.result();
+			} else {
+				await session.prompt("test");
+			}
+>>>>>>> main
 			return capturedOptions;
 		} finally {
 			session.dispose();
@@ -159,7 +206,84 @@ describe("createAgentSession stream options", () => {
 		}
 	}
 
+<<<<<<< HEAD
 	// Codex 的 HTTP 空闲超时应映射到通用 timeoutMs。
+=======
+	async function createCacheWarmingSession(populate?: (manager: SessionManager, model: Model<Api>) => void) {
+		const model: Model<Api> = {
+			...createModel("anthropic-messages"),
+			cost: { input: 10, output: 50, cacheRead: 0.25, cacheWrite: 12.5 },
+			promptCache: { short: 300 },
+		};
+		const authStorage = AuthStorage.create(join(agentDir, "auth.json"));
+		await authStorage.modify(model.provider, async () => ({ type: "api_key", key: "test-api-key" }));
+		const modelRegistry = await createModelRegistry(authStorage, join(agentDir, "models.json"));
+		let providerCalls = 0;
+		modelRegistry.registerProvider(model.provider, {
+			api: model.api,
+			streamSimple: () => {
+				providerCalls++;
+				return createDoneStream(model.api, 100_000);
+			},
+		});
+		const sessionManager = SessionManager.inMemory(cwd);
+		populate?.(sessionManager, model);
+		const { session } = await createAgentSession({
+			cwd,
+			agentDir,
+			model,
+			modelRuntime: getModelRuntime(modelRegistry),
+			settingsManager: SettingsManager.inMemory({ cacheWarming: "idle" }),
+			sessionManager,
+		});
+		return {
+			session,
+			providerCalls: () => providerCalls,
+			dispose: () => {
+				session.dispose();
+				modelRegistry.unregisterProvider(model.provider);
+			},
+		};
+	}
+
+	it("schedules cache warming after a completed session request", async () => {
+		const fixture = await createCacheWarmingSession();
+		try {
+			await fixture.session.prompt("test");
+			expect(fixture.session.cacheWarmingStatus?.nextWarmAt).toBeGreaterThan(Date.now());
+
+			// Equivalent shallow copies remain current, but removing the request prefix does not.
+			fixture.session.agent.state.messages = [...fixture.session.agent.state.messages];
+			fixture.session.agent.state.model = { ...fixture.session.agent.state.model };
+			expect(fixture.session.cacheWarmingStatus?.nextWarmAt).toBeGreaterThan(Date.now());
+			fixture.session.agent.state.messages = fixture.session.agent.state.messages.slice(1);
+			expect(fixture.session.cacheWarmingStatus?.reason).toBe("conversation context changed");
+		} finally {
+			fixture.dispose();
+		}
+	});
+
+	it("waits for the next request instead of restoring cache warming", async () => {
+		const fixture = await createCacheWarmingSession((manager, model) => {
+			manager.appendModelChange(model.provider, model.id);
+			manager.appendThinkingLevelChange("off");
+			manager.appendMessage({ role: "user", content: "test", timestamp: Date.now() - 60_000 });
+			const assistant = { ...createDoneMessage(model.api, 100_000), timestamp: Date.now() - 59_000 };
+			manager.appendMessage(assistant);
+			manager.appendUsage("cache_warm", model.provider, model.id, assistant.usage);
+		});
+		try {
+			expect(fixture.providerCalls()).toBe(0);
+			expect(fixture.session.cacheWarmingStatus).toEqual({
+				state: "inactive",
+				reason: "waiting for first request",
+			});
+		} finally {
+			fixture.dispose();
+		}
+	});
+
+>>>>>>> main
 	it("forwards httpIdleTimeoutMs as timeoutMs for OpenAI Codex", async () => {
 		// options 是提供商最终收到的超时设置。
 		const options = await captureStreamOptions("openai-codex-responses", { httpIdleTimeoutMs: 1234 });
@@ -218,14 +342,46 @@ describe("createAgentSession stream options", () => {
 		expect(options?.maxRetryDelayMs).toBe(3000);
 	});
 
+<<<<<<< HEAD
 	// Header 钩子应看到已合并 Header 并原地修改，内部 transform 不应下传提供商。
+=======
+	// Regression test for #9784.
+	it("forwards provider stream events to extensions", async () => {
+		const providerEvent = { openrouter_metadata: { strategy: "direct" } };
+		const extensionEvents: unknown[] = [];
+
+		const options = await captureStreamOptions(
+			"openai-completions",
+			{},
+			{},
+			(pi) => {
+				pi.on("provider_stream_event", (event) => {
+					extensionEvents.push(event);
+				});
+			},
+			providerEvent,
+		);
+
+		expect(options?.onProviderStreamEvent).toEqual(expect.any(Function));
+		expect(extensionEvents).toEqual([
+			{
+				data: providerEvent,
+				type: "provider_stream_event",
+				provider: "capture-provider",
+				api: "openai-completions",
+				model: "capture-model",
+			},
+		]);
+	});
+
+>>>>>>> main
 	it("runs before_provider_headers on assembled headers without forwarding the transform", async () => {
 		// options 是提供商 Header、模型 Header、显式 Header 和扩展 Header 的合并结果。
 		const options = await captureStreamOptions(
 			"openai-completions",
 			{},
 			{ headers: { "x-explicit": "explicit" } },
-			`export default function (pi) {
+			(pi) => {
 				pi.on("before_provider_headers", (event) => {
 					event.headers["x-hook"] = [
 						event.headers["x-provider"],
@@ -233,7 +389,7 @@ describe("createAgentSession stream options", () => {
 						event.headers["x-explicit"],
 					].join(":");
 				});
-			}`,
+			},
 		);
 
 		expect(options?.headers).toMatchObject({

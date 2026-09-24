@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `client/index` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `./remote-session.ts`、`./transcript.ts`，并通过 TypeScript 模块边界组织实现。
@@ -21,3 +22,6 @@ export {
 	selectTranscript,
 	type TranscriptState,
 } from "./transcript.ts";
+=======
+export * from "@earendil-works/pi-client";
+>>>>>>> main

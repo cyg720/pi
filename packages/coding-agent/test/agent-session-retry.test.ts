@@ -88,13 +88,18 @@ describe("AgentSession retry", () => {
 	async function createSession(options?: {
 		failCount?: number;
 		maxRetries?: number;
+		maxAgentDelayMs?: number;
 		delayAssistantMessageEndMs?: number;
 	}) {
 		/** 开始成功前需要模拟的失败次数。 */
 		const failCount = options?.failCount ?? 1;
 		/** 会话允许的最大重试次数。 */
 		const maxRetries = options?.maxRetries ?? 3;
+<<<<<<< HEAD
 		/** 助手 message_end 扩展处理的人工延迟。 */
+=======
+		const maxAgentDelayMs = options?.maxAgentDelayMs ?? 60000;
+>>>>>>> main
 		const delayAssistantMessageEndMs = options?.delayAssistantMessageEndMs ?? 0;
 		/** 模拟提供商流函数累计调用次数。 */
 		let callCount = 0;
@@ -138,7 +143,7 @@ describe("AgentSession retry", () => {
 		/** 由临时认证构建的模型注册表。 */
 		const modelRegistry = await createModelRegistry(authStorage, tempDir);
 		await authStorage.modify("anthropic", async () => ({ type: "api_key", key: "test-key" }));
-		settingsManager.applyOverrides({ retry: { enabled: true, maxRetries, baseDelayMs: 1 } });
+		settingsManager.applyOverrides({ retry: { enabled: true, maxRetries, baseDelayMs: 1, maxAgentDelayMs } });
 
 		session = new AgentSession({
 			agent,
@@ -203,7 +208,23 @@ describe("AgentSession retry", () => {
 		expect(created.session.isRetrying).toBe(false);
 	});
 
+<<<<<<< HEAD
 	/** 验证 prompt 会等待延迟的 message_end 处理和重试全部完成。 */
+=======
+	it("caps agent retry delay", async () => {
+		// Regression for #8826.
+		const created = await createSession({ failCount: 4, maxRetries: 5, maxAgentDelayMs: 5 });
+		const delays: number[] = [];
+		created.session.subscribe((event) => {
+			if (event.type === "auto_retry_start") delays.push(event.delayMs);
+		});
+
+		await created.session.prompt("Test");
+
+		expect(delays).toEqual([1, 2, 4, 5]);
+	});
+
+>>>>>>> main
 	it("prompt waits for retry completion even when assistant message_end handling is delayed", async () => {
 		/** 首次失败且助手结束事件延迟 40ms 的会话。 */
 		const created = await createSession({ failCount: 1, delayAssistantMessageEndMs: 40 });

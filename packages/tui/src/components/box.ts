@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 Box 容器组件：为所有子组件统一施加水平/垂直内边距与背景色，
  *              并对渲染结果做“内容+宽度+背景采样”四元组缓存。
@@ -11,6 +12,9 @@
  * 【新手阅读建议】先看 RenderCache 四个字段理解缓存判定 → 再读 render 主流程与 applyBg。
  */
 import type { Component } from "../tui.ts";
+=======
+import { type Component, dispatchMouseEvent, type TuiMouseDispatchResult, type TuiMouseEvent } from "../tui.ts";
+>>>>>>> main
 import { applyBackgroundToLine, visibleWidth } from "../utils.ts";
 
 // 渲染缓存结构（中文说明）：记录生成结果时的输入条件，用于命中判定
@@ -44,6 +48,7 @@ export class Box implements Component {
 	// Cache for rendered output
 	// 渲染缓存；undefined 表示失效
 	private cache?: RenderCache;
+	private mouseLayout?: { width: number; children: Array<{ component: Component; height: number }> };
 
 	// 构造函数：默认水平/垂直各 1，无背景
 	constructor(paddingX = 1, paddingY = 1, bgFn?: (text: string) => string) {
@@ -104,7 +109,36 @@ export class Box implements Component {
 		}
 	}
 
+<<<<<<< HEAD
 	// 渲染：以给定宽度输出带内边距与背景的完整行数组
+=======
+	handleMouse(event: TuiMouseEvent): TuiMouseDispatchResult | undefined {
+		const contentWidth = Math.max(1, event.width - this.paddingX * 2);
+		const contentY = event.y - this.paddingY;
+		const contentX = event.x - this.paddingX;
+		if (contentY < 0 || contentX < 0 || contentX >= contentWidth) return undefined;
+
+		const mouseChildren =
+			this.mouseLayout?.width === contentWidth
+				? this.mouseLayout.children
+				: this.children.map((component) => ({ component, height: component.render(contentWidth).length }));
+		let childY = 0;
+		for (const { component: child, height: childHeight } of mouseChildren) {
+			if (contentY >= childY && contentY < childY + childHeight) {
+				return dispatchMouseEvent(child, {
+					...event,
+					x: contentX,
+					y: contentY - childY,
+					width: contentWidth,
+					height: childHeight,
+				});
+			}
+			childY += childHeight;
+		}
+		return undefined;
+	}
+
+>>>>>>> main
 	render(width: number): string[] {
 		if (this.children.length === 0) {
 			return [];
@@ -117,12 +151,15 @@ export class Box implements Component {
 		// Render all children
 		// 渲染全部子组件并拼上左内边距
 		const childLines: string[] = [];
+		const mouseChildren: Array<{ component: Component; height: number }> = [];
 		for (const child of this.children) {
 			const lines = child.render(contentWidth);
+			mouseChildren.push({ component: child, height: lines.length });
 			for (const line of lines) {
 				childLines.push(leftPad + line);
 			}
 		}
+		this.mouseLayout = { width: contentWidth, children: mouseChildren };
 
 		if (childLines.length === 0) {
 			return [];

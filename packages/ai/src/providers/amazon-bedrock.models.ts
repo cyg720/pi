@@ -12,8 +12,19 @@
  */
 
 import values from "./data/amazon-bedrock.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const AMAZON_BEDROCK_MODELS: ModelCatalog<typeof values, "amazon-bedrock"> =
 	flattenModelCatalog("amazon-bedrock", values);
+=======
+export const AMAZON_BEDROCK_MODELS: ChatModelCatalog<typeof values, "amazon-bedrock"> =
+	flattenChatModelCatalog("amazon-bedrock", values);
+
+export const AMAZON_BEDROCK_IMAGE_MODELS: ImageModelCatalog<typeof values, "amazon-bedrock"> =
+	flattenImageModelCatalog("amazon-bedrock", values);
+
+export const AMAZON_BEDROCK_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "amazon-bedrock"> =
+	flattenClassifierModelCatalog("amazon-bedrock", values);
+>>>>>>> main

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-client` 包中的 `types` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `@earendil-works/pi-protocol`、`./transport.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,6 +8,10 @@
  * 【新手阅读建议】先查看 `ConnectionState`、`ConnectionStateChange`、`Unsubscribe`、`ListenerErrorHandler`、`PiClientOptions`、`CreateSessionOptions` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { ModelRef, ThinkingLevel } from "@earendil-works/pi-protocol";
+=======
+import type { ServiceSubscriptionSnapshot } from "@earendil-works/chord";
+import type { RpcTarget, SessionTarget } from "@earendil-works/pi-protocol";
+>>>>>>> main
 import type { ByteTransportFactory } from "./transport.ts";
 
 export type ConnectionState = "disconnected" | "connecting" | "connected";
@@ -18,17 +23,22 @@ export interface ConnectionStateChange {
 
 export type Unsubscribe = () => void;
 export type ListenerErrorHandler = (error: Error) => void;
+export type AttachmentChangeListener = (attachment: SessionTarget | undefined) => void;
 
-export interface PiClientOptions {
+export interface ServiceSubscription {
+	readonly id: string;
+	readonly target: RpcTarget;
+	readonly snapshot: ServiceSubscriptionSnapshot;
+	/** Begin ordered update delivery after the caller has installed the snapshot. */
+	start(): void;
+	dispose(): Promise<void>;
+}
+
+export interface ClientOptions {
 	transportFactory: ByteTransportFactory;
+	/** Logical server identity expected at the physical endpoint. */
+	serverId: string;
 	maxFrameLength?: number;
 	/** Reports subscriber failures without allowing them to corrupt client state. */
 	onListenerError?: ListenerErrorHandler;
-}
-
-export interface CreateSessionOptions {
-	cwd?: string;
-	name?: string;
-	model?: ModelRef;
-	thinkingLevel?: ThinkingLevel;
 }

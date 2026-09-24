@@ -12,8 +12,19 @@
  */
 
 import values from "./data/qwen-token-plan.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const QWEN_TOKEN_PLAN_MODELS: ModelCatalog<typeof values, "qwen-token-plan"> =
 	flattenModelCatalog("qwen-token-plan", values);
+=======
+export const QWEN_TOKEN_PLAN_MODELS: ChatModelCatalog<typeof values, "qwen-token-plan"> =
+	flattenChatModelCatalog("qwen-token-plan", values);
+
+export const QWEN_TOKEN_PLAN_IMAGE_MODELS: ImageModelCatalog<typeof values, "qwen-token-plan"> =
+	flattenImageModelCatalog("qwen-token-plan", values);
+
+export const QWEN_TOKEN_PLAN_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "qwen-token-plan"> =
+	flattenClassifierModelCatalog("qwen-token-plan", values);
+>>>>>>> main

@@ -1,9 +1,9 @@
 import { getKeybindings } from "../keybindings.ts";
 import { decodeKittyPrintable } from "../keys.ts";
 import { KillRing } from "../kill-ring.ts";
-import { type Component, CURSOR_MARKER, type Focusable } from "../tui.ts";
+import { type Component, CURSOR_MARKER, type Focusable, type TuiMouseEvent, type TuiMouseEventResult } from "../tui.ts";
 import { UndoStack } from "../undo-stack.ts";
-import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, visibleWidth } from "../utils.ts";
+import { getGraphemeSegmenter, isWhitespaceChar, sliceByColumn, truncateToWidth, visibleWidth } from "../utils.ts";
 import { findWordBackward, findWordForward } from "../word-navigation.ts";
 
 const segmenter = getGraphemeSegmenter();
@@ -12,6 +12,12 @@ const segmenter = getGraphemeSegmenter();
 interface InputState {
 	value: string;
 	cursor: number;
+}
+
+export interface InputOptions {
+	prompt?: string;
+	placeholder?: string;
+	placeholderStyle?: (text: string) => string;
 }
 
 /**
@@ -26,7 +32,14 @@ export class Input implements Component, Focusable {
 	private value: string = "";
 	// 光标在 value 中的字符下标
 	private cursor: number = 0; // Cursor position in the value
+<<<<<<< HEAD
 	// 提交回调（Enter）
+=======
+	private readonly prompt: string;
+	private readonly placeholder: string;
+	private readonly placeholderStyle: (text: string) => string;
+	private renderedStartColumn = 0;
+>>>>>>> main
 	public onSubmit?: (value: string) => void;
 	// 取消回调（Esc）
 	public onEscape?: () => void;
@@ -51,7 +64,16 @@ export class Input implements Component, Focusable {
 	// 撤销栈
 	private undoStack = new UndoStack<InputState>();
 
+<<<<<<< HEAD
 	// 读取当前输入值
+=======
+	constructor(options: InputOptions = {}) {
+		this.prompt = options.prompt ?? "> ";
+		this.placeholder = options.placeholder ?? "";
+		this.placeholderStyle = options.placeholderStyle ?? ((text) => text);
+	}
+
+>>>>>>> main
 	getValue(): string {
 		return this.value;
 	}
@@ -229,7 +251,28 @@ export class Input implements Component, Focusable {
 		}
 	}
 
+<<<<<<< HEAD
 	// 插入单个字符（私有）：连续打字合并为一个撤销单元（遇空白或动作切换才重新压栈）
+=======
+	handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+		if (event.type !== "press" || event.button !== "left" || event.y !== 0) return undefined;
+		const visibleColumn = Math.max(0, event.x - 2);
+		const targetColumn = this.renderedStartColumn + visibleColumn;
+		let currentColumn = 0;
+		this.cursor = this.value.length;
+		for (const grapheme of segmenter.segment(this.value)) {
+			const nextColumn = currentColumn + visibleWidth(grapheme.segment);
+			if (targetColumn < nextColumn) {
+				this.cursor = grapheme.index;
+				break;
+			}
+			currentColumn = nextColumn;
+		}
+		this.lastAction = null;
+		return { handled: true, focus: true };
+	}
+
+>>>>>>> main
 	private insertCharacter(char: string): void {
 		// Undo coalescing: consecutive word chars coalesce into one undo unit
 		if (isWhitespaceChar(char) || this.lastAction !== "type-word") {
@@ -413,17 +456,34 @@ export class Input implements Component, Focusable {
 	// 前置硬件光标标记供 IME 定位 → 补空格到整行宽
 	render(width: number): string[] {
 		// Calculate visible window
+<<<<<<< HEAD
 		// 固定提示符
 		const prompt = "> ";
 		const availableWidth = width - prompt.length;
+=======
+		const availableWidth = width - visibleWidth(this.prompt);
+>>>>>>> main
 
 		// 宽度不足以容纳提示符：直接返回提示符
 		if (availableWidth <= 0) {
-			return [prompt];
+			return [truncateToWidth(this.prompt, width, "")];
+		}
+
+		if (this.value.length === 0 && this.placeholder) {
+			const placeholder = truncateToWidth(this.placeholder, availableWidth, "");
+			const graphemes = [...segmenter.segment(placeholder)];
+			const atCursor = graphemes[0]?.segment ?? " ";
+			const afterCursor = placeholder.slice(atCursor.length);
+			const marker = this.focused ? CURSOR_MARKER : "";
+			const cursorChar = `\x1b[7m${this.placeholderStyle(atCursor)}\x1b[27m`;
+			const textWithCursor = marker + cursorChar + this.placeholderStyle(afterCursor);
+			const padding = " ".repeat(Math.max(0, availableWidth - visibleWidth(textWithCursor)));
+			return [this.prompt + textWithCursor + padding];
 		}
 
 		let visibleText = "";
 		let cursorDisplay = this.cursor;
+		this.renderedStartColumn = 0;
 		const totalWidth = visibleWidth(this.value);
 
 		// 全部内容放得下：无需滚动
@@ -454,6 +514,7 @@ export class Input implements Component, Focusable {
 					startCol = Math.max(0, cursorCol - halfWidth);
 				}
 
+				this.renderedStartColumn = startCol;
 				visibleText = sliceByColumn(this.value, startCol, scrollWidth, true);
 				const beforeCursor = sliceByColumn(this.value, startCol, Math.max(0, cursorCol - startCol), true);
 				cursorDisplay = beforeCursor.length;
@@ -482,7 +543,7 @@ export class Input implements Component, Focusable {
 		// Calculate visual width
 		const visualLength = visibleWidth(textWithCursor);
 		const padding = " ".repeat(Math.max(0, availableWidth - visualLength));
-		const line = prompt + textWithCursor + padding;
+		const line = this.prompt + textWithCursor + padding;
 
 		return [line];
 	}

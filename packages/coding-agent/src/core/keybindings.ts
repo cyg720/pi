@@ -23,6 +23,7 @@ export interface AppKeybindings {
 	"app.exit": true;
 	"app.suspend": true;
 	"app.thinking.cycle": true;
+	"app.thinking.save": true;
 	"app.model.cycleForward": true;
 	"app.model.cycleBackward": true;
 	"app.model.select": true;
@@ -106,6 +107,10 @@ export const KEYBINDINGS = {
 		defaultKeys: "shift+tab",
 		description: "Cycle thinking level",
 	},
+	"app.thinking.save": {
+		defaultKeys: "ctrl+s",
+		description: "Save thinking level",
+	},
 	"app.model.cycleForward": {
 		defaultKeys: "ctrl+p",
 		description: "Cycle to next model",
@@ -130,7 +135,7 @@ export const KEYBINDINGS = {
 	},
 	"app.message.copy": {
 		defaultKeys: "ctrl+x",
-		description: "Copy message to clipboard",
+		description: "Copy selection or last assistant message",
 	},
 	"app.message.followUp": {
 		defaultKeys: windowsKeybindings ? "ctrl+q" : "alt+enter",

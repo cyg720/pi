@@ -8,8 +8,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { cloudflareStreams } from "../src/providers/cloudflare-stream.ts";
-import type { Api, Context, Model } from "../src/types.ts";
+import type { Api, Model } from "../src/types.ts";
 import { AssistantMessageEventStream } from "../src/utils/event-stream.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /** 含 Cloudflare 路径占位符的最小模型夹具。 */
 const model: Model<Api> = {
@@ -25,8 +26,12 @@ const model: Model<Api> = {
 	maxTokens: 100,
 };
 
+<<<<<<< HEAD
 /** 无消息的固定请求上下文。 */
 const context: Context = { messages: [] };
+=======
+const context = normalizeContext({ messages: [] });
+>>>>>>> main
 
 /** Cloudflare 流 URL 物化测试组。 */
 describe("Cloudflare provider streams", () => {

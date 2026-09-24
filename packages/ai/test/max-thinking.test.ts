@@ -8,8 +8,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { streamSimple as streamSimpleOpenAICodexResponses } from "../src/api/openai-codex-responses.ts";
-import { clampThinkingLevel, getModel, getSupportedThinkingLevels } from "../src/compat.ts";
-import type { Context, Model } from "../src/types.ts";
+import { clampThinkingLevel, getModel, getSupportedThinkingLevels, normalizeContext } from "../src/compat.ts";
+import type { Model } from "../src/types.ts";
 
 /**
  * 创建包含测试账户标识的伪 Codex JWT 字符串。
@@ -47,7 +47,7 @@ describe("max thinking level", () => {
 		expect(clampThinkingLevel(model, "max")).toBe("high");
 	});
 
-	it.each(["gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra"] as const)(
+	it.each(["gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-luna", "gpt-6-sol"] as const)(
 		"exposes xhigh and max for openai-codex/%s",
 		// modelId 是当前参数化检查的 Codex 模型标识。
 		(modelId) => {
@@ -88,6 +88,7 @@ describe("max thinking level", () => {
 		expect(clampThinkingLevel(model, "xhigh")).toBe("max");
 	});
 
+<<<<<<< HEAD
 	// 验证 max 最终映射到 Codex Responses 的 reasoning.effort；无参数，无返回值。
 	it("sends max to the Codex Responses API", async () => {
 		// model 是明确支持 max 的 GPT-5.6 sol 配置。
@@ -109,7 +110,28 @@ describe("max thinking level", () => {
 				throw new Error("payload captured");
 			},
 		}).result();
+=======
+	it.each(["gpt-5.6-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna"] as const)(
+		"sends max to the Codex Responses API for %s",
+		async (modelId) => {
+			const model = getModel("openai-codex", modelId)!;
+			const context = normalizeContext({
+				systemPrompt: "You are a helpful assistant.",
+				messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
+			});
+			let payload: unknown;
 
-		expect(payload).toMatchObject({ reasoning: { effort: "max", summary: "auto" } });
-	});
+			await streamSimpleOpenAICodexResponses(model, context, {
+				apiKey: mockToken(),
+				reasoning: "max",
+				onPayload: (request) => {
+					payload = request;
+					throw new Error("payload captured");
+				},
+			}).result();
+>>>>>>> main
+
+			expect(payload).toMatchObject({ reasoning: { effort: "max", summary: "auto" } });
+		},
+	);
 });

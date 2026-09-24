@@ -281,7 +281,11 @@ describe("session selector path/delete interactions", () => {
 	it("does not start redundant All loads when toggling scopes while All is already loading", async () => {
 		/** Current 范围返回的会话。 */
 		const currentSessions = [makeSession({ id: "current" })];
+<<<<<<< HEAD
 		/** 手动控制完成时间的 All 范围加载。 */
+=======
+		const allSessions = [makeSession({ id: "all" })];
+>>>>>>> main
 		const allDeferred = createDeferred<SessionInfo[]>();
 		/** All 加载器实际调用次数。 */
 		let allLoadCalls = 0;
@@ -289,8 +293,9 @@ describe("session selector path/delete interactions", () => {
 		/** 使用延迟 All 加载器创建的选择器。 */
 		const selector = new SessionSelectorComponent(
 			async () => currentSessions,
-			async () => {
+			async (onProgress) => {
 				allLoadCalls++;
+				onProgress?.(1, 2, allSessions);
 				return allDeferred.promise;
 			},
 			() => {},
@@ -311,8 +316,10 @@ describe("session selector path/delete interactions", () => {
 		// 加载仍未完成时再次切到 all，应复用原任务。
 
 		expect(allLoadCalls).toBe(1);
+		expect(selector.getSessionList().getSelectedSessionPath()).toBe(allSessions[0]!.path);
+		expect(selector.render(120).join("\n")).toContain("Loading");
 
-		allDeferred.resolve([makeSession({ id: "all" })]);
+		allDeferred.resolve(allSessions);
 		await flushPromises();
 	});
 

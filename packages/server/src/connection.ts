@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-server` 包中的 `connection` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `@earendil-works/pi-protocol`、`./types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,8 +8,12 @@
  * 【新手阅读建议】先查看 `ByteConnection`、`ByteConnectionHandler`、`ByteConnectionAcceptor`、`ConnectionStage`、`ConnectionState`、`isTerminalConnection` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { ClientMessageDecoder } from "@earendil-works/pi-protocol";
+=======
+import type { ServiceStateEncoder } from "@earendil-works/chord";
+import type { ClientMessageDecoder, RpcTarget } from "@earendil-works/pi-protocol";
+>>>>>>> main
 
-import type { MaybePromise } from "./types.ts";
+import type { MaybePromise, RoutedServerServiceAttachment } from "./types.ts";
 
 /** An established, authorized ordered byte connection. */
 export interface ByteConnection {
@@ -28,15 +33,15 @@ export type ByteConnectionAcceptor = (connection: ByteConnection) => ByteConnect
 export type ConnectionStage = "awaitingHello" | "handshaking" | "ready" | "closing" | "closed";
 
 export interface ConnectionState {
-	id: string;
 	connection: ByteConnection;
 	decoder: ClientMessageDecoder;
-	sessionIds: Set<string>;
+	serviceStateEncoders: Map<string, ServiceStateEncoder>;
 	stage: ConnectionStage;
 	disconnected: boolean;
-	handshakeComplete: boolean;
 	handshake?: Promise<void>;
 	handshakeTimeout: NodeJS.Timeout;
+	serverServices?: RoutedServerServiceAttachment;
+	activeRequests: Map<string, { controller: AbortController; target: RpcTarget }>;
 }
 
 export function isTerminalConnection(state: ConnectionState): boolean {

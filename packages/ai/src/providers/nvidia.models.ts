@@ -12,8 +12,19 @@
  */
 
 import values from "./data/nvidia.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const NVIDIA_MODELS: ModelCatalog<typeof values, "nvidia"> =
 	flattenModelCatalog("nvidia", values);
+=======
+export const NVIDIA_MODELS: ChatModelCatalog<typeof values, "nvidia"> =
+	flattenChatModelCatalog("nvidia", values);
+
+export const NVIDIA_IMAGE_MODELS: ImageModelCatalog<typeof values, "nvidia"> =
+	flattenImageModelCatalog("nvidia", values);
+
+export const NVIDIA_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "nvidia"> =
+	flattenClassifierModelCatalog("nvidia", values);
+>>>>>>> main

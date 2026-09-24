@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】图片模型查询层：把生成文件（image-models.generated.ts）中的分组模型数据
  *              载入内存注册表，提供按供应商/模型 ID 的类型安全查询。
@@ -16,14 +17,39 @@ import type { ImagesApi, ImagesModel, KnownImagesProvider } from "./types.ts";
 const imageModelRegistry: Map<string, Map<string, ImagesModel<ImagesApi>>> = new Map();
 
 // 模块加载时从生成数据构建注册表
+=======
+import { IMAGE_MODELS } from "./models.generated.ts";
+import type { ImageApi, ImageModel } from "./types.ts";
+
+/**
+ * Compat reads of the generated catalog restricted to image models. New code
+ * uses `Models.getModelOfType("image", ...)` or `getBuiltinImageModel()` from `providers/all`.
+ */
+
+type Catalog = typeof IMAGE_MODELS;
+type ImageModelIds<TProvider extends keyof Catalog> = keyof Catalog[TProvider];
+
+/** Built-in providers with at least one image model in the generated catalog. */
+export type BuiltinImageProvider = {
+	[TProvider in keyof Catalog]: [ImageModelIds<TProvider>] extends [never] ? never : TProvider;
+}[keyof Catalog];
+
+type BuiltinImageModel<
+	TProvider extends BuiltinImageProvider,
+	TModelId extends ImageModelIds<TProvider>,
+> = Catalog[TProvider][TModelId] extends ImageModel<infer TApi extends ImageApi> ? ImageModel<TApi> : never;
+
+const imageModelsByProvider = new Map<string, Map<string, ImageModel<ImageApi>>>();
+>>>>>>> main
 for (const [provider, models] of Object.entries(IMAGE_MODELS)) {
-	const providerModels = new Map<string, ImagesModel<ImagesApi>>();
-	for (const [id, model] of Object.entries(models)) {
-		providerModels.set(id, model as ImagesModel<ImagesApi>);
+	const imageModels = new Map<string, ImageModel<ImageApi>>();
+	for (const model of Object.values(models as Record<string, ImageModel<ImageApi>>)) {
+		imageModels.set(model.id, model);
 	}
-	imageModelRegistry.set(provider, providerModels);
+	if (imageModels.size > 0) imageModelsByProvider.set(provider, imageModels);
 }
 
+<<<<<<< HEAD
 // 从生成数据推导模型所属 API 类型（保证查询结果类型精确）
 type ImageModelApi<
 	TProvider extends KnownImagesProvider,
@@ -50,10 +76,25 @@ export function getImageProviders(): KnownImagesProvider[] {
 
 // 列出某供应商的全部图片模型（公开，类型安全）
 export function getImageModels<TProvider extends KnownImagesProvider>(
+=======
+/** @deprecated Static catalog read. Use `getBuiltinImageModel` from "@earendil-works/pi-ai/providers/all" or `Models.getModelOfType("image", ...)`. */
+export function getImageModel<TProvider extends BuiltinImageProvider, TModelId extends ImageModelIds<TProvider>>(
+>>>>>>> main
 	provider: TProvider,
-): ImagesModel<ImageModelApi<TProvider, keyof (typeof IMAGE_MODELS)[TProvider]>>[] {
-	const models = imageModelRegistry.get(provider);
-	return models
-		? (Array.from(models.values()) as ImagesModel<ImageModelApi<TProvider, keyof (typeof IMAGE_MODELS)[TProvider]>>[])
-		: [];
+	modelId: TModelId,
+): BuiltinImageModel<TProvider, TModelId> {
+	return imageModelsByProvider.get(provider)?.get(modelId as string) as BuiltinImageModel<TProvider, TModelId>;
+}
+
+/** @deprecated Static catalog read. Use `Models.getProviders()`. */
+export function getImageProviders(): BuiltinImageProvider[] {
+	return Array.from(imageModelsByProvider.keys()) as BuiltinImageProvider[];
+}
+
+/** @deprecated Static catalog read. Use `getBuiltinImageModels` from "@earendil-works/pi-ai/providers/all" or `Models.getModelsOfType("image")`. */
+export function getImageModels<TProvider extends BuiltinImageProvider>(
+	provider: TProvider,
+): BuiltinImageModel<TProvider, ImageModelIds<TProvider>>[] {
+	const models = imageModelsByProvider.get(provider);
+	return models ? (Array.from(models.values()) as BuiltinImageModel<TProvider, ImageModelIds<TProvider>>[]) : [];
 }

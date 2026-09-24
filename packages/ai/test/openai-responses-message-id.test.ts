@@ -9,8 +9,8 @@
 import type { ResponseOutputMessage } from "openai/resources/responses/responses.js";
 import { describe, expect, it } from "vitest";
 import { convertResponsesMessages } from "../src/api/openai-responses-shared.ts";
-import { getModel } from "../src/compat.ts";
-import type { AssistantMessage, Context, Usage } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
+import type { AssistantMessage, Usage } from "../src/types.ts";
 
 /** 满足消息结构的零用量夹具。 */
 const usage: Usage = {
@@ -42,11 +42,15 @@ describe("OpenAI Responses message ID conversion", () => {
 			stopReason: "stop",
 			timestamp: Date.now() - 1000,
 		};
+<<<<<<< HEAD
 		/** 一条用户消息加上述助手消息的上下文。 */
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			systemPrompt: "You are concise.",
 			messages: [{ role: "user", content: "hello", timestamp: Date.now() - 2000 }, assistant],
-		};
+		});
 
 		/** 转换得到的 Responses 输入项。 */
 		const input = convertResponsesMessages(model, context, new Set(["openai", "openai-codex", "opencode"]));

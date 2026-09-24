@@ -12,8 +12,19 @@
  */
 
 import values from "./data/kimi-coding.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const KIMI_CODING_MODELS: ModelCatalog<typeof values, "kimi-coding"> =
 	flattenModelCatalog("kimi-coding", values);
+=======
+export const KIMI_CODING_MODELS: ChatModelCatalog<typeof values, "kimi-coding"> =
+	flattenChatModelCatalog("kimi-coding", values);
+
+export const KIMI_CODING_IMAGE_MODELS: ImageModelCatalog<typeof values, "kimi-coding"> =
+	flattenImageModelCatalog("kimi-coding", values);
+
+export const KIMI_CODING_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "kimi-coding"> =
+	flattenClassifierModelCatalog("kimi-coding", values);
+>>>>>>> main

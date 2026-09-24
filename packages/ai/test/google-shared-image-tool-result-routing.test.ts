@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { convertMessages } from "../src/api/google-shared.ts";
 import type { Context, Model } from "../src/types.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /**
  * 创建指定提供商和标识的 Google 测试模型。
@@ -101,8 +102,12 @@ describe("google-shared image tool result routing", () => {
 	it("keeps separate synthetic image turn for Gemini 2.x Google API models", () => {
 		// model 是 Gemini 2.5 Flash 的测试配置。
 		const model = makeModel("google-generative-ai", "google", "gemini-2.5-flash");
+<<<<<<< HEAD
 		// contents 是转换后的 Google API 对话轮次数组。
 		const contents = convertMessages(model, makeContext(model));
+=======
+		const contents = convertMessages(model, normalizeContext(makeContext(model)));
+>>>>>>> main
 
 		expect(contents).toHaveLength(5);
 		// part 是第三轮的当前内容部分，预期均为函数响应。
@@ -116,8 +121,12 @@ describe("google-shared image tool result routing", () => {
 	it("nests image tool results for Gemini 3 Google API models", () => {
 		// model 是 Gemini 3 Pro Preview 的测试配置。
 		const model = makeModel("google-generative-ai", "google", "gemini-3-pro-preview");
+<<<<<<< HEAD
 		// contents 是按 Gemini 3 规则合并后的三轮对话。
 		const contents = convertMessages(model, makeContext(model));
+=======
+		const contents = convertMessages(model, normalizeContext(makeContext(model)));
+>>>>>>> main
 
 		expect(contents).toHaveLength(3);
 		// toolResultTurn 是同时容纳三个工具结果的第三轮。

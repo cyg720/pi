@@ -15,7 +15,11 @@ import { ENV_AGENT_DIR } from "../src/config.ts";
 
 /** 编码代理 TypeScript CLI 的绝对路径。 */
 const cliPath = resolve(__dirname, "../src/cli.ts");
+<<<<<<< HEAD
 /** 本文件创建的临时目录清单。 */
+=======
+const sourceResolverPath = resolve(__dirname, "../src/experimental/source-resolver.ts");
+>>>>>>> main
 const tempDirs: string[] = [];
 
 /** 每例结束后清理所有临时目录。 */
@@ -47,14 +51,17 @@ async function runCli(args: string[], cwd: string, agentDir: string): Promise<{ 
 	let stderr = "";
 	/** 子进程关闭时解析的退出码。 */
 	const code = await new Promise<number | null>((resolvePromise, reject) => {
+<<<<<<< HEAD
 		/** 以当前 Node 运行 TypeScript CLI 的子进程。 */
 		const child = spawn(process.execPath, [cliPath, ...args], {
+=======
+		const child = spawn(process.execPath, ["--import", sourceResolverPath, cliPath, ...args], {
+>>>>>>> main
 			cwd,
 			env: {
 				...process.env,
 				[ENV_AGENT_DIR]: agentDir,
 				PI_OFFLINE: "1",
-				TSX_TSCONFIG_PATH: resolve(__dirname, "../../../tsconfig.json"),
 			},
 			stdio: ["ignore", "ignore", "pipe"],
 		});

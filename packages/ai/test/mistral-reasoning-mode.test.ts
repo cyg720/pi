@@ -7,8 +7,9 @@
  * 新手阅读建议：先看 MistralPayload，再比较七个用例中模型、reasoning 与 cacheRetention。
  */
 import { describe, expect, it } from "vitest";
-import { getModel, streamSimple } from "../src/compat.ts";
+import { streamSimple } from "../src/api/mistral-conversations.ts";
 import type { Context, Model, SimpleStreamOptions } from "../src/types.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /** 描述本测试关心的 Mistral 请求字段。 */
 interface MistralPayload {
@@ -20,7 +21,25 @@ interface MistralPayload {
 	promptCacheKey?: string;
 }
 
+<<<<<<< HEAD
 /** 创建含一条 Hello 消息的最小 Context；无参数，返回上下文。 */
+=======
+function makeModel(id: string, reasoning: boolean): Model<"mistral-conversations"> {
+	return {
+		id,
+		name: id,
+		api: "mistral-conversations",
+		provider: "mistral",
+		baseUrl: "http://127.0.0.1:9",
+		reasoning,
+		input: ["text"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 128000,
+		maxTokens: 16384,
+	};
+}
+
+>>>>>>> main
 function makeContext(): Context {
 	return {
 		messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
@@ -39,6 +58,7 @@ async function capturePayload(
 ): Promise<MistralPayload> {
 	// capturedPayload 保存 onPayload 收到的请求对象。
 	let capturedPayload: MistralPayload | undefined;
+<<<<<<< HEAD
 	// payloadCaptureModel 使用本地无效端点，确保不访问真实服务。
 	const payloadCaptureModel: Model<"mistral-conversations"> = {
 		...model,
@@ -47,6 +67,9 @@ async function capturePayload(
 
 	// stream 构造请求并在连接失败前触发载荷钩子。
 	const stream = streamSimple(payloadCaptureModel, makeContext(), {
+=======
+	const stream = streamSimple(model, normalizeContext(makeContext()), {
+>>>>>>> main
 		...options,
 		apiKey: "fake-key",
 		// payload 是发送前请求对象，保存后原样返回。
@@ -68,8 +91,12 @@ async function capturePayload(
 describe("Mistral reasoning mode selection", () => {
 	// 验证 Small 4 开启思考时使用 high reasoningEffort；无参数，无返回值。
 	it("uses reasoning_effort for Mistral Small 4", async () => {
+<<<<<<< HEAD
 		// payload 是 Small 4 中等思考设置产生的请求载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-small-2603"), { reasoning: "medium" });
+=======
+		const payload = await capturePayload(makeModel("mistral-small-2603", true), { reasoning: "medium" });
+>>>>>>> main
 
 		expect(payload.reasoningEffort).toBe("high");
 		expect(payload.promptMode).toBeUndefined();
@@ -77,8 +104,12 @@ describe("Mistral reasoning mode selection", () => {
 
 	// 验证 Small 4 关闭思考时省略所有推理控制；无参数，无返回值。
 	it("omits reasoning controls for Mistral Small 4 when thinking is off", async () => {
+<<<<<<< HEAD
 		// payload 是未指定 reasoning 的 Small 4 请求载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-small-2603"));
+=======
+		const payload = await capturePayload(makeModel("mistral-small-2603", true));
+>>>>>>> main
 
 		expect(payload.reasoningEffort).toBeUndefined();
 		expect(payload.promptMode).toBeUndefined();
@@ -86,26 +117,68 @@ describe("Mistral reasoning mode selection", () => {
 
 	// 验证 Magistral 模型使用 promptMode=reasoning；无参数，无返回值。
 	it("uses prompt_mode for Magistral reasoning models", async () => {
+<<<<<<< HEAD
 		// payload 是 Magistral 中等思考请求载荷。
 		const payload = await capturePayload(getModel("mistral", "magistral-medium-latest"), { reasoning: "medium" });
+=======
+		const payload = await capturePayload(makeModel("magistral-medium-latest", true), { reasoning: "medium" });
+>>>>>>> main
 
 		expect(payload.promptMode).toBe("reasoning");
 		expect(payload.reasoningEffort).toBeUndefined();
 	});
 
+<<<<<<< HEAD
 	// 验证 Medium 3.5 开启思考时使用 high reasoningEffort；无参数，无返回值。
 	it("uses reasoning_effort for Mistral Medium 3.5", async () => {
 		// payload 是 Medium 3.5 中等思考请求载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-medium-3.5"), { reasoning: "medium" });
+=======
+	// Regression for #9375: Mistral-hosted GLM-5.2 ignores prompt_mode.
+	describe("zai-glm-5-2", () => {
+		it("uses reasoning_effort when thinking is enabled", async () => {
+			const payload = await capturePayload(makeModel("zai-glm-5-2", true), { reasoning: "medium" });
+>>>>>>> main
 
-		expect(payload.reasoningEffort).toBe("high");
-		expect(payload.promptMode).toBeUndefined();
+			expect(payload.reasoningEffort).toBe("high");
+			expect(payload.promptMode).toBeUndefined();
+		});
+
+		it("omits reasoning controls when thinking is off", async () => {
+			const payload = await capturePayload(makeModel("zai-glm-5-2", true));
+
+			expect(payload.reasoningEffort).toBeUndefined();
+			expect(payload.promptMode).toBeUndefined();
+		});
 	});
 
+<<<<<<< HEAD
 	// 验证 Medium 3.5 关闭思考时省略推理字段；无参数，无返回值。
 	it("omits reasoning controls for Mistral Medium 3.5 when thinking is off", async () => {
 		// payload 是未指定 reasoning 的 Medium 3.5 载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-medium-3.5"));
+=======
+	// Regression for #8700: Medium aliases must use reasoning_effort, not Magistral's prompt_mode.
+	describe.each(["mistral-medium-2604", "mistral-medium-latest"] as const)("%s", (modelId) => {
+		it("uses reasoning_effort when thinking is enabled", async () => {
+			const payload = await capturePayload(makeModel(modelId, true), { reasoning: "medium" });
+
+			expect(payload.reasoningEffort).toBe("high");
+			expect(payload.promptMode).toBeUndefined();
+		});
+
+		it("omits reasoning controls when thinking is off", async () => {
+			const payload = await capturePayload(makeModel(modelId, true));
+
+			expect(payload.reasoningEffort).toBeUndefined();
+			expect(payload.promptMode).toBeUndefined();
+		});
+	});
+
+	// Regression for #8700: the Medium prefix must still respect the model's reasoning capability.
+	it("omits reasoning controls for non-reasoning Medium models", async () => {
+		const payload = await capturePayload(makeModel("mistral-medium-2505", false), { reasoning: "medium" });
+>>>>>>> main
 
 		expect(payload.reasoningEffort).toBeUndefined();
 		expect(payload.promptMode).toBeUndefined();
@@ -113,8 +186,12 @@ describe("Mistral reasoning mode selection", () => {
 
 	// 验证会话 id 默认映射为提示缓存键；无参数，无返回值。
 	it("uses the session id as prompt cache key", async () => {
+<<<<<<< HEAD
 		// payload 是带 sessionId 的 Large 模型请求载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-large-latest"), {
+=======
+		const payload = await capturePayload(makeModel("mistral-large-latest", false), {
+>>>>>>> main
 			sessionId: "session-123",
 		});
 
@@ -123,8 +200,12 @@ describe("Mistral reasoning mode selection", () => {
 
 	// 验证禁用缓存保留时省略提示缓存键；无参数，无返回值。
 	it("omits prompt cache key when cache retention is disabled", async () => {
+<<<<<<< HEAD
 		// payload 是 cacheRetention=none 的 Large 模型载荷。
 		const payload = await capturePayload(getModel("mistral", "mistral-large-latest"), {
+=======
+		const payload = await capturePayload(makeModel("mistral-large-latest", false), {
+>>>>>>> main
 			sessionId: "session-123",
 			cacheRetention: "none",
 		});

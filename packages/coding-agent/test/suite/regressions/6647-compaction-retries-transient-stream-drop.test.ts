@@ -143,9 +143,13 @@ describe("#6647 compaction retries transient summarization failures", () => {
 		const result = await harness.session.compact();
 
 		expect(result.summary).toContain("recovered summary");
+<<<<<<< HEAD
 		expect(getCallCount()).toBe(3); // 1 initial + 2 retries
 		// 共调用三次：一次初始请求和两次重试。
 		/** 捕获的摘要重试调度事件。 */
+=======
+		expect(getCallCount()).toBe(3); // 1 prefix-summary attempt + 2 retries
+>>>>>>> main
 		const starts = harness.eventsOfType("summarization_retry_scheduled");
 		/** 捕获的摘要重试结束事件。 */
 		const ends = harness.eventsOfType("summarization_retry_finished");

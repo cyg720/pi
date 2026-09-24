@@ -7,7 +7,7 @@
  * 新手阅读建议：先比较前三个用例的开关差异，再看 Kimi 模型目录如何预设兼容选项。
  */
 import { describe, expect, it } from "vitest";
-import { getModel, streamSimple } from "../src/compat.ts";
+import { getModel, getModels, streamSimple } from "../src/compat.ts";
 import type { AssistantMessage, Context, Model } from "../src/types.ts";
 
 // 捕获的 Anthropic 请求最小结构，只声明本测试需要检查的消息内容。
@@ -118,6 +118,46 @@ describe("Anthropic empty thinking signature compat", () => {
 		// 载荷中的助手消息；规范化后的空签名应继续保留在 thinking 块中。
 		const assistant = payload.messages?.find((message) => message.role === "assistant");
 		expect(assistant?.content).toEqual([{ type: "thinking", thinking: "internal reasoning", signature: "" }]);
+	});
+
+	// Regression for #9676: Vercel AI Gateway emits unsigned thinking for translated models.
+	it("allows empty thinking signatures for every Vercel AI Gateway model", () => {
+		const models = getModels("vercel-ai-gateway");
+		expect(models.length).toBeGreaterThan(0);
+		expect(models.every((model) => model.compat?.allowEmptySignature === true)).toBe(true);
+	});
+
+	// Regression for #9323: Fireworks emits unsigned thinking that must survive replay.
+	it.each([
+		"accounts/fireworks/models/deepseek-v4-flash-0731",
+		"accounts/fireworks/models/deepseek-v4-flash-vision-exp",
+		"accounts/fireworks/models/deepseek-v4-pro-0813",
+		"accounts/fireworks/models/qwen3p8-max",
+		"accounts/fireworks/models/qwen3p8-2p4t-a95b",
+		"accounts/fireworks/models/kimi-k2p6",
+	] as const)("preserves unsigned thinking for Fireworks %s", async (modelId) => {
+		const model = getModel("fireworks", modelId);
+		expect(model.compat?.allowEmptySignature).toBe(true);
+		const context = makeContext("", "internal reasoning", "fireworks", modelId);
+		const assistant = context.messages[1] as AssistantMessage;
+		assistant.content.push({ type: "text", text: "answer" });
+		const payload = await capturePayload(model, context);
+		expect(payload.messages?.find((message) => message.role === "assistant")?.content).toEqual([
+			{ type: "thinking", thinking: "internal reasoning", signature: "" },
+			{ type: "text", text: "answer" },
+		]);
+	});
+
+	// Regression for #9323: opting into unsigned replay must not change cross-model conversion.
+	it("still converts cross-model Fireworks thinking to text", async () => {
+		const model = getModel("fireworks", "accounts/fireworks/models/deepseek-v4-flash-0731");
+		const payload = await capturePayload(
+			model,
+			makeContext("", "internal reasoning", "fireworks", "accounts/fireworks/models/kimi-k2p6"),
+		);
+		expect(payload.messages?.find((message) => message.role === "assistant")?.content).toEqual([
+			{ type: "text", text: "internal reasoning" },
+		]);
 	});
 
 	it.each(["k3"] as const)("allows empty signatures for Kimi Coding %s", async (modelId) => {

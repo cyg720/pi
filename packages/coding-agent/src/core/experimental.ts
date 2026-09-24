@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `core/experimental` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 语言内建能力与本文件声明，并通过 TypeScript 模块边界组织实现。
@@ -8,10 +9,8 @@
  */
 const PREFER_STRICT_TOOL_SAMPLING = { type: "json_schema", strict: "prefer" } as const;
 
+=======
+>>>>>>> main
 export function areExperimentalFeaturesEnabled(): boolean {
 	return process.env.PI_EXPERIMENTAL === "1";
-}
-
-export function getExperimentalToolSampling() {
-	return areExperimentalFeaturesEnabled() ? PREFER_STRICT_TOOL_SAMPLING : undefined;
 }

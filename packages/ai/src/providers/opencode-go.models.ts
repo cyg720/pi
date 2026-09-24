@@ -12,8 +12,19 @@
  */
 
 import values from "./data/opencode-go.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const OPENCODE_GO_MODELS: ModelCatalog<typeof values, "opencode-go"> =
 	flattenModelCatalog("opencode-go", values);
+=======
+export const OPENCODE_GO_MODELS: ChatModelCatalog<typeof values, "opencode-go"> =
+	flattenChatModelCatalog("opencode-go", values);
+
+export const OPENCODE_GO_IMAGE_MODELS: ImageModelCatalog<typeof values, "opencode-go"> =
+	flattenImageModelCatalog("opencode-go", values);
+
+export const OPENCODE_GO_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "opencode-go"> =
+	flattenClassifierModelCatalog("opencode-go", values);
+>>>>>>> main

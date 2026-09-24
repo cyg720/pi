@@ -17,10 +17,19 @@ const OPENROUTER_ANTHROPIC_LATEST_MODEL_IDS = [
 	"~anthropic/claude-sonnet-latest",
 ] as const;
 
+<<<<<<< HEAD
 /** OpenRouter 缓存控制元数据测试组。 */
 describe("OpenRouter Anthropic cache control metadata", () => {
 	/** 对每个模型 ID 验证兼容配置；modelId 始终来自上方只读列表。 */
 	it.each(OPENROUTER_ANTHROPIC_LATEST_MODEL_IDS)("enables cache control for %s", (modelId) => {
 		expect(getModel("openrouter", modelId).compat?.cacheControlFormat).toBe("anthropic");
+=======
+describe("OpenRouter Anthropic latest alias metadata", () => {
+	it.each(OPENROUTER_ANTHROPIC_LATEST_MODEL_IDS)("keeps completions cache control for %s", (modelId) => {
+		const model = getModel("openrouter", modelId);
+		expect(model.api).toBe("openai-completions");
+		if (model.api !== "openai-completions") throw new Error(`Unexpected API for ${modelId}`);
+		expect(model.compat?.cacheControlFormat).toBe("anthropic");
+>>>>>>> main
 	});
 });

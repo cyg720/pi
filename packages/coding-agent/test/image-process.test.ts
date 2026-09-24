@@ -40,7 +40,14 @@ function expectPngMagic(base64Data: string): void {
 
 /** 图片处理管线测试组。 */
 describe("image processing pipeline", () => {
+<<<<<<< HEAD
 	/** 验证 BMP 文件头被识别为 image/bmp。 */
+=======
+	it.each(["GIF87a", "GIF89a"])("detects the complete %s signature", (signature) => {
+		expect(detectSupportedImageMimeType(Buffer.from(signature, "ascii"))).toBe("image/gif");
+	});
+
+>>>>>>> main
 	it("detects BMP files from magic bytes", () => {
 		expect(detectSupportedImageMimeType(createTinyBmp1x1Red24bpp())).toBe("image/bmp");
 	});

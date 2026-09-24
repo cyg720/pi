@@ -11,9 +11,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { stream as streamAnthropic } from "../src/api/anthropic-messages.ts";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
 import { stream as streamOpenAIResponses } from "../src/api/openai-responses.ts";
-import { getModel, stream } from "../src/compat.ts";
+import { getModel, normalizeContext, stream } from "../src/compat.ts";
 import { MODELS } from "../src/models.generated.ts";
-import type { Context, Model } from "../src/types.ts";
+import type { Model } from "../src/types.ts";
 
 /** 专用控制流异常：在成功截获请求载荷后立即中止流，避免真正发送测试请求。 */
 class PayloadCaptured extends Error {
@@ -34,8 +34,12 @@ interface OpenAICompletionsCachePayload {
 
 /** 接口 OpenAIResponsesCachePayload：描述测试需要检查的 OpenAI 提示缓存载荷字段。 */
 interface OpenAIResponsesCachePayload extends OpenAICompletionsCachePayload {
+<<<<<<< HEAD
 	/** 可选缓存写入策略；explicit 用于禁用隐式缓存写入。 */
 	prompt_cache_options?: { mode: "explicit" };
+=======
+	prompt_cache_options?: { mode?: "explicit"; ttl?: "30m" };
+>>>>>>> main
 }
 
 /** 创建截获 onPayload 的回调。参数 capture 保存强类型载荷；返回会在保存后抛出 PayloadCaptured 的函数。例如：stopAfterPayload(payload => saved = payload)。 */
@@ -63,11 +67,15 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 		}
 	});
 
+<<<<<<< HEAD
 	/** 变量 context：所有请求共享的最小系统提示与用户消息上下文；只在当前模块、分组或测试范围内使用。 */
 	const context: Context = {
+=======
+	const context = normalizeContext({
+>>>>>>> main
 		systemPrompt: "You are a helpful assistant.",
 		messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
-	};
+	});
 
 	/** 测试分组：按提供商拆分的提示缓存保留行为。 */
 	describe("Anthropic Provider", () => {
@@ -318,7 +326,17 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 
 	/** 测试分组：按提供商拆分的提示缓存保留行为。 */
 	describe("OpenAI Responses Provider", () => {
+<<<<<<< HEAD
 		/** 测试场景：检查当前缓存模式与模型兼容标志生成的请求载荷字段。 */
+=======
+		it.each(["gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-6-astra", "gpt-6-luna", "gpt-6-sol"] as const)(
+			"does not enable cache warming from the documented TTL alone for %s",
+			(modelId) => {
+				expect(getModel("openai", modelId).promptCache).toBeUndefined();
+			},
+		);
+
+>>>>>>> main
 		it.skipIf(!process.env.OPENAI_API_KEY)(
 			"should not set prompt_cache_retention when PI_CACHE_RETENTION is not set",
 			async () => {
@@ -518,12 +536,23 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 			expect(capturedPayload?.prompt_cache_options).toBeUndefined();
 		});
 
+<<<<<<< HEAD
 		/** 测试场景：检查当前缓存模式与模型兼容标志生成的请求载荷字段。 */
 		it("should set prompt_cache_retention when cacheRetention is long", async () => {
 			/** 变量 model：当前被测模型配置；只在当前模块、分组或测试范围内使用。 */
 			const model = getModel("openai", "gpt-4o-mini");
 			/** 变量 capturedPayload：onPayload 截获的提供商原始请求载荷；只在当前模块、分组或测试范围内使用。 */
 			let capturedPayload: any = null;
+=======
+		it.each([
+			["gpt-4o-mini", "24h", undefined],
+			["gpt-6-astra", undefined, { ttl: "30m" }],
+			["gpt-6-sol", undefined, { ttl: "30m" }],
+			["gpt-6-luna", undefined, { ttl: "30m" }],
+		] as const)("should use the supported long cache field for %s", async (modelId, retention, cacheOptions) => {
+			const model = getModel("openai", modelId);
+			let capturedPayload: OpenAIResponsesCachePayload | undefined;
+>>>>>>> main
 
 			try {
 				/** 变量 s：尚未消费的助手消息事件流；只在当前模块、分组或测试范围内使用。 */
@@ -531,7 +560,7 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 					apiKey: "fake-key",
 					cacheRetention: "long",
 					sessionId: "session-2",
-					onPayload: stopAfterPayload((payload) => {
+					onPayload: stopAfterPayload<OpenAIResponsesCachePayload>((payload) => {
 						capturedPayload = payload;
 					}),
 				});
@@ -545,9 +574,9 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 				// 中文说明：以上英文注释解释了载荷触发方式、代理失败预期或具体缓存字段断言。
 			}
 
-			expect(capturedPayload).not.toBeNull();
-			expect(capturedPayload.prompt_cache_key).toBe("session-2");
-			expect(capturedPayload.prompt_cache_retention).toBe("24h");
+			expect(capturedPayload?.prompt_cache_key).toBe("session-2");
+			expect(capturedPayload?.prompt_cache_retention).toBe(retention);
+			expect(capturedPayload?.prompt_cache_options).toEqual(cacheOptions);
 		});
 	});
 
@@ -670,5 +699,70 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 			expect(capturedPayload?.prompt_cache_key).toBeUndefined();
 			expect(capturedPayload?.prompt_cache_retention).toBeUndefined();
 		});
+
+		it.each([MODELS.cerebras["gpt-oss-120b"], MODELS.cerebras["qwen-3.8-27b"]] as const)(
+			"should omit strict field on tools for cerebras/$id",
+			async (metadata) => {
+				const model = metadata as Model<"openai-completions">;
+
+				const contextWithTools = {
+					messages: [
+						{
+							role: "system" as const,
+							content: "test",
+							toolsAdded: [
+								{
+									name: "t1",
+									description: "strict tool",
+									parameters: {
+										type: "object" as const,
+										properties: { x: { type: "string" } },
+										required: ["x"],
+									},
+									constrainedSampling: { type: "json_schema" as const },
+								},
+								{
+									name: "t2",
+									description: "non-strict tool",
+									parameters: {
+										type: "object" as const,
+										properties: { y: { type: "string" } },
+										required: ["y"],
+									},
+								},
+							],
+							timestamp: 0,
+						},
+						{ role: "user" as const, content: "hello", timestamp: 1 },
+					],
+				};
+
+				let capturedPayload: any;
+
+				try {
+					const s = streamOpenAICompletions(model, contextWithTools as any, {
+						apiKey: "fake-key",
+						sessionId: "test",
+						onPayload: stopAfterPayload((payload: any) => {
+							capturedPayload = payload;
+						}),
+					});
+
+					for await (const event of s) {
+						if (event.type === "error") break;
+					}
+				} catch {
+					// Expected to fail
+				}
+
+				expect(model.compat?.supportsStrictMode).toBeUndefined();
+				expect(capturedPayload).toBeDefined();
+				const tools = capturedPayload?.tools as any[] | undefined;
+				expect(tools).toBeDefined();
+				for (const tool of tools!) {
+					expect(tool.function).not.toHaveProperty("strict");
+				}
+			},
+		);
 	});
 });

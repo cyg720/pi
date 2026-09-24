@@ -12,8 +12,19 @@
  */
 
 import values from "./data/cloudflare-workers-ai.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const CLOUDFLARE_WORKERS_AI_MODELS: ModelCatalog<typeof values, "cloudflare-workers-ai"> =
 	flattenModelCatalog("cloudflare-workers-ai", values);
+=======
+export const CLOUDFLARE_WORKERS_AI_MODELS: ChatModelCatalog<typeof values, "cloudflare-workers-ai"> =
+	flattenChatModelCatalog("cloudflare-workers-ai", values);
+
+export const CLOUDFLARE_WORKERS_AI_IMAGE_MODELS: ImageModelCatalog<typeof values, "cloudflare-workers-ai"> =
+	flattenImageModelCatalog("cloudflare-workers-ai", values);
+
+export const CLOUDFLARE_WORKERS_AI_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "cloudflare-workers-ai"> =
+	flattenClassifierModelCatalog("cloudflare-workers-ai", values);
+>>>>>>> main

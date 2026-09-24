@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `cli/experimental/commands/client` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `../auth.ts`、`../command.ts`、`../command-options.ts`、`../transport-address.ts`，并通过 TypeScript 模块边界组织实现。
@@ -8,37 +9,81 @@
  */
 import type { AuthInput } from "../auth.ts";
 import { Command } from "../command.ts";
+=======
+import { Command, flagOption, stringOption } from "../command.ts";
+>>>>>>> main
 import {
+	type AuthInput,
 	authTokenFileOption,
 	authTokenOption,
+	connectOption,
 	parseAuth,
-	parseLegacyOptions,
-	transportOption,
-	unsupportedLegacyOptions,
+	type TransportAddress,
+	unsupportedOptions,
 } from "../command-options.ts";
-import type { TransportAddress } from "../transport-address.ts";
 
 export interface ClientCommand {
 	readonly command: "client";
 	readonly auth?: AuthInput;
 	readonly connect?: TransportAddress;
+	readonly sessionId?: string;
+	readonly continue?: boolean;
+	readonly resume?: boolean;
+	readonly provider?: string;
+	readonly model?: string;
+	readonly pluginPackages?: readonly string[];
+	readonly prompt?: string;
 }
 
 export interface ClientCommandContext {
 	runClient(command: ClientCommand): void | Promise<void>;
 }
 
-const connectOption = transportOption("--connect");
+const sessionIdOption = stringOption("--session-id");
+const continueOption = flagOption("--continue");
+const continueShortOption = flagOption("-c");
+const resumeOption = flagOption("--resume");
+const resumeShortOption = flagOption("-r");
+const providerOption = stringOption("--provider");
+const modelOption = stringOption("--model");
+const pluginPackageOption = stringOption("-e", { repeatable: true });
 
 export const clientCommand = new Command<ClientCommand, ClientCommandContext>("client")
 	.option(connectOption)
+	.option(sessionIdOption)
+	.option(continueOption)
+	.option(continueShortOption)
+	.option(resumeOption)
+	.option(resumeShortOption)
+	.option(providerOption)
+	.option(modelOption)
+	.option(pluginPackageOption)
 	.option(authTokenOption)
 	.option(authTokenFileOption)
 	.build((input) => {
 		const { auth, errors: authErrors } = parseAuth(input);
 		const connect = input.value(connectOption);
-		const { errors: optionErrors } = parseLegacyOptions(input);
-		const errors = [...authErrors, ...optionErrors, ...unsupportedLegacyOptions("client", input)];
+		const sessionId = input.value(sessionIdOption);
+		const shouldContinue = input.value(continueOption) === true || input.value(continueShortOption) === true;
+		const shouldResume = input.value(resumeOption) === true || input.value(resumeShortOption) === true;
+		const provider = input.value(providerOption);
+		const model = input.value(modelOption);
+		const pluginPackages = input.values(pluginPackageOption);
+		const promptArgs = input.remainingArgs[0] === "--" ? input.remainingArgs.slice(1) : input.remainingArgs;
+		const prompt =
+			promptArgs.length === 1 &&
+			(input.remainingArgs[0] === "--" || !promptArgs[0]!.startsWith("-")) &&
+			promptArgs[0]!.length > 0
+				? promptArgs[0]
+				: undefined;
+		const modelErrors = provider !== undefined && model === undefined ? ["--provider requires --model"] : [];
+		const sessionSelectionErrors =
+			[sessionId !== undefined, shouldContinue, shouldResume].filter(Boolean).length > 1
+				? ["--session-id, --continue, and --resume are mutually exclusive"]
+				: [];
+		const unsupportedErrors =
+			input.remainingArgs.length === 0 || prompt !== undefined ? [] : unsupportedOptions("client", input);
+		const errors = [...authErrors, ...modelErrors, ...sessionSelectionErrors, ...unsupportedErrors];
 		if (errors.length > 0) return { ok: false, errors };
 		return {
 			ok: true,
@@ -46,6 +91,13 @@ export const clientCommand = new Command<ClientCommand, ClientCommandContext>("c
 				command: "client",
 				...(auth === undefined ? {} : { auth }),
 				...(connect === undefined ? {} : { connect }),
+				...(sessionId === undefined ? {} : { sessionId }),
+				...(shouldContinue ? { continue: true } : {}),
+				...(shouldResume ? { resume: true } : {}),
+				...(provider === undefined ? {} : { provider }),
+				...(model === undefined ? {} : { model }),
+				...(pluginPackages.length === 0 ? {} : { pluginPackages }),
+				...(prompt === undefined ? {} : { prompt }),
 			},
 		};
 	})

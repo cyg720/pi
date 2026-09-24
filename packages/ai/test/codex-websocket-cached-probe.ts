@@ -24,8 +24,8 @@ import {
 	resetOpenAICodexWebSocketDebugStats,
 	stream as streamOpenAICodexResponses,
 } from "../src/api/openai-codex-responses.ts";
-import { getModel } from "../src/compat.ts";
-import type { AssistantMessage, Context, Message, Model, Tool, ToolResultMessage, Transport } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
+import type { AssistantMessage, Message, Model, Tool, ToolResultMessage, Transport } from "../src/types.ts";
 
 /** 探针允许的推理强度。 */
 type ThinkingLevel = "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
@@ -211,14 +211,22 @@ async function main(): Promise<void> {
 	if (!apiKey) {
 		throw new Error("No OpenAI Codex API key found in coding-agent auth storage.");
 	}
+<<<<<<< HEAD
 	/** 在所有轮次之间持续增长的模型上下文。 */
 	const context: Context = {
+=======
+	const context = normalizeContext({
+>>>>>>> main
 		systemPrompt:
 			"You are participating in a benchmark. For each benchmark turn, call deterministic_probe exactly once before the final answer. Keep final answers minimal.",
 		messages: [],
 		tools: [deterministicProbeTool()],
+<<<<<<< HEAD
 	};
 	/** 每个用户轮次从开始到最终文本的耗时毫秒数。 */
+=======
+	});
+>>>>>>> main
 	const elapsed: number[] = [];
 	resetOpenAICodexWebSocketDebugStats(args.sessionId);
 

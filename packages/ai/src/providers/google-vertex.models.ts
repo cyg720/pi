@@ -12,8 +12,19 @@
  */
 
 import values from "./data/google-vertex.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const GOOGLE_VERTEX_MODELS: ModelCatalog<typeof values, "google-vertex"> =
 	flattenModelCatalog("google-vertex", values);
+=======
+export const GOOGLE_VERTEX_MODELS: ChatModelCatalog<typeof values, "google-vertex"> =
+	flattenChatModelCatalog("google-vertex", values);
+
+export const GOOGLE_VERTEX_IMAGE_MODELS: ImageModelCatalog<typeof values, "google-vertex"> =
+	flattenImageModelCatalog("google-vertex", values);
+
+export const GOOGLE_VERTEX_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "google-vertex"> =
+	flattenClassifierModelCatalog("google-vertex", values);
+>>>>>>> main

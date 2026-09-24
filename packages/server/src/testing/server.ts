@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-server` 包中的 `testing/server` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `../server.ts`、`../types.ts`、`./service.ts`，并通过 TypeScript 模块边界组织实现。
@@ -9,27 +10,33 @@
 import { PiServer } from "../server.ts";
 import type { PiServerOptions, PiServerService } from "../types.ts";
 import { TestServerService } from "./service.ts";
+=======
+import { Server } from "../server.ts";
+import type { ServerHost, ServerOptions } from "../types.ts";
+import { TestServerHost } from "./host.ts";
+>>>>>>> main
 
-export interface TestServerOptions extends PiServerOptions {
-	service?: PiServerService;
+export interface TestServerOptions extends Omit<ServerOptions, "serverId"> {
+	host?: ServerHost;
+	serverId?: string;
 }
 
 export interface TestServer {
-	server: PiServer;
-	service: PiServerService;
+	server: Server;
+	host: ServerHost;
 }
 
-/** Create an unstarted PiServer with deterministic defaults for transport conformance tests. */
+/** Create an unstarted Server with deterministic defaults for transport conformance tests. */
 export function createTestServer(options: TestServerOptions): TestServer {
-	const service = options.service ?? new TestServerService();
+	const host = options.host ?? new TestServerHost();
 	return {
-		server: new PiServer(service, {
+		server: new Server(host, {
 			listeners: options.listeners,
 			maxFrameLength: options.maxFrameLength,
 			handshakeTimeoutMs: options.handshakeTimeoutMs,
-			serverId: options.serverId,
+			serverId: options.serverId ?? "00000000-0000-4000-8000-000000000001",
 			onError: options.onError,
 		}),
-		service,
+		host,
 	};
 }

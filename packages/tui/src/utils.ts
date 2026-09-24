@@ -77,7 +77,18 @@ const widthCache = new Map<string, number>();
 export const cjkBreakRegex =
 	/[\p{Script_Extensions=Han}\p{Script_Extensions=Hiragana}\p{Script_Extensions=Katakana}\p{Script_Extensions=Hangul}\p{Script_Extensions=Bopomofo}]/u;
 
+<<<<<<< HEAD
 // 是否全为可打印 ASCII（私有）：快速路径判定
+=======
+// CJK letters remain part of words and paths; only punctuation can separate prose from completions.
+export const cjkPunctuationRegex = new RegExp(
+	`(?:(?=\\p{Punctuation})${cjkBreakRegex.source}|[，．：；！？（）［］｛｝“”‘’…—])`,
+	"u",
+);
+export const autocompleteSeparatorRegex = new RegExp(`(?:\\s|${cjkPunctuationRegex.source})`, "u");
+export const autocompleteBoundaryRegex = new RegExp(`(?:^|${autocompleteSeparatorRegex.source})`, "u");
+
+>>>>>>> main
 function isPrintableAscii(str: string): boolean {
 	for (let i = 0; i < str.length; i++) {
 		const code = str.charCodeAt(i);
@@ -740,7 +751,14 @@ class AnsiCodeTracker {
 		return result;
 	}
 
+<<<<<<< HEAD
 	// 是否有任何生效属性或超链接
+=======
+	getActiveBackgroundCode(): string {
+		return this.bgColor ? `\x1b[${this.bgColor}m` : "";
+	}
+
+>>>>>>> main
 	hasActiveCodes(): boolean {
 		return (
 			this.bold ||
@@ -789,6 +807,13 @@ function updateTrackerFromText(text: string, tracker: AnsiCodeTracker): void {
 			i++;
 		}
 	}
+}
+
+/** Return only the background color active at the end of an ANSI-styled string. */
+export function getActiveBackgroundAnsi(text: string): string {
+	const tracker = new AnsiCodeTracker();
+	updateTrackerFromText(text, tracker);
+	return tracker.getActiveBackgroundCode();
 }
 
 /**

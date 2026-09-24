@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-ai` 包中的 `models-store` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `./types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,9 +8,13 @@
  * 【新手阅读建议】先查看 `ModelsStoreEntry`、`ModelsStoreOperationOptions`、`ModelsStore`、`InMemoryModelsStore` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { Api, Model } from "./types.ts";
+=======
+import type { AnyModel } from "./types.ts";
+>>>>>>> main
 
 export interface ModelsStoreEntry {
-	models: readonly Model<Api>[];
+	/** Persisted models of every type. */
+	models: readonly AnyModel[];
 	/** Unix timestamp from the remote catalog's Last-Modified header. */
 	lastModified?: number;
 	/** Unix timestamp of the last completed remote check. */

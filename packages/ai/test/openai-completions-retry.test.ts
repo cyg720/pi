@@ -8,7 +8,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
-import type { Context, Model } from "../src/types.ts";
+import type { Model } from "../src/types.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 // OpenAI SDK 模拟状态；记录每次请求选项并按队列提供 withResponse 错误。
 const mockState = vi.hoisted(() => ({
@@ -77,12 +78,16 @@ const model: Model<"openai-completions"> = {
 	maxTokens: 100,
 };
 
+<<<<<<< HEAD
 // 固定单轮用户消息上下文，不包含工具。
 const context: Context = {
+=======
+const context = normalizeContext({
+>>>>>>> main
 	systemPrompt: "",
 	messages: [{ role: "user", content: [{ type: "text", text: "hi" }], timestamp: 0 }],
 	tools: [],
-};
+});
 
 /** 功能：启动并完全消费测试流；参数 options 可设置重试次数和最大延迟；返回：最终消息 Promise。示例：await consume({ maxRetries: 2 })。 */
 async function consume(options?: { maxRetries?: number; maxRetryDelayMs?: number }) {

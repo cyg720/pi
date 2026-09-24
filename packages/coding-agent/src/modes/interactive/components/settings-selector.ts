@@ -12,12 +12,14 @@ import {
 	Text,
 } from "@earendil-works/pi-tui";
 import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "../../../core/http-dispatcher.ts";
-import type {
-	DefaultProjectTrust,
-	FullscreenExitOutput,
-	MermaidRenderingMode,
-	TuiMode,
-	WarningSettings,
+import {
+	CACHE_WARMING_MODES,
+	type CacheWarmingMode,
+	type DefaultProjectTrust,
+	type FullscreenExitOutput,
+	type MermaidRenderingMode,
+	type TuiMode,
+	type WarningSettings,
 } from "../../../core/settings-manager.ts";
 import { getSettingsListTheme, parseAutoThemeSetting, type TerminalTheme, theme } from "../theme/theme.ts";
 import { DynamicBorder } from "./dynamic-border.ts";
@@ -64,6 +66,7 @@ export interface SettingsConfig {
 	followUpMode: "all" | "one-at-a-time";
 	transport: Transport;
 	httpIdleTimeoutMs: number;
+	cacheWarmingMode: CacheWarmingMode;
 	thinkingLevel: ThinkingLevel;
 	availableThinkingLevels: ThinkingLevel[];
 	modelThinkingLevels: Record<string, ThinkingLevel>;
@@ -103,6 +106,7 @@ export interface SettingsCallbacks {
 	onFollowUpModeChange: (mode: "all" | "one-at-a-time") => void;
 	onTransportChange: (transport: Transport) => void;
 	onHttpIdleTimeoutMsChange: (timeoutMs: number) => void;
+	onCacheWarmingModeChange: (mode: CacheWarmingMode) => void;
 	onModelThinkingLevelChange: (provider: string, modelId: string, level: ThinkingLevel) => void;
 	onModelThinkingLevelRemove: (provider: string, modelId: string) => void;
 	onThemeChange: (theme: string) => void;
@@ -195,20 +199,23 @@ function modelItemLabel(model: Model<any>): string {
 	return `${model.id} ${theme.fg("muted", `[${model.provider}]`)}`;
 }
 
-function themeItems(availableThemes: string[]): SelectItem[] {
-	return availableThemes.map((name) => ({ value: name, label: name }));
+function themeItems(availableThemes: string[], currentTheme: string): SelectItem[] {
+	return availableThemes.map((name) => ({
+		value: name,
+		label: `${name === currentTheme ? "✓ " : "  "}${name}`,
+	}));
 }
 
 const AUTOMATIC_THEME_VALUE = "/";
 
-function singleModeThemeItems(availableThemes: string[]): SelectItem[] {
+function singleModeThemeItems(availableThemes: string[], currentTheme: string): SelectItem[] {
 	return [
 		{
 			value: AUTOMATIC_THEME_VALUE,
-			label: "Automatic",
+			label: "  Automatic",
 			description: "Use separate themes for light and dark terminal appearance",
 		},
-		...themeItems(availableThemes),
+		...themeItems(availableThemes, currentTheme),
 	];
 }
 
@@ -289,7 +296,7 @@ class ThemeSubmenu extends Container {
 		const menu = new SelectSubmenu(
 			"Theme",
 			"Select a theme, or choose Automatic to follow terminal appearance.",
-			singleModeThemeItems(this.availableThemes),
+			singleModeThemeItems(this.availableThemes, this.singleTheme),
 			this.singleTheme,
 			(value) => {
 				if (value === AUTOMATIC_THEME_VALUE) {
@@ -405,7 +412,7 @@ class ThemeSubmenu extends Container {
 		return new SelectSubmenu(
 			title,
 			description,
-			themeItems(this.availableThemes),
+			themeItems(this.availableThemes, currentValue),
 			currentValue,
 			onSelect,
 			() => {
@@ -497,6 +504,14 @@ export class SettingsSelectorComponent extends Container {
 				values: HTTP_IDLE_TIMEOUT_CHOICES.map((choice) => choice.label),
 			},
 			{
+				id: "cache-warming-mode",
+				label: "Cache warming",
+				description:
+					"off; streaming while the agent runs; idle also between runs while continuation stays profitable",
+				currentValue: config.cacheWarmingMode,
+				values: [...CACHE_WARMING_MODES],
+			},
+			{
 				id: "hide-thinking",
 				label: "Hide thinking",
 				description: "Hide thinking blocks in assistant responses",
@@ -513,7 +528,7 @@ export class SettingsSelectorComponent extends Container {
 			{
 				id: "cache-miss-notices",
 				label: "Cache miss notices",
-				description: "Show transcript notices for significant prompt-cache misses and compaction costs",
+				description: "Show transcript notices for cache costs and provider recovery diagnostics",
 				currentValue: config.showCacheMissNotices ? "true" : "false",
 				values: ["true", "false"],
 			},
@@ -864,6 +879,9 @@ export class SettingsSelectorComponent extends Container {
 						}
 						break;
 					}
+					case "cache-warming-mode":
+						callbacks.onCacheWarmingModeChange(newValue as CacheWarmingMode);
+						break;
 					case "hide-thinking":
 						callbacks.onHideThinkingBlockChange(newValue === "true");
 						break;

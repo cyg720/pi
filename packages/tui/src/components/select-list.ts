@@ -13,7 +13,7 @@
  *              最后看 renderItem 双列布局的宽度分配细节。
  */
 import { getKeybindings } from "../keybindings.ts";
-import type { Component } from "../tui.ts";
+import type { Component, TuiMouseEvent, TuiMouseEventResult } from "../tui.ts";
 import { truncateToWidth, visibleWidth } from "../utils.ts";
 
 // 主列默认宽度（列数）
@@ -77,7 +77,11 @@ export class SelectList implements Component {
 	private filteredItems: SelectItem[] = [];
 	// 当前选中下标
 	private selectedIndex: number = 0;
+<<<<<<< HEAD
 	// 视口内最大可见条数
+=======
+	private mousePressedIndex: number | undefined;
+>>>>>>> main
 	private maxVisible: number = 5;
 	// 外观主题
 	private theme: SelectListTheme;
@@ -130,12 +134,16 @@ export class SelectList implements Component {
 		const primaryColumnWidth = this.getPrimaryColumnWidth();
 
 		// Calculate visible range with scrolling
+<<<<<<< HEAD
 		// 计算滚动窗口：尽量让选中项居中并钳制在合法范围
 		const startIndex = Math.max(
 			0,
 			Math.min(this.selectedIndex - Math.floor(this.maxVisible / 2), this.filteredItems.length - this.maxVisible),
 		);
 		const endIndex = Math.min(startIndex + this.maxVisible, this.filteredItems.length);
+=======
+		const { startIndex, endIndex } = this.getVisibleRange();
+>>>>>>> main
 
 		// Render visible items
 		for (let i = startIndex; i < endIndex; i++) {
@@ -157,7 +165,46 @@ export class SelectList implements Component {
 		return lines;
 	}
 
+<<<<<<< HEAD
 	// 输入处理：上/下循环移动并通知；Enter 确认；Esc 或 Ctrl+C 取消
+=======
+	handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+		if (this.filteredItems.length === 0) return undefined;
+		if (event.type === "wheel" && event.wheelDelta) {
+			const delta = event.wheelDelta < 0 ? -1 : 1;
+			const previousIndex = this.selectedIndex;
+			this.selectedIndex = Math.max(0, Math.min(this.filteredItems.length - 1, this.selectedIndex + delta));
+			if (this.selectedIndex !== previousIndex) this.notifySelectionChange();
+			return { handled: true, render: this.selectedIndex !== previousIndex };
+		}
+		// Hover must not change selection: the visible range is centered on it.
+		if (event.button !== "left" || (event.type !== "press" && event.type !== "click")) return undefined;
+		const { startIndex, endIndex } = this.getVisibleRange();
+		const itemIndex = startIndex + event.y;
+		if (itemIndex < startIndex || itemIndex >= endIndex) return undefined;
+
+		if (event.type === "press") {
+			this.mousePressedIndex = itemIndex;
+			if (this.selectedIndex !== itemIndex) {
+				this.selectedIndex = itemIndex;
+				this.notifySelectionChange();
+			}
+			return { handled: true, focus: true };
+		}
+		if (event.type === "click") {
+			const clickedIndex = this.mousePressedIndex ?? itemIndex;
+			this.mousePressedIndex = undefined;
+			const changed = this.selectedIndex !== clickedIndex;
+			this.selectedIndex = clickedIndex;
+			if (changed) this.notifySelectionChange();
+			const selectedItem = this.filteredItems[this.selectedIndex];
+			if (selectedItem) this.onSelect?.(selectedItem);
+			return { handled: true };
+		}
+		return undefined;
+	}
+
+>>>>>>> main
 	handleInput(keyData: string): void {
 		const kb = getKeybindings();
 		// Up arrow - wrap to bottom when at top
@@ -185,7 +232,21 @@ export class SelectList implements Component {
 		}
 	}
 
+<<<<<<< HEAD
 	// 渲染单行条目（私有）：有描述且空间充足时走双列布局，否则仅渲染主列
+=======
+	private getVisibleRange(): { startIndex: number; endIndex: number } {
+		const startIndex = Math.max(
+			0,
+			Math.min(this.selectedIndex - Math.floor(this.maxVisible / 2), this.filteredItems.length - this.maxVisible),
+		);
+		return {
+			startIndex,
+			endIndex: Math.min(startIndex + this.maxVisible, this.filteredItems.length),
+		};
+	}
+
+>>>>>>> main
 	private renderItem(
 		item: SelectItem,
 		isSelected: boolean,

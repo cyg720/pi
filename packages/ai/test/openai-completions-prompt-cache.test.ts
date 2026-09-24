@@ -8,7 +8,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
-import { getModel } from "../src/compat.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
 import type { Model } from "../src/types.ts";
 
 /** FakeOpenAI 构造函数中本测试关心的配置。 */
@@ -132,10 +132,10 @@ describe("openai-completions prompt caching", () => {
 	) {
 		await streamOpenAICompletions(
 			model,
-			{
+			normalizeContext({
 				systemPrompt: "sys",
 				messages: [{ role: "user", content: "hi", timestamp: Date.now() }],
-			},
+			}),
 			{ apiKey: "test-key", ...options },
 		).result();
 
@@ -224,6 +224,14 @@ describe("openai-completions prompt caching", () => {
 		},
 	);
 
+	it("sends Baseten session affinity for built-in catalog models", async () => {
+		const model = getModel("baseten", "zai-org/GLM-5.2");
+		const { headers } = await captureRequest({ sessionId: "baseten-catalog-session" }, model);
+
+		expect(headers["x-session-affinity"]).toBe("baseten-catalog-session");
+		expect(headers["x-client-request-id"]).toBe("baseten-catalog-session");
+	});
+
 	it("uses OpenAI no-session format when configured", async () => {
 		/** 使用 OpenAI no-session 亲和格式的模型。 */
 		const model = createModel({
@@ -257,6 +265,7 @@ describe("openai-completions prompt caching", () => {
 		expect(headers["x-session-affinity"]).toBeUndefined();
 	});
 
+<<<<<<< HEAD
 	it("auto-detects OpenRouter session-affinity header for OpenRouter endpoints", async () => {
 		/** 可从 provider/baseUrl 自动判断 OpenRouter 格式的模型。 */
 		const model = createModel({
@@ -265,6 +274,10 @@ describe("openai-completions prompt caching", () => {
 			compat: { sendSessionAffinityHeaders: true },
 		});
 		/** payload 与 headers 是 OpenRouter 兼容模型请求数据，用于确认不发送 OpenAI 私有字段。 */
+=======
+	it("sends OpenRouter session-affinity header by default for built-in OpenRouter models", async () => {
+		const model = getModel("openrouter", "auto");
+>>>>>>> main
 		const { payload, headers } = await captureRequest({ sessionId: "session-openrouter" }, model);
 
 		expect(payload?.session_id).toBeUndefined();
@@ -280,6 +293,7 @@ describe("openai-completions prompt caching", () => {
 		const model = createModel({
 			provider: "openrouter",
 			baseUrl: "https://openrouter.ai/api/v1",
+			compat: { sendSessionAffinityHeaders: false },
 		});
 		/** payload 与 headers 是按基础地址识别出的 OpenRouter 请求数据。 */
 		const { payload, headers } = await captureRequest({ sessionId: "session-openrouter" }, model);

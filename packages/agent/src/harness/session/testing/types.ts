@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-agent-core` 包中的 `harness/session/testing/types` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `../types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,17 +8,17 @@
  * 【新手阅读建议】先查看 `SessionBackendFixture`、`SessionBackendFixtureFactory`、`SessionBackendConformanceCase` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { SessionRepo } from "../types.ts";
+=======
+import type { Storage } from "../types.ts";
+>>>>>>> main
 
-/** A fresh backend instance owned by one conformance case. */
-export interface SessionBackendFixture extends AsyncDisposable {
-	readonly repository: SessionRepo;
+/** A fresh backend storage instance owned by one test or benchmark case. */
+export interface StorageFixture extends AsyncDisposable {
+	readonly storage: Storage;
 }
 
-/** Creates an isolated fixture for one conformance case. */
-export type SessionBackendFixtureFactory = () => Promise<SessionBackendFixture>;
-
 /** A runner-independent conformance case that can be registered with any test framework. */
-export interface SessionBackendConformanceCase {
+export interface ConformanceCase {
 	readonly group: string;
 	readonly name: string;
 	run(): Promise<void>;

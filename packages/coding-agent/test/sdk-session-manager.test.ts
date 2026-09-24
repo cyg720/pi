@@ -104,7 +104,7 @@ describe("createAgentSession session manager defaults", () => {
 		});
 
 		expect(session.sessionManager).toBe(sessionManager);
-		expect(session.systemPrompt).toContain(`Current working directory: ${sessionCwd}`);
+		expect(session.systemPrompt).toContain(`<cwd>\n${sessionCwd}\n</cwd>`);
 
 		// 会话注册的内置 Bash 工具；找不到时断言失败。
 		const bashTool = session.agent.state.tools.find((tool) => tool.name === "bash");

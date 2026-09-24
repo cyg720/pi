@@ -8,8 +8,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { convertResponsesMessages } from "../src/api/openai-responses-shared.ts";
-import { getModel } from "../src/compat.ts";
-import type { AssistantMessage, Context, ToolResultMessage, Usage } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
+import type { AssistantMessage, ToolResultMessage, Usage } from "../src/types.ts";
 
 /** 满足助手消息结构的零用量夹具。 */
 const usage: Usage = {
@@ -59,14 +59,18 @@ describe("OpenAI Responses convertResponsesMessages empty tool result", () => {
 			timestamp: now,
 		};
 
+<<<<<<< HEAD
 		/** 用户、工具调用和空工具结果组成的上下文。 */
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			messages: [
 				{ role: "user", content: "Run the command", timestamp: now - 1 },
 				assistant,
 				buildEmptyToolResult("tool-1", now + 1),
 			],
-		};
+		});
 
 		/** 转换后的 Responses 输入项。 */
 		const input = convertResponsesMessages(model, context, new Set(["openai", "openai-codex", "opencode"]));

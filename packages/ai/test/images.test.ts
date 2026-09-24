@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { getImageModel } from "../src/image-models.ts";
 import { generateImages } from "../src/images.ts";
-import type { ImageContent, ImagesContext, ImagesModel, ProviderImagesOptions } from "../src/types.ts";
+import type { ImageContent, ImageModel, ImagesContext, ProviderImagesOptions } from "../src/types.ts";
 
 // __filename 是当前 ESM 测试文件绝对路径。
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +22,7 @@ const __dirname = dirname(__filename);
 /** 表示提供商选项并允许端到端测试传入额外字段。 */
 type ImagesOptionsWithExtras = ProviderImagesOptions & Record<string, unknown>;
 
+<<<<<<< HEAD
 /**
  * 验证模型能完成最小图片生成。
  * 参数：model 为图片模型，options 为可选提供商设置。
@@ -30,6 +31,9 @@ type ImagesOptionsWithExtras = ProviderImagesOptions & Record<string, unknown>;
  */
 async function basicImageGeneration<TApi extends string>(model: ImagesModel<TApi>, options?: ImagesOptionsWithExtras) {
 	// context 是要求生成白底红圆的纯文本输入。
+=======
+async function basicImageGeneration<TApi extends string>(model: ImageModel<TApi>, options?: ImagesOptionsWithExtras) {
+>>>>>>> main
 	const context: ImagesContext = {
 		input: [{ type: "text", text: "Generate a simple red circle on a plain white background. No text." }],
 	};
@@ -44,6 +48,7 @@ async function basicImageGeneration<TApi extends string>(model: ImagesModel<TApi
 	expect(response.timestamp).toBeGreaterThan(0);
 }
 
+<<<<<<< HEAD
 /**
  * 在模型支持文字输出时验证同时返回文本与图片。
  * 参数：model 为图片模型，options 为可选设置。
@@ -79,6 +84,9 @@ async function handleTextAndImageOutput<TApi extends string>(
  * 使用示例：`await handleImageInput(model)`。
  */
 async function handleImageInput<TApi extends string>(model: ImagesModel<TApi>, options?: ImagesOptionsWithExtras) {
+=======
+async function handleImageInput<TApi extends string>(model: ImageModel<TApi>, options?: ImagesOptionsWithExtras) {
+>>>>>>> main
 	if (!model.input.includes("image")) {
 		console.log(`Skipping image input test - model ${model.id} doesn't support image input`);
 		return;
@@ -119,12 +127,15 @@ describe("Images E2E Tests", () => {
 				await basicImageGeneration(model);
 			});
 
+<<<<<<< HEAD
 			// 验证模型能同时输出文字和图片；无参数，无返回值。
 			it("should handle text plus image output", { retry: 3 }, async () => {
 				await handleTextAndImageOutput(model);
 			});
 
 			// 验证模型接受图片输入并生成变体；无参数，无返回值。
+=======
+>>>>>>> main
 			it("should handle image input", { retry: 3 }, async () => {
 				await handleImageInput(model);
 			});

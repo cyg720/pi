@@ -8,8 +8,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { convertResponsesMessages } from "../src/api/openai-responses-shared.ts";
-import { getModel } from "../src/compat.ts";
-import type { AssistantMessage, Context, ToolResultMessage, Usage } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
+import type { AssistantMessage, ToolResultMessage, Usage } from "../src/types.ts";
 import { shortHash } from "../src/utils/hash.ts";
 
 /** Copilot 返回的代表性超长原始工具调用 ID。 */
@@ -59,11 +59,15 @@ describe("OpenAI Responses foreign tool call ID normalization", () => {
 			isError: false,
 			timestamp: Date.now() - 1000,
 		};
+<<<<<<< HEAD
 		/** 用户、助手工具调用和工具结果组成的跨提供方上下文。 */
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			systemPrompt: "You are concise.",
 			messages: [{ role: "user", content: "Use the tool.", timestamp: Date.now() - 3000 }, assistant, toolResult],
-		};
+		});
 
 		/** 转换后的 Responses 输入项。 */
 		const input = convertResponsesMessages(model, context, new Set(["openai", "openai-codex", "opencode"]));

@@ -9,8 +9,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
 import { stream as streamAnthropic } from "../src/api/anthropic-messages.ts";
-import { getModel } from "../src/compat.ts";
-import type { Context } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
 
 /** 把事件数组编码成 SSE Response；events 为事件和 JSON 数据，返回状态 200 响应。 */
 function createSseResponse(events: Array<{ event: string; data: string }>): Response {
@@ -22,7 +21,7 @@ function createSseResponse(events: Array<{ event: string; data: string }>): Resp
 /** 创建 messages.create().asResponse() 返回固定响应的假客户端。 */
 function createFakeAnthropicClient(response: Response): Anthropic {
 	return {
-		messages: { create: () => ({ asResponse: async () => response }) },
+		beta: { messages: { create: () => ({ asResponse: async () => response }) } },
 	} as unknown as Anthropic;
 }
 
@@ -70,9 +69,13 @@ function eventsWithCacheCreation(
 }
 
 // claude-opus-4-8: input 5, cacheWrite (5m) 6.25 per Mtok. 1h write = 2x input = 10.
+<<<<<<< HEAD
 // Claude Opus 4.8：输入 5 美元/百万令牌，5m 缓存写入 6.25，1h 写入为输入价 2 倍即 10。
 // context 是触发一次请求的最小固定用户上下文。
 const context: Context = { messages: [{ role: "user", content: "hi", timestamp: Date.now() }] };
+=======
+const context = normalizeContext({ messages: [{ role: "user", content: "hi", timestamp: Date.now() }] });
+>>>>>>> main
 
 describe("Anthropic 1h cache write cost", () => {
 	// 验证 1h 部分按 10/Mtok，其余按 6.25/Mtok；无参数，无返回值。
@@ -83,8 +86,14 @@ describe("Anthropic 1h cache write cost", () => {
 		const response = createSseResponse(
 			eventsWithCacheCreation({ ephemeral_5m_input_tokens: 600_000, ephemeral_1h_input_tokens: 400_000 }),
 		);
+<<<<<<< HEAD
 		// result 是流解析器计算用量和费用后的助手结果。
 		const result = await streamAnthropic(model, context, { client: createFakeAnthropicClient(response) }).result();
+=======
+		const result = await streamAnthropic(model, context, {
+			client: createFakeAnthropicClient(response),
+		}).result();
+>>>>>>> main
 
 		expect(result.usage.cacheWrite).toBe(1_000_000);
 		expect(result.usage.cacheWrite1h).toBe(400_000);
@@ -93,14 +102,58 @@ describe("Anthropic 1h cache write cost", () => {
 		expect(result.usage.cost.cacheWrite).toBeCloseTo(7.75, 10);
 	});
 
+<<<<<<< HEAD
 	// 验证缺少缓存明细时全部按 5m 费率计算；无参数，无返回值。
+=======
+	// Regression for #9210: Vercel AI Gateway sends cache usage in message_delta, not message_start.
+	it("prices 1h cache writes reported only in message_delta", async () => {
+		const model = getModel("vercel-ai-gateway", "anthropic/claude-haiku-4.5");
+		const response = createSseResponse([
+			{
+				event: "message_start",
+				data: JSON.stringify({
+					type: "message_start",
+					message: { id: "msg_test", usage: { input_tokens: 0, output_tokens: 0 } },
+				}),
+			},
+			{
+				event: "message_delta",
+				data: JSON.stringify({
+					type: "message_delta",
+					delta: { stop_reason: "end_turn" },
+					usage: {
+						input_tokens: 3,
+						output_tokens: 4,
+						cache_creation_input_tokens: 6535,
+						cache_creation: { ephemeral_5m_input_tokens: 0, ephemeral_1h_input_tokens: 6535 },
+					},
+				}),
+			},
+			{ event: "message_stop", data: JSON.stringify({ type: "message_stop" }) },
+		]);
+		const result = await streamAnthropic(model, context, {
+			client: createFakeAnthropicClient(response),
+		}).result();
+
+		expect(result.usage.cacheWrite).toBe(6535);
+		expect(result.usage.cacheWrite1h).toBe(6535);
+		expect(result.usage.cost.cacheWrite).toBeCloseTo((6535 * model.cost.input * 2) / 1_000_000, 10);
+	});
+
+>>>>>>> main
 	it("falls back to the 5m rate when no breakdown is reported", async () => {
 		// model 是 Claude Opus 4.8 配置。
 		const model = getModel("anthropic", "claude-opus-4-8");
 		// response 只报告缓存写入总量。
 		const response = createSseResponse(eventsWithCacheCreation(undefined));
+<<<<<<< HEAD
 		// result 是回退费率计算后的助手结果。
 		const result = await streamAnthropic(model, context, { client: createFakeAnthropicClient(response) }).result();
+=======
+		const result = await streamAnthropic(model, context, {
+			client: createFakeAnthropicClient(response),
+		}).result();
+>>>>>>> main
 
 		expect(result.usage.cacheWrite).toBe(1_000_000);
 		expect(result.usage.cacheWrite1h ?? 0).toBe(0);

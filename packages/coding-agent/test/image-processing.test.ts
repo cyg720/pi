@@ -26,6 +26,9 @@ const TINY_PNG =
 const TINY_JPEG =
 	"/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAACAAIDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAVAQEBAAAAAAAAAAAAAAAAAAAGCf/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AD3VTB3/2Q==";
 
+const TINY_JPEG_2X1 =
+	"/9j/4AAQSkZJRgABAgAAAQABAAD/wAARCAABAAIDAREAAhEBAxEB/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD4H8Q/8h/Uv+vmX/0M1/o1wJ/ySWU/9g1D/wBNRMOM/wDkp8z/AOv9b/05I//Z";
+
 // 100x100 gray PNG
 // 100×100 灰色 PNG，用于触发尺寸上限缩放。
 /** 中等尺寸 PNG Base64 夹具。 */
@@ -48,7 +51,31 @@ function imageBytes(base64Data: string): Uint8Array {
 	return Buffer.from(base64Data, "base64");
 }
 
+<<<<<<< HEAD
 /** 覆盖图片格式转换到 PNG 的直通和转码路径。 */
+=======
+function app1Segment(payload: Uint8Array): Buffer {
+	const segment = Buffer.alloc(payload.length + 4);
+	segment[0] = 0xff;
+	segment[1] = 0xe1;
+	segment.writeUInt16BE(payload.length + 2, 2);
+	segment.set(payload, 4);
+	return segment;
+}
+
+function jpegWithXmpBeforeOrientation(): string {
+	const jpeg = Buffer.from(TINY_JPEG_2X1, "base64");
+	const xmp = app1Segment(Buffer.from('http://ns.adobe.com/xap/1.0/\0<x:xmpmeta xmlns:x="adobe:ns:meta/"/>'));
+	const orientation6 = app1Segment(
+		Buffer.concat([
+			Buffer.from("Exif\0\0"),
+			Buffer.from("49492a0008000000010012010300010000000600000000000000", "hex"),
+		]),
+	);
+	return Buffer.concat([jpeg.subarray(0, 2), xmp, orientation6, jpeg.subarray(2)]).toString("base64");
+}
+
+>>>>>>> main
 describe("convertToPng", () => {
 	it("should return original data for PNG input", async () => {
 		/** PNG 输入的转换结果，应原样返回数据。 */
@@ -77,6 +104,15 @@ describe("convertToPng", () => {
 		// 十六进制 0x4e 对应 ASCII 字符 N。
 		expect(buffer[3]).toBe(0x47); // 'G'
 		// 十六进制 0x47 对应 ASCII 字符 G。
+	});
+
+	it("should apply EXIF orientation after an XMP APP1 segment", async () => {
+		const result = await convertToPng(jpegWithXmpBeforeOrientation(), "image/jpeg");
+
+		expect(result).not.toBeNull();
+		const png = Buffer.from(result!.data, "base64");
+		expect(png.readUInt32BE(16)).toBe(1);
+		expect(png.readUInt32BE(20)).toBe(2);
 	});
 });
 

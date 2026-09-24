@@ -12,8 +12,12 @@ import { getModel, streamSimple } from "../src/compat.ts";
 // Empty tools arrays must NOT be serialized as `tools: []` — some OpenAI-compatible
 // backends (e.g. DashScope / Aliyun Qwen via compatible-mode) reject the request with
 // `"[] is too short - 'tools'"` (HTTP 400) when `--no-tools` produces an empty array.
+<<<<<<< HEAD
 // Regression for https://github.com/earendil-works/pi-mono/issues/<issue-number>
 // 空工具数组不能无条件序列化为 tools: []；部分兼容后端会返回 HTTP 400，但存在工具历史时仍需保留该字段。
+=======
+// Regression for https://github.com/earendil-works/pi/issues/3649
+>>>>>>> main
 
 /** 保存最后一次 Completions 请求参数和客户端构造选项。 */
 const mockState = vi.hoisted(() => ({

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+<<<<<<< HEAD
 /**
  * 【文件职责】Bun 独立二进制入口：注册静态 OAuth 流程 → 恢复沙箱环境变量 →
  *              注册 Bedrock 实现 → 转入标准 CLI。此入口解决动态导入在单文件二进制
@@ -22,3 +23,8 @@ restoreSandboxEnv();
 
 await import("./register-bedrock.ts");
 await import("../cli.ts");
+=======
+import "./sandbox-env-setup.ts";
+import "./runtime-setup.ts";
+import "../cli.ts";
+>>>>>>> main

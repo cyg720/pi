@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `utils/tool-result-images` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `@earendil-works/pi-ai`、`./image-process.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,6 +8,9 @@
  * 【新手阅读建议】先查看 `ToolResultContent`、`NormalizeToolResultImagesOptions`、`normalizeToolResultImages` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
+=======
+import type { ImageContent, ModelImageResizeOptions, TextContent } from "@earendil-works/pi-ai";
+>>>>>>> main
 import { processImage } from "./image-process.ts";
 
 export type ToolResultContent = TextContent | ImageContent;
@@ -14,6 +18,8 @@ export type ToolResultContent = TextContent | ImageContent;
 export interface NormalizeToolResultImagesOptions {
 	/** Whether oversized images are resized to inline provider limits. Default: true */
 	autoResizeImages?: boolean;
+	/** Model-specific resize profile. Uses the conservative built-in defaults when omitted. */
+	resizeOptions?: ModelImageResizeOptions;
 }
 
 /**
@@ -45,7 +51,10 @@ export async function normalizeToolResultImages(
 			continue;
 		}
 
-		const processed = await processImage(Buffer.from(block.data, "base64"), block.mimeType, { autoResizeImages });
+		const processed = await processImage(Buffer.from(block.data, "base64"), block.mimeType, {
+			autoResizeImages,
+			resizeOptions: options?.resizeOptions,
+		});
 		if (!processed.ok) {
 			// Unlike `read`, keep the original block. The tool already produced this image and the
 			// failure may just be an unavailable image backend, so passing it through preserves the

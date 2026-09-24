@@ -2,9 +2,18 @@ import type { AutocompleteProvider, AutocompleteSuggestions } from "../autocompl
 import { getKeybindings } from "../keybindings.ts";
 import { decodePrintableKey, matchesKey } from "../keys.ts";
 import { KillRing } from "../kill-ring.ts";
-import { type Component, CURSOR_MARKER, type Focusable, type TUI } from "../tui.ts";
+import {
+	type Component,
+	CURSOR_MARKER,
+	type Focusable,
+	type TUI,
+	type TuiMouseEvent,
+	type TuiMouseEventResult,
+} from "../tui.ts";
 import { UndoStack } from "../undo-stack.ts";
 import {
+	autocompleteBoundaryRegex,
+	autocompleteSeparatorRegex,
 	cjkBreakRegex,
 	getGraphemeSegmenter,
 	getWordSegmenter,
@@ -308,6 +317,10 @@ const SLASH_COMMAND_SELECT_LIST_LAYOUT: SelectListLayoutOptions = {
 const ATTACHMENT_AUTOCOMPLETE_DEBOUNCE_MS = 20;
 // 默认补全触发字符：@（附件/文件）与 #（斜杠命令）
 const DEFAULT_AUTOCOMPLETE_TRIGGER_CHARACTERS = ["@", "#"];
+// Unquoted completions end at whitespace or CJK punctuation; quoted paths may contain either.
+const unquotedAutocompleteSuffixRegex = new RegExp(`(?:(?!${autocompleteSeparatorRegex.source}).)*`, "u");
+// Trigger tokens may be wrapped in prose, e.g. "(@src/foo" or "`@src/foo".
+const autocompleteTokenStartSource = `${autocompleteBoundaryRegex.source}[([{<\`]*`;
 
 // 转义正则字符类中的元字符（私有）
 function escapeCharacterClass(value: string): string {
@@ -316,19 +329,32 @@ function escapeCharacterClass(value: string): string {
 
 // 构建触发模式（私有）：词元开头紧跟任一触发字符且之后无空白
 function buildTriggerPattern(triggerCharacters: string[]): RegExp {
-	return new RegExp(`(?:^|[\\s])[${triggerCharacters.map(escapeCharacterClass).join("")}][^\\s]*$`);
+	return new RegExp(
+		`${autocompleteTokenStartSource}(?:@"[^"]*|[${triggerCharacters.map(escapeCharacterClass).join("")}]${unquotedAutocompleteSuffixRegex.source})$`,
+		"u",
+	);
 }
 
 // 构建防抖模式（私有）：仅对非 @ 的触发字符做防抖（@ 附件始终即时）；
 // 支持 @"路径 与 /命令 两种形态
 function buildDebouncePattern(triggerCharacters: string[]): RegExp {
 	const escapedWithoutAt = triggerCharacters.filter((character) => character !== "@").map(escapeCharacterClass);
-	return new RegExp(`(?:^|[ \\t])(?:@(?:"[^"]*|[^\\s]*)|[${escapedWithoutAt.join("")}][^\\s]*)$`);
+	return new RegExp(
+		`${autocompleteTokenStartSource}(?:@(?:"[^"]*|${unquotedAutocompleteSuffixRegex.source})|[${escapedWithoutAt.join("")}]${unquotedAutocompleteSuffixRegex.source})$`,
+		"u",
+	);
 }
 
 // 生成滚动边框行（私有）：指示方向与隐藏行数；空间不足时用省略号截断
 function createScrollBorder(direction: "↑" | "↓", hiddenLineCount: number, width: number): string {
 	const availableWidth = Math.max(0, width);
+	const label = ` ${direction} ${hiddenLineCount} more `;
+	const labelWidth = visibleWidth(label);
+	if (labelWidth + 2 <= availableWidth) {
+		const leftWidth = Math.floor((availableWidth - labelWidth) / 2);
+		return "─".repeat(leftWidth) + label + "─".repeat(availableWidth - leftWidth - labelWidth);
+	}
+
 	const indicator = `─── ${direction} ${hiddenLineCount} more `;
 	const remaining = availableWidth - visibleWidth(indicator);
 	if (remaining >= 0) return indicator + "─".repeat(remaining);
@@ -356,8 +382,10 @@ export class Editor implements Component, Focusable {
 	private theme: EditorTheme;
 	private paddingX: number = 0;
 
-	// Store last render width for cursor navigation
+	// Store last render geometry for cursor navigation and mouse hit-testing.
 	private lastWidth: number = 80;
+	private renderedVisibleLineCount = 1;
+	private renderedAutocompleteHeight = 0;
 
 	// Vertical scrolling support
 	private scrollOffset: number = 0;
@@ -581,8 +609,21 @@ export class Editor implements Component, Focusable {
 		// No cached state to invalidate currently
 	}
 
+<<<<<<< HEAD
 	// 渲染（公开）：布局文本 → 滚动定位保持光标可见 → 顶部边框（可含上滚指示）→
 	// 逐行绘制（含伪光标反显与硬件光标标记）→ 底部边框（可含下滚指示）→ 补全列表
+=======
+	protected renderTopBorder(width: number, hiddenLineCount: number): string {
+		const border = hiddenLineCount > 0 ? createScrollBorder("↑", hiddenLineCount, width) : "─".repeat(width);
+		return this.borderColor(border);
+	}
+
+	protected renderBottomBorder(width: number, hiddenLineCount: number): string {
+		const border = hiddenLineCount > 0 ? createScrollBorder("↓", hiddenLineCount, width) : "─".repeat(width);
+		return this.borderColor(border);
+	}
+
+>>>>>>> main
 	render(width: number): string[] {
 		const maxPadding = Math.max(0, Math.floor((width - 1) / 2));
 		const paddingX = Math.min(this.paddingX, maxPadding);
@@ -596,8 +637,6 @@ export class Editor implements Component, Focusable {
 		// Store for cursor navigation (must match wrapping width)
 		// 记录布局宽度供光标导航使用（必须与折行宽度一致）
 		this.lastWidth = layoutWidth;
-
-		const horizontal = this.borderColor("─");
 
 		// Layout the text
 		const layoutLines = this.layoutText(layoutWidth);
@@ -626,12 +665,14 @@ export class Editor implements Component, Focusable {
 		// Get visible lines slice
 		// 取出可见窗口内的布局行
 		const visibleLines = layoutLines.slice(this.scrollOffset, this.scrollOffset + maxVisibleLines);
+		this.renderedVisibleLineCount = visibleLines.length;
 
 		const result: string[] = [];
 		const leftPadding = " ".repeat(paddingX);
 		const rightPadding = leftPadding;
 
 		// Render top border (with scroll indicator if scrolled down)
+<<<<<<< HEAD
 		// 顶部边框：滚下去时显示上滚指示
 		if (this.scrollOffset > 0) {
 			const border = createScrollBorder("↑", this.scrollOffset, width);
@@ -639,6 +680,9 @@ export class Editor implements Component, Focusable {
 		} else {
 			result.push(horizontal.repeat(width));
 		}
+=======
+		result.push(this.renderTopBorder(width, this.scrollOffset));
+>>>>>>> main
 
 		// Render each visible layout line
 		// Emit hardware cursor marker when focused so TUI can position the
@@ -696,17 +740,17 @@ export class Editor implements Component, Focusable {
 		// Render bottom border (with scroll indicator if more content below)
 		// 底部边框：还有内容时显示下滚指示
 		const linesBelow = layoutLines.length - (this.scrollOffset + visibleLines.length);
-		if (linesBelow > 0) {
-			const border = createScrollBorder("↓", linesBelow, width);
-			result.push(this.borderColor(border));
-		} else {
-			result.push(horizontal.repeat(width));
-		}
+		result.push(this.renderBottomBorder(width, linesBelow));
 
 		// Add autocomplete list if active
+<<<<<<< HEAD
 		// 补全激活时把选择列表渲染在编辑器下方
+=======
+		this.renderedAutocompleteHeight = 0;
+>>>>>>> main
 		if (this.autocompleteState && this.autocompleteList) {
 			const autocompleteResult = this.autocompleteList.render(contentWidth);
+			this.renderedAutocompleteHeight = autocompleteResult.length;
 			for (const line of autocompleteResult) {
 				const lineWidth = visibleWidth(line);
 				const linePadding = " ".repeat(Math.max(0, contentWidth - lineWidth));
@@ -717,8 +761,74 @@ export class Editor implements Component, Focusable {
 		return result;
 	}
 
+<<<<<<< HEAD
 	// 输入分发主入口（公开）：跳转模式 → 括号粘贴状态机 → Ctrl+C 让出 →
 	// 撤销 → 补全模式按键（取消/上下/应用）→ Tab 触发 → 其余按键逐项分发给具体处理
+=======
+	handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+		const autocompleteStartRow = this.renderedVisibleLineCount + 2;
+		if (
+			this.autocompleteState &&
+			this.autocompleteList &&
+			event.y >= autocompleteStartRow &&
+			event.y < autocompleteStartRow + this.renderedAutocompleteHeight
+		) {
+			const maxPadding = Math.max(0, Math.floor((event.width - 1) / 2));
+			const paddingX = Math.min(this.paddingX, maxPadding);
+			const contentWidth = Math.max(1, event.width - paddingX * 2);
+			const result = this.autocompleteList.handleMouse?.({
+				...event,
+				x: event.x - paddingX,
+				y: event.y - autocompleteStartRow,
+				width: contentWidth,
+				height: this.renderedAutocompleteHeight,
+			});
+			return result ? { ...result, focus: true } : undefined;
+		}
+
+		// Leave press/drag/release unhandled so the renderer's screen-level text
+		// selection can run over the editor rows (drag to select, release to copy).
+		// The renderer synthesizes a click when press and release land on the same
+		// cell without movement, which is the gesture that positions the cursor.
+		if (event.type !== "click" || event.button !== "left") return undefined;
+		if (event.y <= 0 || event.y > this.renderedVisibleLineCount) return { handled: true, focus: true };
+
+		const visualLines = this.buildVisualLineMap(this.lastWidth);
+		const visualLineIndex = this.scrollOffset + event.y - 1;
+		const visualLine = visualLines[visualLineIndex];
+		if (!visualLine) return { handled: true, focus: true };
+		const logicalLine = this.state.lines[visualLine.logicalLine] ?? "";
+		const chunkEnd = visualLine.startCol + visualLine.length;
+		const chunk = logicalLine.slice(visualLine.startCol, chunkEnd);
+		const maxPadding = Math.max(0, Math.floor((event.width - 1) / 2));
+		const paddingX = Math.min(this.paddingX, maxPadding);
+		const targetColumn = Math.max(0, event.x - paddingX);
+		let visibleColumn = 0;
+		let targetIndex = chunk.length;
+		let lastGraphemeIndex = 0;
+		for (const grapheme of this.segment(chunk, "grapheme")) {
+			const nextColumn = visibleColumn + visibleWidth(grapheme.segment);
+			lastGraphemeIndex = grapheme.index;
+			if (targetColumn < nextColumn) {
+				targetIndex = grapheme.index;
+				break;
+			}
+			visibleColumn = nextColumn;
+		}
+		const isLastSegment =
+			visualLineIndex === visualLines.length - 1 ||
+			visualLines[visualLineIndex + 1]?.logicalLine !== visualLine.logicalLine;
+		if (!isLastSegment && targetIndex === chunk.length && chunk.length > 0) targetIndex = lastGraphemeIndex;
+
+		this.state.cursorLine = visualLine.logicalLine;
+		this.setCursorCol(visualLine.startCol + targetIndex);
+		this.lastAction = null;
+		this.exitHistoryBrowsing();
+		if (this.autocompleteState) this.updateAutocomplete();
+		return { handled: true, focus: true };
+	}
+
+>>>>>>> main
 	handleInput(data: string): void {
 		const kb = getKeybindings();
 
@@ -1274,13 +1384,12 @@ export class Editor implements Component, Focusable {
 			else if (this.autocompleteTriggerCharacters.includes(char)) {
 				const currentLine = this.state.lines[this.state.cursorLine] || "";
 				const textBeforeCursor = currentLine.slice(0, this.state.cursorCol);
-				const charBeforeSymbol = textBeforeCursor[textBeforeCursor.length - 2];
-				if (textBeforeCursor.length === 1 || charBeforeSymbol === " " || charBeforeSymbol === "\t") {
+				if (this.autocompleteTriggerPattern.test(textBeforeCursor)) {
 					this.tryTriggerAutocomplete();
 				}
 			}
 			// Also auto-trigger when typing letters in a slash command or symbol completion context
-			else if (/[a-zA-Z0-9.\-_]/.test(char)) {
+			else if (/[a-zA-Z0-9.\-_]/.test(char) || cjkBreakRegex.test(char)) {
 				const currentLine = this.state.lines[this.state.cursorLine] || "";
 				const textBeforeCursor = currentLine.slice(0, this.state.cursorCol);
 				// Check if we're in a slash command (with or without space for arguments)
@@ -2315,7 +2424,25 @@ export class Editor implements Component, Focusable {
 		items: Array<{ value: string; label: string; description?: string }>,
 	): SelectList {
 		const layout = prefix.startsWith("/") ? SLASH_COMMAND_SELECT_LIST_LAYOUT : undefined;
-		return new SelectList(items, this.autocompleteMaxVisible, this.theme.selectList, layout);
+		const list = new SelectList(items, this.autocompleteMaxVisible, this.theme.selectList, layout);
+		list.onSelect = (selected) => {
+			if (!this.autocompleteProvider) return;
+			this.pushUndoSnapshot();
+			this.lastAction = null;
+			const result = this.autocompleteProvider.applyCompletion(
+				this.state.lines,
+				this.state.cursorLine,
+				this.state.cursorCol,
+				selected,
+				this.autocompletePrefix,
+			);
+			this.state.lines = result.lines;
+			this.state.cursorLine = result.cursorLine;
+			this.setCursorCol(result.cursorCol);
+			this.cancelAutocomplete();
+			this.onChange?.(this.getText());
+		};
+		return list;
 	}
 
 	// 尝试触发补全（私有）：Tab 显式触发或输入触发字符时请求

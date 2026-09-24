@@ -71,13 +71,17 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
 
 import type { BedrockOptions } from "../src/api/bedrock-converse-stream.ts";
 import { stream as streamBedrock, streamSimple as streamSimpleBedrock } from "../src/api/bedrock-converse-stream.ts";
-import { getModel } from "../src/compat.ts";
-import type { Context, Model } from "../src/types.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
+import type { Model } from "../src/types.ts";
 
+<<<<<<< HEAD
 // context 是所有 Bedrock 流共享的单条用户消息。
 const context: Context = {
+=======
+const context = normalizeContext({
+>>>>>>> main
 	messages: [{ role: "user", content: "hello", timestamp: Date.now() }],
-};
+});
 
 // MIDDLEWARE_NAME 是被测自定义 Header 中间件的固定注册名。
 const MIDDLEWARE_NAME = "pi-ai-custom-headers";

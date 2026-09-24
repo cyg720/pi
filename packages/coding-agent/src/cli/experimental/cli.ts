@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-coding-agent` 包中的 `cli/experimental/cli` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `./commands/client.ts`、`./commands/pi.ts`、`./commands/server.ts`，并通过 TypeScript 模块边界组织实现。
@@ -6,10 +7,21 @@
  * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
  * 【新手阅读建议】先查看 `ExperimentalCliContext`、`experimentalCli` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
+=======
+import { Command } from "./command.ts";
+>>>>>>> main
 import { type ClientCommandContext, clientCommand } from "./commands/client.ts";
-import { type PiCommandContext, piCommand } from "./commands/pi.ts";
 import { type ServerCommandContext, serverCommand } from "./commands/server.ts";
 
-export type ExperimentalCliContext = PiCommandContext & ServerCommandContext & ClientCommandContext;
+interface ExperimentalCommandGroup {
+	readonly command: "experimental";
+}
 
-export const experimentalCli = piCommand.command(serverCommand).command(clientCommand);
+export type CliContext = ServerCommandContext & ClientCommandContext;
+
+const experimentalCommand = new Command<ExperimentalCommandGroup, CliContext>("experimental").build(() => ({
+	ok: false,
+	errors: ["Expected experimental command: server or client"],
+}));
+
+export const cli = experimentalCommand.command(serverCommand).command(clientCommand);

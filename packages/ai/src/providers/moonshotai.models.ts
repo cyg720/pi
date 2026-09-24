@@ -12,8 +12,19 @@
  */
 
 import values from "./data/moonshotai.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const MOONSHOTAI_MODELS: ModelCatalog<typeof values, "moonshotai"> =
 	flattenModelCatalog("moonshotai", values);
+=======
+export const MOONSHOTAI_MODELS: ChatModelCatalog<typeof values, "moonshotai"> =
+	flattenChatModelCatalog("moonshotai", values);
+
+export const MOONSHOTAI_IMAGE_MODELS: ImageModelCatalog<typeof values, "moonshotai"> =
+	flattenImageModelCatalog("moonshotai", values);
+
+export const MOONSHOTAI_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "moonshotai"> =
+	flattenClassifierModelCatalog("moonshotai", values);
+>>>>>>> main

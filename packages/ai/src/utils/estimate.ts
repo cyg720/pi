@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】上下文 token 估算：用"供应商精确用量 + 尾部启发式"合成上下文 token 估算，
  *              供压缩决策/界面显示等使用（不替代真实计价）。
@@ -13,6 +14,10 @@
  *              最后看 estimateContextTokens 的合成逻辑。
  */
 import type { AssistantMessage, Context, ImageContent, Message, TextContent, Tool, Usage } from "../types.ts";
+=======
+import type { AssistantMessage, ImageContent, Message, TextContent, TranscriptContext, Usage } from "../types.ts";
+import { getSystemMessageText } from "./text.ts";
+>>>>>>> main
 
 /** 上下文用量估算结果（中文说明）：tokens 估算总量；usageTokens 最近有效用量；
  * trailingTokens 该用量之后消息的估算；lastUsageIndex 提供用量的消息下标（无则 null）。 */
@@ -74,6 +79,13 @@ export function estimateTextAndImageContentTokens(content: string | Array<TextCo
 export function estimateMessageTokens(message: Message): number {
 	let chars = 0;
 
+	if (message.role === "system") {
+		return (
+			estimateTextTokens(getSystemMessageText(message)) +
+			estimateToolsTokens(message.toolsAdded) +
+			estimateToolsTokens(message.toolsRemoved)
+		);
+	}
 	if (message.role === "user") return estimateTextAndImageContentTokens(message.content);
 	if (message.role === "toolResult") return estimateTextAndImageContentTokens(message.content);
 
@@ -117,8 +129,13 @@ function getLastAssistantUsageInfo(messages: readonly Message[]): { usage: Usage
 	return usageInfo;
 }
 
+<<<<<<< HEAD
 // 消息数组估算（私有）：有有效用量则"精确值+尾部估算"；否则全量启发式
 function estimateMessages(messages: readonly Message[]): ContextUsageEstimate {
+=======
+export function estimateContextTokens(context: TranscriptContext | readonly Message[]): ContextUsageEstimate {
+	const messages = "messages" in context ? context.messages : context;
+>>>>>>> main
 	const usageInfo = getLastAssistantUsageInfo(messages);
 	if (usageInfo) {
 		const usageTokens = calculateContextTokens(usageInfo.usage);
@@ -134,6 +151,7 @@ function estimateMessages(messages: readonly Message[]): ContextUsageEstimate {
 	return { tokens, usageTokens: 0, trailingTokens: tokens, lastUsageIndex: null };
 }
 
+<<<<<<< HEAD
 // 工具定义 token 估算（私有）：整体 JSON 化后按文本估算
 function estimateToolsTokens(tools: readonly Tool[] | undefined): number {
 	if (!tools || tools.length === 0) return 0;
@@ -179,3 +197,9 @@ export function estimateContextTokens(context: Context | readonly Message[]): Co
 		lastUsageIndex: estimate.lastUsageIndex,
 	};
 }
+=======
+function estimateToolsTokens(tools: readonly unknown[] | undefined): number {
+	if (!tools || tools.length === 0) return 0;
+	return estimateTextTokens(safeJsonStringify(tools));
+}
+>>>>>>> main

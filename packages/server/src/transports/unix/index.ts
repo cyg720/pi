@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-server` 包中的 `transports/unix/index` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `./listener.ts`、`./preset.ts`、`./types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -6,6 +7,9 @@
  * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
  * 【新手阅读建议】先查看各条重导出语句，再进入对应子模块阅读具体类型与实现。
  */
+=======
+export { getUnixSocketPath } from "./address.ts";
+>>>>>>> main
 export { createUnixListener } from "./listener.ts";
 export { createUnixServer } from "./preset.ts";
 export type { UnixListenerOptions, UnixServerOptions } from "./types.ts";

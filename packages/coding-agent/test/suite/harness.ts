@@ -95,9 +95,12 @@ export interface HarnessOptions {
 	models?: FauxModelDefinition[];
 	/** 内存设置管理器的部分初始设置。 */
 	settings?: Partial<Settings>;
+<<<<<<< HEAD
 	/** Agent 初始系统提示词。 */
 	systemPrompt?: string;
 	/** 可供会话使用的工具实现。 */
+=======
+>>>>>>> main
 	tools?: AgentTool[];
 	/** 初始启用的工具名。 */
 	initialActiveToolNames?: string[];
@@ -212,6 +215,7 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 				api: registeredModel.api,
 				reasoning: registeredModel.reasoning,
 				input: registeredModel.input,
+				inputLimits: registeredModel.inputLimits,
 				cost: registeredModel.cost,
 				contextWindow: registeredModel.contextWindow,
 				maxTokens: registeredModel.maxTokens,
@@ -226,7 +230,7 @@ export async function createHarness(options: HarnessOptions = {}): Promise<Harne
 		streamFn: streamSimple,
 		initialState: {
 			model,
-			systemPrompt: options.systemPrompt ?? "You are a test assistant.",
+			systemPrompt: "",
 			tools: [],
 		},
 		convertToLlm,

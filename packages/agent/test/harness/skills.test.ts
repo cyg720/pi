@@ -9,6 +9,7 @@
 import { symlink } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { BACKGROUND_CONTEXT } from "../../src/harness/context.ts";
 import { NodeExecutionEnv } from "../../src/harness/env/nodejs.ts";
 import { loadSkills, loadSourcedSkills } from "../../src/harness/skills.ts";
 import { createTempDir } from "./session-test-utils.ts";
@@ -19,7 +20,7 @@ describe("loadSkills", () => {
 		const root = createTempDir();
 		// 绑定 root 的 Node 执行环境，所有相对路径都从该目录解析。
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir(".agents/skills/example", { recursive: true });
+		await env.createDir(".agents/skills/example", { recursive: true }, BACKGROUND_CONTEXT);
 		await env.writeFile(
 			".agents/skills/example/SKILL.md",
 			`---
@@ -29,10 +30,15 @@ disable-model-invocation: true
 ---
 Use this skill.
 `,
+			BACKGROUND_CONTEXT,
 		);
 
+<<<<<<< HEAD
 		// 技能加载结果与非致命诊断；合法文件应得到一项技能且无诊断。
 		const { skills, diagnostics } = await loadSkills(env, ".agents/skills");
+=======
+		const { skills, diagnostics } = await loadSkills(env, ".agents/skills", BACKGROUND_CONTEXT);
+>>>>>>> main
 
 		expect(diagnostics).toEqual([]);
 		expect(skills).toEqual([
@@ -51,15 +57,20 @@ Use this skill.
 		const root = createTempDir();
 		// 用于创建和读取真实目录树的执行环境。
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir("actual/example", { recursive: true });
+		await env.createDir("actual/example", { recursive: true }, BACKGROUND_CONTEXT);
 		await env.writeFile(
 			"actual/example/SKILL.md",
 			"---\nname: example\ndescription: Example skill\n---\nUse this skill.",
+			BACKGROUND_CONTEXT,
 		);
 		await symlink(join(root, "actual"), join(root, "skills-link"));
 
+<<<<<<< HEAD
 		// 从符号链接入口发现的技能集合。
 		const { skills } = await loadSkills(env, "skills-link");
+=======
+		const { skills } = await loadSkills(env, "skills-link", BACKGROUND_CONTEXT);
+>>>>>>> main
 
 		expect(skills.map((skill) => skill.name)).toEqual(["example"]);
 		expect(skills[0]?.filePath).toBe(join(root, "skills-link/example/SKILL.md"));
@@ -70,16 +81,26 @@ Use this skill.
 		const root = createTempDir();
 		// 绑定临时目录的 Node 执行环境。
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir("user/example", { recursive: true });
+		await env.createDir("user/example", { recursive: true }, BACKGROUND_CONTEXT);
 		await env.writeFile(
 			"user/example/SKILL.md",
 			"---\nname: example\ndescription: Example skill\n---\nUse this skill.",
+			BACKGROUND_CONTEXT,
 		);
 
+<<<<<<< HEAD
 		// 带来源包装的技能与诊断；source 应保留 user 类型。
 		const { skills, diagnostics } = await loadSourcedSkills(env, [
 			{ path: "user", source: { type: "user" as const } },
 		]);
+=======
+		const { skills, diagnostics } = await loadSourcedSkills(
+			env,
+			[{ path: "user", source: { type: "user" as const } }],
+			undefined,
+			BACKGROUND_CONTEXT,
+		);
+>>>>>>> main
 
 		expect(diagnostics).toEqual([]);
 		expect(skills).toEqual([
@@ -101,13 +122,22 @@ Use this skill.
 		const root = createTempDir();
 		// 负责写入缺少 description 文件并加载它的执行环境。
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir("user/broken", { recursive: true });
-		await env.writeFile("user/broken/SKILL.md", "---\nname: broken\n---\nMissing description.");
+		await env.createDir("user/broken", { recursive: true }, BACKGROUND_CONTEXT);
+		await env.writeFile("user/broken/SKILL.md", "---\nname: broken\n---\nMissing description.", BACKGROUND_CONTEXT);
 
+<<<<<<< HEAD
 		// 无效技能的空结果与警告诊断；诊断必须携带 user 来源。
 		const { skills, diagnostics } = await loadSourcedSkills(env, [
 			{ path: "user", source: { type: "user" as const } },
 		]);
+=======
+		const { skills, diagnostics } = await loadSourcedSkills(
+			env,
+			[{ path: "user", source: { type: "user" as const } }],
+			undefined,
+			BACKGROUND_CONTEXT,
+		);
+>>>>>>> main
 
 		expect(skills).toEqual([]);
 		expect(diagnostics).toEqual([
@@ -126,12 +156,20 @@ Use this skill.
 		const root = createTempDir();
 		// 用于创建根文件和嵌套文件的执行环境。
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir("skills/nested", { recursive: true });
-		await env.writeFile("skills/root.md", "---\ndescription: Root skill\n---\nRoot content");
-		await env.writeFile("skills/nested/ignored.md", "---\ndescription: Ignored\n---\nIgnored content");
+		await env.createDir("skills/nested", { recursive: true }, BACKGROUND_CONTEXT);
+		await env.writeFile("skills/root.md", "---\ndescription: Root skill\n---\nRoot content", BACKGROUND_CONTEXT);
+		await env.writeFile(
+			"skills/nested/ignored.md",
+			"---\ndescription: Ignored\n---\nIgnored content",
+			BACKGROUND_CONTEXT,
+		);
 
+<<<<<<< HEAD
 		// 从 skills 根目录加载的技能；嵌套 ignored.md 不应出现。
 		const { skills } = await loadSkills(env, "skills");
+=======
+		const { skills } = await loadSkills(env, "skills", BACKGROUND_CONTEXT);
+>>>>>>> main
 
 		expect(skills.map((skill) => skill.name)).toEqual(["skills"]);
 		expect(skills[0]?.content).toBe("Root content");
@@ -140,17 +178,18 @@ Use this skill.
 	it("ignores root markdown docs that do not declare skills", async () => {
 		const root = createTempDir();
 		const env = new NodeExecutionEnv({ cwd: root });
-		await env.createDir("skills/nested-skill", { recursive: true });
-		await env.writeFile("skills/README.md", "# Shared skills\n\nDocumentation.");
-		await env.writeFile("skills/AGENTS.md", "# Agent notes\n\nDocumentation.");
-		await env.writeFile("skills/CLAUDE.md", "---\ndescription: [invalid\n---\n\nDocumentation.");
-		await env.writeFile("skills/root.md", "---\ndescription: Root skill\n---\nRoot content");
+		await env.createDir("skills/nested-skill", { recursive: true }, BACKGROUND_CONTEXT);
+		await env.writeFile("skills/README.md", "# Shared skills\n\nDocumentation.", BACKGROUND_CONTEXT);
+		await env.writeFile("skills/AGENTS.md", "# Agent notes\n\nDocumentation.", BACKGROUND_CONTEXT);
+		await env.writeFile("skills/CLAUDE.md", "---\ndescription: [invalid\n---\n\nDocumentation.", BACKGROUND_CONTEXT);
+		await env.writeFile("skills/root.md", "---\ndescription: Root skill\n---\nRoot content", BACKGROUND_CONTEXT);
 		await env.writeFile(
 			"skills/nested-skill/SKILL.md",
 			"---\nname: nested-skill\ndescription: Nested skill\n---\nNested content",
+			BACKGROUND_CONTEXT,
 		);
 
-		const { skills, diagnostics } = await loadSkills(env, "skills");
+		const { skills, diagnostics } = await loadSkills(env, "skills", BACKGROUND_CONTEXT);
 
 		expect(diagnostics).toEqual([]);
 		expect(skills.map((skill) => skill.name).sort()).toEqual(["nested-skill", "skills"]);

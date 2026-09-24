@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-server` 包中的 `transports/unix/types` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `../../types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -7,6 +8,9 @@
  * 【新手阅读建议】先查看 `UnixListenerOptions`、`UnixServerOptions` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { PiServerOptions } from "../../types.ts";
+=======
+import type { ServerOptions } from "../../types.ts";
+>>>>>>> main
 
 export interface UnixListenerOptions {
 	path: string;
@@ -20,4 +24,4 @@ export interface UnixListenerOptions {
 	onError?: (error: Error) => void;
 }
 
-export interface UnixServerOptions extends Omit<PiServerOptions, "listeners">, UnixListenerOptions {}
+export interface UnixServerOptions extends Omit<ServerOptions, "listeners">, UnixListenerOptions {}

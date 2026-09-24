@@ -13,7 +13,11 @@ import { build } from "esbuild";
 
 // 基础浏览器冒烟包的临时输出路径。
 const outputPath = join(tmpdir(), "pi-browser-smoke.js");
+<<<<<<< HEAD
 // Agent 摇树检查包的临时输出路径。
+=======
+const durableOutputPath = join(tmpdir(), "pi-durable-browser-smoke.js");
+>>>>>>> main
 const agentTreeshakeOutputPath = join(tmpdir(), "pi-agent-treeshake-smoke.js");
 // 失败详情日志路径，供精简终端错误指引定位。
 const errorLogPath = join(tmpdir(), "pi-browser-smoke-errors.log");
@@ -72,7 +76,43 @@ try {
 		plugins: [generatedCatalogDataPlugin],
 	});
 
+<<<<<<< HEAD
 	// Agent 选择性入口的内存构建结果，metafile 用于依赖图检查。
+=======
+	const durableBuild = await build({
+		entryPoints: ["scripts/durable-browser-smoke-entry.ts"],
+		bundle: true,
+		platform: "browser",
+		format: "esm",
+		logLevel: "silent",
+		metafile: true,
+		outfile: durableOutputPath,
+		write: false,
+	});
+	const durableInputs = durableBuild.metafile.inputs;
+	for (const expectedInput of [
+		"packages/durable/src/index.ts",
+		"packages/durable/src/env/index.ts",
+		"packages/durable/src/storage/jsonl/index.ts",
+		"packages/durable/src/storage/jsonl/storage.ts",
+		"packages/durable/src/storage/memory.ts",
+		"packages/durable/src/storage/sqlite/index.ts",
+		"packages/durable/src/storage/sqlite/storage.ts",
+	]) {
+		if (!findInput(durableInputs, expectedInput)) {
+			throw new Error(`Durable browser bundle does not include ${expectedInput}`);
+		}
+	}
+	for (const forbiddenInput of [
+		"packages/durable/src/env/node.ts",
+		"packages/durable/src/storage/jsonl/node.ts",
+		"packages/durable/src/storage/sqlite/node.ts",
+	]) {
+		const nodeAdapter = findInput(durableInputs, forbiddenInput);
+		if (nodeAdapter) throw new Error(`Durable browser bundle unexpectedly includes ${nodeAdapter}`);
+	}
+
+>>>>>>> main
 	const agentTreeshakeBuild = await build({
 		entryPoints: ["scripts/agent-treeshake-smoke-entry.ts"],
 		bundle: true,

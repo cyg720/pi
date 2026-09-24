@@ -9,8 +9,9 @@
 import type { ResponseReasoningItem, ResponseStreamEvent } from "openai/resources/responses/responses.js";
 import { describe, expect, it } from "vitest";
 import { convertResponsesMessages, processResponsesStream } from "../src/api/openai-responses-shared.ts";
-import type { AssistantMessage, Context, Model } from "../src/types.ts";
+import type { AssistantMessage, Model } from "../src/types.ts";
 import { AssistantMessageEventStream } from "../src/utils/event-stream.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /** 功能：创建 Azure Responses 测试模型；参数：无；返回：固定模型元数据。示例：const model = createModel()。 */
 function createModel(): Model<"azure-openai-responses"> {
@@ -79,15 +80,23 @@ async function* createEvents(
 
 /** 功能：把助手消息放入下一轮上下文并取回推理项；参数 model、assistant；返回：首个 reasoning 输入或 undefined。示例：getReplayedReasoning(model, output)。 */
 function getReplayedReasoning(model: Model<"azure-openai-responses">, assistant: AssistantMessage) {
+<<<<<<< HEAD
 	// 模拟“用户—助手—追问”的回放上下文；时间戳只用于保持消息顺序。
 	const context: Context = {
+=======
+	const context = normalizeContext({
+>>>>>>> main
 		messages: [
 			{ role: "user", content: "first", timestamp: Date.now() - 1 },
 			assistant,
 			{ role: "user", content: "follow-up", timestamp: Date.now() },
 		],
+<<<<<<< HEAD
 	};
 	// 转换后的 Azure Responses 输入数组，仅用于寻找 reasoning 项。
+=======
+	});
+>>>>>>> main
 	const input = convertResponsesMessages(model, context, new Set(["azure-openai-responses"]));
 	return input.find((item) => item.type === "reasoning");
 }

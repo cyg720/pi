@@ -12,6 +12,7 @@ import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
 import { stream as streamAnthropic } from "../src/api/anthropic-messages.ts";
 import type { Context, Model, Tool } from "../src/types.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 // CapturedRequest 保存本地服务器观察到的请求头和解析后的 JSON 请求体。
 interface CapturedRequest {
@@ -115,11 +116,22 @@ async function captureAnthropicRequest(
 	const address = server.address() as AddressInfo;
 
 	try {
+<<<<<<< HEAD
 		// stream 是指向本地服务器的 Anthropic 消息流。
 		const stream = streamAnthropic(createModel(`http://127.0.0.1:${address.port}`, compat), context, {
 			apiKey: "test-key",
 			cacheRetention: "none",
 		});
+=======
+		const stream = streamAnthropic(
+			createModel(`http://127.0.0.1:${address.port}`, compat),
+			normalizeContext(context),
+			{
+				apiKey: "test-key",
+				cacheRetention: "none",
+			},
+		);
+>>>>>>> main
 
 		// event 是当前 Anthropic 流事件，完成或出错后停止消费。
 		for await (const event of stream) {

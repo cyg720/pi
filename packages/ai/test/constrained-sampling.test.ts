@@ -19,8 +19,9 @@ import {
 	convertResponsesTools,
 	processResponsesStream,
 } from "../src/api/openai-responses-shared.ts";
-import type { AssistantMessage, Context, Model, Tool, ToolCall } from "../src/types.ts";
+import type { AssistantMessage, Model, Tool, ToolCall } from "../src/types.ts";
 import { AssistantMessageEventStream } from "../src/utils/event-stream.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /**
  * 创建不访问网络的最小 Responses 模型夹具。
@@ -101,6 +102,7 @@ function makeTool(overrides: Partial<Tool> = {}): Tool {
 	};
 }
 
+<<<<<<< HEAD
 /**
  * 劫持事件流 push 方法并记录所有 toolcall_delta 文本。
  * @param stream 待观察的助手消息事件流。
@@ -109,16 +111,26 @@ function makeTool(overrides: Partial<Tool> = {}): Tool {
  */
 function captureToolCallDeltas(stream: AssistantMessageEventStream): string[] {
 	/** 按发送顺序收集的工具调用参数增量。 */
+=======
+function captureToolCallEvents(stream: AssistantMessageEventStream): {
+	starts: ToolCall["arguments"][];
+	deltas: string[];
+} {
+	const starts: ToolCall["arguments"][] = [];
+>>>>>>> main
 	const deltas: string[] = [];
 	/** 绑定原实例的 push，记录后仍需转发事件。 */
 	const originalPush = stream.push.bind(stream);
 	stream.push = (event) => {
-		if (event.type === "toolcall_delta") {
+		if (event.type === "toolcall_start") {
+			const block = event.partial.content[event.contentIndex];
+			if (block?.type === "toolCall") starts.push(structuredClone(block.arguments));
+		} else if (event.type === "toolcall_delta") {
 			deltas.push(event.delta);
 		}
 		originalPush(event);
 	};
-	return deltas;
+	return { starts, deltas };
 }
 
 /** 覆盖约束工具在声明转换、历史消息和实时响应流中的完整生命周期。 */
@@ -244,8 +256,12 @@ describe("constrained tool sampling", () => {
 			name: "sample_tool",
 			arguments: { payload: "abc" },
 		};
+<<<<<<< HEAD
 		/** 包含工具调用及对应工具结果的历史会话。 */
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			messages: [
 				{
 					role: "assistant",
@@ -266,9 +282,15 @@ describe("constrained tool sampling", () => {
 					timestamp: Date.now(),
 				},
 			],
+<<<<<<< HEAD
 		};
 		// invalidArguments 是当前缺字段或字段类型错误的语法工具参数夹具。
 		for (const invalidArguments of [{}, { payload: 42 }]) {
+=======
+		});
+		const invalidArgumentsList: ToolCall["arguments"][] = [{}, { payload: 42 }];
+		for (const invalidArguments of invalidArgumentsList) {
+>>>>>>> main
 			replayedToolCall.arguments = invalidArguments;
 			expect(() =>
 				convertResponsesMessages(makeModel(), context, new Set(["openai"]), {
@@ -312,25 +334,33 @@ describe("constrained tool sampling", () => {
 		);
 	});
 
+<<<<<<< HEAD
 	it("streams custom Responses tool calls as string arguments", async () => {
 		/** 将被流处理器填充的助手输出。 */
+=======
+	it("starts custom Responses tool calls with their initial input", async () => {
+>>>>>>> main
 		const output = makeOutput();
 		/** 接收标准化消息事件的本地事件流。 */
 		const stream = new AssistantMessageEventStream();
+<<<<<<< HEAD
 		/** 记录工具参数的逐段 JSON 增量。 */
 		const deltas = captureToolCallDeltas(stream);
 		/** 模拟一次自定义工具调用从创建、增量、完成到响应结束的原始事件序列。 */
+=======
+		const { starts, deltas } = captureToolCallEvents(stream);
+>>>>>>> main
 		const events = [
 			{
 				type: "response.output_item.added",
 				output_index: 0,
-				item: { type: "custom_tool_call", call_id: "call_1", id: "ctc_1", name: "sample_tool", input: "" },
+				item: { type: "custom_tool_call", call_id: "call_1", id: "ctc_1", name: "sample_tool", input: "a" },
 			},
 			{
 				type: "response.custom_tool_call_input.delta",
 				output_index: 0,
 				item_id: "ctc_1",
-				delta: "ab",
+				delta: "b",
 			},
 			{
 				type: "response.custom_tool_call_input.done",
@@ -354,6 +384,7 @@ describe("constrained tool sampling", () => {
 		});
 
 		expect(output.stopReason).toBe("toolUse");
+		expect(starts).toEqual([{ payload: "a" }]);
 		expect(output.content).toEqual([
 			{ type: "toolCall", id: "call_1|ctc_1", name: "sample_tool", arguments: { payload: "abc" } },
 		]);

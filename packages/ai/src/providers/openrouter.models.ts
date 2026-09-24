@@ -12,8 +12,19 @@
  */
 
 import values from "./data/openrouter.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const OPENROUTER_MODELS: ModelCatalog<typeof values, "openrouter"> =
 	flattenModelCatalog("openrouter", values);
+=======
+export const OPENROUTER_MODELS: ChatModelCatalog<typeof values, "openrouter"> =
+	flattenChatModelCatalog("openrouter", values);
+
+export const OPENROUTER_IMAGE_MODELS: ImageModelCatalog<typeof values, "openrouter"> =
+	flattenImageModelCatalog("openrouter", values);
+
+export const OPENROUTER_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "openrouter"> =
+	flattenClassifierModelCatalog("openrouter", values);
+>>>>>>> main

@@ -14,14 +14,15 @@ import type {
 	AssistantMessage,
 	AssistantMessageEvent,
 	AssistantMessageEventStream,
-	Context,
 	ImageContent,
+	JsonValue,
 	Message,
 	Model,
 	SimpleStreamOptions,
 	TextContent,
 	Tool,
 	ToolResultMessage,
+	TranscriptContext,
 	Usage,
 } from "@earendil-works/pi-ai";
 import type { Static, TSchema } from "typebox";
@@ -29,6 +30,10 @@ import type { Static, TSchema } from "typebox";
 /**
  * Stream function used by the agent loop. `Models.streamSimple` satisfies
  * this shape.
+ *
+ * The loop passes a normalized transcript: the system prompt and tool
+ * declarations are carried by the transcript's system messages, never by
+ * `context.systemPrompt` or `context.tools`.
  *
  * Contract:
  * - Must not throw or return a rejected promise for request/model/runtime failures.
@@ -44,7 +49,7 @@ import type { Static, TSchema } from "typebox";
  */
 export type StreamFn = (
 	model: Model<Api>,
-	context: Context,
+	context: TranscriptContext,
 	options?: SimpleStreamOptions,
 ) => AssistantMessageEventStream | Promise<AssistantMessageEventStream>;
 
@@ -175,14 +180,23 @@ export interface AfterToolCallContext {
 	context: AgentContext;
 }
 
+<<<<<<< HEAD
 /** Context passed to `shouldStopAfterTurn`. */
 /** 中文说明：shouldStopAfterTurn（判断本轮结束后是否停止）钩子的上下文。 */
 export interface ShouldStopAfterTurnContext {
+=======
+/** Context passed to completed-turn callbacks. */
+export interface AgentTurnContext {
+>>>>>>> main
 	/** The assistant message that completed the turn. */
 	// 刚刚完成本轮回复的助手消息
 	message: AssistantMessage;
+<<<<<<< HEAD
 	/** Tool result messages passed to the preceding `turn_end` event. */
 	// 随本轮 turn_end 事件发出的工具结果消息列表
+=======
+	/** Tool result messages emitted for the completed turn. */
+>>>>>>> main
 	toolResults: ToolResultMessage[];
 	/** Current agent context after the turn's assistant message and tool results have been appended. */
 	// 已追加本轮助手消息与工具结果后的最新代理上下文
@@ -192,12 +206,28 @@ export interface ShouldStopAfterTurnContext {
 	newMessages: AgentMessage[];
 }
 
+/** Decision returned by {@link FinishTurn}. Returning undefined preserves normal scheduling. */
+export type AgentTurnDecision = { action: "continue" } | { action: "end" };
+
+/**
+ * Called after a completed assistant turn and all of its tool-result messages, but before `turn_end`.
+ * On a normal turn, `{ action: "continue" }` ensures one next provider request. Tool-result, steering, or
+ * follow-up scheduling can satisfy that request and adds no extra request; otherwise the loop continues once
+ * with the current context. Error and aborted responses remain hard exits.
+ */
+export type FinishTurn = (
+	turn: AgentTurnContext,
+	signal?: AbortSignal,
+) => AgentTurnDecision | void | Promise<AgentTurnDecision | undefined> | Promise<void>;
+
 /** Replacement runtime state used by the agent loop before starting another provider request. */
 /** 中文说明：下一轮模型请求开始前可替换的运行状态（由 prepareNextTurn 钩子返回）。 */
 export interface AgentLoopTurnUpdate {
 	/** Context for the next provider request. */
 	// 下一轮使用的上下文；省略则沿用当前值
 	context?: AgentContext;
+	/** Messages to append before the next provider request, with normal lifecycle events. */
+	messages?: AgentMessage[];
 	/** Model for the next provider request. */
 	// 下一轮使用的模型；省略则沿用当前值
 	model?: Model<any>;
@@ -206,8 +236,31 @@ export interface AgentLoopTurnUpdate {
 	thinkingLevel?: ThinkingLevel;
 }
 
+<<<<<<< HEAD
 /** prepareNextTurn 钩子的入参上下文：直接复用 shouldStopAfterTurn 的结构，无额外字段。 */
 export interface PrepareNextTurnContext extends ShouldStopAfterTurnContext {}
+=======
+/** Runtime state available immediately before a conversational provider request. */
+export interface PrepareRequestContext {
+	context: AgentContext;
+	model: Model<any>;
+	thinkingLevel: ThinkingLevel;
+}
+
+/** Replacement runtime state for the provider request being prepared. */
+export type AgentRequestUpdate = Omit<AgentLoopTurnUpdate, "messages">;
+
+/**
+ * Called immediately before every conversational provider request, including the first.
+ * Pending messages have already been appended and emitted when this callback runs.
+ */
+export type PrepareRequest = (
+	request: PrepareRequestContext,
+	signal?: AbortSignal,
+) => AgentRequestUpdate | void | Promise<AgentRequestUpdate | undefined> | Promise<void>;
+
+export interface PrepareNextTurnContext extends AgentTurnContext {}
+>>>>>>> main
 
 /**
  * 低层代理循环的完整配置（中文说明）：继承 SimpleStreamOptions 的全部流式选项，
@@ -221,7 +274,7 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	/**
 	 * Converts AgentMessage[] to LLM-compatible Message[] before each LLM call.
 	 *
-	 * Each AgentMessage must be converted to a UserMessage, AssistantMessage, or ToolResultMessage
+	 * Each AgentMessage must be converted to a SystemMessage, UserMessage, AssistantMessage, or ToolResultMessage
 	 * that the LLM can understand. AgentMessages that cannot be converted (e.g., UI-only notifications,
 	 * status messages) should be filtered out.
 	 *
@@ -285,23 +338,31 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	getApiKey?: (provider: string) => Promise<string | undefined> | string | undefined;
 
 	/**
-	 * Called after each turn fully completes and `turn_end` has been emitted.
-	 *
-	 * If it returns true, the loop emits `agent_end` and exits before polling steering or follow-up queues,
-	 * without starting another LLM call. The current assistant response and any tool executions finish normally.
-	 * This callback sees the completed-turn context and runs before `prepareNextTurn`.
-	 *
-	 * Use this to request a graceful stop after the current turn, e.g. before context gets too full.
-	 *
-	 * Contract: must not throw or reject. Throwing interrupts the low-level agent loop without producing a normal event sequence.
+	 * Called after the assistant message and all tool-result messages have been emitted, immediately before `turn_end`.
+	 * `{ action: "end" }` ends the run without polling queues or preparing another request.
+	 * On a normal turn, `{ action: "continue" }` ensures one next provider request. Tool-result, steering, or
+	 * follow-up scheduling can satisfy that request and adds no extra request; otherwise the loop continues once
+	 * with the current context. Returning undefined preserves normal scheduling. Error and aborted responses remain
+	 * hard exits.
 	 */
+<<<<<<< HEAD
 	// 中文说明：每轮完全结束并发出 turn_end 后调用；返回 true 则发出 agent_end 并优雅退出（不再发起新的 LLM 调用），
 	// 常用于“上下文快满时请求停止”。
 	shouldStopAfterTurn?: (context: ShouldStopAfterTurnContext) => boolean | Promise<boolean>;
+=======
+	finishTurn?: FinishTurn;
+
+	/**
+	 * Called immediately before every conversational provider request, including the first.
+	 * Pending messages have already been appended. The returned context, model, and thinking level
+	 * replace the runtime values for this and later requests in the run. This hook does not poll queues.
+	 */
+	prepareRequest?: PrepareRequest;
+>>>>>>> main
 
 	/**
 	 * Called after `turn_end` when the loop will continue, immediately before the next turn starts.
-	 * Return replacement context/model/thinking state to affect that turn.
+	 * Return replacement context/model/thinking state or messages to append to affect that turn.
 	 * Return undefined to keep using the current context/config.
 	 */
 	// 中文说明：在 turn_end 之后、决定是否发起下一轮之前调用；返回要替换的上下文/模型/思考强度，
@@ -313,7 +374,7 @@ export interface AgentLoopConfig extends SimpleStreamOptions {
 	/**
 	 * Returns steering messages to inject into the conversation mid-run.
 	 *
-	 * Called after the current assistant turn finishes executing its tool calls, unless `shouldStopAfterTurn` exits first.
+	 * Called after the current assistant turn finishes executing its tool calls, unless `finishTurn` ends the run.
 	 * If messages are returned, they are added to the context before the next LLM call.
 	 * Tool calls from the current assistant message are not skipped.
 	 *
@@ -437,19 +498,38 @@ export type AgentMessage = Message | CustomAgentMessages[keyof CustomAgentMessag
  * tools/messages 采用存取器属性实现，赋新数组时会复制顶层数组，避免外部引用被意外共享/篡改。
  */
 export interface AgentState {
+<<<<<<< HEAD
 	/** System prompt sent with each model request. */
 	// 随每次模型请求发送的系统提示词
 	systemPrompt: string;
+=======
+	/**
+	 * Current system prompt, replayed from the transcript's system messages.
+	 *
+	 * Read-only: to change the prompt, append a system message with `content` or `sections`.
+	 * In `initialState`, this seeds the leading system message.
+	 */
+	readonly systemPrompt: string;
+>>>>>>> main
 	/** Active model used for future turns. */
 	// 当前生效模型（后续轮次将使用它）
 	model: Model<any>;
 	/** Requested reasoning level for future turns. */
 	// 后续轮次请求的思考强度
 	thinkingLevel: ThinkingLevel;
-	/** Available tools. Assigning a new array copies the top-level array. */
+	/**
+	 * Executable tools. Assigning a new array copies the top-level array.
+	 *
+	 * Differences from the tools declared in the transcript are announced to the model
+	 * with a system message before the next request.
+	 */
 	set tools(tools: AgentTool<any>[]);
 	get tools(): AgentTool<any>[];
-	/** Conversation transcript. Assigning a new array copies the top-level array. */
+	/**
+	 * Conversation transcript. Assigning a new array copies the top-level array.
+	 *
+	 * System messages in the transcript carry the prompt and tool declarations.
+	 */
 	set messages(messages: AgentMessage[]);
 	get messages(): AgentMessage[];
 	/**
@@ -471,8 +551,12 @@ export interface AgentState {
 }
 
 /** Final or partial result produced by a tool. */
+<<<<<<< HEAD
 /** 中文说明：工具产出的最终（或阶段性）结果。 */
 export interface AgentToolResult<T> {
+=======
+export interface AgentToolResult<T = JsonValue | undefined> {
+>>>>>>> main
 	/** Text or image content returned to the model. */
 	// 返回给模型的文本/图片内容数组
 	content: (TextContent | ImageContent)[];
@@ -482,9 +566,12 @@ export interface AgentToolResult<T> {
 	/** Usage from the final tool execution itself, if available. Not used for main LLM context accounting. */
 	// 工具自身执行的用量统计（如有）；不计入主对话 token 核算
 	usage?: Usage;
+<<<<<<< HEAD
 	/** Names of tools introduced by this result and available from this transcript point onward. */
 	// 本次结果引入的新工具名列表（自此之后的对话中可用）
 	addedToolNames?: string[];
+=======
+>>>>>>> main
 	/**
 	 * Hint that the agent should stop after the current tool batch.
 	 * Early termination only happens when every finalized tool result in the batch sets this to true.
@@ -526,6 +613,8 @@ export interface AgentTool<TParameters extends TSchema = TSchema, TDetails = any
 		signal?: AbortSignal,
 		onUpdate?: AgentToolUpdateCallback<TDetails>,
 	) => Promise<AgentToolResult<TDetails>>;
+	/** Recovery policy for an effect whose durable intent exists but whose outcome is unknown. */
+	replay?: "never" | "safe";
 	/**
 	 * Per-tool execution mode override.
 	 * - "sequential": this tool must execute one at a time with other tool calls.
@@ -540,14 +629,21 @@ export interface AgentTool<TParameters extends TSchema = TSchema, TDetails = any
 /** Context snapshot passed into the low-level agent loop. */
 /** 中文说明：传入低层代理循环的上下文快照：系统提示词 + 对模型可见的消息记录 + 本轮可用工具。 */
 export interface AgentContext {
+<<<<<<< HEAD
 	/** System prompt included with the request. */
 	// 随请求发送的系统提示词
 	systemPrompt: string;
+=======
+>>>>>>> main
 	/** Transcript visible to the model. */
 	// 对模型可见的对话记录
 	messages: AgentMessage[];
+<<<<<<< HEAD
 	/** Tools available for this run. */
 	// 本轮可用的工具列表
+=======
+	/** Tools available for execution in this run. */
+>>>>>>> main
 	tools?: AgentTool<any>[];
 }
 
@@ -573,8 +669,12 @@ export type AgentEvent =
 	// 轮次生命周期事件——一轮 = 一次助手回复 + 相关工具调用/结果
 	| { type: "turn_start" }
 	| { type: "turn_end"; message: AgentMessage; toolResults: ToolResultMessage[] }
+<<<<<<< HEAD
 	// Message lifecycle - emitted for user, assistant, and toolResult messages
 	// 消息生命周期事件——用户/助手/工具结果消息均会触发
+=======
+	// Message lifecycle - emitted for system, user, assistant, and toolResult messages
+>>>>>>> main
 	| { type: "message_start"; message: AgentMessage }
 	// Only emitted for assistant messages during streaming
 	// 仅助手消息流式输出期间触发

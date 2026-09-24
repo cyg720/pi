@@ -65,12 +65,17 @@ async function basicPrompt(model: Model<string>) {
 	await agent.prompt("What is 2+2? Answer with just the number.");
 
 	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBe(2);
-	expect(agent.state.messages[0].role).toBe("user");
-	expect(agent.state.messages[1].role).toBe("assistant");
+	expect(agent.state.messages.length).toBe(3);
+	expect(agent.state.messages[0].role).toBe("system");
+	expect(agent.state.messages[1].role).toBe("user");
+	expect(agent.state.messages[2].role).toBe("assistant");
 
+<<<<<<< HEAD
 	/** 状态中的最终助手消息。 */
 	const assistantMessage = agent.state.messages[1];
+=======
+	const assistantMessage = agent.state.messages[2];
+>>>>>>> main
 	if (assistantMessage.role !== "assistant") throw new Error("Expected assistant message");
 	expect(getTextContent(assistantMessage)).toContain("4");
 }
@@ -185,7 +190,7 @@ async function stateUpdates(model: Model<string>) {
 	expect(events.indexOf("message_end")).toBeLessThan(events.lastIndexOf("agent_end"));
 
 	expect(agent.state.isStreaming).toBe(false);
-	expect(agent.state.messages.length).toBe(2);
+	expect(agent.state.messages.length).toBe(3);
 }
 
 /** 验证多轮提示会保留早期上下文。参数 model 为按上下文响应的虚拟模型；无返回值。例如：await multiTurnConversation(model)。 */
@@ -202,13 +207,17 @@ async function multiTurnConversation(model: Model<string>) {
 	});
 
 	await agent.prompt("My name is Alice.");
-	expect(agent.state.messages.length).toBe(2);
+	expect(agent.state.messages.length).toBe(3);
 
 	await agent.prompt("What is my name?");
-	expect(agent.state.messages.length).toBe(4);
+	expect(agent.state.messages.length).toBe(5);
 
+<<<<<<< HEAD
 	/** 第二轮生成的助手回复，应能引用第一轮姓名。 */
 	const lastMessage = agent.state.messages[3];
+=======
+	const lastMessage = agent.state.messages[4];
+>>>>>>> main
 	if (lastMessage.role !== "assistant") throw new Error("Expected assistant message");
 	expect(getTextContent(lastMessage).toLowerCase()).toContain("alice");
 }
@@ -300,8 +309,12 @@ describe("Agent integration with faux provider", () => {
 
 		await agent.prompt("What is 2+2?");
 
+<<<<<<< HEAD
 		/** 同时包含 thinking 与 text 块的助手消息。 */
 		const assistantMessage = agent.state.messages[1];
+=======
+		const assistantMessage = agent.state.messages[2];
+>>>>>>> main
 		if (assistantMessage?.role !== "assistant") throw new Error("Expected assistant message");
 		expect(assistantMessage.content).toEqual([
 			{ type: "thinking", thinking: "step by step" },

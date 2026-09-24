@@ -12,8 +12,19 @@
  */
 
 import values from "./data/github-copilot.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const GITHUB_COPILOT_MODELS: ModelCatalog<typeof values, "github-copilot"> =
 	flattenModelCatalog("github-copilot", values);
+=======
+export const GITHUB_COPILOT_MODELS: ChatModelCatalog<typeof values, "github-copilot"> =
+	flattenChatModelCatalog("github-copilot", values);
+
+export const GITHUB_COPILOT_IMAGE_MODELS: ImageModelCatalog<typeof values, "github-copilot"> =
+	flattenImageModelCatalog("github-copilot", values);
+
+export const GITHUB_COPILOT_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "github-copilot"> =
+	flattenClassifierModelCatalog("github-copilot", values);
+>>>>>>> main

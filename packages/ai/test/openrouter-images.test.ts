@@ -8,7 +8,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateImages } from "../src/images.ts";
-import type { ImagesContext, ImagesModel } from "../src/types.ts";
+import type { ImageModel, ImagesContext } from "../src/types.ts";
 
 // OpenAI SDK 模拟状态；保存最后一次请求体和请求选项。
 const mockState = vi.hoisted(() => ({
@@ -81,8 +81,13 @@ describe("openrouter images", () => {
 	});
 
 	it("returns text plus images in final output", async () => {
+<<<<<<< HEAD
 		// 同时支持文本和图片输出的 OpenRouter 图像模型。
 		const model: ImagesModel<"openrouter-images"> = {
+=======
+		const model: ImageModel<"openrouter-images"> = {
+			type: "image",
+>>>>>>> main
 			id: "google/gemini-3.1-flash-image-preview",
 			name: "Gemini 3.1 Flash Image Preview",
 			api: "openrouter-images",
@@ -117,8 +122,13 @@ describe("openrouter images", () => {
 	});
 
 	it("passes through abort signal and returns aborted result", async () => {
+<<<<<<< HEAD
 		// 只输出图片的 FLUX 测试模型。
 		const model: ImagesModel<"openrouter-images"> = {
+=======
+		const model: ImageModel<"openrouter-images"> = {
+			type: "image",
+>>>>>>> main
 			id: "black-forest-labs/flux.2-pro",
 			name: "FLUX.2 Pro",
 			api: "openrouter-images",
@@ -144,8 +154,13 @@ describe("openrouter images", () => {
 	});
 
 	it("generateImages resolves the final assistant images result", async () => {
+<<<<<<< HEAD
 		// 最终结果解析场景的 FLUX 测试模型。
 		const model: ImagesModel<"openrouter-images"> = {
+=======
+		const model: ImageModel<"openrouter-images"> = {
+			type: "image",
+>>>>>>> main
 			id: "black-forest-labs/flux.2-pro",
 			name: "FLUX.2 Pro",
 			api: "openrouter-images",
@@ -163,5 +178,7 @@ describe("openrouter images", () => {
 		// 应至少包含一项 image 的最终结果。
 		const output = await generateImages(model, context, { apiKey: "test" });
 		expect(output.output.some((item) => item.type === "image")).toBe(true);
+		// Image-only models must not request text output.
+		expect((mockState.lastParams as { modalities?: string[] }).modalities).toEqual(["image"]);
 	});
 });

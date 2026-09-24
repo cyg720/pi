@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { sql } from "./sql.ts";
 import type { SqliteDatabase } from "./types.ts";
 
+<<<<<<< HEAD
 /**
  * 【文件职责】SQLite 迁移：建表与版本迁移 SQL。
  * 【新手阅读建议】看迁移清单。
@@ -50,4 +50,9 @@ export async function applyMigrations(db: SqliteDatabase): Promise<void> {
 		});
 		applied.add(migration.id);
 	}
+=======
+export async function applyInitialSchema(db: SqliteDatabase): Promise<void> {
+	const migration = await readFile(fileURLToPath(new URL("./migrations/001_initial.sql", import.meta.url)), "utf8");
+	db.exec(migration);
+>>>>>>> main
 }

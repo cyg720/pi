@@ -95,10 +95,18 @@ export class Loader extends Text {
 		this.updateDisplay();
 	}
 
+<<<<<<< HEAD
 	/**
 	 * 替换指示符配置（中文说明）：传入 undefined 表示使用内置默认；
 	 * 显式提供则进入“逐字渲染”模式（帧不再套用 spinner 配色）；配置后立即重启动画。
 	 */
+=======
+	override invalidate(): void {
+		super.invalidate();
+		this.updateDisplay();
+	}
+
+>>>>>>> main
 	setIndicator(indicator?: LoaderIndicatorOptions): void {
 		this.renderIndicatorVerbatim = indicator !== undefined;
 		this.frames = indicator?.frames !== undefined ? [...indicator.frames] : [...DEFAULT_FRAMES];
@@ -119,11 +127,19 @@ export class Loader extends Text {
 		}, this.intervalMs);
 	}
 
+<<<<<<< HEAD
 	// 组装当前显示文本（私有）：帧 + 空格 + 着色消息；随后请求 TUI 重绘
 	private updateDisplay(): void {
+=======
+	protected getRenderedIndicator(): string {
+>>>>>>> main
 		const frame = this.frames[this.currentFrame] ?? "";
-		const renderedFrame = this.renderIndicatorVerbatim ? frame : this.spinnerColorFn(frame);
-		const indicator = frame.length > 0 ? `${renderedFrame} ` : "";
+		return this.renderIndicatorVerbatim ? frame : this.spinnerColorFn(frame);
+	}
+
+	private updateDisplay(): void {
+		const renderedFrame = this.getRenderedIndicator();
+		const indicator = renderedFrame.length > 0 ? `${renderedFrame} ` : "";
 		this.setText(`${indicator}${this.messageColorFn(this.message)}`);
 		if (this.ui) {
 			this.ui.requestRender();

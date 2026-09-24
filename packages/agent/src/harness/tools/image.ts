@@ -25,9 +25,13 @@ export function detectSupportedImageMimeType(buffer: Uint8Array): string | undef
 	if (startsWith(buffer, [0xff, 0xd8, 0xff])) return buffer[3] === 0xf7 ? undefined : "image/jpeg";
 	// PNG：签名匹配且为非动画的标准 PNG
 	if (startsWith(buffer, PNG_SIGNATURE)) return isPng(buffer) && !isAnimatedPng(buffer) ? "image/png" : undefined;
+<<<<<<< HEAD
 	// GIF：ASCII "GIF" 开头
 	if (startsWithAscii(buffer, 0, "GIF")) return "image/gif";
 	// WebP：RIFF 容器 + 偏移 8 处 "WEBP"
+=======
+	if (startsWithAscii(buffer, 0, "GIF87a") || startsWithAscii(buffer, 0, "GIF89a")) return "image/gif";
+>>>>>>> main
 	if (startsWithAscii(buffer, 0, "RIFF") && startsWithAscii(buffer, 8, "WEBP")) return "image/webp";
 	// BMP："BM" 开头且结构校验通过
 	if (startsWithAscii(buffer, 0, "BM") && isBmp(buffer)) return "image/bmp";

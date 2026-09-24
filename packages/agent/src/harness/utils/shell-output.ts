@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】带“尾部捕获 + 全量落盘”的 shell 执行封装：边执行边维护受截断限制的尾部输出，
  *              超限时自动把全量输出写入临时文件，并向调用方提供实时进度快照。
@@ -13,6 +14,19 @@
  *              最后看主函数结尾的三分支返回策略。
  */
 import { type ExecutionEnv, ExecutionError, err, ok, type Result, type ShellExecOptions, toError } from "../types.ts";
+=======
+import type { Context } from "../context.ts";
+import {
+	type ExecutionEnv,
+	type ExecutionError,
+	err,
+	ok,
+	type Result,
+	type ShellExecOptions,
+	type ShellOutputView,
+} from "../types.ts";
+import { applyShellOutputUpdate, sanitizeShellOutput } from "./output-capture.ts";
+>>>>>>> main
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, type TruncationResult, truncateTail } from "./truncate.ts";
 
 /** 捕获进度快照（中文说明）：当前尾部输出、其截断信息、全量文件路径（如有）与未完成行的字节数。 */
@@ -27,9 +41,14 @@ export interface ShellCaptureProgress {
 	lastLineBytes: number;
 }
 
+<<<<<<< HEAD
 /** 捕获选项（中文说明）：继承 ShellExecOptions 并替换输出回调——onChunk 同时拿到文本与进度快照生成器。 */
 export interface ShellCaptureOptions extends Omit<ShellExecOptions, "onStdout" | "onStderr"> {
 	onChunk?: (chunk: string, getProgress: () => ShellCaptureProgress) => void;
+=======
+export interface ShellCaptureOptions extends Omit<ShellExecOptions, "capture" | "onUpdate"> {
+	onChunk?: (chunk: string, getProgress: () => ShellCaptureProgress, context: Context) => void;
+>>>>>>> main
 	/** Return shell execution failures with captured output instead of as a failed Result. */
 	// 为 true 时执行失败不以 err 返回，而是把错误放进结果的 executionError 字段
 	returnExecutionErrors?: boolean;
@@ -47,6 +66,7 @@ export interface ShellCaptureResult extends ShellCaptureProgress {
 	executionError?: ExecutionError;
 }
 
+<<<<<<< HEAD
 // 把任意抛出值规范化为 ExecutionError（私有）：已是该类型则原样返回，否则包装为 unknown 错误码
 function toExecutionError(error: unknown): ExecutionError {
 	if (error instanceof ExecutionError) return error;
@@ -87,12 +107,29 @@ function trimToLastUtf8Bytes(text: string, maxBytes: number, encoder: { encode(i
  * 执行 shell 并捕获输出（中文说明）：
  * 参数 env —— 执行环境；command —— 命令；options —— 捕获选项。
  * 返回 ok(ShellCaptureResult) 或 err(ExecutionError)；stdout/stderr 统一流入同一处理器。
+=======
+function progressFrom(output: ShellOutputView): ShellCaptureProgress {
+	return {
+		output: output.text,
+		truncation: { content: output.text, ...output.truncation },
+		...(output.spillPath === undefined ? {} : { fullOutputPath: output.spillPath }),
+		lastLineBytes: output.lastLineBytes ?? 0,
+	};
+}
+
+/**
+ * Compatibility collector for callers that need one bounded final view.
+ * Source-side capture, adaptive publication, and spilling remain owned by the
+ * execution environment.
+>>>>>>> main
  */
 export async function executeShellWithCapture(
 	env: ExecutionEnv,
 	command: string,
-	options?: ShellCaptureOptions,
+	options: ShellCaptureOptions | undefined,
+	context: Context,
 ): Promise<Result<ShellCaptureResult, ExecutionError>> {
+<<<<<<< HEAD
 	// 尾部输出缓冲（会被持续裁剪）
 	let tailOutput = "";
 	// 尾部缓冲的字节上限：默认字节上限的 2 倍
@@ -202,10 +239,17 @@ export async function executeShellWithCapture(
 
 	try {
 		const result = await env.exec(command, {
+=======
+	let output: ShellOutputView | undefined;
+	const result = await env.exec(
+		command,
+		{
+>>>>>>> main
 			cwd: options?.cwd,
 			env: options?.env,
 			inheritEnv: options?.inheritEnv,
 			timeout: options?.timeout,
+<<<<<<< HEAD
 			abortSignal: options?.abortSignal,
 			onStdout: onChunk,
 			onStderr: onChunk,
@@ -252,5 +296,56 @@ export async function executeShellWithCapture(
 	} catch (error) {
 		acceptingOutput = false;
 		return err(toExecutionError(error));
+=======
+			capture: {
+				limits: { maxBytes: DEFAULT_MAX_BYTES, maxLines: DEFAULT_MAX_LINES, retain: "tail" },
+				spill: true,
+			},
+			onUpdate: (update, updateContext) => {
+				const previous = output;
+				output = applyShellOutputUpdate(output, update);
+				const chunk =
+					update.kind === "append" || update.kind === "slide"
+						? update.text
+						: update.kind === "replace" && previous === undefined
+							? output.text
+							: undefined;
+				// A metadata-only update and a post-cap replacement contain no new
+				// incremental chunk. Reporting their complete view would duplicate bytes
+				// for callers that accumulate this compatibility callback.
+				if (chunk) options?.onChunk?.(chunk, () => progressFrom(output!), updateContext);
+			},
+		},
+		context,
+	);
+
+	if (output === undefined) {
+		const { content, ...truncation } = truncateTail("");
+		output = { text: content, truncation };
+>>>>>>> main
 	}
+	const progress = progressFrom(output);
+	if (!result.ok) {
+		if (result.error.code === "aborted" || context.abortSignal?.aborted) {
+			return ok({ ...progress, exitCode: undefined, cancelled: true, truncated: progress.truncation.truncated });
+		}
+		if (options?.returnExecutionErrors) {
+			return ok({
+				...progress,
+				exitCode: undefined,
+				cancelled: false,
+				truncated: progress.truncation.truncated,
+				executionError: result.error,
+			});
+		}
+		return err(result.error);
+	}
+	return ok({
+		...progress,
+		exitCode: result.value.exitCode,
+		cancelled: false,
+		truncated: result.value.truncation.truncated,
+	});
 }
+
+export { sanitizeShellOutput as sanitizeBinaryOutput };

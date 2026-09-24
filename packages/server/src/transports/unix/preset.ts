@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-server` 包中的 `transports/unix/preset` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `../../server.ts`、`../../types.ts`、`./listener.ts`、`./types.ts`，并通过 TypeScript 模块边界组织实现。
@@ -8,11 +9,19 @@
  */
 import { PiServer } from "../../server.ts";
 import type { PiServerService } from "../../types.ts";
+=======
+import type { SessionMetadata } from "@earendil-works/pi-agent-core";
+import { Server } from "../../server.ts";
+import type { ServerHost } from "../../types.ts";
+>>>>>>> main
 import { createUnixListener } from "./listener.ts";
 import type { UnixServerOptions } from "./types.ts";
 
-/** Compose PiServer with one Unix-domain socket listener. */
-export function createUnixServer(service: PiServerService, options: UnixServerOptions): PiServer {
+/** Compose Server with one Unix-domain socket listener. */
+export function createUnixServer<TMetadata extends SessionMetadata>(
+	host: ServerHost<TMetadata>,
+	options: UnixServerOptions,
+): Server<TMetadata> {
 	const listener = createUnixListener({
 		path: options.path,
 		mode: options.mode,
@@ -21,10 +30,11 @@ export function createUnixServer(service: PiServerService, options: UnixServerOp
 		gracefulCloseTimeoutMs: options.gracefulCloseTimeoutMs,
 		onError: options.onError,
 	});
-	return new PiServer(service, {
+	return new Server(host, {
 		listeners: [listener],
 		maxFrameLength: options.maxFrameLength,
 		handshakeTimeoutMs: options.handshakeTimeoutMs,
+		onConnectionCountChanged: options.onConnectionCountChanged,
 		serverId: options.serverId,
 		onError: options.onError,
 	});

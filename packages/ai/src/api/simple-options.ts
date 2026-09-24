@@ -8,19 +8,19 @@
  */
 import type {
 	Api,
-	Context,
 	Model,
 	SimpleStreamOptions,
 	StreamOptions,
 	ThinkingBudgets,
 	ThinkingLevel,
+	TranscriptContext,
 } from "../types.ts";
 import { estimateContextTokens } from "../utils/estimate.ts";
 
 const CONTEXT_SAFETY_TOKENS = 4096;
 const MIN_MAX_TOKENS = 1;
 
-export function clampMaxTokensToContext(model: Model<Api>, context: Context, maxTokens: number): number {
+export function clampMaxTokensToContext(model: Model<Api>, context: TranscriptContext, maxTokens: number): number {
 	if (model.contextWindow <= 0) return Math.max(MIN_MAX_TOKENS, maxTokens);
 	const available = model.contextWindow - estimateContextTokens(context).tokens - CONTEXT_SAFETY_TOKENS;
 	return Math.min(maxTokens, Math.max(MIN_MAX_TOKENS, available));
@@ -28,7 +28,7 @@ export function clampMaxTokensToContext(model: Model<Api>, context: Context, max
 
 export function buildBaseOptions(
 	model: Model<Api>,
-	context: Context,
+	context: TranscriptContext,
 	options?: SimpleStreamOptions,
 	apiKey?: string,
 ): StreamOptions {
@@ -50,6 +50,7 @@ export function buildBaseOptions(
 		headers: options?.headers,
 		onPayload: options?.onPayload,
 		onResponse: options?.onResponse,
+		onProviderStreamEvent: options?.onProviderStreamEvent,
 		timeoutMs: options?.timeoutMs,
 		websocketConnectTimeoutMs: options?.websocketConnectTimeoutMs,
 		maxRetries: options?.maxRetries,

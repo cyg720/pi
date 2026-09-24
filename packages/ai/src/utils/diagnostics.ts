@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】诊断记录工具：把运行期错误/异常规范化为可持久化的诊断条目，
  *              并支持追加到助手消息的 diagnostics 字段。
@@ -10,6 +11,10 @@
  */
 
 /** 错误信息快照（中文说明）：用于诊断的规范化错误字段。 */
+=======
+import type { JsonObject } from "../types.ts";
+
+>>>>>>> main
 export interface DiagnosticErrorInfo {
 	// 错误名（可选）
 	name?: string;
@@ -29,8 +34,12 @@ export interface AssistantMessageDiagnostic {
 	timestamp: number;
 	// 错误快照（可选）
 	error?: DiagnosticErrorInfo;
+<<<<<<< HEAD
 	// 附加详情（可选）
 	details?: Record<string, unknown>;
+=======
+	details?: JsonObject;
+>>>>>>> main
 }
 
 // 把任意值格式化为可读字符串（公开）：Error 取 message/name，其余 String() 化
@@ -56,7 +65,7 @@ export function extractDiagnosticError(error: unknown): DiagnosticErrorInfo {
 export function createAssistantMessageDiagnostic(
 	type: string,
 	error: unknown,
-	details?: Record<string, unknown>,
+	details?: JsonObject,
 ): AssistantMessageDiagnostic {
 	return { type, timestamp: Date.now(), error: extractDiagnosticError(error), details };
 }

@@ -12,8 +12,19 @@
  */
 
 import values from "./data/together.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const TOGETHER_MODELS: ModelCatalog<typeof values, "together"> =
 	flattenModelCatalog("together", values);
+=======
+export const TOGETHER_MODELS: ChatModelCatalog<typeof values, "together"> =
+	flattenChatModelCatalog("together", values);
+
+export const TOGETHER_IMAGE_MODELS: ImageModelCatalog<typeof values, "together"> =
+	flattenImageModelCatalog("together", values);
+
+export const TOGETHER_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "together"> =
+	flattenClassifierModelCatalog("together", values);
+>>>>>>> main

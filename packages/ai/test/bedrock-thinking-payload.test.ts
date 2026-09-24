@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { type BedrockOptions, stream as streamBedrock } from "../src/api/bedrock-converse-stream.ts";
-import { getModel } from "../src/compat.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
 import type { Context, Model } from "../src/types.ts";
 import { hasBedrockCredentials } from "./bedrock-utils.ts";
 
@@ -52,8 +52,12 @@ async function capturePayload(
 ): Promise<BedrockThinkingPayload> {
 	/** onPayload 保存的思考载荷。 */
 	let capturedPayload: BedrockThinkingPayload | undefined;
+<<<<<<< HEAD
 	/** 发出请求前会被 PayloadCaptured 中止的事件流。 */
 	const s = streamBedrock(model, makeContext(), {
+=======
+	const s = streamBedrock(model, normalizeContext(makeContext()), {
+>>>>>>> main
 		...options,
 		reasoning: options?.reasoning ?? "high",
 		onPayload: (payload) => {
@@ -226,7 +230,7 @@ describe.skipIf(!hasBedrockCredentials())("Bedrock Claude max tokens E2E", () =>
 			/** 要求输出 5200 个 token 的真实 Bedrock 响应。 */
 			const response = await streamBedrock(
 				model,
-				{
+				normalizeContext({
 					systemPrompt: "You are a deterministic text generator. Follow the requested output format exactly.",
 					messages: [
 						{
@@ -236,7 +240,7 @@ describe.skipIf(!hasBedrockCredentials())("Bedrock Claude max tokens E2E", () =>
 							timestamp: Date.now(),
 						},
 					],
-				},
+				}),
 				{ reasoning: "low" },
 			).result();
 
@@ -280,10 +284,10 @@ describe("Application inference profile support", () => {
 		/** 在 onPayload 处停止的 Bedrock 事件流。 */
 		const s = streamBedrock(
 			model,
-			{
+			normalizeContext({
 				systemPrompt: "You are helpful.",
 				messages: [{ role: "user", content: "Hello", timestamp: Date.now() }],
-			},
+			}),
 			{
 				onPayload: (payload) => {
 					capturedPayload = payload;

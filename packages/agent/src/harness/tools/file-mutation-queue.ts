@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】文件变更串行队列：确保对“同一执行环境 + 同一规范路径”的写/删等变更操作按提交顺序
  *              逐个执行，避免并发编辑同一文件造成交错损坏。
@@ -11,6 +12,9 @@
  * 【新手阅读建议】重点读 withFileMutationQueue：理解“先在 registration 链上排队拿号，
  *              再在对应文件的 Promise 链上等号”的两段式设计。
  */
+=======
+import type { Context } from "../context.ts";
+>>>>>>> main
 import type { ExecutionEnv } from "../types.ts";
 import { getOrThrow } from "../types.ts";
 
@@ -33,6 +37,7 @@ function getState(env: ExecutionEnv): MutationQueueState {
 	return state;
 }
 
+<<<<<<< HEAD
 /**
  * 计算变更队列键（私有）：优先用规范路径（解析符号链接后的真实路径）；
  * 文件不存在或后端不支持规范化时退回绝对路径；其他错误向上抛出。
@@ -40,12 +45,18 @@ function getState(env: ExecutionEnv): MutationQueueState {
 async function getMutationQueueKey(env: ExecutionEnv, path: string): Promise<string> {
 	const absolutePath = getOrThrow(await env.absolutePath(path));
 	const canonicalPath = await env.canonicalPath(absolutePath);
+=======
+async function getMutationQueueKey(env: ExecutionEnv, path: string, context: Context): Promise<string> {
+	const absolutePath = getOrThrow(await env.absolutePath(path, context));
+	const canonicalPath = await env.canonicalPath(absolutePath, context);
+>>>>>>> main
 	if (canonicalPath.ok) return canonicalPath.value;
 	if (canonicalPath.error.code === "not_found" || canonicalPath.error.code === "not_supported") return absolutePath;
 	throw canonicalPath.error;
 }
 
 /** Serialize file mutations targeting the same environment and canonical path. */
+<<<<<<< HEAD
 /**
  * 在文件变更队列中串行执行函数（中文说明）：
  * 参数 env —— 执行环境；path —— 目标文件路径；fn —— 要排队的异步操作。
@@ -53,10 +64,18 @@ async function getMutationQueueKey(env: ExecutionEnv, path: string): Promise<str
  *   await withFileMutationQueue(env, file, async () => { /* 读-改-写 file *\/ })
  */
 export async function withFileMutationQueue<T>(env: ExecutionEnv, path: string, fn: () => Promise<T>): Promise<T> {
+=======
+export async function withFileMutationQueue<T>(
+	env: ExecutionEnv,
+	path: string,
+	fn: () => Promise<T>,
+	context: Context,
+): Promise<T> {
+>>>>>>> main
 	const state = getState(env);
 	// 第一段：在全局注册链上排队，确定本操作的文件队列与位置
 	const registration = state.registration.then(async () => {
-		const key = await getMutationQueueKey(env, path);
+		const key = await getMutationQueueKey(env, path, context);
 		const currentQueue = state.queues.get(key) ?? Promise.resolve();
 
 		// 为本次操作准备一个“放行闸门”

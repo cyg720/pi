@@ -15,7 +15,11 @@ const dependencySections = ["dependencies", "devDependencies", "optionalDependen
 const exactVersionPattern = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 /** 递归扫描时跳过的目录。 */
 const ignoredDirectories = new Set([".git", "dist", "node_modules"]);
+<<<<<<< HEAD
 /** 已发现的 package.json 相对路径。 */
+=======
+const internalPackageNames = new Set(["@earendil-works/chord"]);
+>>>>>>> main
 const packageJsonFiles = [];
 
 /** @param directory 当前扫描目录。@returns 无返回；将发现的清单追加到 packageJsonFiles。 */
@@ -37,7 +41,7 @@ function collectPackageJsonFiles(directory) {
 
 /** @param name 依赖包名。@returns 是否为本仓库内部包。 */
 function isInternalWorkspaceDependency(name) {
-	return name.startsWith("@earendil-works/pi-");
+	return name.startsWith("@earendil-works/pi-") || internalPackageNames.has(name);
 }
 
 /** @param specifier 依赖说明符。@returns 是否来自工作区、文件、Git 或 URL 而非 npm 注册表版本。 */

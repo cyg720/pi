@@ -9,7 +9,7 @@
 import { Type } from "typebox";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { stream as streamOpenAICompletions } from "../src/api/openai-completions.ts";
-import { getModel } from "../src/compat.ts";
+import { getModel, normalizeContext } from "../src/compat.ts";
 import type { Message, Model } from "../src/types.ts";
 
 // CacheControl 描述 Anthropic 风格临时缓存标记及可选 TTL。
@@ -107,7 +107,7 @@ async function capturePayload(
 
 	await streamOpenAICompletions(
 		model,
-		{
+		normalizeContext({
 			systemPrompt: "System prompt",
 			messages: messages ?? [{ role: "user", content: "Hello", timestamp }],
 			tools: [
@@ -119,7 +119,7 @@ async function capturePayload(
 					}),
 				},
 			],
-		},
+		}),
 		{ apiKey: "test-key", ...options },
 	).result();
 
@@ -189,20 +189,29 @@ describe("openai-completions cacheControlFormat", () => {
 		expectAnthropicCacheMarkers(params);
 	});
 
+<<<<<<< HEAD
 	// 内置 OpenRouter Claude 模型也应保留生成目录中的缓存兼容设置。
 	it("preserves Anthropic-style cache markers for OpenRouter Anthropic models", async () => {
 		// model 是真实模型目录中的 OpenRouter Claude。
 		const model = getModel("openrouter", "anthropic/claude-sonnet-4");
 		// params 是目录模型生成的缓存请求体。
+=======
+	it("preserves Anthropic-style cache markers for OpenRouter Anthropic batch aliases", async () => {
+		const model = getModel("openrouter", "anthropic/claude-fable-5.1:batch");
+>>>>>>> main
 		const params = await capturePayload(model);
 		expectAnthropicCacheMarkers(params);
 	});
 
 	// 历史以工具结果结尾时，对话缓存边界应移到工具消息。
 	it("moves the conversation cache marker to a tool result", async () => {
+<<<<<<< HEAD
 		// model 是支持 Anthropic 缓存格式的 OpenRouter Claude。
 		const model = getModel("openrouter", "anthropic/claude-sonnet-4");
 		// timestamp 统一三条相关消息的时间。
+=======
+		const model = getModel("openrouter", "anthropic/claude-fable-5.1:batch");
+>>>>>>> main
 		const timestamp = Date.now();
 		// params 捕获一轮用户、工具调用和工具结果历史的请求。
 		const params = await capturePayload(model, undefined, [

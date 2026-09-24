@@ -115,6 +115,7 @@ function createReftableWorktree(tempDir: string): WorktreeFixture {
 	return { worktreeDir, reftableDir };
 }
 
+<<<<<<< HEAD
 /**
  * 轮询等待条件成立，超时则抛错。
  * @param condition 无副作用的完成条件。
@@ -122,6 +123,14 @@ function createReftableWorktree(tempDir: string): WorktreeFixture {
  * @returns 条件成立后完成的 Promise。
  * @example await waitFor(() => calls.length === 1);
  */
+=======
+function emitReftableChange(provider: FooterDataProvider): void {
+	const { reftableWatcher } = provider as unknown as { reftableWatcher: FSWatcher | null };
+	expect(reftableWatcher).not.toBeNull();
+	reftableWatcher?.emit("change", "change", "tables.list");
+}
+
+>>>>>>> main
 async function waitFor(condition: () => boolean, timeoutMs = 3000): Promise<void> {
 	/** 开始等待的毫秒时间戳。 */
 	const startedAt = Date.now();
@@ -227,9 +236,15 @@ describe("FooterDataProvider reftable branch detection", () => {
 		}
 	});
 
+	// Drive debounce behavior explicitly; native fs.watch delivery can race watcher startup.
 	it("does not notify listeners when reftable updates keep the same branch", async () => {
+<<<<<<< HEAD
 		/** 用于触发 reftable 监听事件的目录。 */
 		const { worktreeDir, reftableDir } = createReftableWorktree(tempDir);
+=======
+		vi.useFakeTimers();
+		const { worktreeDir } = createReftableWorktree(tempDir);
+>>>>>>> main
 		process.chdir(worktreeDir);
 
 		/** 缓存 main 分支并监听 reftable 的提供器。 */
@@ -241,8 +256,8 @@ describe("FooterDataProvider reftable branch detection", () => {
 			const onBranchChange = vi.fn();
 			provider.onBranchChange(onBranchChange);
 
-			writeFileSync(join(reftableDir, "tables.list"), "1\n");
-			await waitFor(() => vi.mocked(execFile).mock.calls.length === 1);
+			emitReftableChange(provider);
+			await vi.advanceTimersByTimeAsync(501);
 
 			expect(vi.mocked(execFile)).toHaveBeenCalledTimes(1);
 			expect(vi.mocked(spawnSync)).not.toHaveBeenCalled();
@@ -250,12 +265,18 @@ describe("FooterDataProvider reftable branch detection", () => {
 			expect(onBranchChange).not.toHaveBeenCalled();
 		} finally {
 			provider.dispose();
+			vi.useRealTimers();
 		}
 	});
 
 	it("debounces rapid reftable updates into a single async refresh", async () => {
+<<<<<<< HEAD
 		/** 快速连续写入 reftable 场景的夹具路径。 */
 		const { worktreeDir, reftableDir } = createReftableWorktree(tempDir);
+=======
+		vi.useFakeTimers();
+		const { worktreeDir } = createReftableWorktree(tempDir);
+>>>>>>> main
 		process.chdir(worktreeDir);
 
 		/** 应对快速事件去抖的提供器。 */
@@ -264,15 +285,18 @@ describe("FooterDataProvider reftable branch detection", () => {
 			expect(provider.getGitBranch()).toBe("main");
 			vi.mocked(execFile).mockClear();
 
-			writeFileSync(join(reftableDir, "tables.list"), "1\n");
-			writeFileSync(join(reftableDir, "tables.list"), "2\n");
-			writeFileSync(join(reftableDir, "tables.list"), "3\n");
-			await waitFor(() => vi.mocked(execFile).mock.calls.length === 1);
-			await new Promise((resolve) => setTimeout(resolve, 650));
-
+			emitReftableChange(provider);
+			emitReftableChange(provider);
+			emitReftableChange(provider);
+			await vi.advanceTimersByTimeAsync(499);
+			expect(vi.mocked(execFile)).not.toHaveBeenCalled();
+			await vi.advanceTimersByTimeAsync(2);
+			expect(vi.mocked(execFile)).toHaveBeenCalledTimes(1);
+			await vi.advanceTimersByTimeAsync(650);
 			expect(vi.mocked(execFile)).toHaveBeenCalledTimes(1);
 		} finally {
 			provider.dispose();
+			vi.useRealTimers();
 		}
 	});
 

@@ -459,6 +459,9 @@
           case 'thinking_level_change':
             parts.push('thinking', entry.thinkingLevel);
             break;
+          case 'context_edit':
+            parts.push('context edit', entry.replacement === null ? 'omit' : 'replace', entry.targetId);
+            break;
         }
 
         return parts.join(' ').toLowerCase();
@@ -498,9 +501,13 @@
           }
 
           // Apply filter mode
+<<<<<<< HEAD
           // 中文说明：上方英文注释记录本段测试前提、预期行为或边界，修改时应同步核对下面断言。
           const isSettingsEntry = ['label', 'custom', 'model_change', 'thinking_level_change'].includes(entry.type);
           /** 变量 passesFilter 保存当前场景的中间数据；取值由声明类型和本用例约束，注意隔离可变状态。 */
+=======
+          const isSettingsEntry = ['label', 'custom', 'context_edit', 'model_change', 'thinking_level_change'].includes(entry.type);
+>>>>>>> main
           let passesFilter = true;
 
           switch (filterMode) {
@@ -876,6 +883,8 @@
             return labelHtml + `<span class="tree-muted">[model: ${escapeHtml(entry.modelId)}]</span>`;
           case 'thinking_level_change':
             return labelHtml + `<span class="tree-muted">[thinking: ${escapeHtml(entry.thinkingLevel)}]</span>`;
+          case 'context_edit':
+            return labelHtml + `<span class="tree-muted">[context ${entry.replacement === null ? 'omit' : 'replace'}: ${escapeHtml(entry.targetId)}]</span>`;
           default:
             return labelHtml + `<span class="tree-muted">[${escapeHtml(entry.type)}]</span>`;
         }

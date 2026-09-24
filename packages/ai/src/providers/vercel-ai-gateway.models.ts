@@ -12,8 +12,19 @@
  */
 
 import values from "./data/vercel-ai-gateway.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const VERCEL_AI_GATEWAY_MODELS: ModelCatalog<typeof values, "vercel-ai-gateway"> =
 	flattenModelCatalog("vercel-ai-gateway", values);
+=======
+export const VERCEL_AI_GATEWAY_MODELS: ChatModelCatalog<typeof values, "vercel-ai-gateway"> =
+	flattenChatModelCatalog("vercel-ai-gateway", values);
+
+export const VERCEL_AI_GATEWAY_IMAGE_MODELS: ImageModelCatalog<typeof values, "vercel-ai-gateway"> =
+	flattenImageModelCatalog("vercel-ai-gateway", values);
+
+export const VERCEL_AI_GATEWAY_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "vercel-ai-gateway"> =
+	flattenClassifierModelCatalog("vercel-ai-gateway", values);
+>>>>>>> main

@@ -28,12 +28,17 @@ const outputPackageJsonPath = join(outputDir, "package.json");
 const outputLockfilePath = join(outputDir, "package-lock.json");
 /** 用于识别仓库内部发布包的名称前缀。 */
 const internalPackagePrefix = "@earendil-works/pi-";
+<<<<<<< HEAD
 /** 独立锁文件根项目使用的私有包名。 */
+=======
+const internalPackageNames = new Set(["@earendil-works/chord"]);
+>>>>>>> main
 const installPackageName = "@earendil-works/pi-coding-agent-install";
 /** 经人工审核允许保留安装脚本的精确包版本及依据。 */
 const allowedInstallScriptPackages = new Map([
-	["@google/genai@1.52.0", "preinstall is a no-op in the published package"],
-	["protobufjs@7.6.5", "postinstall only warns about protobufjs version scheme mismatches"],
+	["@google/genai@2.21.0", "preinstall is a no-op in the published package"],
+	["esbuild@0.28.2", "postinstall selects and verifies the platform-specific esbuild binary"],
+	["protobufjs@7.6.6", "postinstall only warns about protobufjs version scheme mismatches"],
 ]);
 
 /** 去重后的命令行参数，目前仅支持 --check。 */
@@ -188,7 +193,7 @@ function getInternalWorkspaces(lockPackages) {
 		if (!lockPath.startsWith("packages/") || lockPath.includes("/node_modules/") || !entry.name || !entry.version) {
 			continue;
 		}
-		if (!entry.name.startsWith(internalPackagePrefix)) {
+		if (!entry.name.startsWith(internalPackagePrefix) && !internalPackageNames.has(entry.name)) {
 			continue;
 		}
 
@@ -267,6 +272,7 @@ function addInternalWorkspace(installLockPackages, addedPaths, queue, name, work
 	addedPaths.add(outputPath);
 
 	for (const dependencyName of Object.keys(packageDependencies(packageJson))) {
+<<<<<<< HEAD
 		/** dependencyName 是根包当前运行时依赖名称，用于追踪完整传递闭包。 */
 		queue.push({ name: dependencyName, from: outputPath });
 	}
@@ -288,6 +294,38 @@ function addExternalPackage(lockPackages, installLockPackages, addedPaths, queue
 	for (const dependencyName of Object.keys(packageDependencies(entry))) {
 		/** dependencyName 是当前包的运行时依赖名称，用于继续遍历依赖图。 */
 		queue.push({ name: dependencyName, from: lockPath });
+=======
+		queue.push({
+			name: dependencyName,
+			sourceFrom: workspace.lockPath,
+			sourceBase: workspace.lockPath,
+			outputBase: outputPath,
+		});
+	}
+}
+
+function addExternalPackage(lockPackages, installLockPackages, addedPaths, queue, item) {
+	const sourceLockPath = resolveExternalDependency(lockPackages, item.name, item.sourceFrom);
+	const outputLockPath =
+		item.sourceBase && sourceLockPath.startsWith(`${item.sourceBase}/`)
+			? [item.outputBase, sourceLockPath.slice(item.sourceBase.length + 1)].filter(Boolean).join("/")
+			: sourceLockPath;
+	if (addedPaths.has(outputLockPath)) {
+		return;
+	}
+
+	const entry = lockPackages[sourceLockPath];
+	installLockPackages[outputLockPath] = copyLockEntry(entry);
+	addedPaths.add(outputLockPath);
+
+	for (const dependencyName of Object.keys(packageDependencies(entry))) {
+		queue.push({
+			name: dependencyName,
+			sourceFrom: sourceLockPath,
+			sourceBase: item.sourceBase,
+			outputBase: item.outputBase,
+		});
+>>>>>>> main
 	}
 }
 
@@ -367,7 +405,11 @@ function validateGeneratedFiles(installerPackageJson, installLock, internalNames
 		if (entry.dev || entry.devOptional || entry.extraneous) {
 			errors.push(`${lockPath || "root"} contains dev/extraneous metadata`);
 		}
-		if (packageName?.startsWith(internalPackagePrefix) && entry.version !== installerPackageJson.version) {
+		if (
+			packageName !== undefined &&
+			(packageName.startsWith(internalPackagePrefix) || internalPackageNames.has(packageName)) &&
+			entry.version !== installerPackageJson.version
+		) {
 			errors.push(`${lockPath} internal package version ${entry.version} does not match ${installerPackageJson.version}`);
 		}
 		if (entry.hasInstallScript) {
@@ -459,8 +501,15 @@ function generateInstallLock() {
 	const addedPaths = new Set([""]);
 	/** 依赖闭包中实际使用的内部包名。 */
 	const internalNames = new Set();
+<<<<<<< HEAD
 	/** 尚待解析的依赖队列，每项携带名称与父锁路径。 */
 	const queue = Object.keys(packageDependencies(installerPackageJson)).map((name) => ({ name, from: "" }));
+=======
+	const queue = Object.keys(packageDependencies(installerPackageJson)).map((name) => ({
+		name,
+		sourceFrom: "",
+	}));
+>>>>>>> main
 
 	while (queue.length > 0) {
 		/** 当前从队首取出的依赖任务。 */
@@ -481,7 +530,7 @@ function generateInstallLock() {
 			continue;
 		}
 
-		addExternalPackage(lockPackages, installLockPackages, addedPaths, queue, item.name, item.from);
+		addExternalPackage(lockPackages, installLockPackages, addedPaths, queue, item);
 	}
 
 	/** 排序并补齐顶层元数据后的最终安装锁对象。 */

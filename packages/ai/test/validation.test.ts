@@ -9,7 +9,7 @@
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 import { describe, expect, it } from "vitest";
-import type { Tool, ToolCall } from "../src/types.ts";
+import type { JsonValue, Tool, ToolCall } from "../src/types.ts";
 import { validateToolArguments } from "../src/utils/validation.ts";
 
 /** 功能：把单个字段模式和值包装成 echo 工具调用；参数 schema、value；返回：tool 与 toolCall。示例：createToolCallWithPlainSchema({ type: "number" }, "42")。 */
@@ -38,7 +38,7 @@ function createToolCallWithPlainSchema(
 		type: "toolCall",
 		id: "tool-1",
 		name: "echo",
-		arguments: { value },
+		arguments: { value: value as JsonValue },
 	};
 
 	return { tool, toolCall };

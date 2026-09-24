@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-client` 包中的 `errors` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `@earendil-works/pi-protocol`，并通过 TypeScript 模块边界组织实现。
@@ -7,50 +8,31 @@
  * 【新手阅读建议】先查看 `PiServerError`、`PiDisconnectedError`、`PiClientDisposedError`、`PiSessionOwnershipError`、`PiSessionDetachedError`、`toError` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
 import type { JsonValue, ProtocolError, ProtocolErrorCode } from "@earendil-works/pi-protocol";
+=======
+import type { ProtocolError, ProtocolErrorCode } from "@earendil-works/pi-protocol";
+>>>>>>> main
 
-export class PiServerError extends Error {
+export class ServerError extends Error {
 	readonly code: ProtocolErrorCode;
-	readonly details: JsonValue | undefined;
 
 	constructor(error: ProtocolError) {
 		super(error.message);
-		this.name = "PiServerError";
+		this.name = "ServerError";
 		this.code = error.code;
-		this.details = error.details;
 	}
 }
 
-export class PiDisconnectedError extends Error {
-	constructor(message = "Pi client is disconnected") {
-		super(message);
-		this.name = "PiDisconnectedError";
+export class DisconnectedError extends Error {
+	constructor(message = "Client is disconnected", cause?: Error) {
+		super(message, cause === undefined ? undefined : { cause });
+		this.name = "DisconnectedError";
 	}
 }
 
-export class PiClientDisposedError extends Error {
+export class ClientDisposedError extends Error {
 	constructor() {
-		super("Pi client is disposed");
-		this.name = "PiClientDisposedError";
-	}
-}
-
-export class PiSessionOwnershipError extends Error {
-	readonly sessionId: string;
-
-	constructor(sessionId: string, message: string) {
-		super(message);
-		this.name = "PiSessionOwnershipError";
-		this.sessionId = sessionId;
-	}
-}
-
-export class PiSessionDetachedError extends Error {
-	readonly sessionId: string;
-
-	constructor(sessionId: string) {
-		super(`Session ${sessionId} is not attached`);
-		this.name = "PiSessionDetachedError";
-		this.sessionId = sessionId;
+		super("Client is disposed");
+		this.name = "ClientDisposedError";
 	}
 }
 
@@ -58,7 +40,7 @@ export function toError(error: unknown): Error {
 	return error instanceof Error ? error : new Error(String(error));
 }
 
-export function toDisconnectedError(error: unknown): PiDisconnectedError {
+export function toDisconnectedError(error: unknown): DisconnectedError {
 	const cause = toError(error);
-	return cause instanceof PiDisconnectedError ? cause : new PiDisconnectedError(cause.message);
+	return cause instanceof DisconnectedError ? cause : new DisconnectedError(cause.message, cause);
 }

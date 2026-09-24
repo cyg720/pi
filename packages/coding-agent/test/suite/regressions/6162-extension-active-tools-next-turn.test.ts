@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 文件职责：回归验证扩展在工具执行中修改活动工具后，下一次模型请求立即采用新工具并记录增量变化。
  * 技术维度：使用 Harness、伪助手工具调用、TypeBox 工具定义和扩展工厂模拟同一次代理运行的多轮请求。
@@ -7,11 +8,21 @@
  * 新手阅读建议：先看每个扩展注册的两个工具，再比较 setResponses 两次回调收到的 tools/messages/systemPrompt。
  */
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
+=======
+import {
+	fauxAssistantMessage,
+	fauxToolCall,
+	getCurrentSystemPrompt,
+	getCurrentTools,
+	type TranscriptContext,
+} from "@earendil-works/pi-ai";
+>>>>>>> main
 import { Type } from "typebox";
 import { describe, expect, it } from "vitest";
-import type { ExtensionFactory } from "../../../src/index.ts";
+import type { ExtensionAPI, ExtensionFactory } from "../../../src/index.ts";
 import { createHarness } from "../harness.ts";
 
+<<<<<<< HEAD
 // 回归覆盖活动工具变化未及时进入同一运行下一轮请求的问题。
 describe("extension active tools next-turn refresh", () => {
 	// setActiveTools 替换工具集后，紧接着的提供商请求应只看到新工具。
@@ -51,6 +62,41 @@ describe("extension active tools next-turn refresh", () => {
 		const harness = await createHarness({
 			extensionFactories,
 		});
+=======
+function getProviderToolNames(context: TranscriptContext): string[] {
+	return getCurrentTools(context.messages)
+		.map((tool) => tool.name)
+		.sort();
+}
+
+/** Register `switch_tools`, which swaps the active set to `after_switch` when executed. */
+function registerSwitchTools(pi: ExtensionAPI): void {
+	pi.registerTool({
+		name: "switch_tools",
+		label: "Switch Tools",
+		description: "Switch the active extension tool set",
+		promptSnippet: "Switch to the next extension tool",
+		parameters: Type.Object({}),
+		execute: async () => {
+			pi.setActiveTools(["after_switch"]);
+			return { content: [{ type: "text", text: "switched" }], details: {} };
+		},
+	});
+	pi.registerTool({
+		name: "after_switch",
+		label: "After Switch",
+		description: "Tool that should be available after switching",
+		promptSnippet: "Run after the active tool set changes",
+		parameters: Type.Object({}),
+		execute: async () => ({ content: [{ type: "text", text: "after" }], details: {} }),
+	});
+}
+
+describe("extension active tools next-turn refresh", () => {
+	// Regression #6162
+	it("applies pi.setActiveTools before the next provider request in the same run", async () => {
+		const harness = await createHarness({ extensionFactories: [registerSwitchTools] });
+>>>>>>> main
 
 		try {
 			harness.session.setActiveToolsByName(["switch_tools"]);
@@ -59,11 +105,11 @@ describe("extension active tools next-turn refresh", () => {
 			const providerToolNames: string[][] = [];
 			harness.setResponses([
 				(context) => {
-					providerToolNames.push((context.tools ?? []).map((tool) => tool.name).sort());
+					providerToolNames.push(getProviderToolNames(context));
 					return fauxAssistantMessage(fauxToolCall("switch_tools", {}), { stopReason: "toolUse" });
 				},
 				(context) => {
-					providerToolNames.push((context.tools ?? []).map((tool) => tool.name).sort());
+					providerToolNames.push(getProviderToolNames(context));
 					return fauxAssistantMessage("done");
 				},
 			]);
@@ -79,6 +125,7 @@ describe("extension active tools next-turn refresh", () => {
 		}
 	});
 
+<<<<<<< HEAD
 	// 追加活动工具时，当前工具结果应记录 addedToolNames 供下一轮理解变化。
 	it("records additive active tool changes on the current tool result", async () => {
 		// extensionFactories 注册一个保留原工具并追加 after_load 的工具。
@@ -118,22 +165,32 @@ describe("extension active tools next-turn refresh", () => {
 
 			// addedToolNames 按提供商轮次记录工具结果声明的新增工具。
 			const addedToolNames: string[][] = [];
+=======
+	it("reports the refreshed system prompt during the run", async () => {
+		const harness = await createHarness({ extensionFactories: [registerSwitchTools] });
+		try {
+			harness.session.setActiveToolsByName(["switch_tools"]);
+			const providerPrompts: string[] = [];
+			const sessionPrompts: string[] = [];
+>>>>>>> main
 			harness.setResponses([
-				() => fauxAssistantMessage(fauxToolCall("load_more_tools", {}), { stopReason: "toolUse" }),
 				(context) => {
-					addedToolNames.push(
-						context.messages
-							.filter((message) => message.role === "toolResult")
-							.flatMap((message) => message.addedToolNames ?? []),
-					);
+					providerPrompts.push(getCurrentSystemPrompt(context.messages));
+					sessionPrompts.push(harness.session.systemPrompt);
+					return fauxAssistantMessage(fauxToolCall("switch_tools", {}), { stopReason: "toolUse" });
+				},
+				(context) => {
+					providerPrompts.push(getCurrentSystemPrompt(context.messages));
+					sessionPrompts.push(harness.session.systemPrompt);
 					return fauxAssistantMessage("done");
 				},
 			]);
 
 			await harness.session.prompt("start");
 
-			expect(harness.session.getActiveToolNames()).toEqual(["load_more_tools", "after_load"]);
-			expect(addedToolNames).toEqual([["after_load"]]);
+			expect(providerPrompts).toHaveLength(2);
+			expect(providerPrompts[0]).not.toBe(providerPrompts[1]);
+			expect(sessionPrompts).toEqual(providerPrompts);
 		} finally {
 			harness.cleanup();
 		}
@@ -148,32 +205,7 @@ describe("extension active tools next-turn refresh", () => {
 					systemPrompt: `${event.systemPrompt}\n\nkeep this run override`,
 				}));
 
-				pi.registerTool({
-					name: "switch_tools",
-					label: "Switch Tools",
-					description: "Switch the active extension tool set",
-					promptSnippet: "Switch to the next extension tool",
-					parameters: Type.Object({}),
-					execute: async () => {
-						pi.setActiveTools(["after_switch"]);
-						return {
-							content: [{ type: "text", text: "switched" }],
-							details: {},
-						};
-					},
-				});
-
-				pi.registerTool({
-					name: "after_switch",
-					label: "After Switch",
-					description: "Tool that should be available after switching",
-					promptSnippet: "Run after the active tool set changes",
-					parameters: Type.Object({}),
-					execute: async () => ({
-						content: [{ type: "text", text: "after" }],
-						details: {},
-					}),
-				});
+				registerSwitchTools(pi);
 			},
 		];
 		// harness 加载系统提示与工具切换扩展。
@@ -188,15 +220,18 @@ describe("extension active tools next-turn refresh", () => {
 			const providerSystemPrompts: string[] = [];
 			// providerToolNames 记录两轮请求的工具集合。
 			const providerToolNames: string[][] = [];
+			const captureSystemPrompt = (context: TranscriptContext): void => {
+				providerSystemPrompts.push(getCurrentSystemPrompt(context.messages));
+			};
 			harness.setResponses([
 				(context) => {
-					providerSystemPrompts.push(context.systemPrompt ?? "");
-					providerToolNames.push((context.tools ?? []).map((tool) => tool.name).sort());
+					captureSystemPrompt(context);
+					providerToolNames.push(getProviderToolNames(context));
 					return fauxAssistantMessage(fauxToolCall("switch_tools", {}), { stopReason: "toolUse" });
 				},
 				(context) => {
-					providerSystemPrompts.push(context.systemPrompt ?? "");
-					providerToolNames.push((context.tools ?? []).map((tool) => tool.name).sort());
+					captureSystemPrompt(context);
+					providerToolNames.push(getProviderToolNames(context));
 					return fauxAssistantMessage("done");
 				},
 			]);

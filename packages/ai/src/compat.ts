@@ -79,7 +79,9 @@ import type {
 	SimpleStreamOptions,
 	StreamFunction,
 	StreamOptions,
+	TranscriptContext,
 } from "./types.ts";
+import { normalizeContext } from "./utils/transcript.ts";
 
 // 已废弃：静态目录读取（建议改用 getBuiltinModel 或 Models.getModel）
 /** @deprecated Static catalog read. Use `getBuiltinModel` from "@earendil-works/pi-ai/providers/all" or `Models.getModel()`. */
@@ -94,14 +96,14 @@ export const getProviders = getBuiltinProviders;
 // API 流函数宽类型（模型/上下文/通用选项 → 事件流）
 export type ApiStreamFunction = (
 	model: Model<Api>,
-	context: Context,
+	context: TranscriptContext,
 	options?: StreamOptions,
 ) => AssistantMessageEventStream;
 
 // API 简化流函数宽类型
 export type ApiStreamSimpleFunction = (
 	model: Model<Api>,
-	context: Context,
+	context: TranscriptContext,
 	options?: SimpleStreamOptions,
 ) => AssistantMessageEventStream;
 
@@ -308,15 +310,16 @@ export function stream<TApi extends Api>(
 	context: Context,
 	options?: ProviderStreamOptions,
 ): AssistantMessageEventStream {
+	const transcript = normalizeContext(context);
 	const builtinProvider = getBuiltinProviderForModel(model);
 	if (builtinProvider) {
 		if (model.provider.startsWith("cloudflare-") && !hasResolvedCloudflareAuth(options)) {
-			return compatModels.stream(model, context, options as ModelsApiStreamOptions<TApi> | undefined);
+			return compatModels.stream(model, transcript, options as ModelsApiStreamOptions<TApi> | undefined);
 		}
-		return builtinProvider.stream(model, context, withEnvApiKey(model, options) as ApiStreamOptions<TApi>);
+		return builtinProvider.stream(model, transcript, withEnvApiKey(model, options) as ApiStreamOptions<TApi>);
 	}
 	const provider = resolveApiProvider(model.api);
-	return provider.stream(model, context, withEnvApiKey(model, options) as StreamOptions);
+	return provider.stream(model, transcript, withEnvApiKey(model, options) as StreamOptions);
 }
 
 // 兼容补全入口（公开）：取流结果
@@ -335,15 +338,16 @@ export function streamSimple<TApi extends Api>(
 	context: Context,
 	options?: SimpleStreamOptions,
 ): AssistantMessageEventStream {
+	const transcript = normalizeContext(context);
 	const builtinProvider = getBuiltinProviderForModel(model);
 	if (builtinProvider) {
 		if (model.provider.startsWith("cloudflare-") && !hasResolvedCloudflareAuth(options)) {
-			return compatModels.streamSimple(model, context, options);
+			return compatModels.streamSimple(model, transcript, options);
 		}
-		return builtinProvider.streamSimple(model, context, withEnvApiKey(model, options));
+		return builtinProvider.streamSimple(model, transcript, withEnvApiKey(model, options));
 	}
 	const provider = resolveApiProvider(model.api);
-	return provider.streamSimple(model, context, withEnvApiKey(model, options));
+	return provider.streamSimple(model, transcript, withEnvApiKey(model, options));
 }
 
 // 兼容简化补全入口（公开）

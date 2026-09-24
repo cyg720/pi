@@ -16,6 +16,7 @@ import { isValidThinkingLevel } from "../cli/args.ts";
 import { DEFAULT_THINKING_LEVEL } from "./defaults.ts";
 import type { ModelRuntime } from "./model-runtime.ts";
 
+<<<<<<< HEAD
 /** Default model IDs for each known provider */
 /**
  * 【文件职责】模型解析：把用户配置的模型引用解析为具体 Model 对象（含自定义模型）。
@@ -23,13 +24,17 @@ import type { ModelRuntime } from "./model-runtime.ts";
  * 【新手阅读建议】看解析主函数。
  */
 export const defaultModelPerProvider: Record<KnownProvider, string> = {
+=======
+/** Default chat model IDs for providers with built-in chat models. */
+export const defaultModelPerProvider: Partial<Record<KnownProvider, string>> = {
+>>>>>>> main
 	"amazon-bedrock": "us.anthropic.claude-opus-4-6-v1",
 	"ant-ling": "Ring-2.6-1T",
 	anthropic: "claude-opus-4-8",
 	openai: "gpt-5.5",
 	"azure-openai-responses": "gpt-5.4",
 	"openai-codex": "gpt-5.5",
-	radius: "auto",
+	radius: "balanced",
 	nvidia: "nvidia/nemotron-3-super-120b-a12b",
 	deepseek: "deepseek-v4-pro",
 	google: "gemini-3.1-pro-preview",
@@ -37,7 +42,7 @@ export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	"github-copilot": "gpt-5.4",
 	openrouter: "moonshotai/kimi-k2.6",
 	"vercel-ai-gateway": "zai/glm-5.1",
-	xai: "grok-4.6",
+	xai: "grok-4.7",
 	groq: "openai/gpt-oss-120b",
 	cerebras: "gpt-oss-120b",
 	zai: "glm-5.3",
@@ -54,6 +59,7 @@ export const defaultModelPerProvider: Record<KnownProvider, string> = {
 	opencode: "kimi-k2.6",
 	"opencode-go": "kimi-k2.6",
 	"kimi-coding": "kimi-for-coding",
+	meta: "muse-spark-1.3",
 	"cloudflare-workers-ai": "@cf/moonshotai/kimi-k2.6",
 	"cloudflare-ai-gateway": "workers-ai/@cf/moonshotai/kimi-k2.6",
 	"qwen-token-plan": "qwen3.7-max",

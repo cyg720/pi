@@ -145,6 +145,8 @@ const PROVIDER_MODEL_PAIRS: ProviderModelPair[] = [
 	// Kimi For Coding
 	// 中文说明：Kimi Coding 模型组合。
 	{ provider: "kimi-coding", model: "kimi-for-coding", label: "kimi-for-coding" },
+	// Meta
+	{ provider: "meta", model: "muse-spark-1.3", label: "meta-muse-spark-1.3" },
 	// Mistral
 	// 中文说明：Mistral 模型组合。
 	{ provider: "mistral", model: "devstral-medium-latest", label: "mistral-devstral-medium" },

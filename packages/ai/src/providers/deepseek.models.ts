@@ -12,8 +12,19 @@
  */
 
 import values from "./data/deepseek.json" with { type: "json" };
-import { flattenModelCatalog, type ModelCatalog } from "../model-catalog.ts";
+import { flattenChatModelCatalog, flattenClassifierModelCatalog, flattenImageModelCatalog, type ChatModelCatalog, type ClassifierModelCatalog, type ImageModelCatalog } from "../model-catalog.ts";
 
+<<<<<<< HEAD
 /** 当前供应商的只读模型目录；键为模型 ID，值为经过扁平化和类型校验的模型元数据。 */
 export const DEEPSEEK_MODELS: ModelCatalog<typeof values, "deepseek"> =
 	flattenModelCatalog("deepseek", values);
+=======
+export const DEEPSEEK_MODELS: ChatModelCatalog<typeof values, "deepseek"> =
+	flattenChatModelCatalog("deepseek", values);
+
+export const DEEPSEEK_IMAGE_MODELS: ImageModelCatalog<typeof values, "deepseek"> =
+	flattenImageModelCatalog("deepseek", values);
+
+export const DEEPSEEK_CLASSIFIER_MODELS: ClassifierModelCatalog<typeof values, "deepseek"> =
+	flattenClassifierModelCatalog("deepseek", values);
+>>>>>>> main

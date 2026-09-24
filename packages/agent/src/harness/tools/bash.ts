@@ -13,16 +13,20 @@
  *              最后研究 scheduleOutputUpdate/emitOutputUpdate 的节流机制。
  */
 import { type Static, Type } from "typebox";
-import type { AgentHarnessTool } from "../types.ts";
-import { getOrThrow } from "../types.ts";
-import { executeShellWithCapture, type ShellCaptureProgress } from "../utils/shell-output.ts";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize, type TruncationResult } from "../utils/truncate.ts";
+import type { Context } from "../context.ts";
+import type { AgentHarnessTool, ShellOutputTruncation, ShellOutputView } from "../types.ts";
+import { applyShellOutputUpdate } from "../utils/output-capture.ts";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, formatSize } from "../utils/truncate.ts";
 import type { ExecutionToolContext } from "./tool-context.ts";
 
 // 超时上限（秒）：受 setTimeout 32 位毫秒上限约束
 const MAX_TIMEOUT_SECONDS = 2_147_483_647 / 1000;
+<<<<<<< HEAD
 // 输出进度更新的最小间隔（毫秒）
 const BASH_UPDATE_THROTTLE_MS = 100;
+=======
+const BASH_CHECKPOINT_INTERVAL_MS = 2_000;
+>>>>>>> main
 
 // bash 工具参数 schema：command 必填；timeout 可选（秒）
 const bashSchema = Type.Object({
@@ -35,7 +39,7 @@ export type BashToolInput = Static<typeof bashSchema>;
 
 /** bash 工具详情（中文说明）：仅在发生截断时填充——截断诊断信息与全量输出文件路径。 */
 export interface BashToolDetails {
-	truncation?: TruncationResult;
+	truncation?: ShellOutputTruncation;
 	fullOutputPath?: string;
 }
 
@@ -53,8 +57,8 @@ export interface BashExecution {
  */
 export type BashPrepare<TContext extends ExecutionToolContext = ExecutionToolContext> = (
 	execution: BashExecution,
-	context: TContext,
-	signal?: AbortSignal,
+	toolContext: TContext,
+	context: Context,
 ) => void | Promise<void>;
 
 /** bash 工具选项（中文说明）：commandPrefix 会被拼接在用户命令之前；prepare 为执行前钩子。 */
@@ -84,19 +88,26 @@ export function createBashTool<TContext extends ExecutionToolContext = Execution
 	return {
 		name: "bash",
 		label: "bash",
-		description: `Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
+		description: `Execute a bash command in the current working directory. Returns combined stdout and stderr. Output is truncated to last ${DEFAULT_MAX_LINES} lines or ${DEFAULT_MAX_BYTES / 1024}KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.`,
 		parameters: bashSchema,
+<<<<<<< HEAD
 		async execute(_toolCallId, { command, timeout }, signal, onUpdate, context) {
 			// 先校验超时参数
 			validateTimeout(timeout);
 			const { env } = context;
 			// 组装执行描述：前缀命令以换行拼接；默认继承环境变量
+=======
+		async execute(_toolCallId, { command, timeout }, onUpdate, toolContext, _invocation, context) {
+			validateTimeout(timeout);
+			const { env } = toolContext;
+>>>>>>> main
 			const execution: BashExecution = {
 				command: options?.commandPrefix ? `${options.commandPrefix}\n${command}` : command,
 				cwd: env.cwd,
 				env: {},
 				inheritEnv: true,
 			};
+<<<<<<< HEAD
 			// 允许宿主在执行前检查/修改参数
 			await options?.prepare?.(execution, context, signal);
 			// 最新进度快照生成器（由捕获层回填）
@@ -200,7 +211,83 @@ export function createBashTool<TContext extends ExecutionToolContext = Execution
 				return { content: [{ type: "text", text: outputText || "(no output)" }], details };
 			} finally {
 				clearUpdateTimer();
+=======
+			await options?.prepare?.(execution, toolContext, context);
+			let view: ShellOutputView | undefined;
+			let lastCheckpointAt = Date.now();
+			let lastCheckpoint: string | undefined;
+			let acceptingUpdates = true;
+
+			onUpdate({ content: [], details: undefined });
+			const result = await env.exec(
+				execution.command,
+				{
+					cwd: execution.cwd,
+					env: execution.env,
+					inheritEnv: execution.inheritEnv,
+					timeout,
+					capture: {
+						limits: { maxBytes: DEFAULT_MAX_BYTES, maxLines: DEFAULT_MAX_LINES, retain: "tail" },
+						spill: true,
+					},
+					onUpdate: (update) => {
+						if (!acceptingUpdates) return;
+						view = applyShellOutputUpdate(view, update);
+						const snapshot = {
+							content: [{ type: "text" as const, text: view.text }],
+							details: {
+								truncation: view.truncation.truncated ? view.truncation : undefined,
+								fullOutputPath: view.spillPath,
+							},
+						};
+						const now = Date.now();
+						const encoded = JSON.stringify(snapshot);
+						const checkpoint =
+							now - lastCheckpointAt >= BASH_CHECKPOINT_INTERVAL_MS && encoded !== lastCheckpoint;
+						onUpdate(snapshot, checkpoint ? { checkpoint: true } : undefined);
+						if (checkpoint) {
+							lastCheckpointAt = now;
+							lastCheckpoint = encoded;
+						}
+					},
+				},
+				context,
+			);
+			acceptingUpdates = false;
+
+			let outputText = view?.text ?? "";
+			const capture = result.ok ? { text: outputText, ...result.value } : view;
+			let details: BashToolDetails | undefined;
+			if (capture?.truncation.truncated) {
+				details = { truncation: capture.truncation, fullOutputPath: capture.spillPath };
+				const startLine = capture.truncation.totalLines - capture.truncation.outputLines + 1;
+				const endLine = capture.truncation.totalLines;
+				if (capture.truncation.lastLinePartial) {
+					const lastLineSize = formatSize(capture.lastLineBytes ?? capture.truncation.outputBytes);
+					outputText += `\n\n[Showing last ${formatSize(capture.truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${capture.spillPath}]`;
+				} else if (capture.truncation.truncatedBy === "lines") {
+					outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${capture.truncation.totalLines}. Full output: ${capture.spillPath}]`;
+				} else {
+					outputText += `\n\n[Showing lines ${startLine}-${endLine} of ${capture.truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${capture.spillPath}]`;
+				}
+>>>>>>> main
 			}
+
+			if (!result.ok) {
+				const status =
+					result.error.code === "timeout"
+						? `Command timed out after ${timeout} seconds`
+						: result.error.code === "aborted"
+							? "Command aborted"
+							: result.error.message;
+				throw new Error(outputText ? `${outputText}\n\n${status}` : status, { cause: result.error });
+			}
+			if (result.value.exitCode !== 0) {
+				throw new Error(
+					`${outputText ? `${outputText}\n\n` : ""}Command exited with code ${result.value.exitCode}`,
+				);
+			}
+			return { content: [{ type: "text", text: outputText || "(no output)" }], details };
 		},
 	};
 }

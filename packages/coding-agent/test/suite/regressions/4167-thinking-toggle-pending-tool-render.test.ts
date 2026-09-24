@@ -62,6 +62,7 @@ type RenderSessionContextThis = {
 	isInitialized: boolean;
 	updateEditorBorderColor(): void;
 	getRegisteredToolDefinition(toolName: string): undefined;
+	maybeShowAssistantDiagnostics(message: AssistantMessage): void;
 	addMessageToChat(message: AgentMessage, options?: { populateHistory?: boolean }): void;
 	renderSessionItems: RenderSessionItems;
 };
@@ -96,6 +97,7 @@ function createFakeInteractiveModeThis(): RenderSessionContextThis {
 		isInitialized: true,
 		updateEditorBorderColor: vi.fn(),
 		getRegisteredToolDefinition: (_toolName: string) => undefined,
+		maybeShowAssistantDiagnostics: vi.fn(),
 		renderSessionItems: (InteractiveMode.prototype as unknown as { renderSessionItems: RenderSessionItems })
 			.renderSessionItems,
 		/** 参数 message 是待显示消息；把角色文本加入容器且无返回值；示例：`fakeThis.addMessageToChat(message)`。 */

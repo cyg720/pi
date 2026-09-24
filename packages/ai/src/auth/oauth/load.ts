@@ -29,6 +29,7 @@ type OAuthFlowLoaders = {
 	githubCopilot: () => OAuthAuth | Promise<OAuthAuth>;
 	openrouter: () => OAuthAuth | Promise<OAuthAuth>;
 	kimiCoding: () => OAuthAuth | Promise<OAuthAuth>;
+	meta: () => OAuthAuth | Promise<OAuthAuth>;
 	xai: () => OAuthAuth | Promise<OAuthAuth>;
 	radius: (options: { name: string; gateway: string }) => OAuthAuth | Promise<OAuthAuth>;
 };
@@ -72,7 +73,15 @@ export const loadKimiCodingOAuth = async (): Promise<OAuthAuth> => {
 	return ((await importOAuthModule("./kimi-coding.ts")) as { kimiCodingOAuth: OAuthAuth }).kimiCodingOAuth;
 };
 
+<<<<<<< HEAD
 // 加载 xAI OAuth（公开）
+=======
+export const loadMetaOAuth = async (): Promise<OAuthAuth> => {
+	if (bundledLoaders) return bundledLoaders.meta();
+	return ((await importOAuthModule("./meta.ts")) as { metaOAuth: OAuthAuth }).metaOAuth;
+};
+
+>>>>>>> main
 export const loadXaiOAuth = async (): Promise<OAuthAuth> => {
 	if (bundledLoaders) return bundledLoaders.xai();
 	return ((await importOAuthModule("./xai.ts")) as { xaiOAuth: OAuthAuth }).xaiOAuth;

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】工具路径解析辅助：把模型给出的工具路径参数规范化并转为绝对路径；
  *              读文件场景额外提供多“变体”探测，兼容模型转录中常见的字符偏差。
@@ -11,6 +12,9 @@
  *              AM/PM 时间样式文件名使用窄不换行空格（macOS 截图命名习惯）。
  * 【新手阅读建议】半分钟读完：重点记住两个导出函数的分工——通用解析 vs 带容错的读取解析。
  */
+=======
+import type { Context } from "../context.ts";
+>>>>>>> main
 import type { ExecutionEnv } from "../types.ts";
 import { getOrThrow } from "../types.ts";
 
@@ -24,6 +28,7 @@ function normalizeToolPath(path: string): string {
 	return normalized.startsWith("@") ? normalized.slice(1) : normalized;
 }
 
+<<<<<<< HEAD
 /**
  * 解析工具路径为绝对路径（中文说明）：先规范化再经执行环境的 absolutePath 转换；
  * 失败时抛出底层 FileError。参数 env —— 执行环境；path —— 模型给的路径；signal —— 中止信号。
@@ -39,6 +44,14 @@ export async function resolveToolPath(env: ExecutionEnv, path: string, signal?: 
  */
 export async function resolveReadToolPath(env: ExecutionEnv, path: string, signal?: AbortSignal): Promise<string> {
 	const resolved = await resolveToolPath(env, path, signal);
+=======
+export async function resolveToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string> {
+	return getOrThrow(await env.absolutePath(normalizeToolPath(path), context));
+}
+
+export async function resolveReadToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string> {
+	const resolved = await resolveToolPath(env, path, context);
+>>>>>>> main
 	const variants = [
 		resolved,
 		resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`),
@@ -48,7 +61,7 @@ export async function resolveReadToolPath(env: ExecutionEnv, path: string, signa
 	];
 
 	for (const variant of new Set(variants)) {
-		if (getOrThrow(await env.exists(variant, signal))) return variant;
+		if (getOrThrow(await env.exists(variant, context))) return variant;
 	}
 	return resolved;
 }

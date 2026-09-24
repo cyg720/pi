@@ -25,10 +25,15 @@ const rootLockfilePath = join(repoRoot, "package-lock.json");
 const shrinkwrapPath = join(codingAgentDir, "npm-shrinkwrap.json");
 /** 识别仓库内部发布包的 npm 名称前缀。 */
 const internalPackagePrefix = "@earendil-works/pi-";
+<<<<<<< HEAD
 /** 已人工审查且允许执行安装脚本的“包@版本”及理由。 */
+=======
+const internalPackageNames = new Set(["@earendil-works/chord"]);
+>>>>>>> main
 const allowedInstallScriptPackages = new Map([
-	["@google/genai@1.52.0", "preinstall is a no-op in the published package"],
-	["protobufjs@7.6.5", "postinstall only warns about protobufjs version scheme mismatches"],
+	["@google/genai@2.21.0", "preinstall is a no-op in the published package"],
+	["esbuild@0.28.2", "postinstall selects and verifies the platform-specific esbuild binary"],
+	["protobufjs@7.6.6", "postinstall only warns about protobufjs version scheme mismatches"],
 ]);
 
 /** 用户传入的去重参数集合。 */
@@ -178,7 +183,7 @@ function getInternalWorkspaces(lockPackages) {
 		if (!lockPath.startsWith("packages/") || lockPath.includes("/node_modules/") || !entry.name || !entry.version) {
 			continue;
 		}
-		if (!entry.name.startsWith(internalPackagePrefix)) {
+		if (!entry.name.startsWith(internalPackagePrefix) && !internalPackageNames.has(entry.name)) {
 			continue;
 		}
 
@@ -257,6 +262,7 @@ function addInternalWorkspace(shrinkwrapPackages, addedPaths, queue, name, works
 	addedPaths.add(outputPath);
 
 	for (const dependencyName of Object.keys(packageDependencies(packageJson))) {
+<<<<<<< HEAD
 		/** dependencyName 是根包当前运行时依赖名称，用于追踪完整传递闭包。 */
 		queue.push({ name: dependencyName, from: outputPath });
 	}
@@ -278,6 +284,38 @@ function addExternalPackage(lockPackages, shrinkwrapPackages, addedPaths, queue,
 	for (const dependencyName of Object.keys(packageDependencies(entry))) {
 		/** dependencyName 是当前包的运行时依赖名称，用于继续遍历依赖图。 */
 		queue.push({ name: dependencyName, from: lockPath });
+=======
+		queue.push({
+			name: dependencyName,
+			sourceFrom: workspace.lockPath,
+			sourceBase: workspace.lockPath,
+			outputBase: outputPath,
+		});
+	}
+}
+
+function addExternalPackage(lockPackages, shrinkwrapPackages, addedPaths, queue, item) {
+	const sourceLockPath = resolveExternalDependency(lockPackages, item.name, item.sourceFrom);
+	const outputLockPath =
+		item.sourceBase && sourceLockPath.startsWith(`${item.sourceBase}/`)
+			? [item.outputBase, sourceLockPath.slice(item.sourceBase.length + 1)].filter(Boolean).join("/")
+			: sourceLockPath;
+	if (addedPaths.has(outputLockPath)) {
+		return;
+	}
+
+	const entry = lockPackages[sourceLockPath];
+	shrinkwrapPackages[outputLockPath] = copyLockEntry(entry);
+	addedPaths.add(outputLockPath);
+
+	for (const dependencyName of Object.keys(packageDependencies(entry))) {
+		queue.push({
+			name: dependencyName,
+			sourceFrom: sourceLockPath,
+			sourceBase: item.sourceBase,
+			outputBase: item.outputBase,
+		});
+>>>>>>> main
 	}
 }
 
@@ -381,8 +419,17 @@ function generateShrinkwrap() {
 	const addedPaths = new Set([""]);
 	/** 依赖闭包中实际使用的内部包名。 */
 	const internalNames = new Set();
+<<<<<<< HEAD
 	/** 待解析依赖的广度遍历队列。 */
 	const queue = Object.keys(packageDependencies(codingAgentPackage)).map((name) => ({ name, from: "" }));
+=======
+	const queue = Object.keys(packageDependencies(codingAgentPackage)).map((name) => ({
+		name,
+		sourceFrom: "packages/coding-agent",
+		sourceBase: "packages/coding-agent",
+		outputBase: "",
+	}));
+>>>>>>> main
 
 	while (queue.length > 0) {
 		/** 当前出队的依赖名及引用路径。 */
@@ -403,7 +450,7 @@ function generateShrinkwrap() {
 			continue;
 		}
 
-		addExternalPackage(lockPackages, shrinkwrapPackages, addedPaths, queue, item.name, item.from);
+		addExternalPackage(lockPackages, shrinkwrapPackages, addedPaths, queue, item);
 	}
 
 	/** 按 npm lockfile v3 格式组装的最终对象。 */

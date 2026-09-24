@@ -184,7 +184,47 @@ describe("TreeSelectorComponent", () => {
 			expect(list.getSelectedNode()?.entry.id).toBe("user-2");
 		});
 
+<<<<<<< HEAD
 		// 测试场景：验证“focuses nearest visible ancestor when currentLeafId is a thinking_level_change entry”对应的行为、返回值与边界条件。
+=======
+		test("hides context edits by default and labels them in all mode", () => {
+			const entries: SessionEntry[] = [
+				userMessage("user-1", null, "hello"),
+				assistantMessage("asst-1", "user-1", "hi"),
+				{
+					type: "context_edit",
+					id: "edit-1",
+					parentId: "asst-1",
+					timestamp: new Date().toISOString(),
+					targetId: "asst-1",
+					replacement: null,
+				},
+			];
+			const tree = buildTree(entries);
+			const defaultSelector = new TreeSelectorComponent(
+				tree,
+				"edit-1",
+				24,
+				() => {},
+				() => {},
+			);
+			expect(defaultSelector.getTreeList().getSelectedNode()?.entry.id).toBe("asst-1");
+
+			const allSelector = new TreeSelectorComponent(
+				tree,
+				"edit-1",
+				24,
+				() => {},
+				() => {},
+				undefined,
+				undefined,
+				"all",
+			);
+			const rendered = allSelector.getTreeList().render(200).map(stripVTControlCharacters).join("\n");
+			expect(rendered).toContain("[context omit: asst-1]");
+		});
+
+>>>>>>> main
 		test("focuses nearest visible ancestor when currentLeafId is a thinking_level_change entry", () => {
 			// Similar structure with thinking_level_change instead of model_change
 			// 中文说明：上方英文注释描述“Similar structure with thinking_level_change instead of”相关前提、步骤或边界；下面代码按该说明执行。

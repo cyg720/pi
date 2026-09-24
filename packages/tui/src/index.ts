@@ -17,6 +17,30 @@ export {
 	CombinedAutocompleteProvider,
 	type SlashCommand,
 } from "./autocomplete.ts";
+// Colors and styling
+export {
+	backgroundAnsi,
+	type Color,
+	type ColorMixSpace,
+	colorToHex,
+	colorToOklch,
+	colorToRgb,
+	foregroundAnsi,
+	type IndexedColor,
+	indexedColor,
+	mixColors,
+	type OklchChannels,
+	type OklchColorValue,
+	oklchColor,
+	parseColor,
+	type RgbColorValue,
+	rgbColor,
+	styleText,
+	styleTextWithAnsi,
+	type TerminalColorMode,
+	type TextAttributes,
+	type TextStyle,
+} from "./colors.ts";
 // Components
 export { Box } from "./components/box.ts";
 export { CancellableLoader } from "./components/cancellable-loader.ts";
@@ -26,6 +50,7 @@ export { Image, type ImageOptions, type ImageTheme } from "./components/image.ts
 export { Input } from "./components/input.ts";
 export { Loader, type LoaderIndicatorOptions } from "./components/loader.ts";
 export { type DefaultTextStyle, Markdown, type MarkdownOptions, type MarkdownTheme } from "./components/markdown.ts";
+export { MouseRegion, type MouseRegionHandler } from "./components/mouse-region.ts";
 export {
 	ScrollView,
 	type ScrollViewOptions,
@@ -82,6 +107,8 @@ export {
 } from "./keys.ts";
 // LaTeX rendering
 export { type RenderLatexOptions, renderLatex } from "./latex.ts";
+// Native platform integration
+export { getNativeClipboard, type NativeClipboard } from "./native-platform.ts";
 // Input buffering for batch splitting
 export { StdinBuffer, type StdinBufferEventMap, type StdinBufferOptions } from "./stdin-buffer.ts";
 // Terminal interface and implementations
@@ -109,6 +136,7 @@ export {
 	getImageDimensions,
 	getJpegDimensions,
 	getPngDimensions,
+	getTerminalColorMode,
 	getWebpDimensions,
 	hyperlink,
 	type ImageDimensions,
@@ -131,6 +159,7 @@ export {
 	isFocusable,
 	isViewportTUI,
 	type OverlayAnchor,
+	type OverlayBounds,
 	type OverlayHandle,
 	type OverlayMargin,
 	type OverlayOptions,
@@ -140,6 +169,10 @@ export {
 	type TuiInputListener,
 	type TuiInputListenerResult,
 	type TuiMode,
+	type TuiMouseButton,
+	type TuiMouseEvent,
+	type TuiMouseEventResult,
+	type TuiMouseEventType,
 	type TuiStopOptions,
 	type ViewportTUI,
 } from "./tui.ts";

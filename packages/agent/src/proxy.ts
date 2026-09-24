@@ -24,13 +24,13 @@
 import {
 	type AssistantMessage,
 	type AssistantMessageEvent,
-	type Context,
 	EventStream,
 	type Model,
 	parseStreamingJson,
 	type SimpleStreamOptions,
 	type StopReason,
 	type ToolCall,
+	type TranscriptContext,
 } from "@earendil-works/pi-ai";
 
 // Create stream class matching ProxyMessageEventStream
@@ -69,12 +69,14 @@ export type ProxyAssistantMessageEvent =
 			type: "done";
 			reason: Extract<StopReason, "stop" | "length" | "toolUse">;
 			usage: AssistantMessage["usage"];
+			providerThinkingLevel?: string;
 	  }
 	| {
 			type: "error";
 			reason: Extract<StopReason, "aborted" | "error">;
 			errorMessage?: string;
 			usage: AssistantMessage["usage"];
+			providerThinkingLevel?: string;
 	  };
 
 /** 允许序列化并发送到代理服务的流选项子集。 */
@@ -141,9 +143,17 @@ function buildProxyRequestOptions(options: ProxyStreamOptions): ProxySerializabl
 	};
 }
 
+<<<<<<< HEAD
 /** 通过代理服务器发起流式模型请求。参数依次为模型、上下文和代理选项；立即返回事件流。 */
 export function streamProxy(model: Model<any>, context: Context, options: ProxyStreamOptions): ProxyMessageEventStream {
 	/** 调用方订阅并等待结果的代理事件流。 */
+=======
+export function streamProxy(
+	model: Model<any>,
+	context: TranscriptContext,
+	options: ProxyStreamOptions,
+): ProxyMessageEventStream {
+>>>>>>> main
 	const stream = new ProxyMessageEventStream();
 
 	(async () => {
@@ -219,6 +229,19 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 			const decoder = new TextDecoder();
 			/** 保存尚未遇到换行的半条 SSE 数据。 */
 			let buffer = "";
+			let sawTerminalEvent = false;
+
+			const processLine = (line: string): void => {
+				if (!line.startsWith("data: ")) return;
+				const data = line.slice(6).trim();
+				if (!data) return;
+				const proxyEvent = JSON.parse(data) as ProxyAssistantMessageEvent;
+				const event = processProxyEvent(proxyEvent, partial);
+				if (event) {
+					if (event.type === "done" || event.type === "error") sawTerminalEvent = true;
+					stream.push(event);
+				}
+			};
 
 			while (true) {
 				/** 本次读取的完成标记和字节块。 */
@@ -236,6 +259,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 
 				// line 是本次网络分片中已经完整结束的一行 SSE 文本。
 				for (const line of lines) {
+<<<<<<< HEAD
 					if (line.startsWith("data: ")) {
 						/** 去除 SSE data: 前缀后的 JSON 文本。 */
 						const data = line.slice(6).trim();
@@ -249,11 +273,34 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 							}
 						}
 					}
+=======
+					processLine(line);
+>>>>>>> main
 				}
 			}
 
 			if (options.signal?.aborted) {
 				throw new Error("Request aborted by user");
+			}
+
+			// The final event may not be newline-terminated; flush the decoder and
+			// process whatever is left in the buffer.
+			buffer += decoder.decode();
+			if (buffer) {
+				processLine(buffer);
+			}
+
+			if (!sawTerminalEvent) {
+				// A clean EOF without a done/error event means the server dropped the
+				// response mid-stream. Surface it as an error instead of leaving
+				// consumers waiting on a result that never arrives.
+				partial.stopReason = "error";
+				partial.errorMessage = "Connection closed by proxy server before the response completed";
+				stream.push({
+					type: "error",
+					reason: "error",
+					error: partial,
+				});
 			}
 
 			stream.end();
@@ -407,12 +454,18 @@ function processProxyEvent(
 		case "done":
 			partial.stopReason = proxyEvent.reason;
 			partial.usage = proxyEvent.usage;
+			if (proxyEvent.providerThinkingLevel !== undefined) {
+				partial.providerThinkingLevel = proxyEvent.providerThinkingLevel;
+			}
 			return { type: "done", reason: proxyEvent.reason, message: partial };
 
 		case "error":
 			partial.stopReason = proxyEvent.reason;
 			partial.errorMessage = proxyEvent.errorMessage;
 			partial.usage = proxyEvent.usage;
+			if (proxyEvent.providerThinkingLevel !== undefined) {
+				partial.providerThinkingLevel = proxyEvent.providerThinkingLevel;
+			}
 			return { type: "error", reason: proxyEvent.reason, error: partial };
 
 		default: {

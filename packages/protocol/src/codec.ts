@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * 【文件职责】实现 `@earendil-works/pi-protocol` 包中的 `codec` 模块，集中维护该模块的类型、状态与操作入口。
  * 【技术维度】主要依赖 `typebox/value`、`./cbor/index.ts`、`./framing.ts`、`./schemas.ts`，并通过 TypeScript 模块边界组织实现。
@@ -6,55 +7,36 @@
  * 【关键边界】调用方应遵守导出类型、错误处理和资源生命周期约束；未导出的辅助实现不构成稳定接口。
  * 【新手阅读建议】先查看 `ProtocolValidationError`、`parseClientMessage`、`parseServerMessage`、`encodeClientMessage`、`encodeServerMessage`、`ClientMessageDecoder` 的签名，再沿导入依赖和内部调用链理解具体实现。
  */
+=======
+import { isJsonValue } from "@earendil-works/chord";
+>>>>>>> main
 import { Check } from "typebox/value";
 import { decodeCbor, encodeCbor } from "./cbor/index.ts";
-import {
-	assertCompleteFrame,
-	DEFAULT_MAX_FRAME_LENGTH,
-	encodeFrame,
-	FrameDecoder,
-	type FrameDecoderOptions,
-} from "./framing.ts";
+import { DEFAULT_MAX_FRAME_LENGTH, encodeFrame, FrameDecoder, type FrameDecoderOptions } from "./framing.ts";
 import {
 	type ClientMessage,
 	ClientMessageSchema,
 	PROTOCOL_VERSION,
 	type ServerMessage,
 	ServerMessageSchema,
-} from "./schemas.ts";
+} from "./protocol.ts";
 
 export class ProtocolValidationError extends Error {
-	constructor(message: string, _value?: unknown) {
+	constructor(message: string) {
 		super(message);
 		this.name = "ProtocolValidationError";
 	}
 }
 
-function isProtocolValue(value: unknown, optionalProperty = false, ancestors = new Set<object>()): boolean {
-	if (value === undefined) return optionalProperty;
-	if (value === null || typeof value === "boolean" || typeof value === "number" || typeof value === "string") {
-		return true;
-	}
-	if (typeof value !== "object" || ancestors.has(value)) return false;
-	ancestors.add(value);
-	try {
-		if (Array.isArray(value)) return value.every((item) => isProtocolValue(item, false, ancestors));
-		if (Object.getPrototypeOf(value) !== Object.prototype) return false;
-		return Object.values(value).every((item) => isProtocolValue(item, true, ancestors));
-	} finally {
-		ancestors.delete(value);
-	}
-}
-
 export function parseClientMessage(value: unknown): ClientMessage {
-	if (!isProtocolValue(value) || !Check(ClientMessageSchema, value)) {
+	if (!Check(ClientMessageSchema, value) || !isJsonValue(value)) {
 		throw new ProtocolValidationError("Invalid client protocol message");
 	}
 	return value;
 }
 
 export function parseServerMessage(value: unknown): ServerMessage {
-	if (!isProtocolValue(value) || !Check(ServerMessageSchema, value)) {
+	if (!Check(ServerMessageSchema, value) || !isJsonValue(value)) {
 		throw new ProtocolValidationError("Invalid server protocol message");
 	}
 	return value;
@@ -74,9 +56,7 @@ function encodeProtocolMessage<T>(
 	const validated = parse(value);
 	try {
 		const maxFrameLength = options?.maxFrameLength ?? DEFAULT_MAX_FRAME_LENGTH;
-		const frame = encodeFrame(encodeCbor(validated, { maxByteLength: maxFrameLength }));
-		assertCompleteFrame(frame, { maxFrameLength });
-		return frame;
+		return encodeFrame(encodeCbor(validated, { maxByteLength: maxFrameLength }));
 	} catch (error) {
 		if (error instanceof ProtocolValidationError) throw error;
 		throw new ProtocolValidationError(`Unable to encode ${kind} protocol message: ${boundedErrorMessage(error)}`);
@@ -165,14 +145,6 @@ export class ServerMessageDecoder {
 	end(): void {
 		this.decoder.end();
 	}
-}
-
-export function createClientMessageDecoder(options?: FrameDecoderOptions): ClientMessageDecoder {
-	return new ClientMessageDecoder(options);
-}
-
-export function createServerMessageDecoder(options?: FrameDecoderOptions): ServerMessageDecoder {
-	return new ServerMessageDecoder(options);
 }
 
 export function isSupportedProtocolVersion(version: number): version is typeof PROTOCOL_VERSION {

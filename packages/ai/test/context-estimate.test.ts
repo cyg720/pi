@@ -8,8 +8,9 @@
  */
 import { describe, expect, it } from "vitest";
 import { buildBaseOptions } from "../src/api/simple-options.ts";
-import type { AssistantMessage, Context, Model, Usage } from "../src/types.ts";
+import type { AssistantMessage, Model, Usage } from "../src/types.ts";
 import { estimateContextTokens } from "../src/utils/estimate.ts";
+import { normalizeContext } from "../src/utils/transcript.ts";
 
 /**
  * 创建零成本、仅输入令牌非零的用量对象。
@@ -64,15 +65,19 @@ const model: Model<"openai-responses"> = {
 describe("context token estimation", () => {
 	// 验证时间更早的助手用量在其前方插入较新消息后会被视为过期；无参数，无返回值。
 	it("ignores stale assistant usage after a newer message is inserted before it", () => {
+<<<<<<< HEAD
 		// context 包含时间顺序被插入消息打乱的旧助手用量和长尾提示词。
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			systemPrompt: "system",
 			messages: [
 				{ role: "user", content: "summary", timestamp: 200 },
 				createAssistant(100, 9_500),
 				{ role: "user", content: "x".repeat(4_000), timestamp: 300 },
 			],
-		};
+		});
 
 		expect(estimateContextTokens(context)).toEqual({
 			tokens: 1_005,
@@ -85,8 +90,12 @@ describe("context token estimation", () => {
 
 	// 验证插入上下文后产生的新助手响应可重新作为用量基准；无参数，无返回值。
 	it("uses assistant usage again after a response to the inserted context", () => {
+<<<<<<< HEAD
 		// context 包含旧助手响应、插入提示、新助手响应和一条尾部用户消息。
 		const context: Context = {
+=======
+		const context = normalizeContext({
+>>>>>>> main
 			messages: [
 				{ role: "user", content: "summary", timestamp: 200 },
 				createAssistant(100, 9_500),
@@ -94,7 +103,7 @@ describe("context token estimation", () => {
 				createAssistant(400, 2_000),
 				{ role: "user", content: "tail", timestamp: 500 },
 			],
-		};
+		});
 
 		expect(estimateContextTokens(context)).toEqual({
 			tokens: 2_001,

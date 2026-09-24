@@ -27,7 +27,7 @@ import type { AssistantMessage } from "../types.ts";
  * - DS4: "Prompt has X tokens, but the configured context size is Y tokens"
  * - Cerebras: "400/413 status code (no body)"
  * - Mistral: "Prompt contains X tokens ... too large for model with Y maximum context length"
- * - z.ai: Does NOT error, accepts overflow silently - handled via usage.input > contextWindow
+ * - z.ai: `{"code":"1261","message":"Prompt too long"}` or silent overflow via usage.input > contextWindow
  * - Xiaomi MiMo: Truncates input to fill contextWindow exactly, then returns finish_reason "length"
  *   with output=0 (no room left to generate). Detected via stopReason "length" + zero output +
  *   input filling the context window.
@@ -47,7 +47,7 @@ import type { AssistantMessage } from "../types.ts";
  * 【新手阅读建议】先读文件头注释了解各供应商模式示例 → 再读 isContextOverflow 三情形。
  */
 const OVERFLOW_PATTERNS = [
-	/prompt is too long/i, // Anthropic token overflow
+	/prompt (?:is )?too long/i, // Anthropic and z.ai token overflow
 	/request_too_large/i, // Anthropic request byte-size overflow (HTTP 413)
 	/input is too long for requested model/i, // Amazon Bedrock
 	/exceeds the context window/i, // OpenAI (Completions & Responses API)
@@ -71,8 +71,9 @@ const OVERFLOW_PATTERNS = [
 	/context[_ ]length[_ ]exceeded/i, // Generic fallback
 	/too many tokens/i, // Generic fallback
 	/token limit exceeded/i, // Generic fallback
-	/^4(?:00|13)\s*(?:status code)?\s*\(no body\)/i, // Cerebras: 400/413 with no body
 ];
+
+const CEREBRAS_BODYLESS_OVERFLOW_PATTERN = /^4(?:00|13)\s*(?:status code)?\s*\(no body\)/i;
 
 /**
  * Patterns that indicate non-overflow errors (e.g. rate limiting, server errors).
@@ -119,6 +120,7 @@ const NON_OVERFLOW_PATTERNS = [
  * - Kimi For Coding: "exceeded model token limit: X (requested: Y)"
  * - DS4: "Prompt has X tokens, but the configured context size is Y tokens"
  * - DashScope/Qwen: "Range of input length should be [1, X]"
+ * - z.ai: "Prompt too long"
  *
  * **Unreliable detection:**
  * - z.ai: Sometimes accepts overflow silently (detectable via usage.input > contextWindow),
@@ -156,8 +158,13 @@ export function isContextOverflow(message: AssistantMessage, contextWindow?: num
 	if (message.stopReason === "error" && message.errorMessage) {
 		// Skip messages matching known non-overflow patterns (e.g. throttling / rate-limit)
 		const isNonOverflow = NON_OVERFLOW_PATTERNS.some((p) => p.test(message.errorMessage!));
-		if (!isNonOverflow && OVERFLOW_PATTERNS.some((p) => p.test(message.errorMessage!))) {
-			return true;
+		if (!isNonOverflow) {
+			if (OVERFLOW_PATTERNS.some((p) => p.test(message.errorMessage!))) {
+				return true;
+			}
+			if (message.provider === "cerebras" && CEREBRAS_BODYLESS_OVERFLOW_PATTERN.test(message.errorMessage)) {
+				return true;
+			}
 		}
 	}
 

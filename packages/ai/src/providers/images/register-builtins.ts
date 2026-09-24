@@ -8,7 +8,14 @@
  */
 import type { generateImages as generateImagesOpenRouterFunction } from "../../api/openrouter-images.ts";
 import { registerImagesApiProvider } from "../../images-api-registry.ts";
-import type { AssistantImages, ImagesContext, ImagesFunction, ImagesModel, ImagesOptions } from "../../types.ts";
+import type {
+	AssistantImages,
+	ImageApi,
+	ImageModel,
+	ImagesContext,
+	ImagesFunction,
+	ImagesOptions,
+} from "../../types.ts";
 
 /** 懒加载模块的最小接口。 */
 interface OpenRouterImagesProviderModule {
@@ -19,6 +26,7 @@ interface OpenRouterImagesProviderModule {
 /** 共享模块加载 Promise；首次调用前为 undefined。 */
 let openRouterImagesProviderModulePromise: Promise<OpenRouterImagesProviderModule> | undefined;
 
+<<<<<<< HEAD
 /**
  * 把未知异常转换为图片错误消息。
  * @param model 本次请求模型。
@@ -27,6 +35,9 @@ let openRouterImagesProviderModulePromise: Promise<OpenRouterImagesProviderModul
  * @example `createLazyLoadErrorImages(model, new Error("failed"))`。
  */
 function createLazyLoadErrorImages(model: ImagesModel<"openrouter-images">, error: unknown): AssistantImages {
+=======
+function createLazyLoadErrorImages(model: ImageModel<ImageApi>, error: unknown): AssistantImages {
+>>>>>>> main
 	return {
 		api: model.api,
 		provider: model.provider,
@@ -51,11 +62,16 @@ function loadOpenRouterImagesProviderModule(): Promise<OpenRouterImagesProviderM
 	return openRouterImagesProviderModulePromise;
 }
 
+<<<<<<< HEAD
 /** OpenRouter 图片生成包装函数；成功委托，失败返回结构化错误。 */
 export const generateImagesOpenRouter: ImagesFunction<"openrouter-images", ImagesOptions> = async (
 	/** 请求模型。 */
 	model: ImagesModel<"openrouter-images">,
 	/** 图片生成上下文。 */
+=======
+export const generateImagesOpenRouter: ImagesFunction<ImagesOptions> = async (
+	model: ImageModel<ImageApi>,
+>>>>>>> main
 	context: ImagesContext,
 	/** 可选生成参数。 */
 	options?: ImagesOptions,
