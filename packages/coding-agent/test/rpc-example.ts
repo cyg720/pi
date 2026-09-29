@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Interactive example of using coding-agent via RpcClient.
- * Usage: npx tsx test/rpc-example.ts
+ * Usage: node test/rpc-example.ts
  */
 /**
  * 这是通过 RpcClient 使用 coding-agent 的交互示例。

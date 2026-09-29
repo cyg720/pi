@@ -412,6 +412,8 @@ async function streamAssistantResponse(
 		apiKey: resolvedApiKey,
 		signal,
 	});
+	// Record the requested level, whichever stream function answered.
+	const result = async () => Object.assign(await response.result(), { thinkingLevel: config.reasoning ?? "off" });
 
 	let partialMessage: AssistantMessage | null = null;
 	let addedPartial = false;
@@ -447,7 +449,7 @@ async function streamAssistantResponse(
 
 			case "done":
 			case "error": {
-				const finalMessage = await response.result();
+				const finalMessage = await result();
 				if (addedPartial) {
 					context.messages[context.messages.length - 1] = finalMessage;
 				} else {
@@ -462,7 +464,7 @@ async function streamAssistantResponse(
 		}
 	}
 
-	const finalMessage = await response.result();
+	const finalMessage = await result();
 	if (addedPartial) {
 		context.messages[context.messages.length - 1] = finalMessage;
 	} else {

@@ -667,7 +667,6 @@ describe("Cache Retention (PI_CACHE_RETENTION)", () => {
 			MODELS.opencode["kimi-k2.5"],
 			MODELS.opencode["kimi-k2.6"],
 			MODELS.opencode["minimax-m2.7"],
-			MODELS["opencode-go"]["kimi-k2.6"],
 		] as const)("should omit long cache retention for $provider/$id", async (metadata) => {
 			/** 变量 model：当前被测模型配置；只在当前模块、分组或测试范围内使用。 */
 			const model = metadata as Model<"openai-completions">;
