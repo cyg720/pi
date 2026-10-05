@@ -11,7 +11,7 @@
     ['start', '从零认识 Pi', '01'], ['map', '项目源码地图', '02'], ['boot', '从 CLI 到会话', '03'],
     ['loop', '模型与工具循环', '04'], ['session', '会话与上下文', '05'], ['extensions', '智能体扩展详解', '06'],
     ['advanced', '服务与持久化', '07'], ['practice', '带着问题读源码', '08'],
-    ['diagrams', '架构图谱', '图'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
+    ['functions', '功能清单详情', 'Fn'], ['diagrams', '架构图谱', '图'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
   ];
   const types = { feat: '新增', fix: '修复', docs: '文档', refactor: '重构', test: '测试', chore: '维护', perf: '性能', build: '构建', ci: 'CI', merge: '合并', revert: '回退', other: '其他' };
   let current = 'start';
@@ -25,6 +25,7 @@
   let historyFiltered = data.commits;
   let historyQuery = { query: '', scope: '', type: '', year: '' };
   let toastTimer;
+  const featureBrowser = createFeatureBrowser(data, esc);
   const notify = text => { $('toast').textContent = text; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2500); };
   const sourceLink = (path, needle = '', label) => `<button class="ref" data-source="${esc(path)}" data-needle="${esc(needle)}">${esc(label || path.replace(/^packages\//, ''))}</button>`;
   const hero = (eyebrow, title, intro, number = '') => `<div class="hero-line"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="lead">${esc(intro)}</p></div>${number ? `<div class="chapter-number" aria-hidden="true">${number}</div>` : ''}</div>`;
@@ -108,12 +109,17 @@
   function render() {
     clearInterval(timer); timer = undefined;
     const [id, anchor] = location.hash.slice(1).split('/');
+    if (current === 'functions' && id === 'functions' && $('featurePanel')) {
+      featureBrowser.navigate(anchor);
+      return;
+    }
+    if (current === 'functions') featureBrowser.rememberMenu();
     current = routes.some(r => r[0] === id) ? id : 'start';
     nav();
     $('breadcrumb').textContent = `Pi 源码导览 / ${routes.find(r => r[0] === current)[1]}`;
     document.title = `${routes.find(r => r[0] === current)[1]} · Pi 源码导览`;
     const chapter = data.chapters.find(c => c.id === current);
-    const html = chapter ? renderChapter(chapter) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
+    const html = chapter ? renderChapter(chapter) : current === 'functions' ? featureBrowser.render(anchor) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
     $('main').innerHTML = `<div class="page">${html}</div>`;
     if ($('traceDetail')) updateTrace();
     if (current === 'map') { treeSearch(); $('treeSearch').addEventListener('input', treeSearch); }
@@ -122,12 +128,13 @@
       for (const id of ['historySearch', 'historyScope', 'historyType', 'historyYear']) $(id).addEventListener(id === 'historySearch' ? 'input' : 'change', filterHistory);
     }
     if (current === 'diagrams') updateDiagram();
+    if (current === 'functions') featureBrowser.activate();
     if (current === 'sources') { libraryRows(); $('librarySearch').addEventListener('input', libraryRows); }
     document.querySelector('.sidebar').classList.remove('open'); $('menu').setAttribute('aria-expanded', 'false');
     if (anchor && document.getElementById(anchor)) document.getElementById(anchor).scrollIntoView();
     else window.scrollTo({ top: 0 });
   }
-  function openSource(path, needle = '') {
+  function openSource(path, needle = '', requestedLine = 0) {
     if (!Object.hasOwn(data.sources, path)) { notify('该文件未收录离线快照'); return; }
     currentSource = path; sourceLine = -1;
     $('sourceTitle').textContent = path;
@@ -136,7 +143,13 @@
     $('sourceStatus').textContent = `${data.sources[path].split('\n').length} 行 · ${data.meta.commit.slice(0, 9)}`;
     if (!$('sourceDialog').open) $('sourceDialog').showModal();
     $('sourceBody').scrollTop = 0;
-    if (needle) findSource();
+    if (Number.isInteger(requestedLine) && requestedLine > 0 && $(`code-${requestedLine - 1}`)) {
+      sourceLine = requestedLine - 1;
+      const line = $(`code-${sourceLine}`);
+      line.classList.add('highlight');
+      $('sourceBody').scrollTop += line.getBoundingClientRect().top - $('sourceBody').getBoundingClientRect().top - 60;
+      $('sourceStatus').textContent = `第 ${requestedLine} 行 · ${data.meta.commit.slice(0, 9)}`;
+    } else if (needle) findSource();
   }
   function findSource() {
     const q = $('sourceFind').value.toLowerCase();
@@ -154,12 +167,14 @@
     const q = $('globalSearch').value.trim().toLowerCase();
     if (!q) { $('searchResults').innerHTML = '<p class="meta">搜索中文讲解、文件路径和内嵌源码内容。提交记录请使用 Git 时间线的专用筛选。</p>'; return; }
     const sections = data.chapters.flatMap(c => c.sections.map((s, i) => ({ c, s, i }))).filter(({ s }) => JSON.stringify(s).toLowerCase().includes(q));
+    const features = featureBrowser.search(q);
     const files = Object.entries(data.sources).filter(([p, text]) => `${p}\n${text}`.toLowerCase().includes(q));
-    $('searchResults').innerHTML = `<p class="meta">${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
+    $('searchResults').innerHTML = `<p class="meta">${features.length} 项功能 · ${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${features.slice(0,20).map(f => `<button class="search-result" data-go="functions/${f.id}">${esc(f.title)}<small>功能清单 · ${esc(f.purpose)}</small></button>`).join('')}${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!features.length && !sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
   }
   document.addEventListener('click', async event => {
-    const el = event.target.closest('button'); if (!el) return;
-    if (el.dataset.source) { $('searchDialog').close(); openSource(el.dataset.source, el.dataset.needle || ''); }
+    const el = event.target.closest('button, [data-source]'); if (!el) return;
+    if (el.dataset.source) { $('searchDialog').close(); openSource(el.dataset.source, el.dataset.needle || '', Number(el.dataset.line || 0)); }
+    if (el.dataset.featureCommit) { historyQuery = { query: el.dataset.featureCommit, scope: '', type: '', year: '' }; location.hash = '#history'; }
     if (el.dataset.go) { $('searchDialog').close(); const next = `#${el.dataset.go}`; if (location.hash === next) render(); else location.hash = next; }
     if (el.dataset.read) { const id = el.dataset.read; if (readChapters.has(id)) readChapters.delete(id); else readChapters.add(id); save('read', [...readChapters]); nav(); el.textContent = readChapters.has(id) ? '已读 · 撤销标记' : '标记本章已读'; }
     if (el.dataset.trace !== undefined) { traceIndex = Number(el.dataset.trace); updateTrace(); }

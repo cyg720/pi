@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { test } from 'node:test';
 import { Script } from 'node:vm';
+import { classifyPath } from './src/catalog.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(dir, 'index.html'), 'utf8');
@@ -61,4 +62,28 @@ test('全部原始资料在本目录有逐字节副本', () => {
     if (existsSync(original)) assert.deepEqual(archived, readFileSync(original));
     assert.ok(archived.length > 0);
   }
+});
+test('功能清单覆盖所有范围内的已跟踪文件，不静默遗漏', () => {
+  const paths = execFileSync('git', ['ls-files', '-z'], { cwd: join(dir, '../..'), encoding: 'utf8' }).split('\0').filter(Boolean);
+  const expected = paths.filter(p => classifyPath(p));
+  assert.deepEqual(Object.keys(data.catalog.files).sort(), expected.sort());
+  assert.equal(data.catalog.stats.unassigned, 0);
+  assert.equal(new Set(data.catalog.features.map(f => f.id)).size, data.catalog.features.length);
+  for (const [path, record] of Object.entries(data.catalog.files)) {
+    assert.ok(record.features.length, path);
+    if (record.text) assert.ok(Object.hasOwn(data.sources, path), path);
+    for (const symbol of record.symbols) {
+      assert.ok(symbol.line >= 1 && symbol.endLine <= record.lines, `${path}:${symbol.name}`);
+    }
+  }
+});
+test('功能详情有来源、用途、入口、边界和有效双向归属', () => {
+  for (const f of data.catalog.features) {
+    for (const field of ['title','purpose','entry','behavior','status','evidence']) assert.ok(f[field], `${f.id} ${field}`);
+    assert.ok(f.files.length, f.id);
+    for (const path of f.files) assert.ok(data.catalog.files[path]?.features.includes(f.id), `${f.id}: ${path}`);
+    for (const path of [...f.docs,...f.tests]) assert.ok(Object.hasOwn(data.sources,path), `${f.id}: ${path}`);
+    for (const hash of f.commits) assert.ok(data.commits.some(c => c.hash === hash));
+  }
+  for (const provider of ['openai','anthropic','google']) assert.ok(data.catalog.features.some(f => f.id === `ai-provider-${provider}`), provider);
 });

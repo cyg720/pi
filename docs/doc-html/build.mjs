@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chapters, packageNotes, trace } from './src/content.mjs';
+import { buildCatalog } from './src/catalog.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(dir, '../..');
@@ -57,6 +58,8 @@ const packages = Object.entries(packageNotes).map(([path, description]) => {
   const pkg = JSON.parse(read(`packages/${path}/package.json`));
   return { path, name: pkg.name, version: pkg.version, description, dependencies: Object.keys(pkg.dependencies || {}).filter(x => x.startsWith('@earendil-works/')) };
 });
+const allPaths = git(['ls-files', '-z']).split('\0').filter(Boolean);
+const { catalog, snapshots } = buildCatalog({ paths: allPaths, read, commits });
 const selected = new Set(chapters.flatMap(c => c.sections.flatMap(s => (s.refs || []).map(r => r[0]))));
 for (const t of trace) selected.add(t[3]);
 for (const pkg of packages) {
@@ -64,23 +67,24 @@ for (const pkg of packages) {
   if (existsSync(join(root, `packages/${pkg.path}/README.md`))) selected.add(`packages/${pkg.path}/README.md`);
 }
 for (const file of ['README.md', 'AGENTS.md', 'packages/coding-agent/src/core/extensions/types.ts', 'packages/coding-agent/docs/configuration.md', 'packages/coding-agent/docs/custom-provider.md', 'packages/coding-agent/docs/session-format.md']) selected.add(file);
-const sources = Object.fromEntries([...selected].sort().map(path => [path, read(path)]));
+const sources = { ...snapshots, ...Object.fromEntries([...selected].sort().map(path => [path, read(path)])) };
 for (const c of chapters) for (const s of c.sections) for (const [path, needle] of s.refs || []) {
   if (!sources[path].includes(needle)) throw new Error(`引用失效: ${path} :: ${needle}`);
 }
 const sourceHashes = Object.fromEntries(Object.entries(sources).map(([p, v]) => [p, sha(v)]));
 const trackedPaths = git(['ls-files', '--', 'packages', 'scripts', '.pi']).trim().split('\n');
-const data = { chapters, trace, packages, sources, sourceHashes, diagrams, commits, trackedPaths, meta: {
+const data = { chapters, trace, packages, sources, sourceHashes, diagrams, commits, trackedPaths, catalog, meta: {
   commit: git(['rev-parse', 'HEAD']).trim(), branch: git(['branch', '--show-current']).trim(), builtAt: new Date().toISOString(),
   shallow: git(['rev-parse', '--is-shallow-repository']).trim() === 'true', status: git(['status', '--short', '--', 'packages', 'scripts']).trim(),
   historyScope: '本地 HEAD 可达的全部提交；按 Git date-order 排列。合并关系保留父提交 ID。'
 }};
 const serialized = JSON.stringify(data).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const template = readFileSync(join(dir, 'src/template.html'), 'utf8');
-const css = readFileSync(join(dir, 'src/style.css'), 'utf8');
-const js = readFileSync(join(dir, 'src/app.js'), 'utf8');
+const css = readFileSync(join(dir, 'src/style.css'), 'utf8') + '\n' + readFileSync(join(dir, 'src/features.css'), 'utf8');
+const js = ['feature-flow.js', 'features-app.js', 'app.js'].map(file => readFileSync(join(dir, 'src', file), 'utf8')).join('\n');
 const output = template.replace('/* INLINE_STYLE */', () => css).replace('/* INLINE_DATA */', () => serialized).replace('/* INLINE_APP */', () => js);
 writeFileSync(join(dir, 'index.html'), output);
 writeFileSync(join(dir, 'data/history.json'), JSON.stringify(commits, null, 2));
-writeFileSync(join(dir, 'data/manifest.json'), JSON.stringify({ ...data.meta, sourceHashes, diagramHashes: Object.fromEntries(diagrams.map(d => [d.file, d.hash])), commitCount: commits.length }, null, 2));
-console.log(`已生成 ${relative(root, join(dir, 'index.html'))}: ${commits.length} 条提交 / ${selected.size} 份源码与文档 / ${diagrams.length} 幅架构图 / ${(Buffer.byteLength(output) / 1024 / 1024).toFixed(1)} MiB`);
+writeFileSync(join(dir, 'data/features.json'), JSON.stringify(catalog, null, 2));
+writeFileSync(join(dir, 'data/manifest.json'), JSON.stringify({ ...data.meta, sourceHashes, diagramHashes: Object.fromEntries(diagrams.map(d => [d.file, d.hash])), commitCount: commits.length, catalog: catalog.stats }, null, 2));
+console.log(`已生成 ${relative(root, join(dir, 'index.html'))}: ${commits.length} 条提交 / ${Object.keys(sources).length} 份源码与文档 / ${catalog.stats.features} 项功能与索引 / ${catalog.stats.files} 个归属文件 / ${catalog.stats.symbols} 个声明 / ${(Buffer.byteLength(output) / 1024 / 1024).toFixed(1)} MiB`);

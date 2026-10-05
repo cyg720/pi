@@ -1,5 +1,2908 @@
 [
   {
+    "hash": "1a71526b35586009f60ee10263084e8b5c8e6a7a",
+    "date": "2026-09-29T10:59:02+08:00",
+    "author": "CYG",
+    "parents": [
+      "f87b983d97cddd877903a0e69c9c6b69568aff64",
+      "cb7969d212836b8939001dce159fbd2ed6ad395f"
+    ],
+    "subject": "Merge branch 'main' into dev",
+    "body": "Merge branch 'main' into dev",
+    "files": [],
+    "scopes": [],
+    "type": "merge",
+    "added": 0,
+    "removed": 0,
+    "zh": "合并历史；涉及 未列出文件，记录 0 个文件的变动、文本新增 0 行 / 删除 0 行。合并提交的常规 numstat 可能为空，请结合父提交理解。",
+    "curated": false
+  },
+  {
+    "hash": "f87b983d97cddd877903a0e69c9c6b69568aff64",
+    "date": "2026-09-29T10:57:30+08:00",
+    "author": "CYG",
+    "parents": [
+      "d5629e20489ccf770ed90b5a33941cb3b7ef24d0"
+    ],
+    "subject": "提交doc",
+    "body": "提交doc",
+    "files": [
+      {
+        "path": "docs/doc-html/README.md",
+        "added": "58",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/VALIDATION.md",
+        "added": "30",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/build.mjs",
+        "added": "86",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/data/history.json",
+        "added": "308329",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/data/manifest.json",
+        "added": "83",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/index.html",
+        "added": "230",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/app.js",
+        "added": "197",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/content.mjs",
+        "added": "88",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/history-notes.json",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/style.css",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/template.html",
+        "added": "31",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/verify.test.mjs",
+        "added": "64",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "other",
+    "added": 309205,
+    "removed": 0,
+    "zh": "提交变更；涉及 仓库级，记录 12 个文件的变动、文本新增 309205 行 / 删除 0 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "cb7969d212836b8939001dce159fbd2ed6ad395f",
+    "date": "2026-09-28T23:55:11+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "540e174c72cd793170b73db8160c6d5f6c5a2236"
+    ],
+    "subject": "feat(durable): add durable task runtime",
+    "body": "feat(durable): add durable task runtime\n\nAdds defineTask, registry-resolved phase handlers, and a scheduler that\ndecides every task transition in one callback on the Session line:\nreservation with migration, dependencies, precedence rules in a step\nbefore each phase, handover to replaced definitions, direct-task abort\n(mark, signal, join, fresh abort invocation), orphaning of blocked tasks,\nopen reconciliation, and close that joins invocations without writing\noutcomes. runtime.commit() callbacks return the typed next state; Tx no\nlonger exposes setTask. Adds Harness.resume, getTask, waitForTask,\nabortTask, and task-aware waitForIdle; RegistryReader.subscribe wakes\nthe scheduler.",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "37",
+        "removed": "10"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "97",
+        "removed": "40"
+      },
+      {
+        "path": "packages/durable/src/harness/harness.ts",
+        "added": "65",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/harness/registry.ts",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/scheduler.ts",
+        "added": "703",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "19",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "24",
+        "removed": "20"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/tasks.ts",
+        "added": "8",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "70",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/test/harness-conversations.test.ts",
+        "added": "8",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/test/harness-registry.test.ts",
+        "added": "9",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/test/harness-tasks-recovery.test.ts",
+        "added": "822",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-tasks.test.ts",
+        "added": "1139",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/scratch.ts",
+        "added": "153",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/test/session-documents.test.ts",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/test/session-forks.test.ts",
+        "added": "8",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-tables.test.ts",
+        "added": "18",
+        "removed": "14"
+      },
+      {
+        "path": "packages/durable/test/task-support.ts",
+        "added": "110",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 3316,
+    "removed": 134,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 22 个文件的变动、文本新增 3316 行 / 删除 134 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "540e174c72cd793170b73db8160c6d5f6c5a2236",
+    "date": "2026-09-28T23:30:45+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "1b2aa0ca0e3b5bf918c31f4cdc28b3d09b4b5c7a"
+    ],
+    "subject": "feat(coding-agent): Virtual models (#10035)",
+    "body": "feat(coding-agent): Virtual models (#10035)\n\nThis adds experimental support for virtual models. A virtual model is a catalog entry that an extension registers with pi.registerVirtualModel(). It does not talk to a provider itself; for every request it picks a physical model and thinking level. The motivation is to make routing policies pluggable: plan on a strong model and implement on a cheap one, pick a model with a classifier, or move to a larger window when the context grows. Today this needs model switching by hand or hacks in prepareRequest.\n\nThe selection stays virtual: model_change records it, resume restores it, and each response records the physical model and thinking level that produced it. Router state can be stored on the session branch, so it follows /tree and forks and survives compaction. Context limits, compaction and image sizing use the physical model a request was routed to. examples/extensions/jev-router.ts shows a full router that uses the Jev classifier to pick Sol or Terra for planning and hands off to Luna after the first edit. docs/virtual-models.md describes the API.",
+    "files": [
+      {
+        "path": "packages/agent/src/agent-loop.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/ai/src/types.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/docs.json",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/extensions.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/session-format.md",
+        "added": "5",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/virtual-models.md",
+        "added": "114",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/examples/extensions/README.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/examples/extensions/jev-router.ts",
+        "added": "113",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session-services.ts",
+        "added": "12",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session.ts",
+        "added": "174",
+        "removed": "96"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/index.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/loader.ts",
+        "added": "28",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "added": "26",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "added": "27",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/model-registry.ts",
+        "added": "34",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/model-runtime.ts",
+        "added": "139",
+        "removed": "12"
+      },
+      {
+        "path": "packages/coding-agent/src/core/sdk.ts",
+        "added": "12",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/src/core/virtual-models.ts",
+        "added": "227",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/index.ts",
+        "added": "9",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/footer.ts",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "added": "4",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/footer-width.test.ts",
+        "added": "17",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/jev-router-example.test.ts",
+        "added": "136",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-compaction.test.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/virtual-models.test.ts",
+        "added": "397",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/virtual-models.test.ts",
+        "added": "381",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "agent",
+      "ai",
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 1876,
+    "removed": 115,
+    "zh": "新增能力；主题线索：模型接入。涉及 agent、ai、coding-agent，记录 26 个文件的变动、文本新增 1876 行 / 删除 115 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "1b2aa0ca0e3b5bf918c31f4cdc28b3d09b4b5c7a",
+    "date": "2026-09-28T23:19:21+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "fd889a2741891ee45116cb6131052d7fad220886"
+    ],
+    "subject": "fix(ai): reject unfinished Responses tool calls instead of running them",
+    "body": "fix(ai): reject unfinished Responses tool calls instead of running them\n\nThe agent runs every tool call in the final assistant message, including\ncalls whose output_item.done never arrived. Those can carry cut-off or\nmixed-up arguments. With llama.cpp, which omits output_index, two parallel\ncalls became three (echo a, echo a, echo b), two of them with the same id.\n\nprocessResponsesStream now fails the stream when a completed response\nstill has an unfinished tool call.\n\nfixes #9974",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/openai-responses-shared.ts",
+        "added": "14",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/test/openai-responses-terminal-event.test.ts",
+        "added": "63",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 78,
+    "removed": 0,
+    "zh": "修复问题；主题线索：工具执行。涉及 ai，记录 3 个文件的变动、文本新增 78 行 / 删除 0 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "fd889a2741891ee45116cb6131052d7fad220886",
+    "date": "2026-09-28T20:59:29+01:00",
+    "author": "Christian Klotz",
+    "parents": [
+      "3883fcb1f310c065d494b14dd597ba6658f04978"
+    ],
+    "subject": "fix(coding-agent,tui): paste Finder file paths instead of icons (#10136)",
+    "body": "fix(coding-agent,tui): paste Finder file paths instead of icons (#10136)\n\nRead Finder file URLs before icon image data on macOS. Quote paths in\nbash mode and reject terminal control characters before rendering.\n\nFixes #9999\n\nCo-authored-by: 1dustycy <onedustycy@gmail.com>",
+    "files": [
+      {
+        "path": "packages/coding-agent/docs/keybindings.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/core/keybindings.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "added": "29",
+        "removed": "8"
+      },
+      {
+        "path": "packages/coding-agent/src/utils/clipboard.ts",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/clipboard-image-native-errors.test.ts",
+        "added": "9",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/clipboard-paste-file-paths.test.ts",
+        "added": "141",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/interactive-tui.test.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/native/clipboard.h",
+        "added": "40",
+        "removed": "2"
+      },
+      {
+        "path": "packages/tui/native/darwin/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/native/darwin/prebuilds/darwin-arm64/darwin-platform.node",
+        "added": "-",
+        "removed": "-"
+      },
+      {
+        "path": "packages/tui/native/darwin/prebuilds/darwin-x64/darwin-platform.node",
+        "added": "-",
+        "removed": "-"
+      },
+      {
+        "path": "packages/tui/native/darwin/src/darwin-platform.m",
+        "added": "39",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/native/napi.h",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/native-platform.ts",
+        "added": "2",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent",
+      "tui"
+    ],
+    "type": "fix",
+    "added": 272,
+    "removed": 14,
+    "zh": "修复问题；主题线索：终端交互。涉及 coding-agent、tui，记录 14 个文件的变动、文本新增 272 行 / 删除 14 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "3883fcb1f310c065d494b14dd597ba6658f04978",
+    "date": "2026-09-28T21:57:29+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "c90d9ea586194003211f10cded3c14f74a4f81e1"
+    ],
+    "subject": "feat(durable): add openable Harness with registry and conversation config",
+    "body": "feat(durable): add openable Harness with registry and conversation config\n\nImplements Pico5 Package 13: Harness.open over a Session with an application-owned\nregistry (tools, tool wrappers, hooks, tasks, system prompt sections; batched\npublication, stable keyed order), lazy root creation with init, atomic\ncreate/fork with init, conversation-bound commits, fork-aware entries, model\ncontext derivation, and the built-in ConversationConfig document.\n\nFixes cached documents skipping migration when accessed with another definition\nversion. Rewrites the Pico5 spec and handoff to the registry/system-prompt\ndesign and removes the superseded live-registries proposal.",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-chord-usage.md",
+        "added": "5",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "92",
+        "removed": "76"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-live-registries.md",
+        "added": "0",
+        "removed": "614"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "531",
+        "removed": "250"
+      },
+      {
+        "path": "packages/durable/src/entries.ts",
+        "added": "11",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/config.ts",
+        "added": "21",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/context.ts",
+        "added": "115",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/harness.ts",
+        "added": "244",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/registry.ts",
+        "added": "335",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "320",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "38",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "60",
+        "removed": "24"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "3",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-context.test.ts",
+        "added": "135",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-conversations.test.ts",
+        "added": "392",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-registry.test.ts",
+        "added": "233",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-support.ts",
+        "added": "104",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/scratch.ts",
+        "added": "311",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/session-checkpoints-migrations.test.ts",
+        "added": "71",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "4",
+        "removed": "4"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 3032,
+    "removed": 975,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 21 个文件的变动、文本新增 3032 行 / 删除 975 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "c90d9ea586194003211f10cded3c14f74a4f81e1",
+    "date": "2026-09-28T20:46:38+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "11894012dd461232eb075bc890538b6866860a10"
+    ],
+    "subject": "feat(ai,coding-agent): add Claude Sonnet 5.5 support",
+    "body": "feat(ai,coding-agent): add Claude Sonnet 5.5 support",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/scripts/generate-models.ts",
+        "added": "34",
+        "removed": "3"
+      },
+      {
+        "path": "packages/ai/test/supports-xhigh.test.ts",
+        "added": "17",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai",
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 53,
+    "removed": 3,
+    "zh": "新增能力；主题线索：模型接入。涉及 ai、coding-agent，记录 4 个文件的变动、文本新增 53 行 / 删除 3 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "11894012dd461232eb075bc890538b6866860a10",
+    "date": "2026-09-28T17:21:20+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "cd5ff1125981f0fc37a56df25eee7310286a3f89"
+    ],
+    "subject": "feat(durable): expose deltas since base to checkpoint predicates",
+    "body": "feat(durable): expose deltas since base to checkpoint predicates\n\nStorage reports replayed deltas after the selected base; Session tracks the\ncount across adopted writes so checkpoint predicates can bound replay.\nAlso adds internal reserved-root creation and conversation-bound commit\ndefaults for the upcoming Harness.",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-chord-usage.md",
+        "added": "5",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "21",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/documents.ts",
+        "added": "2",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "21",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "31",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "7",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "7",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "10",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/test/session-checkpoints-migrations.test.ts",
+        "added": "48",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 157,
+    "removed": 25,
+    "zh": "新增能力；主题线索：持久化、应用组合与状态。涉及 durable，记录 13 个文件的变动、文本新增 157 行 / 删除 25 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "cd5ff1125981f0fc37a56df25eee7310286a3f89",
+    "date": "2026-09-28T16:47:23+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "35180b9df8e9e1ad0f58731f9f01d44f251718b1"
+    ],
+    "subject": "docs: reorder durable harness milestones",
+    "body": "docs: reorder durable harness milestones",
+    "files": [
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "249",
+        "removed": "194"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "docs",
+    "added": 249,
+    "removed": 194,
+    "zh": "更新文档；主题线索：持久化。涉及 durable，记录 1 个文件的变动、文本新增 249 行 / 删除 194 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "35180b9df8e9e1ad0f58731f9f01d44f251718b1",
+    "date": "2026-09-28T16:36:06+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "c1449660c83fd00a7c71d5f7e1bd29fafd400550"
+    ],
+    "subject": "feat(durable): add document states and buffered watches",
+    "body": "feat(durable): add document states and buffered watches",
+    "files": [
+      {
+        "path": "packages/chord/README.md",
+        "added": "40",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/services/consumer.ts",
+        "added": "55",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/src/services/instances.ts",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/services/provider.ts",
+        "added": "41",
+        "removed": "24"
+      },
+      {
+        "path": "packages/chord/src/services/state-codec.ts",
+        "added": "18",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/services/state.ts",
+        "added": "114",
+        "removed": "32"
+      },
+      {
+        "path": "packages/chord/src/services/wire.ts",
+        "added": "14",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/types.ts",
+        "added": "10",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/test/service-delivery.test.ts",
+        "added": "335",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/service-wire.test.ts",
+        "added": "51",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/state-delivery.test.ts",
+        "added": "300",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-chord-usage.md",
+        "added": "34",
+        "removed": "46"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "45",
+        "removed": "49"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-live-registries.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "126",
+        "removed": "133"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "9",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/observation.ts",
+        "added": "289",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/publications.ts",
+        "added": "0",
+        "removed": "16"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "185",
+        "removed": "17"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "1",
+        "removed": "22"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "128",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/scratch.ts",
+        "added": "33",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/test/session-documents.test.ts",
+        "added": "15",
+        "removed": "16"
+      },
+      {
+        "path": "packages/durable/test/session-states.test.ts",
+        "added": "232",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/session-watches.test.ts",
+        "added": "503",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "chord",
+      "durable"
+    ],
+    "type": "feat",
+    "added": 2587,
+    "removed": 365,
+    "zh": "新增能力；主题线索：持久化。涉及 chord、durable，记录 27 个文件的变动、文本新增 2587 行 / 删除 365 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "c1449660c83fd00a7c71d5f7e1bd29fafd400550",
+    "date": "2026-09-28T14:55:08+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "dc84c1ac0afd15721071507a3a06b5e3d0cad614"
+    ],
+    "subject": "fix(ai): allow empty thinking signatures for OpenCode qwen3.8-flash",
+    "body": "fix(ai): allow empty thinking signatures for OpenCode qwen3.8-flash\n\nfixes #10047",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/scripts/generate-models.ts",
+        "added": "4",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 5,
+    "removed": 0,
+    "zh": "修复问题；涉及 ai，记录 2 个文件的变动、文本新增 5 行 / 删除 0 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "dc84c1ac0afd15721071507a3a06b5e3d0cad614",
+    "date": "2026-09-28T14:32:48+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "04efdfc38078f952a0436a3363e50744226ec824"
+    ],
+    "subject": "fix(ai): send requested thinking level to Mistral reasoning models",
+    "body": "fix(ai): send requested thinking level to Mistral reasoning models\n\nMistral models with effort levels now use reasoning_effort based on\ntheir thinking level map from models.dev instead of a hardcoded id list.\nGLM 5.3 no longer gets prompt_mode, GLM 5.2 can use max, and off sends\nthe model's off value when it has one.\n\nfixes #9678",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/scripts/generate-models.ts",
+        "added": "6",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/src/api/mistral-conversations.ts",
+        "added": "10",
+        "removed": "25"
+      },
+      {
+        "path": "packages/ai/test/mistral-reasoning-mode.test.ts",
+        "added": "56",
+        "removed": "33"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 73,
+    "removed": 59,
+    "zh": "修复问题；主题线索：模型接入。涉及 ai，记录 4 个文件的变动、文本新增 73 行 / 删除 59 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "04efdfc38078f952a0436a3363e50744226ec824",
+    "date": "2026-09-28T14:19:07+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "e1787702d32e0a7fd7387840c918faa4d1286187"
+    ],
+    "subject": "feat(ai): Discount jev (#10119)",
+    "body": "feat(ai): Discount jev (#10119)\n\nAdd the llama-cpp-classify classifier API. Each question becomes one chat prompt with single-token answer labels; llama-server's pre-sampling next-token log-probabilities give the softmax over those labels. Missing labels are retried with deeper readouts and then reported as errors.",
+    "files": [
+      {
+        "path": "packages/ai/README.md",
+        "added": "30",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/llama-cpp-classify.lazy.ts",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/llama-cpp-classify.ts",
+        "added": "458",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/types.ts",
+        "added": "9",
+        "removed": "2"
+      },
+      {
+        "path": "packages/ai/test/llama-cpp-classify.test.ts",
+        "added": "405",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/test/typesafe-system-one.test.ts",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/llama-cpp.md",
+        "added": "11",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/llama/provider.ts",
+        "added": "59",
+        "removed": "26"
+      },
+      {
+        "path": "packages/coding-agent/test/llama-extension.test.ts",
+        "added": "68",
+        "removed": "2"
+      },
+      {
+        "path": "vitest.base.ts",
+        "added": "5",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai",
+      "coding-agent",
+      "仓库级"
+    ],
+    "type": "feat",
+    "added": 1054,
+    "removed": 31,
+    "zh": "新增能力；涉及 ai、coding-agent、仓库级，记录 10 个文件的变动、文本新增 1054 行 / 删除 31 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "e1787702d32e0a7fd7387840c918faa4d1286187",
+    "date": "2026-09-28T12:08:56+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "ebced834311dbbbce621c075565c79183c7e4fe1"
+    ],
+    "subject": "fix(coding-agent): default OpenCode Go to Kimi K3 after Kimi K2.6 removal",
+    "body": "fix(coding-agent): default OpenCode Go to Kimi K3 after Kimi K2.6 removal",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/model-resolver.ts",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 2,
+    "removed": 1,
+    "zh": "修复问题；涉及 coding-agent，记录 2 个文件的变动、文本新增 2 行 / 删除 1 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "ebced834311dbbbce621c075565c79183c7e4fe1",
+    "date": "2026-09-28T12:01:02+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "6f7551516b84278eb9da1c340c8e7bc66be1a6ba"
+    ],
+    "subject": "fix(ai): update tests for removed OpenCode Go Kimi K2.6",
+    "body": "fix(ai): update tests for removed OpenCode Go Kimi K2.6\n\nmodels.dev dropped Kimi K2.6 from OpenCode Go, which broke type checks\nagainst the regenerated catalog. Use OpenCode Go Kimi K3 for\nprovider-level tests and OpenCode Zen Kimi K2.6 for thinking format tests.",
+    "files": [
+      {
+        "path": "packages/ai/test/cache-retention.test.ts",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/test/openai-completions-tool-choice.test.ts",
+        "added": "8",
+        "removed": "8"
+      },
+      {
+        "path": "packages/ai/test/supports-xhigh.test.ts",
+        "added": "0",
+        "removed": "6"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 8,
+    "removed": 15,
+    "zh": "修复问题；涉及 ai，记录 3 个文件的变动、文本新增 8 行 / 删除 15 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "6f7551516b84278eb9da1c340c8e7bc66be1a6ba",
+    "date": "2026-09-28T00:22:39+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "2b0a123de98318c2ff8069661721ce0c3794c34e"
+    ],
+    "subject": "fix(ai,coding-agent): update Fireworks tests and default for removed models",
+    "body": "fix(ai,coding-agent): update Fireworks tests and default for removed models\n\nmodels.dev dropped Kimi K2.6, GLM 5.2, and the dated DeepSeek V4 Fireworks\nmodels, which broke type checks against the regenerated catalog.",
+    "files": [
+      {
+        "path": "packages/ai/test/anthropic-adaptive-thinking-models.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/test/anthropic-empty-thinking-signature-compat.test.ts",
+        "added": "4",
+        "removed": "6"
+      },
+      {
+        "path": "packages/ai/test/fireworks-models.test.ts",
+        "added": "11",
+        "removed": "21"
+      },
+      {
+        "path": "packages/ai/test/openai-completions-prompt-cache.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/test/providers.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/model-resolver.ts",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "ai",
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 20,
+    "removed": 31,
+    "zh": "修复问题；主题线索：模型接入。涉及 ai、coding-agent，记录 7 个文件的变动、文本新增 20 行 / 删除 31 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "2b0a123de98318c2ff8069661721ce0c3794c34e",
+    "date": "2026-09-26T14:37:30+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "bf8e4b953183009507e68697750179951095a60c"
+    ],
+    "subject": "feat(coding-agent): remove themes section from startup banner",
+    "body": "feat(coding-agent): remove themes section from startup banner",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "added": "0",
+        "removed": "23"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 1,
+    "removed": 23,
+    "zh": "新增能力；涉及 coding-agent，记录 2 个文件的变动、文本新增 1 行 / 删除 23 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "bf8e4b953183009507e68697750179951095a60c",
+    "date": "2026-09-26T13:33:47+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "d6af72e1857cfb10b41d8ff8e69f0d72b4cf6d31"
+    ],
+    "subject": "feat(coding-agent,tui): System theme (#10067)",
+    "body": "feat(coding-agent,tui): System theme (#10067)\n\n* feat(coding-agent,tui): add system theme derived from terminal colors\n\nThe new default system theme builds pi's colors from the terminal's reported foreground, background, and ANSI palette. Tokens take their hue and relative saturation from a palette slot; lightness is placed by OKLab lightness difference and WCAG 2 contrast minimums. Terminals that report only a background get built-in hues, and terminals that report nothing get ANSI indices with faint secondary text.\n\nThe TUI queries OSC 10, 11, and 4 in one burst ended by DA1, so replies complete in one round trip, and reports replies that arrive after the timeout. Startup never waits: the system theme starts in grayscale and updates when colors arrive. Light/dark detection now uses the reported colors instead of the ?996 query; mode 2031 notifications trigger a new query.\n\n* fix(coding-agent): wait for terminal colors before building the startup header\n\nThe header and startup notices bake theme colors into their text. When the color replies arrived after they were built, as in Windows Terminal, they stayed grayscale. Startup now waits for the first color query, which ends at the DA1 reply or after 100 ms.\n\n* fix(coding-agent): rebuild header and notices on theme changes\n\nThe startup header, loaded resources, and chat notices baked theme colors into their text, so they kept the old colors after a theme switch or when the system theme received the terminal's colors. They now use ThemedText, which rebuilds its text from a function whenever the UI is invalidated.\n\n* fix(tui): keep focus on components that forward mouse events to children\n\nA component that forwards a mouse event to a child it hosts, such as SettingsList with an open submenu, left keyboard focus on the child. When the host removed the child, focus stayed on a detached component and all keys were lost. The forwarding component now keeps focus, like delegating containers do.\n\n* feat(coding-agent): describe the system theme in the theme selector\n\n* feat(coding-agent): list the system theme above automatic in the theme selector\n\n* refactor(coding-agent,tui): remove leftovers of the light/dark startup detection\n\nTheme detection only reports dark or light now; the source and confidence fields only served saving the detected theme. The first-time setup no longer shows the detected appearance. Removes the TUI's unused queryTerminalColorScheme(), queryTerminalBackgroundColor(), queryTerminalForegroundColor(), and parseOsc11BackgroundColor(); queryTerminalColors() covers them.\n\n* feat(coding-agent): match the reviewed system and light/dark theme design\n\nThe system theme now follows the reviewed design: color families with OKHSL saturation curves, palette slots per family, contrast rules per token and panel, relaxation for mid-gray backgrounds, and the terminal foreground for body text. Each contrast level is a target-lightness curve fitted to the reviewed output. The built-in dark and light themes use the reviewed Pi dark and light colors.\n\n* feat(coding-agent): show the pi logo in the startup header\n\nA two-line pixel logo replaces the app name. Its first line carries the version, its second line the first line of key hints.\n\n* feat(tui,coding-agent): support OKHSL colors in themes\n\nparseColor() accepts okhsl(H S L), and okhslColor() and colorToOkhsl() construct and read OKHSL colors. OKHSL saturation is relative to the sRGB gamut, so every value is in gamut. Theme files accept okhsl() values; HTML exports convert them to hex. The OKHSL code moves from coding-agent into pi-tui, where colors.ts now shares its Oklab conversion instead of keeping a second copy.\n\n* refactor(coding-agent): write the built-in themes in OKHSL\n\nThe built-in dark and light themes use okhsl() values, with variables for colors that several roles share, so they read as color families and serve as editable templates. Near-identical values collapsed into one; no color changes visibly.\n\n* refactor(coding-agent,tui): simplify terminal color and theme code\n\nShare the terminal color query between startup and the theme controller, merge the query's resolve/late-reply state into one callback, keep a single global for terminal colors, use oklab.ts arrays directly in colors.ts, and drop leftover helpers and exports.\n\n* fix(coding-agent): use one terminal light/dark decision everywhere\n\nTheme pairs, the system theme, and Theme.appearance now share getTerminalTheme(): the reported background decides, then the terminal's light/dark report, then COLORFGBG, then dark.\n\nCOLORFGBG is classified by palette index like Vim (0-6 and 8 dark) and only reads the last field, so rxvt's \"default\" no longer picks up the foreground index.\n\nSimplify the tests added on this branch.\n\n* fix(ai): use an OpenRouter model that still exists in beta test\n\nOpenRouter removed anthropic/claude-3-haiku, which broke type checking in CI after model regeneration.",
+    "files": [
+      {
+        "path": "packages/ai/test/anthropic-sse-parsing.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/settings.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/themes.md",
+        "added": "28",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/startup-ui.ts",
+        "added": "40",
+        "removed": "33"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/client-tui.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/first-time-setup.ts",
+        "added": "13",
+        "removed": "10"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/pi-logo.ts",
+        "added": "26",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts",
+        "added": "18",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/themed-text.ts",
+        "added": "32",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "added": "240",
+        "removed": "205"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/dark.json",
+        "added": "59",
+        "removed": "72"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/light.json",
+        "added": "57",
+        "removed": "69"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/system-theme.ts",
+        "added": "636",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/theme-controller.ts",
+        "added": "125",
+        "removed": "85"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/theme-json.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+        "added": "157",
+        "removed": "172"
+      },
+      {
+        "path": "packages/coding-agent/test/settings-selector.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/syntax-highlight.test.ts",
+        "added": "6",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/test/system-theme.test.ts",
+        "added": "117",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/theme-controller.test.ts",
+        "added": "96",
+        "removed": "68"
+      },
+      {
+        "path": "packages/coding-agent/test/theme-detection.test.ts",
+        "added": "26",
+        "removed": "130"
+      },
+      {
+        "path": "packages/coding-agent/test/theme-export.test.ts",
+        "added": "23",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/theme-style.test.ts",
+        "added": "26",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/test/themed-text.test.ts",
+        "added": "26",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/README.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/colors.ts",
+        "added": "50",
+        "removed": "67"
+      },
+      {
+        "path": "packages/tui/src/index.ts",
+        "added": "5",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/src/oklab.ts",
+        "added": "233",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/terminal-colors.ts",
+        "added": "18",
+        "removed": "11"
+      },
+      {
+        "path": "packages/tui/src/terminal.ts",
+        "added": "16",
+        "removed": "9"
+      },
+      {
+        "path": "packages/tui/src/tui.ts",
+        "added": "104",
+        "removed": "84"
+      },
+      {
+        "path": "packages/tui/test/colors.test.ts",
+        "added": "22",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/test/mouse-components.test.ts",
+        "added": "62",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/test/terminal-colors.test.ts",
+        "added": "66",
+        "removed": "142"
+      },
+      {
+        "path": "packages/tui/test/terminal.test.ts",
+        "added": "15",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai",
+      "coding-agent",
+      "tui"
+    ],
+    "type": "feat",
+    "added": 2354,
+    "removed": 1191,
+    "zh": "新增能力；主题线索：终端交互。涉及 ai、coding-agent、tui，记录 36 个文件的变动、文本新增 2354 行 / 删除 1191 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "d6af72e1857cfb10b41d8ff8e69f0d72b4cf6d31",
+    "date": "2026-09-25T18:05:22+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "04b5bad666830eb3a0dddc77a715eed95e12485a"
+    ],
+    "subject": "docs(durable): clarify scratch examples",
+    "body": "docs(durable): clarify scratch examples",
+    "files": [
+      {
+        "path": "packages/durable/test/scratch.ts",
+        "added": "107",
+        "removed": "62"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "docs",
+    "added": 107,
+    "removed": 62,
+    "zh": "更新文档；主题线索：持久化。涉及 durable，记录 1 个文件的变动、文本新增 107 行 / 删除 62 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "04b5bad666830eb3a0dddc77a715eed95e12485a",
+    "date": "2026-09-25T17:46:13+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "a6ca861024ddc1492af14e5386a3d3e2bfe8ab64"
+    ],
+    "subject": "feat(durable): add typed IDs and explicit ownership",
+    "body": "feat(durable): add typed IDs and explicit ownership",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "222",
+        "removed": "154"
+      },
+      {
+        "path": "packages/durable/src/documents.ts",
+        "added": "10",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/src/ids.ts",
+        "added": "11",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "6",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/session/forks.ts",
+        "added": "8",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "20",
+        "removed": "12"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "92",
+        "removed": "42"
+      },
+      {
+        "path": "packages/durable/src/storage/jsonl/storage.ts",
+        "added": "57",
+        "removed": "39"
+      },
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "81",
+        "removed": "66"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "60",
+        "removed": "40"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-benchmark.ts",
+        "added": "40",
+        "removed": "26"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "131",
+        "removed": "100"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "105",
+        "removed": "82"
+      },
+      {
+        "path": "packages/durable/test/jsonl-storage.test.ts",
+        "added": "61",
+        "removed": "41"
+      },
+      {
+        "path": "packages/durable/test/memory-storage.test.ts",
+        "added": "7",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/test/scratch.ts",
+        "added": "95",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-checkpoints-migrations.test.ts",
+        "added": "15",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/test/session-definitions.test.ts",
+        "added": "14",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/test/session-documents.test.ts",
+        "added": "11",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/test/session-forks.test.ts",
+        "added": "105",
+        "removed": "52"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "7",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/test/session-tables.test.ts",
+        "added": "137",
+        "removed": "26"
+      },
+      {
+        "path": "packages/durable/test/sqlite-facade.test.ts",
+        "added": "33",
+        "removed": "16"
+      },
+      {
+        "path": "packages/durable/test/sqlite-migrations.test.ts",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/sqlite-storage.test.ts",
+        "added": "58",
+        "removed": "26"
+      },
+      {
+        "path": "packages/durable/test/storage.bench.ts",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/test/types.test.ts",
+        "added": "78",
+        "removed": "76"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 1473,
+    "removed": 845,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 28 个文件的变动、文本新增 1473 行 / 删除 845 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "a6ca861024ddc1492af14e5386a3d3e2bfe8ab64",
+    "date": "2026-09-25T17:39:09+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "ab30693d64f96615e36707e7affa58adf45a98dc"
+    ],
+    "subject": "fix(ai): price OpenAI Fast mode service tier like priority",
+    "body": "fix(ai): price OpenAI Fast mode service tier like priority\n\nGPT-6 models return service_tier \"fast\" for Fast mode requests (the new\nname for priority processing), which fell through to the 1x default.\n\ncloses #10034",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/openai-responses.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/test/openai-responses-compat.test.ts",
+        "added": "49",
+        "removed": "40"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 51,
+    "removed": 40,
+    "zh": "修复问题；主题线索：模型接入。涉及 ai，记录 3 个文件的变动、文本新增 51 行 / 删除 40 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "ab30693d64f96615e36707e7affa58adf45a98dc",
+    "date": "2026-09-25T17:27:12+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "ff72faba28d10c86611863d0aaa5d3122f2d8cb0"
+    ],
+    "subject": "fix(ai): upgrade openai SDK to 7.19.0 (#10044)",
+    "body": "fix(ai): upgrade openai SDK to 7.19.0 (#10044)\n\n* fix(ai): upgrade openai SDK to 7.19.0\n\nAdds the \"fast\" service tier to the SDK types, needed to price\nGPT-6 Fast mode requests correctly. Drops the local\nprompt_cache_options type, which the SDK now defines.\n\n* fix(coding-agent): check Cloudflare compat request via fetch instead of SDK mock\n\npi-ai now resolves its own nested openai 7.x while evals keeps 6.x at the\nroot, so vi.mock(\"openai\") in coding-agent no longer reached pi-ai's client.\nCapture the outgoing request with a fake fetch and assert the URL and headers.\n\n* fix(ai): drop any casts for stream_options and max_tokens in openai-completions\n\nstream_options is typed by the SDK, so assign it directly. max_tokens is\ndeprecated by OpenAI but still needed for OpenAI-compatible providers\nthat reject max_completion_tokens; use a narrow cast instead of any to\navoid the deprecation warning.",
+    "files": [
+      {
+        "path": "package-lock.json",
+        "added": "39",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/ai/src/api/openai-completions.ts",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "packages/ai/src/api/openai-responses.ts",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/install-lock/package-lock.json",
+        "added": "38",
+        "removed": "19"
+      },
+      {
+        "path": "packages/coding-agent/npm-shrinkwrap.json",
+        "added": "38",
+        "removed": "19"
+      },
+      {
+        "path": "packages/coding-agent/test/model-runtime-cloudflare-compat.test.ts",
+        "added": "40",
+        "removed": "52"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "ai",
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 161,
+    "removed": 98,
+    "zh": "修复问题；主题线索：模型接入。涉及 仓库级、ai、coding-agent，记录 7 个文件的变动、文本新增 161 行 / 删除 98 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "ff72faba28d10c86611863d0aaa5d3122f2d8cb0",
+    "date": "2026-09-25T16:27:23+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "507d7649e9573f7caa38c7d920e2278b64a74ed8"
+    ],
+    "subject": "fix(coding-agent): save new session file at the first user message",
+    "body": "fix(coding-agent): save new session file at the first user message\n\nA new session was only written to disk once the first assistant message\nexisted. If pi exited during the first turn (Ctrl+C twice while streaming,\nor the process was killed), the user's prompt was lost and the session\nnever appeared in /resume.\n\nThe file is now created as soon as the session has a user or assistant\nmessage. A session with only setup entries (model, thinking level) still\nstays in memory, so starting pi and quitting without chatting leaves no\nfile. Forking uses the same rule through a shared helper, so the two paths\ncannot drift apart and write the header twice (#1672).\n\ncloses #10000",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session-runtime.ts",
+        "added": "1",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/src/core/session-manager.ts",
+        "added": "16",
+        "removed": "18"
+      },
+      {
+        "path": "packages/coding-agent/test/session-manager/file-operations.test.ts",
+        "added": "53",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/session-manager/tree-traversal.test.ts",
+        "added": "21",
+        "removed": "40"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-runtime.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/utilities.ts",
+        "added": "14",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 107,
+    "removed": 63,
+    "zh": "修复问题；主题线索：会话与上下文。涉及 coding-agent，记录 7 个文件的变动、文本新增 107 行 / 删除 63 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "507d7649e9573f7caa38c7d920e2278b64a74ed8",
+    "date": "2026-09-25T16:17:23+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "8930b9ec0b9299d4e48da2d9e0b7009f5f54391d"
+    ],
+    "subject": "feat(durable): add conversation document forks",
+    "body": "feat(durable): add conversation document forks",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "138",
+        "removed": "27"
+      },
+      {
+        "path": "packages/durable/src/documents.ts",
+        "added": "20",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/src/errors.ts",
+        "added": "15",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/session/forks.ts",
+        "added": "95",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "167",
+        "removed": "33"
+      },
+      {
+        "path": "packages/durable/src/storage/jsonl/storage.ts",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "107",
+        "removed": "24"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/database.ts",
+        "added": "5",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/migrations.ts",
+        "added": "5",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/node.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "112",
+        "removed": "47"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "252",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "24",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/test/jsonl-storage.test.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/session-checkpoints-migrations.test.ts",
+        "added": "1",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/test/session-forks.test.ts",
+        "added": "641",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "22",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/test/session-tables.test.ts",
+        "added": "6",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/test/sqlite-facade.test.ts",
+        "added": "15",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/sqlite-storage.test.ts",
+        "added": "2",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 1644,
+    "removed": 170,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 23 个文件的变动、文本新增 1644 行 / 删除 170 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "8930b9ec0b9299d4e48da2d9e0b7009f5f54391d",
+    "date": "2026-09-25T16:00:51+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "c01f687e5b900a42a69d22248f472b7fe4a790ea"
+    ],
+    "subject": "fix(ai): ignore empty Mistral content deltas",
+    "body": "fix(ai): ignore empty Mistral content deltas\n\nGLM models on Mistral send empty content deltas at the start of a\nresponse, alongside tool call fragments, and sometimes mid-thinking.\nEach one opened an empty text block, and a mid-thinking one split\nthinking into two blocks, which Mistral rejects on replay with\n\"Expected at most one leading ThinkChunk\".\n\ncloses #9674",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/mistral-conversations.ts",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/test/mistral-http-transport.test.ts",
+        "added": "42",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 47,
+    "removed": 0,
+    "zh": "修复问题；主题线索：应用组合与状态。涉及 ai，记录 3 个文件的变动、文本新增 47 行 / 删除 0 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "c01f687e5b900a42a69d22248f472b7fe4a790ea",
+    "date": "2026-09-25T15:52:46+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "ddba59618794b870786210e14065a639656ea10e"
+    ],
+    "subject": "fix(ai): apply model samplingParams in direct stream()/complete() calls",
+    "body": "fix(ai): apply model samplingParams in direct stream()/complete() calls\n\nModel-level samplingParams were only merged by streamSimple(). Direct\nstream()/complete() calls, such as extensions using\nmodelRegistry.complete(), dropped them. The OpenAI-compatible adapters\nnow merge model defaults with request keys, and request keys take\nprecedence.\n\ncloses #9506",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/api/azure-openai-responses.ts",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/ai/src/api/openai-completions.ts",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/ai/src/api/openai-responses.ts",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/ai/src/api/simple-options.ts",
+        "added": "1",
+        "removed": "5"
+      },
+      {
+        "path": "packages/ai/test/sampling-options.test.ts",
+        "added": "42",
+        "removed": "41"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 50,
+    "removed": 58,
+    "zh": "修复问题；主题线索：模型接入。涉及 ai，记录 6 个文件的变动、文本新增 50 行 / 删除 58 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "ddba59618794b870786210e14065a639656ea10e",
+    "date": "2026-09-25T15:44:41+02:00",
+    "author": "Christian Klotz",
+    "parents": [
+      "e473b5cd8b6f2e82f1295aeee81cb697ffde2ed5"
+    ],
+    "subject": "fix(coding-agent): honor truecolor in custom themes (fixes #9973) (#10039)",
+    "body": "fix(coding-agent): honor truecolor in custom themes (fixes #9973) (#10039)",
+    "files": [
+      {
+        "path": "packages/coding-agent/src/core/resource-loader.ts",
+        "added": "26",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/test/resource-loader-theme.test.ts",
+        "added": "103",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 129,
+    "removed": 9,
+    "zh": "修复问题；涉及 coding-agent，记录 2 个文件的变动、文本新增 129 行 / 删除 9 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "e473b5cd8b6f2e82f1295aeee81cb697ffde2ed5",
+    "date": "2026-09-25T14:51:52+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "b3487650f6378f1b0d1643dd254445ceb4a98035"
+    ],
+    "subject": "feat(coding-agent): report prompt disposition in RPC responses",
+    "body": "feat(coding-agent): report prompt disposition in RPC responses\n\nSuccessful RPC prompt, steer, and follow_up responses include\ndata.disposition (\"handled\", \"queued\", or \"started\" for prompt), so clients\nknow whether to wait for agent_settled.\n\nfixes #9098",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/rpc-commands.md",
+        "added": "9",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/docs/rpc.md",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/sdk.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session.ts",
+        "added": "137",
+        "removed": "137"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
+        "added": "16",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
+        "added": "7",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+        "added": "11",
+        "removed": "5"
+      },
+      {
+        "path": "packages/coding-agent/test/agent-session-concurrent.test.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-prompt-response-semantics.test.ts",
+        "added": "132",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/regressions/7150-rpc-prompt-during-compaction.test.ts",
+        "added": "5",
+        "removed": "4"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 324,
+    "removed": 177,
+    "zh": "新增能力；涉及 coding-agent，记录 11 个文件的变动、文本新增 324 行 / 删除 177 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "b3487650f6378f1b0d1643dd254445ceb4a98035",
+    "date": "2026-09-25T13:30:50+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "ca7460d16b5f72f3d0a3fb79b88c56754de81bfa"
+    ],
+    "subject": "fix(tui): keep cursor visible when overlays close after stop",
+    "body": "fix(tui): keep cursor visible when overlays close after stop\n\nClosing the last overlay hid the terminal cursor. If an extension closed\nan overlay during session shutdown, this ran after stop() had restored\nthe cursor, leaving the shell with an invisible cursor.\n\ncloses #10026",
+    "files": [
+      {
+        "path": "packages/tui/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/tui.ts",
+        "added": "9",
+        "removed": "4"
+      },
+      {
+        "path": "packages/tui/test/overlay-options.test.ts",
+        "added": "41",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "tui"
+    ],
+    "type": "fix",
+    "added": 51,
+    "removed": 4,
+    "zh": "修复问题；主题线索：终端交互。涉及 tui，记录 3 个文件的变动、文本新增 51 行 / 删除 4 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "ca7460d16b5f72f3d0a3fb79b88c56754de81bfa",
+    "date": "2026-09-25T13:14:33+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "49681e1b71c9c32cdfbf45c21f8e3cb3a8c8629d"
+    ],
+    "subject": "feat: build with TypeScript 7 and run sources with plain node",
+    "body": "feat: build with TypeScript 7 and run sources with plain node\n\nReplace the tsgo native preview with typescript@7.0.2 and port the check scripts to the TS 7 API. Target ES2024, drop useDefineForClassFields: false and unused decorator options, and enable verbatimModuleSyntax. Replace tsx with node plus the source resolver hook, passed to --import as a file URL.\n\ncloses #9965",
+    "files": [
+      {
+        "path": "mini-test.sh",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "package-lock.json",
+        "added": "303",
+        "removed": "83"
+      },
+      {
+        "path": "package.json",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/agent/benchmark/session/allocation-profile.ts",
+        "added": "4",
+        "removed": "3"
+      },
+      {
+        "path": "packages/agent/benchmark/session/loaded-footprint.ts",
+        "added": "4",
+        "removed": "3"
+      },
+      {
+        "path": "packages/agent/benchmark/tsconfig.json",
+        "added": "2",
+        "removed": "3"
+      },
+      {
+        "path": "packages/agent/package.json",
+        "added": "3",
+        "removed": "4"
+      },
+      {
+        "path": "packages/ai/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/client/package.json",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/examples/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/examples/extensions/custom-provider-gitlab-duo/test.ts",
+        "added": "5",
+        "removed": "5"
+      },
+      {
+        "path": "packages/coding-agent/examples/rpc-client.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/examples/rpc-extension-ui.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/examples/sdk/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/package.json",
+        "added": "1",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/config.ts",
+        "added": "4",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/micro/README.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/mini/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/process.ts",
+        "added": "2",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-entry.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/rpc-example.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/session-file-invalid.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/session-id-readonly.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/startup-session-name.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/stdout-cleanliness.test.ts",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/streaming-render-debug.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/test-theme-colors.ts",
+        "added": "7",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/evals/package.json",
+        "added": "3",
+        "removed": "4"
+      },
+      {
+        "path": "packages/protocol/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/server/package.json",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/session-backends/sqlite-node/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/telemetry/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/README.md",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/tui/package.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/test/image-test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/test/viewport-overwrite-repro.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "pi-test.ps1",
+        "added": "3",
+        "removed": "6"
+      },
+      {
+        "path": "pi-test.sh",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "scripts/check-runtime-deps.mjs",
+        "added": "77",
+        "removed": "37"
+      },
+      {
+        "path": "scripts/check-ts-relative-imports.mjs",
+        "added": "62",
+        "removed": "31"
+      },
+      {
+        "path": "tsconfig.base.json",
+        "added": "3",
+        "removed": "5"
+      },
+      {
+        "path": "tsconfig.json",
+        "added": "0",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "agent",
+      "ai",
+      "chord",
+      "client",
+      "coding-agent",
+      "durable",
+      "evals",
+      "protocol",
+      "server",
+      "session-backends",
+      "telemetry",
+      "tui"
+    ],
+    "type": "feat",
+    "added": 545,
+    "removed": 242,
+    "zh": "新增能力；涉及 仓库级、agent、ai、chord、client、coding-agent、durable、evals、protocol、server、session-backends、telemetry、tui，记录 46 个文件的变动、文本新增 545 行 / 删除 242 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "49681e1b71c9c32cdfbf45c21f8e3cb3a8c8629d",
+    "date": "2026-09-25T11:35:36+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "92e8d4f02a069289a9ff474eabf9c6e023e9d266"
+    ],
+    "subject": "fix(coding-agent): hide line range for full-file read calls with null offset/limit",
+    "body": "fix(coding-agent): hide line range for full-file read calls with null offset/limit\n\nStrict tool schemas make models send null for omitted optional fields.\nThe read renderer only treated undefined as missing, so full-file reads\nrendered as \"path:1\".\n\nfixes #9996",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/tools/renderers/read.ts",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/test/tool-execution-component.test.ts",
+        "added": "16",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 20,
+    "removed": 2,
+    "zh": "修复问题；涉及 coding-agent，记录 3 个文件的变动、文本新增 20 行 / 删除 2 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "92e8d4f02a069289a9ff474eabf9c6e023e9d266",
+    "date": "2026-09-25T11:26:14+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "f444ea5eafeb11dd02ea487f8916ba3a89540fb3"
+    ],
+    "subject": "fix(coding-agent): stop RpcClient skipping listeners on unsubscribe",
+    "body": "fix(coding-agent): stop RpcClient skipping listeners on unsubscribe\n\ncloses #9990",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
+        "added": "3",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 4,
+    "removed": 2,
+    "zh": "修复问题；涉及 coding-agent，记录 2 个文件的变动、文本新增 4 行 / 删除 2 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "f444ea5eafeb11dd02ea487f8916ba3a89540fb3",
+    "date": "2026-09-25T10:53:32+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "5fd446ca1843682e8da3fec4ceb71c42f56fbace"
+    ],
+    "subject": "fix(coding-agent): use per-ref cache folders for pinned temporary git extensions",
+    "body": "fix(coding-agent): use per-ref cache folders for pinned temporary git extensions\n\nTemporary git extensions (-e git:...@ref) were cached in a folder keyed\nonly by host and repo path. After changing the pinned ref, pi reused the\nold checkout without refreshing it and kept loading the first downloaded\ncommit. Include the ref in the temporary folder hash so each ref gets\nits own checkout. Unpinned sources keep their existing folder.\n\ncloses #9982",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/package-manager.ts",
+        "added": "4",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/test/package-manager.test.ts",
+        "added": "29",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 34,
+    "removed": 3,
+    "zh": "修复问题；主题线索：扩展机制。涉及 coding-agent，记录 3 个文件的变动、文本新增 34 行 / 删除 3 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "5fd446ca1843682e8da3fec4ceb71c42f56fbace",
+    "date": "2026-09-25T00:08:51+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "9e70c3d505db56fdb095cf5d777096f6888662a2"
+    ],
+    "subject": "feat(durable): optimize document replay",
+    "body": "feat(durable): optimize document replay",
+    "files": [
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "20",
+        "removed": "9"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "93",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/sqlite-storage.test.ts",
+        "added": "76",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 191,
+    "removed": 11,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 4 个文件的变动、文本新增 191 行 / 删除 11 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "9e70c3d505db56fdb095cf5d777096f6888662a2",
+    "date": "2026-09-25T00:08:32+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "b2bd111f2d46eed1a4689c32f30fde6306498827"
+    ],
+    "subject": "feat(chord): optimize immutable batch application",
+    "body": "feat(chord): optimize immutable batch application",
+    "files": [
+      {
+        "path": "packages/chord/src/delta/README.md",
+        "added": "18",
+        "removed": "4"
+      },
+      {
+        "path": "packages/chord/src/delta/apply-immutable-batch.ts",
+        "added": "0",
+        "removed": "71"
+      },
+      {
+        "path": "packages/chord/src/delta/index.ts",
+        "added": "38",
+        "removed": "15"
+      },
+      {
+        "path": "packages/chord/src/delta/tracker.ts",
+        "added": "1",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/test/delta-apply-immutable.test.ts",
+        "added": "272",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/delta-traversal.bench.ts",
+        "added": "0",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "chord"
+    ],
+    "type": "feat",
+    "added": 329,
+    "removed": 93,
+    "zh": "新增能力；主题线索：应用组合与状态。涉及 chord，记录 6 个文件的变动、文本新增 329 行 / 删除 93 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "b2bd111f2d46eed1a4689c32f30fde6306498827",
+    "date": "2026-09-24T23:18:25+02:00",
+    "author": "Ramiz Wachtler",
+    "parents": [
+      "5d4de953ce48ebe1fbdd72e9819b8bccabaeb08d"
+    ],
+    "subject": "feat(coding-agent): add hidden-message toggle to HTML exports (#10020)",
+    "body": "feat(coding-agent): add hidden-message toggle to HTML exports (#10020)",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/export-html/template.css",
+        "added": "10",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/export-html/template.js",
+        "added": "50",
+        "removed": "17"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 61,
+    "removed": 17,
+    "zh": "新增能力；涉及 coding-agent，记录 3 个文件的变动、文本新增 61 行 / 删除 17 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "5d4de953ce48ebe1fbdd72e9819b8bccabaeb08d",
+    "date": "2026-09-24T23:09:15+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "19a0361be89bf78ccf9bbaed9a496d6484759f67"
+    ],
+    "subject": "feat(durable): add checkpoints and document migrations",
+    "body": "feat(durable): add checkpoints and document migrations",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "5",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/documents.ts",
+        "added": "15",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "64",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "32",
+        "removed": "14"
+      },
+      {
+        "path": "packages/durable/src/storage/jsonl/storage.ts",
+        "added": "6",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "14",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "26",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "14",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "20",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/jsonl-storage.test.ts",
+        "added": "7",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/test/session-checkpoints-migrations.test.ts",
+        "added": "684",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/sqlite-storage.test.ts",
+        "added": "8",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 897,
+    "removed": 38,
+    "zh": "新增能力；主题线索：持久化。涉及 durable，记录 13 个文件的变动、文本新增 897 行 / 删除 38 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "19a0361be89bf78ccf9bbaed9a496d6484759f67",
+    "date": "2026-09-24T22:23:36+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "7cf037c218be969425c01c24568ddd7d4bc6ee2b"
+    ],
+    "subject": "feat(durable): add transactional sessions and documents",
+    "body": "feat(durable): add transactional sessions and documents\n\nAdd typed document definitions, atomic Session transactions, complete commit publication, task/document lifecycle handling, and paginated Tx scans. Share Chord's strict JSON copier across draft placements and durable ownership boundaries.",
+    "files": [
+      {
+        "path": "packages/chord/src/delta/tracker.ts",
+        "added": "4",
+        "removed": "48"
+      },
+      {
+        "path": "packages/chord/src/index.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/json.ts",
+        "added": "75",
+        "removed": "5"
+      },
+      {
+        "path": "packages/chord/test/json.test.ts",
+        "added": "52",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "8",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "5",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5.md",
+        "added": "8",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/src/documents.ts",
+        "added": "177",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "25",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/publications.ts",
+        "added": "16",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/session.ts",
+        "added": "239",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/session/transaction.ts",
+        "added": "677",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/storage/jsonl/storage.ts",
+        "added": "9",
+        "removed": "13"
+      },
+      {
+        "path": "packages/durable/src/storage/memory.ts",
+        "added": "4",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/src/storage/sqlite/storage.ts",
+        "added": "4",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-benchmark.ts",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/testing/storage-conformance.ts",
+        "added": "27",
+        "removed": "27"
+      },
+      {
+        "path": "packages/durable/src/types.ts",
+        "added": "228",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/test/jsonl-storage.test.ts",
+        "added": "8",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/test/session-definitions.test.ts",
+        "added": "111",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-documents.test.ts",
+        "added": "651",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-support.ts",
+        "added": "129",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/session-tables.test.ts",
+        "added": "328",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/sqlite-storage.test.ts",
+        "added": "8",
+        "removed": "8"
+      }
+    ],
+    "scopes": [
+      "chord",
+      "durable"
+    ],
+    "type": "feat",
+    "added": 2797,
+    "removed": 143,
+    "zh": "新增能力；主题线索：会话与上下文、持久化。涉及 chord、durable，记录 24 个文件的变动、文本新增 2797 行 / 删除 143 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "7cf037c218be969425c01c24568ddd7d4bc6ee2b",
+    "date": "2026-09-24T20:51:10+02:00",
+    "author": "Ramiz Wachtler",
+    "parents": [
+      "6966636dbe69e70f5036124be3f6b31043d5b74c"
+    ],
+    "subject": "fix(tui): choose Kitty image dimensions by aspect distortion (#9957)",
+    "body": "fix(tui): choose Kitty image dimensions by aspect distortion (#9957)",
+    "files": [
+      {
+        "path": "packages/tui/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/terminal-image.ts",
+        "added": "37",
+        "removed": "7"
+      },
+      {
+        "path": "packages/tui/test/terminal-image.test.ts",
+        "added": "139",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "tui"
+    ],
+    "type": "fix",
+    "added": 177,
+    "removed": 8,
+    "zh": "修复问题；主题线索：终端交互。涉及 tui，记录 3 个文件的变动、文本新增 177 行 / 删除 8 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
+    "hash": "6966636dbe69e70f5036124be3f6b31043d5b74c",
+    "date": "2026-09-24T19:33:02+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "d5629e20489ccf770ed90b5a33941cb3b7ef24d0"
+    ],
+    "subject": "fix(chord): allow promise probes on settled drafts",
+    "body": "fix(chord): allow promise probes on settled drafts",
+    "files": [
+      {
+        "path": "packages/chord/src/delta/tracker.ts",
+        "added": "11",
+        "removed": "5"
+      },
+      {
+        "path": "packages/chord/test/delta-tracker/tracker.test.ts",
+        "added": "29",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "chord"
+    ],
+    "type": "fix",
+    "added": 40,
+    "removed": 5,
+    "zh": "修复问题；主题线索：应用组合与状态。涉及 chord，记录 2 个文件的变动、文本新增 40 行 / 删除 5 行。具体改动意图见原始提交说明与文件清单。",
+    "curated": false
+  },
+  {
     "hash": "d5629e20489ccf770ed90b5a33941cb3b7ef24d0",
     "date": "2026-09-24T15:08:36+02:00",
     "author": "Armin Ronacher",
