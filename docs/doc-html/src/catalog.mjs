@@ -2,15 +2,28 @@ import ts from 'typescript';
 import { posix } from 'node:path';
 import { featureModules, featureSpecs } from './features.mjs';
 import { moduleOrder, compareFeatures } from './feature-order.mjs';
+import { exampleNotes } from './example-notes.mjs';
 
 const scriptFile = /\.(?:[cm]?ts|tsx|[cm]?js|jsx)$/;
 const testFile = /(?:\/test[s]?\/|\.(?:test|spec)\.[^.]+$)/;
 const textFile = /\.(?:[cm]?[jt]sx?|json|css|html|md|txt|sh|ps1|py|c|h|m|grit|yaml|yml|toml)$/;
 
-export function classifyPath(path) {
-  if (testFile.test(path)) return null;
+export function discoverModules(paths, read) {
+  const result = featureModules.filter(m => paths.some(p => p.startsWith(m.root)));
+  for (const path of paths.filter(p => /^packages\/[^/]+\/package\.json$/.test(p))) {
+    const dir = posix.dirname(path);
+    const root = `${dir}/src/`;
+    if (!paths.some(p => p.startsWith(root)) || result.some(m => m.root === root)) continue;
+    const pkg = JSON.parse(read(path));
+    result.push({ id: `package-${posix.basename(dir)}`, title: `${posix.basename(dir)} · 新包源码索引`, root, description: `来自 ${pkg.name}；尚未单独撰写中文能力说明。`, status: '待解读', doc: paths.includes(`${dir}/README.md`) ? `${dir}/README.md` : path });
+  }
+  return result;
+}
+
+export function classifyPath(path, modules = featureModules) {
+  if (testFile.test(path) && !modules.some(m => m.status === '示例' && path.startsWith(m.root))) return null;
   if (/^packages\/[^/]+\/scripts\//.test(path) || /^[^/]+\.sh$/.test(path)) return 'engineering';
-  return [...featureModules].sort((a, b) => b.root.length - a.root.length).find(m => path.startsWith(m.root))?.id ?? null;
+  return [...modules].sort((a, b) => b.root.length - a.root.length).find(m => path.startsWith(m.root))?.id ?? null;
 }
 
 export function parseSource(path, text) {
@@ -22,8 +35,10 @@ export function parseSource(path, text) {
   record.comment = (ts.getLeadingCommentRanges(text, 0) || []).map(r => clean(text.slice(r.pos, r.end))).join('\n\n');
   function visit(node, owner = '') {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      record.imports.push({ spec: node.moduleSpecifier.text, line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1, kind: ts.isExportDeclaration(node) ? '再导出' : '导入', typeOnly: Boolean(node.isTypeOnly || node.importClause?.isTypeOnly) });
+      const bindings = node.importClause?.namedBindings || node.exportClause;
+      record.imports.push({ spec: node.moduleSpecifier.text, line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1, kind: ts.isExportDeclaration(node) ? '再导出' : '导入', typeOnly: Boolean(node.isTypeOnly || node.importClause?.isTypeOnly || (!node.importClause?.name && bindings?.elements?.length && bindings.elements.every(item => item.isTypeOnly))) });
     }
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments.length === 1 && ts.isStringLiteral(node.arguments[0])) record.imports.push({ spec: node.arguments[0].text, line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1, kind: '动态导入', typeOnly: false });
     let kind;
     if (ts.isFunctionDeclaration(node)) kind = '函数';
     else if (ts.isClassDeclaration(node)) kind = '类';
@@ -88,11 +103,12 @@ export function resolveImport(from, spec, files, manifests) {
 
 export function buildCatalog({ paths, read, commits }) {
   const pathSet = new Set(paths);
+  const discovered = discoverModules(paths, read);
   const manifests = paths.filter(p => /^packages\/(?:[^/]+|session-backends\/[^/]+)\/package\.json$/.test(p)).map(p => ({ dir: posix.dirname(p), ...JSON.parse(read(p)) }));
   const files = {};
   const snapshots = {};
   for (const path of paths) {
-    const module = classifyPath(path);
+    const module = classifyPath(path, discovered);
     if (!module) continue;
     const text = textFile.test(path) ? read(path) : null;
     const info = text === null ? { symbols: [], imports: [], comment: '' } : parseSource(path, text);
@@ -105,37 +121,47 @@ export function buildCatalog({ paths, read, commits }) {
       ref.target = resolveImport(path, ref.spec, pathSet, manifests);
       if (ref.target && files[ref.target]) {
         const edge = { path, line: ref.line, kind: ref.kind, typeOnly: ref.typeOnly };
-        if (testFile.test(path)) files[ref.target].tests.push(edge);
+        if (testFile.test(path) && !files[path]) files[ref.target].tests.push(edge);
         else files[ref.target].consumers.push(edge);
       }
     }
   }
   const features = [];
-  for (const module of featureModules) {
+  for (const module of discovered) {
     const owned = Object.keys(files).filter(p => files[p].module === module.id);
-    for (const [key, title, patterns, purpose, entry, behavior] of featureSpecs[module.id] || []) {
-      const members = owned.filter(p => patterns.some(pattern => p.slice(module.root.length) === pattern || (!/\.[a-z]+$/i.test(pattern) && p.slice(module.root.length).startsWith(pattern))));
+    for (const [key, title, patterns, purpose, entry, behavior, docs = []] of featureSpecs[module.id] || []) {
+      const members = owned.filter(p => { const relative = module.id === 'engineering' ? p.replace(/^packages\/[^/]+\/scripts\//, '').replace(/^scripts\//, '') : p.slice(module.root.length); return patterns.some(pattern => relative === pattern || (!/\.[a-z]+$/i.test(pattern) && relative.startsWith(pattern))); });
       if (!members.length) throw new Error(`功能没有源码依据: ${module.id}/${key}`);
-      features.push({ id: `${module.id}-${key}`, module: module.id, title, purpose, entry, behavior, files: members, status: module.status, evidence: '中文能力解说', docs: [module.doc] });
+      features.push({ id: `${module.id}-${key}`, module: module.id, title, purpose, entry, behavior, files: members, status: module.status, evidence: '中文能力解说', docs: [...new Set([module.doc, ...docs])].filter(p => pathSet.has(p)) });
     }
     // Independently list provider factories and runnable example entry units.
     if (module.id === 'ai') for (const path of owned.filter(p => /^packages\/ai\/src\/providers\/[^/]+\.ts$/.test(p) && !/\.models\.ts$|\.d\.ts$/.test(p) && files[p].symbols.some(s => s.exported && /函数/.test(s.kind) && /\bProvider\b/.test(s.output)))) {
       const key = posix.basename(path, '.ts');
       features.push({ id: `ai-provider-${key}`, module: 'ai', title: `${key} · 提供商接入`, purpose: `通过 ${key} 工厂提供模型目录、请求派发或认证组合；具体导出与原始注释见下方。`, entry: files[path].symbols.filter(s => s.exported).map(s => s.name).join('、'), behavior: '返回 Provider 的导出函数由语法树识别；不根据厂商名称推断支持全部模型或所有输入类型。', files: [path, ...owned.filter(p => p === path.replace(/\.ts$/, '.models.ts'))], status: '库能力', evidence: '源码规则归类', docs: [module.doc] });
     }
-    if (module.id === 'examples') {
+    if (module.status === '示例') {
       const groups = new Map();
       for (const path of owned) {
         const parts = path.slice(module.root.length).split('/');
-        const key = parts.slice(0, Math.min(2, parts.length)).join('/');
+        const key = parts.slice(0, Math.min(module.id === 'examples' ? 2 : 1, parts.length)).join('/');
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(path);
       }
-      for (const [key, members] of groups) features.push({ id: `example-${key.replace(/[^a-zA-Z0-9-]/g, '-')}`, module: module.id, title: `${key.replace(/\.[^.]+$/, '')} · 示例`, purpose: `展示 ${key} 对应的扩展或 SDK 用法。具体场景以入口文件的原始说明、注册代码和配套 README 为依据。`, entry: members.find(p => /(?:index|\d[^/]*)\.ts$/.test(p)) || members[0], behavior: '示例不是默认启用功能；阅读注册入口、参数契约和清理行为后再选择使用。', files: members, status: '示例', evidence: '源码规则归类', docs: [module.doc, ...members.filter(p => p.endsWith('README.md'))] });
+      for (const [key, members] of groups) {
+        const note = exampleNotes[module.id]?.[key];
+        features.push({ id: `${module.id === 'examples' ? 'example' : module.id}-${key.replace(/[^a-zA-Z0-9-]/g, '-')}`, module: module.id, title: `${note?.[0] || key.replace(/\.[^.]+$/, '')} · 示例`, purpose: note?.[1] || `展示 ${key} 对应的扩展或 SDK 用法。具体场景以入口文件的原始说明、注册代码和配套 README 为依据。`, entry: members.find(p => /(?:main|index|\d[^/]*)\.ts$/.test(p)) || members[0], behavior: '示例不是默认启用功能；阅读注册入口、参数契约和清理行为后再选择使用。', files: members, status: '示例', evidence: note ? '中文能力解说' : '源码规则归类', docs: [...new Set([module.doc, ...members.filter(p => p.endsWith('README.md'))])].filter(p => pathSet.has(p)) });
+      }
     }
     const assigned = new Set(features.filter(f => f.module === module.id).flatMap(f => f.files));
     const remaining = owned.filter(p => !assigned.has(p));
-    if (remaining.length) features.push({ id: `${module.id}-support`, module: module.id, title: '其余实现、入口与支撑资源', purpose: `${module.title}中尚未单独撰写中文能力说明的文件在此完整列出，防止静默遗漏。`, entry: '从文件列表选择入口，查看符号、原始注释和引用', behavior: '此项是覆盖索引，不代表其中所有实现已做语义审计。每份源码仍可离线展开。', files: remaining, status: module.status, evidence: '源码覆盖索引', docs: [module.doc] });
+    const supportGroups = new Map();
+    for (const path of remaining) {
+      const relative = module.id === 'engineering' ? path : path.slice(module.root.length);
+      const group = relative.includes('/') ? posix.dirname(relative) : 'root';
+      if (!supportGroups.has(group)) supportGroups.set(group, []);
+      supportGroups.get(group).push(path);
+    }
+    for (const [group, members] of supportGroups) features.push({ id: `${module.id}-support-${group.replace(/[^a-zA-Z0-9-]/g, '-')}`, module: module.id, title: `${group === 'root' ? '根入口与类型' : group} · 支撑实现`, purpose: `${module.title}的 ${group} 文件尚未单独作语义解读，在此按实现目录完整列出。`, entry: members[0], behavior: '目录归属是索引依据；具体作用请结合原始注释、完整实现与双向引用阅读。', files: members, status: module.status, evidence: '源码覆盖索引', docs: [module.doc].filter(p => pathSet.has(p)) });
   }
   features.sort(compareFeatures);
   const history = new Map();
@@ -150,8 +176,8 @@ export function buildCatalog({ paths, read, commits }) {
     for (const path of feature.files) files[path].features.push(feature.id);
     for (const doc of feature.docs) if (pathSet.has(doc) && !snapshots[doc]) snapshots[doc] = read(doc);
   }
-  // Test sources are embedded only when an exact static import links them to indexed files.
+  // Tests are embedded when a resolved import or literal dynamic import links to indexed files.
   for (const path of new Set(features.flatMap(f => f.tests))) snapshots[path] = read(path);
-  const modules = featureModules.map(m => ({ ...m, features: features.filter(f => f.module === m.id).map(f => f.id), fileCount: Object.values(files).filter(f => f.module === m.id).length })).sort((a, b) => moduleOrder.indexOf(a.id) - moduleOrder.indexOf(b.id));
-  return { catalog: { modules, features, files, stats: { files: Object.keys(files).length, symbols: Object.values(files).reduce((n, f) => n + f.symbols.length, 0), features: features.length, documented: features.filter(f => f.evidence === '中文能力解说').length, unassigned: Object.values(files).filter(f => !f.features.length).length }, scope: 'Git 已跟踪的全部工作区包 src、coding-agent/examples、tui/native、根/包 scripts 与根 shell 入口。测试通过精确静态 import 关联；文档、测试场景、构建产物和二进制不计为独立业务功能。TS/JS 用语法树提取声明与注释；C/Objective-C/Shell 保留文本或资源索引。文件覆盖不等于每项语义都已人工审计。' }, snapshots };
+  const modules = discovered.map(m => ({ ...m, features: features.filter(f => f.module === m.id).map(f => f.id), fileCount: Object.values(files).filter(f => f.module === m.id).length })).sort((a, b) => (moduleOrder.indexOf(a.id) < 0 ? moduleOrder.length : moduleOrder.indexOf(a.id)) - (moduleOrder.indexOf(b.id) < 0 ? moduleOrder.length : moduleOrder.indexOf(b.id)));
+  return { catalog: { modules, features, files, stats: { files: Object.keys(files).length, symbols: Object.values(files).reduce((n, f) => n + f.symbols.length, 0), features: features.length, documented: features.filter(f => f.evidence === '中文能力解说').length, unassigned: Object.values(files).filter(f => !f.features.length).length }, scope: 'Git 已跟踪的全部工作区包 src、coding-agent/examples、agent/examples、durable/test/examples、tui/native、根/包 scripts 与根 shell 入口。根工作区中新包的 src 自动发现并标为待解读。普通测试通过可解析的 import、再导出和字面量动态导入关联，不计为独立业务功能；示例单独列出。文档、构建产物和二进制不计为独立业务功能。TS/JS 用语法树提取声明与注释；C/Objective-C/Shell 保留文本或资源索引。文件覆盖不等于每项语义都已人工审计。' }, snapshots };
 }

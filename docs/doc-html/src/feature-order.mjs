@@ -1,26 +1,28 @@
 // Reading order: entry -> assembly -> execution -> persistence -> presentation.
 // Independent SDKs and optional paths do not form a single runtime trace.
-export const moduleOrder = ['coding', 'agent', 'ai', 'durable', 'sqlite', 'tui', 'native', 'chord', 'client', 'protocol', 'server', 'experimental', 'telemetry', 'examples', 'evals', 'engineering'];
+export const moduleOrder = ['coding', 'agent', 'ai', 'codemode', 'mcp', 'durable', 'tui', 'native', 'chord', 'client', 'protocol', 'server', 'experimental', 'telemetry', 'examples', 'agent-examples', 'durable-examples', 'evals', 'engineering'];
 export const featureOrder = {
-  coding: ['startup', 'settings', 'trust', 'packages', 'resources', 'extensions', 'skills', 'templates', 'auth', 'models', 'virtual', 'llama', 'sdk', 'sessions', 'system', 'input', 'interactive', 'print', 'rpc', 'keys', 'clipboard', 'prompt', 'tool-support', 'read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'powershell', 'compaction', 'branch', 'cache', 'export', 'components', 'theme', 'http', 'diagnostics'],
-  agent: ['harness', 'session', 'context', 'execution', 'loop', 'tools', 'drive', 'search', 'proxy', 'pico'],
-  ai: ['contracts', 'catalog', 'auth', 'api', 'images', 'utilities', 'compat', 'cli'],
-  durable: ['records', 'session', 'harness', 'env', 'memory', 'jsonl', 'sqlite', 'testing'],
-  tui: ['input', 'complete', 'components', 'render', 'text', 'color', 'image'],
+  coding: ['startup', 'settings', 'trust', 'packages', 'resources', 'builtin', 'extensions', 'mcp-config', 'mcp-auth', 'mcp-management', 'mcp-runtime', 'mcp-tools', 'mcp-resources', 'skills', 'templates', 'auth', 'models', 'virtual', 'llama', 'sdk', 'sessions', 'system', 'input', 'interactive', 'fullscreen', 'print', 'rpc', 'keys', 'clipboard', 'prompt', 'loadout', 'tool-search', 'codemode', 'codemode-store', 'codemode-models', 'output-files', 'nested-tools', 'tool-support', 'read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'powershell', 'compaction', 'branch', 'cache', 'export', 'components', 'theme', 'system-theme', 'radius-login', 'catalog-refresh', 'experimental-cli', 'http', 'diagnostics'],
+  agent: ['loop', 'run-tool', 'proxy'],
+  codemode: ['source', 'declarations', 'wasm', 'host', 'worker', 'store', 'output'],
+  mcp: ['client', 'stdio', 'http', 'oauth-discovery', 'oauth-callback', 'oauth-flow', 'content', 'testing'],
+  ai: ['contracts', 'catalog', 'auth', 'chatgpt-login', 'oauth-remote', 'federation', 'api', 'strict-tools', 'classifiers', 'images', 'utilities', 'compat', 'cli'],
+  durable: ['records', 'session', 'harness', 'registry', 'agent-config', 'prompt', 'inbox', 'generation', 'tool-tasks', 'env', 'coding-tools', 'watch', 'compaction', 'subagents', 'task-graph', 'views', 'events', 'usage', 'memory', 'jsonl', 'sqlite', 'testing'],
+  tui: ['input', 'wheel', 'complete', 'editing-history', 'layout', 'components', 'render', 'search', 'text', 'color', 'image'],
   chord: ['json', 'context', 'facets', 'services', 'delta', 'bundle'],
   client: ['transport', 'client', 'errors'],
   protocol: ['envelope', 'codec', 'cbor'],
   server: ['transport', 'route', 'testing'],
-  experimental: ['plugins', 'services', 'workers', 'clients', 'mini', 'micro'],
+  experimental: ['plugins', 'services', 'workers', 'clients', 'session-catalog', 'durable-app', 'vacation-app'],
   telemetry: ['schema', 'adapters', 'conformance'],
   evals: ['runner', 'report'],
-  engineering: ['checks', 'catalog', 'analysis', 'release']
+  engineering: ['checks', 'catalog', 'model-hydration', 'install-lock', 'analysis', 'release']
 };
 
 export function compareFeatures(a, b) {
   const moduleRank = id => moduleOrder.indexOf(id) < 0 ? moduleOrder.length : moduleOrder.indexOf(id);
   const rank = feature => {
-    if (feature.id.endsWith('-support')) return 10000;
+    if (feature.id.endsWith('-support') || feature.id.includes('-support-')) return 10000;
     const keys = featureOrder[feature.module] || [];
     const index = keys.indexOf(feature.id.slice(feature.module.length + 1));
     if (index >= 0) return index;

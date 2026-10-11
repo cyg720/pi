@@ -11,7 +11,7 @@
     ['start', '从零认识 Pi', '01'], ['map', '项目源码地图', '02'], ['boot', '从 CLI 到会话', '03'],
     ['loop', '模型与工具循环', '04'], ['session', '会话与上下文', '05'], ['extensions', '智能体扩展详解', '06'],
     ['advanced', '服务与持久化', '07'], ['practice', '带着问题读源码', '08'],
-    ['functions', '功能清单详情', 'Fn'], ['diagrams', '架构图谱', '图'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
+    ['development', '本地开发说明', 'Dev'], ['directory', '源码目录说明', 'Dir'], ['functions', '功能清单详情', 'Fn'], ['diagrams', '架构图谱', '图'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
   ];
   const types = { feat: '新增', fix: '修复', docs: '文档', refactor: '重构', test: '测试', chore: '维护', perf: '性能', build: '构建', ci: 'CI', merge: '合并', revert: '回退', other: '其他' };
   let current = 'start';
@@ -25,7 +25,13 @@
   let historyFiltered = data.commits;
   let historyQuery = { query: '', scope: '', type: '', year: '' };
   let toastTimer;
+  const developmentKey = `development-${data.meta.commit.slice(0, 9)}`;
+  const storedSteps = saved(developmentKey, []);
+  const developmentSteps = new Set(Array.isArray(storedSteps) ? storedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < data.chapters.find(c => c.id === 'development').sections.length) : []);
+  let commandShell = saved('command-shell', 'powershell');
+  if (!['all', 'powershell', 'bash'].includes(commandShell)) commandShell = 'powershell';
   const featureBrowser = createFeatureBrowser(data, esc);
+  const directoryBrowser = createDirectoryBrowser(data, esc);
   const notify = text => { $('toast').textContent = text; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2500); };
   const sourceLink = (path, needle = '', label) => `<button class="ref" data-source="${esc(path)}" data-needle="${esc(needle)}">${esc(label || path.replace(/^packages\//, ''))}</button>`;
   const hero = (eyebrow, title, intro, number = '') => `<div class="hero-line"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="lead">${esc(intro)}</p></div>${number ? `<div class="chapter-number" aria-hidden="true">${number}</div>` : ''}</div>`;
@@ -52,11 +58,29 @@
   function renderChapter(chapter) {
     const index = routes.findIndex(r => r[0] === chapter.id);
     const welcome = chapter.id === 'start' ? `<div class="stats"><div class="stat"><b>${data.packages.length}</b><small>包与职责</small></div><div class="stat"><b>8</b><small>循序渐进的章节</small></div><div class="stat"><b>${data.commits.length.toLocaleString()}</b><small>本地 Git 提交</small></div><div class="stat"><b>5</b><small>可交互架构图</small></div></div><div class="route"><a href="#boot"><span>PATH 01 · START</span><h3>跟着启动走</h3><p>从 cli.ts 到会话装配</p></a><a href="#loop"><span>PATH 02 · EXECUTE</span><h3>跟着请求走</h3><p>模型 → 工具 → 下一轮</p></a><a href="#extensions"><span>PATH 03 · EXTEND</span><h3>理解智能体扩展</h3><p>工具、事件与子智能体</p></a></div>` : '';
-    const sections = chapter.sections.map((s, i) => `<section class="section" id="section-${i}"><h2>${esc(s.title)}</h2>${s.text ? `<p>${esc(s.text)}</p>` : ''}${s.table ? `<div class="table-wrap"><table><thead><tr>${s.table[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${s.table.slice(1).map(row => `<tr>${row.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : ''}${s.refs ? `<div class="refs">${s.refs.map(r => sourceLink(...r)).join('')}</div>` : ''}</section>`).join('');
-    return `${hero(chapter.eyebrow, chapter.title, chapter.intro, String(index + 1).padStart(2, '0'))}${welcome}${chapter.id === 'loop' || chapter.id === 'start' ? traceHtml() : ''}<div class="two-col"><article>${sections}${finish(chapter.id)}</article><aside class="toc"><strong>本章阅读路线</strong>${chapter.sections.map((s, i) => `<a href="#${chapter.id}/section-${i}">${esc(s.title)}</a>`).join('')}<div class="callout">先读中文解释，再打开对应源码。快照带行号，可搜索函数名。</div></aside></div>`;
+    const isDevelopment = chapter.id === 'development';
+    const sections = chapter.sections.map((s, i) => `<section class="section" id="section-${i}"><h2>${esc(s.title)}</h2>${s.text ? `<p>${esc(s.text)}</p>` : ''}${s.table ? `<div class="table-wrap"><table><thead><tr>${s.table[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${s.table.slice(1).map(row => `<tr>${row.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : ''}${renderGuideBlocks(s, chapter.id, i, esc)}${s.refs ? `<div class="refs">${s.refs.map(r => sourceLink(...r)).join('')}</div>` : ''}${isDevelopment ? `<label class="dev-check"><input type="checkbox" data-dev-complete="${i}" ${developmentSteps.has(i) ? 'checked' : ''}>我已完成 / 确认这一阶段</label>` : ''}</section>`).join('');
+    const developmentToolbar = isDevelopment ? `<div class="dev-toolbar"><label>命令显示<select id="commandShell">${[['powershell','Windows PowerShell'],['bash','Git Bash / Linux'],['all','全部命令']].map(([value,title]) => `<option value="${value}" ${commandShell === value ? 'selected' : ''}>${title}</option>`).join('')}</select></label><div><b id="devProgress"></b><small>勾选只记录阅读进度，不代表命令已运行或验证通过。</small></div></div><nav class="dev-jump" aria-label="开发阶段快捷导航">${chapter.sections.map((s,i) => `<a href="#development/section-${i}">${esc(s.title)}</a>`).join('')}</nav>` : '';
+    return `${isDevelopment ? '<div class="dev-page">' : ''}${hero(chapter.eyebrow, chapter.title, chapter.intro, isDevelopment ? 'DEV' : String(index + 1).padStart(2, '0'))}${welcome}${developmentToolbar}${chapter.id === 'loop' || chapter.id === 'start' ? traceHtml() : ''}<div class="two-col"><article>${sections}${isDevelopment ? '<div class="end-nav"><a href="#functions">查看功能与源码 →</a><a href="#practice">阅读练习 →</a></div>' : finish(chapter.id)}</article><aside class="toc"><strong>${isDevelopment ? '开发步骤' : '本章阅读路线'}</strong>${chapter.sections.map((s, i) => `<a href="#${chapter.id}/section-${i}">${esc(s.title)}</a>`).join('')}<div class="callout">先读中文解释，再打开对应源码。快照带行号，可搜索函数名。</div></aside></div>${isDevelopment ? '</div>' : ''}`;
+  }
+  function activateDevelopment() {
+    const guide = data.chapters.find(c => c.id === 'development');
+    $('devProgress').textContent = `${developmentSteps.size} / ${guide.sections.length} 个阶段已确认`;
+    filterGuideCommands($('main'), commandShell);
+    $('commandShell').addEventListener('change', () => {
+      commandShell = $('commandShell').value;
+      save('command-shell', commandShell);
+      filterGuideCommands($('main'), commandShell);
+    });
+    $('main').querySelectorAll('[data-dev-complete]').forEach(input => input.addEventListener('change', () => {
+      const index = Number(input.dataset.devComplete);
+      if (input.checked) developmentSteps.add(index); else developmentSteps.delete(index);
+      save(developmentKey, [...developmentSteps]);
+      $('devProgress').textContent = `${developmentSteps.size} / ${guide.sections.length} 个阶段已确认`;
+    }));
   }
   function renderMap() {
-    return `${hero('02 / REPOSITORY MAP', '项目源码地图', '按职责认识包；箭头“依赖”来自工作区 package.json，不等同于每次请求的执行路径。', '02')}<div class="grid">${data.packages.map(p => `<article class="card"><small class="mono">packages/${esc(p.path)}</small><h2>${esc(p.path)}</h2><p>${esc(p.description)}</p><div class="chips">${p.dependencies.map(d => `<span class="chip">依赖 ${esc(d.replace('@earendil-works/', ''))}</span>`).join('') || '<span class="chip">无直接 Pi 工作区运行时依赖</span>'}</div><div class="refs">${sourceLink(`packages/${p.path}/package.json`, '', '包清单')}${data.sources[`packages/${p.path}/README.md`] ? sourceLink(`packages/${p.path}/README.md`, '', '阅读 README') : ''}</div></article>`).join('')}</div><section class="section"><h2>目录索引</h2><p>按本次生成时 git ls-files 收录的 packages、scripts、.pi 路径搜索。完整源码快照仅覆盖书架列出的精选文件。</p><label>过滤文件路径 <input id="treeSearch" type="search" placeholder="例如 extensions 或 session-manager"></label><p id="treeCount" class="meta"></p><div id="treeResults" class="tree-list"></div></section>${finish('map')}`;
+    return `${hero('02 / REPOSITORY MAP', '项目源码地图', '按职责认识包；箭头“依赖”来自工作区 package.json，不等同于每次请求的执行路径。', '02')}<div class="grid">${data.packages.map(p => `<article class="card"><small class="mono">packages/${esc(p.path)}</small><h2>${esc(p.path)}</h2><p>${esc(p.description)}</p><div class="chips">${p.dependencies.map(d => `<span class="chip">依赖 ${esc(d.replace('@earendil-works/', ''))}</span>`).join('') || '<span class="chip">无直接 Pi 工作区运行时依赖</span>'}</div><div class="refs">${sourceLink(`packages/${p.path}/package.json`, '', '包清单')}${data.sources[`packages/${p.path}/README.md`] ? sourceLink(`packages/${p.path}/README.md`, '', '阅读 README') : ''}</div></article>`).join('')}</div><section class="section"><h2>目录索引</h2><p>按本次生成时 git ls-files 收录的 packages、scripts、.pi 路径搜索。扫描范围内的源码以及关联测试、文档均可在离线书架阅读。</p><label>过滤文件路径 <input id="treeSearch" type="search" placeholder="例如 extensions 或 session-manager"></label><p id="treeCount" class="meta"></p><div id="treeResults" class="tree-list"></div></section>${finish('map')}`;
   }
   function treeSearch() {
     const query = $('treeSearch').value.toLowerCase();
@@ -98,7 +122,7 @@
     $('diagramHost').innerHTML = `<iframe class="diagram-frame" title="${esc(d.title)}" sandbox="allow-scripts allow-downloads" src="${diagramUrl(diagramIndex)}"></iframe>`;
   }
   function renderSources() {
-    return `${hero('LIBRARY / LOCAL SNAPSHOTS', '离线源码书架', `${Object.keys(data.sources).length} 份精选源码、类型声明与原始文档已内嵌。无需本地服务器，也不读取磁盘上的其他源码文件。`)}<div class="callout">快照版本：${esc(data.meta.commit)}<br>${data.meta.status ? '生成时 packages/scripts 存在工作区变更，快照反映工作区内容，请结合 manifest 检查。' : '生成时 packages/scripts 没有 Git 报告的工作区变更。'}<br>每份文件的 SHA-256 保存在 data/manifest.json。复制此 HTML 到别处仍可阅读全部内嵌内容。</div><div class="filters"><label class="grow">按文件名筛选<input id="librarySearch" type="search" placeholder="例如 extensions/types.ts"></label></div><p id="libraryCount" class="meta"></p><div id="libraryRows" class="source-list"></div>`;
+    return `${hero('LIBRARY / LOCAL SNAPSHOTS', '离线源码书架', `${Object.keys(data.sources).length} 份源码、关联测试、类型声明与原始文档已内嵌。无需本地服务器，也不读取磁盘上的其他源码文件。`)}<div class="callout">快照版本：${esc(data.meta.commit)}<br>${data.meta.status ? '生成时 packages/scripts 存在工作区变更，快照反映工作区内容，请结合 manifest 检查。' : '生成时 packages/scripts 没有 Git 报告的工作区变更。'}<br>每份文件的 SHA-256 保存在 data/manifest.json。复制此 HTML 到别处仍可阅读全部内嵌内容。</div><div class="filters"><label class="grow">按文件名筛选<input id="librarySearch" type="search" placeholder="例如 extensions/types.ts"></label></div><p id="libraryCount" class="meta"></p><div id="libraryRows" class="source-list"></div>`;
   }
   function libraryRows() {
     const q = $('librarySearch').value.toLowerCase();
@@ -109,17 +133,22 @@
   function render() {
     clearInterval(timer); timer = undefined;
     const [id, anchor] = location.hash.slice(1).split('/');
+    if (current === 'directory' && id === 'directory' && $('directoryDetail')) {
+      directoryBrowser.navigate(anchor);
+      return;
+    }
     if (current === 'functions' && id === 'functions' && $('featurePanel')) {
       featureBrowser.navigate(anchor);
       return;
     }
     if (current === 'functions') featureBrowser.rememberMenu();
+    if (current === 'directory') directoryBrowser.rememberMenu();
     current = routes.some(r => r[0] === id) ? id : 'start';
     nav();
     $('breadcrumb').textContent = `Pi 源码导览 / ${routes.find(r => r[0] === current)[1]}`;
     document.title = `${routes.find(r => r[0] === current)[1]} · Pi 源码导览`;
     const chapter = data.chapters.find(c => c.id === current);
-    const html = chapter ? renderChapter(chapter) : current === 'functions' ? featureBrowser.render(anchor) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
+    const html = chapter ? renderChapter(chapter) : current === 'directory' ? directoryBrowser.render(anchor) : current === 'functions' ? featureBrowser.render(anchor) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
     $('main').innerHTML = `<div class="page">${html}</div>`;
     if ($('traceDetail')) updateTrace();
     if (current === 'map') { treeSearch(); $('treeSearch').addEventListener('input', treeSearch); }
@@ -129,6 +158,8 @@
     }
     if (current === 'diagrams') updateDiagram();
     if (current === 'functions') featureBrowser.activate();
+    if (current === 'development') activateDevelopment();
+    if (current === 'directory') directoryBrowser.activate();
     if (current === 'sources') { libraryRows(); $('librarySearch').addEventListener('input', libraryRows); }
     document.querySelector('.sidebar').classList.remove('open'); $('menu').setAttribute('aria-expanded', 'false');
     if (anchor && document.getElementById(anchor)) document.getElementById(anchor).scrollIntoView();
@@ -168,13 +199,21 @@
     if (!q) { $('searchResults').innerHTML = '<p class="meta">搜索中文讲解、文件路径和内嵌源码内容。提交记录请使用 Git 时间线的专用筛选。</p>'; return; }
     const sections = data.chapters.flatMap(c => c.sections.map((s, i) => ({ c, s, i }))).filter(({ s }) => JSON.stringify(s).toLowerCase().includes(q));
     const features = featureBrowser.search(q);
+    const directories = directoryBrowser.search(q);
     const files = Object.entries(data.sources).filter(([p, text]) => `${p}\n${text}`.toLowerCase().includes(q));
-    $('searchResults').innerHTML = `<p class="meta">${features.length} 项功能 · ${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${features.slice(0,20).map(f => `<button class="search-result" data-go="functions/${f.id}">${esc(f.title)}<small>功能清单 · ${esc(f.purpose)}</small></button>`).join('')}${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!features.length && !sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
+    $('searchResults').innerHTML = `<p class="meta">${directories.length} 个目录节点 · ${features.length} 项功能 · ${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${directories.slice(0,20).map(n => `<button class="search-result" data-go="directory/${esc(encodeURIComponent(n.path))}">${esc(n.path || '仓库根目录')}<small>源码目录 · ${esc(n.description.slice(0,130))}</small></button>`).join('')}${features.slice(0,20).map(f => `<button class="search-result" data-go="functions/${f.id}">${esc(f.title)}<small>功能清单 · ${esc(f.purpose)}</small></button>`).join('')}${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!directories.length && !features.length && !sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
   }
   document.addEventListener('click', async event => {
     const el = event.target.closest('button, [data-source]'); if (!el) return;
     if (el.dataset.source) { $('searchDialog').close(); openSource(el.dataset.source, el.dataset.needle || '', Number(el.dataset.line || 0)); }
     if (el.dataset.featureCommit) { historyQuery = { query: el.dataset.featureCommit, scope: '', type: '', year: '' }; location.hash = '#history'; }
+    if (el.dataset.copyCommand) {
+      const code = readGuideCommand(data.chapters, el.dataset.copyCommand);
+      if (code !== undefined) {
+        try { await navigator.clipboard.writeText(code); notify('命令已复制，请在对应环境执行'); }
+        catch { notify('剪贴板不可用，请选取命令文本手动复制'); }
+      }
+    }
     if (el.dataset.go) { $('searchDialog').close(); const next = `#${el.dataset.go}`; if (location.hash === next) render(); else location.hash = next; }
     if (el.dataset.read) { const id = el.dataset.read; if (readChapters.has(id)) readChapters.delete(id); else readChapters.add(id); save('read', [...readChapters]); nav(); el.textContent = readChapters.has(id) ? '已读 · 撤销标记' : '标记本章已读'; }
     if (el.dataset.trace !== undefined) { traceIndex = Number(el.dataset.trace); updateTrace(); }
@@ -206,7 +245,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden && timer) { clearInterval(timer); timer = undefined; if ($('tracePlay')) $('tracePlay').textContent = '自动演示'; } });
   window.addEventListener('hashchange', render);
   document.body.classList.toggle('dark', saved('dark', false));
-  $('version').textContent = data.meta.commit.slice(0, 9);
+  $('version').textContent = `${data.meta.version} · ${data.meta.commit.slice(0, 9)}`;
   $('sidebarMeta').textContent = `SOURCE ${data.meta.commit.slice(0, 9)}\n${data.meta.builtAt.slice(0, 10)} · 本地快照`;
   render();
 })();

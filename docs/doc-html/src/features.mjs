@@ -1,20 +1,25 @@
+import { additionalFeatures } from './feature-additions.mjs';
+
 // 中文能力地图。paths 是相对于模块 root 的精确文件或目录前缀。
 // 索引器额外列出全部扫描文件，未解释的实现不会伪装成人工说明。
 export const featureModules = [
   ['coding', '编码智能体 · 产品能力', 'packages/coding-agent/src/', '从输入、配置和工具，到会话管理与终端工作流。', '产品能力', 'packages/coding-agent/docs/cli.md'],
-  ['agent', 'Agent · 执行与 Harness', 'packages/agent/src/', '低层模型/工具循环，以及会话、分支和持久执行接口。', '运行时机制', 'packages/agent/README.md'],
+  ['agent', 'Agent · 消息与工具执行', 'packages/agent/src/', '内存消息、多轮工具循环、工具前后 Hook、排队与取消。', '运行时机制', 'packages/agent/README.md'],
+  ['codemode', 'Codemode · 脚本沙箱', 'packages/codemode/src/', 'QuickJS/WASM 中的模型脚本、工具桥接、输出与容量限制。', '库能力', 'packages/codemode/README.md'],
+  ['mcp', 'MCP · 协议客户端与认证', 'packages/mcp/src/', 'MCP 客户端、stdio/HTTP 传输、OAuth、内容与测试传输。', '库能力', 'packages/mcp/README.md'],
   ['ai', 'AI · 模型与提供商', 'packages/ai/src/', '统一消息、流式请求、认证、模型目录与协议适配。', '库能力', 'packages/ai/README.md'],
   ['tui', 'TUI · 终端界面', 'packages/tui/src/', '渲染、布局、编辑、补全、键鼠输入和终端能力。', '库能力', 'packages/tui/README.md'],
   ['chord', 'Chord · 服务与插件组合', 'packages/chord/src/', 'Facet 组合、服务绑定、复制状态与不可变 delta。', '库能力', 'packages/chord/README.md'],
-  ['durable', 'Durable · 持久任务与文档', 'packages/durable/src/', '会话事务、任务阶段、文档与存储实现。', '库能力', 'packages/durable/README.md'],
+  ['durable', 'Durable · 持久任务与文档', 'packages/durable/src/', '提交优先的会话、任务、模型生成、子智能体与存储。', '实验性', 'packages/durable/README.md'],
   ['client', 'Client · 远程客户端', 'packages/client/src/', '实验性服务协议的连接、请求与订阅客户端。', '实验性', 'packages/client/README.md'],
   ['server', 'Server · 会话服务端', 'packages/server/src/', '实验性连接、会话路由与 attachment 生命周期。', '实验性', 'packages/server/README.md'],
   ['protocol', 'Protocol · 通信协议', 'packages/protocol/src/', '消息信封、CBOR 编码和字节流分帧。', '实验性', 'packages/protocol/README.md'],
-  ['sqlite', 'SQLite · Agent 会话后端', 'packages/session-backends/sqlite-node/src/', '为 Agent Session 提供 Node SQLite 持久化。', '库能力', 'packages/session-backends/sqlite-node/README.md'],
   ['telemetry', 'Telemetry · 遥测契约', 'packages/telemetry/src/', '显式上下文、span、类型化事件和参考实现。', '库能力', 'packages/telemetry/README.md'],
   ['evals', 'Evals · 行为评测', 'packages/evals/src/', '隔离评测、实验分组、重复运行和结果配对。', '开发工具', 'packages/evals/README.md'],
-  ['experimental', '实验应用 · 服务化探索', 'packages/coding-agent/src/experimental/', '独立服务、worker、应用插件与 mini/micro 示例入口。', '实验性', 'packages/coding-agent/src/experimental/services/README.md'],
+  ['experimental', '实验应用 · 服务化探索', 'packages/coding-agent/src/experimental/', '独立服务、worker、Durable 编码应用与 Vacation 背景子会话。', '实验性', 'packages/coding-agent/src/experimental/services/README.md'],
   ['examples', '示例 · 扩展与 SDK', 'packages/coding-agent/examples/', '可阅读、可改写的扩展、SDK 和插件示例；不等于默认启用。', '示例', 'packages/coding-agent/examples/extensions/README.md'],
+  ['agent-examples', '示例 · Agent + MCP + Codemode', 'packages/agent/examples/', '展示在低层 Agent 中接入 MCP 工具与脚本编排。', '示例', 'packages/agent/README.md'],
+  ['durable-examples', '示例 · Durable 能力演练', 'packages/durable/test/examples/', '覆盖队列、恢复、子任务、前后台子会话与扩展配置的可运行示例。', '示例', 'packages/durable/README.md'],
   ['native', '原生集成 · 平台能力', 'packages/tui/native/', 'Windows、macOS、Linux 原生剪贴板与平台适配。', '平台支撑', 'packages/tui/README.md'],
   ['engineering', '工程 · 构建与维护', 'scripts/', '依赖校验、构建发布、模型目录生成和开发统计。', '开发工具', 'AGENTS.md']
 ].map(([id, title, root, description, status, doc]) => ({ id, title, root, description, status, doc }));
@@ -63,16 +68,9 @@ export const featureSpecs = {
     ['diagnostics', '诊断、错误记录与问题报告', ['core/bug-report.ts','core/bug-report-upload.ts','core/crash-log.ts','core/diagnostics.ts','core/timings.ts','core/telemetry.ts','modes/interactive/bug-report.ts'], '收集诊断信息、启动耗时与问题报告内容。', '/bug；诊断事件', '诊断数据可能含运行上下文；报告上传与本地记录分别处理。']
   ],
   agent: [
-    ['loop','消息、工具与多轮循环',['agent.ts','agent-loop.ts','types.ts','stream-fn.ts'],'维护消息状态、工具批次、steering/follow-up 和取消。','Agent.prompt / continue / abort','流函数由调用者注入；低层循环与 coding-agent 的会话策略分开。'],
-    ['harness','Harness 装配与资源管理',['harness/agent-harness.ts','harness/config.ts','harness/context.ts','harness/hooks.ts','harness/types.ts'],'把模型、工具、执行环境和会话资源组装成 Harness。','AgentHarness','契约定义依赖与 hook；不要与 CLI ExtensionAPI 混用。'],
-    ['drive','持久执行驱动与恢复',['harness/runtime/'],'协调 lane、事件归约、检查点、生成、工具和重试恢复。','Harness runtime / drive','目录中不同驱动阶段分别处理响应、恢复与边界；索引展示其实现与引用。'],
-    ['execution','模型与工具执行门控',['harness/execution/'],'在 Harness 中执行助手生成与工具操作。','Harness 执行接口','执行层承接上下文与 effect 边界，不承担终端 UI。'],
-    ['session','Session、分支、提交与存储',['harness/session/'],'提供会话树操作、提交序列、分叉及内存/JSONL 后端。','Session / MemorySessionRepo / JSONL','testing 子目录属于契约测试辅助，不代表生产调度路径。'],
-    ['tools','Harness 内置文件与 Shell 工具',['harness/tools/','harness/env/','harness/utils/'],'通过执行环境提供文件、Shell、图片与输出管理。','ExecutionEnv / FileSystem / Shell','与 CLI 的工具包装层区分，适配环境而不硬绑终端。'],
-    ['context','技能、模板、提示与压缩',['harness/skills.ts','harness/prompt-templates.ts','harness/system-prompt.ts','harness/messages.ts','harness/compaction/'],'为 Harness 组装上下文并生成压缩/分支摘要。','Harness 资源与上下文 API','复用同类概念，不意味着与 CLI 使用同一实例。'],
-    ['pico','Pico3 运行时实现',['harness/pico3/'],'包含任务、调度、会话、插件和 Chord 适配的运行时实现。','pico3 子路径','按目录单独识别，不把它标成 CLI 默认执行路径。'],
-    ['search','会话搜索契约',['search/'],'提供会话搜索相关接口和投影边界。','search 导出','与 SQLite 后端的存储职责分开。'],
-    ['proxy','代理流与 Node 入口',['proxy.ts','node.ts'],'支持代理流封装与 Node 环境入口。','代理/Node SDK 调用','是否使用由宿主装配决定。']
+    ['loop','消息、工具与多轮循环',['agent.ts','agent-loop.ts','types.ts','stream-fn.ts'],'维护内存消息、工具批次、steering/follow-up、模型上下文变换与取消。','Agent.prompt / continue / abort','当前 Agent 是内存运行循环；持久 Harness 在 pi-durable，CLI 会话由 coding-agent 管理。'],
+    ['run-tool','独立工具管线与前后 Hook',['agent-loop.ts','types.ts'],'让宿主通过 runToolCall 复用参数校验、beforeToolCall、执行及 afterToolCall。','runToolCall / AgentToolCallOutcome','适合嵌套调用；宿主直接调用 tool.execute 会跳过此管线。'],
+    ['proxy','代理流与状态事件',['proxy.ts','types.ts'],'将代理返回的响应流映射为 Agent 使用的事件与消息。','代理流 SDK','是否使用由宿主注入的流函数决定。']
   ],
   ai: [
     ['contracts','统一消息、模型与工具契约',['types.ts','models.ts','session-resources.ts'],'定义统一请求/响应、模型能力和工具调用数据。','pi-ai 根导出','根入口保持核心能力；具体提供商通过子路径接入。'],
@@ -105,9 +103,9 @@ export const featureSpecs = {
     ['session','会话事务、分叉与观察',['session/'],'组织持久会话、提交事务、分叉与观察。','createSession','存储事务与观察者通知有专门边界。'],
     ['records','文档、条目、任务与 ID 契约',['documents.ts','entries.ts','tasks.ts','types.ts','ids.ts','errors.ts'],'定义持久记录类型、文档语义和任务阶段。','defineDoc / defineEntry / defineTask','这些记录契约与 CLI JSONL 条目不是同一套 API。'],
     ['harness','会话执行、注册表与调度',['harness/'],'组合模型与工具注册、会话配置及任务调度。','Harness / createRegistry','以当前实现为准；设计文档不代表所有计划已经落地。'],
-    ['memory','内存存储',['storage/memory.ts'],'提供进程内的持久记录契约实现。','MemoryStorage','内存实现不提供进程退出后的磁盘恢复。'],
+    ['memory','内存存储',['storage/memory.ts'],'提供进程内的记录与事务契约实现。','MemoryStorage','内存实现不提供进程退出后的磁盘恢复。'],
     ['jsonl','JSONL 存储与 Node 文件适配',['storage/jsonl/'],'将持久提交写到文件记录和 sidecar。','openNodeJsonlStorage','单写入者所有权与 fsync 选项影响耐久性。'],
-    ['sqlite','SQLite 存储、迁移与 Node 适配',['storage/sqlite/'],'用 SQLite 保存持久记录并执行有序 schema 迁移。','openNodeSqliteStorage','同步数据库 facade 不等同于远程异步 D1。'],
+    ['sqlite','SQLite 存储、迁移与 Node 适配',['storage/sqlite/'],'用 SQLite 保存持久记录并执行有序 schema 迁移。','openNodeSqliteStorage','当前 portable SQLite 核心使用 Promise 数据库 facade，事务内必须使用事务句柄。'],
     ['env','执行环境与输出捕获',['env/'],'提供文件/进程环境与可截断输出管理。','env 子路径','运行环境相关实现与存储契约分别阅读。'],
     ['testing','存储一致性用例与基准',['testing/'],'让存储实现复用相同契约测试及读写负载。','testing 子路径','基准是比较基础，不是生产容量保证。']
   ],
@@ -126,9 +124,6 @@ export const featureSpecs = {
     ['codec','消息编码与字节流分帧',['codec.ts','framing.ts'],'把消息编码成帧并处理任意分段、合并的输入字节。','encodeClientMessage / ServerMessageDecoder','帧长度与结构限制用于拒绝无效消息。'],
     ['cbor','CBOR 编解码与限制',['cbor/'],'实现二进制值编码和受限解码。','CBOR 子模块','严格 JSON 与协议结构校验是不同层的约束。']
   ],
-  sqlite: [
-    ['storage','SQLite 会话仓库与适配',['sqlite/','index.ts'],'提供会话创建、打开、列举、分叉、删除和存储适配。','SqliteSessionRepo / createNodeSqliteFactory','单会话单写入者由宿主保证；不包含跨进程租约接管或 FTS 服务。']
-  ],
   telemetry: [
     ['schema','Span、事件与类型化 schema',['index.ts'],'定义操作跨度、属性与事件，并从 schema 推导调用类型。','defineTelemetrySchema / createTypedSpanStarter','上下文显式传入，没有全局当前 span 或内置 exporter。'],
     ['adapters','空操作与内存参考实现',['noop.ts','memory.ts'],'提供零记录开销路径和可检查的内存记录器。','NOOP_TELEMETRY_CONTEXT / InMemoryTelemetryContext','生产导出后端由应用提供适配。'],
@@ -143,8 +138,6 @@ export const featureSpecs = {
     ['workers','协调器、服务与会话 worker',['coordinator.ts','coordinator-entry.ts','server.ts','session-worker.ts','session-worker-manager.ts','process.ts'],'在不同进程间组织连接、会话所有权与 worker 生命周期。','实验服务启动入口','不当作默认单进程 CLI 的必经路径。'],
     ['plugins','应用插件包与内置插件',['plugins/','plugin.ts','source-resolver.ts'],'解析并组合实验应用使用的插件能力。','实验插件系统','与 CLI TypeScript 扩展体系分别展示。'],
     ['clients','客户端、TUI 与认证中继',['client.ts','client-runtime.ts','client-tui.ts','client-tui-chat.ts','radius-auth.ts','radius-relay.ts','cli.ts','commands.ts'],'把实验服务连接到交互客户端和认证流程。','实验性客户端入口','服务连接与 CLI stdin/stdout RPC 不同。'],
-    ['mini','Mini 多进程应用',['mini/'],'通过 server、worker、TUI 和共享协议演示服务化应用。','mini/main.ts','独立实验入口，不能推断为默认产品实现。'],
-    ['micro','Micro 精简应用',['micro/'],'集中展示精简模型、工具、会话与 TUI 的组合。','micro/main.ts','用于实验阅读，功能契约以该目录为准。']
   ],
   native: [
     ['win','Windows 平台桥接',['win32/'],'提供 Windows 原生平台和剪贴板实现及构建。','native/win32','二进制预构建仅列入资源清单，不解析为 TypeScript 符号。'],
@@ -159,3 +152,7 @@ export const featureSpecs = {
     ['analysis','会话统计与性能分析',['stats','cost','tool-stats','read-tool-stats','edit-tool-stats','session-','profile-'],'分析会话、工具使用、上下文和性能。','本地统计脚本','这些脚本不是默认对话功能。']
   ]
 };
+
+for (const [module, specs] of Object.entries(additionalFeatures)) {
+  featureSpecs[module] = [...(featureSpecs[module] || []), ...specs];
+}

@@ -6,7 +6,8 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { test } from 'node:test';
 import { Script } from 'node:vm';
-import { classifyPath } from './src/catalog.mjs';
+import { classifyPath, discoverModules } from './src/catalog.mjs';
+import { developmentGuide } from './src/development.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(dir, 'index.html'), 'utf8');
@@ -18,6 +19,7 @@ test('本地 HEAD 可达历史完整且每条都有中文概述', () => {
   assert.ok(data.commits.every(c => /[\u4e00-\u9fff]/.test(c.zh) && c.subject));
 });
 test('所有教学引用均有离线快照且定位文本存在', () => {
+  assert.deepEqual(data.chapters.find(c => c.id === 'development'), developmentGuide, '开发说明必须随单文件重新生成');
   for (const c of data.chapters) for (const s of c.sections) for (const [path, needle] of s.refs || []) {
     assert.ok(data.sources[path], `缺少 ${path}`);
     assert.ok(data.sources[path].includes(needle), `定位失效 ${path}: ${needle}`);
@@ -65,7 +67,8 @@ test('全部原始资料在本目录有逐字节副本', () => {
 });
 test('功能清单覆盖所有范围内的已跟踪文件，不静默遗漏', () => {
   const paths = execFileSync('git', ['ls-files', '-z'], { cwd: join(dir, '../..'), encoding: 'utf8' }).split('\0').filter(Boolean);
-  const expected = paths.filter(p => classifyPath(p));
+  const modules = discoverModules(paths, p => readFileSync(join(dir, '../..', p), 'utf8'));
+  const expected = paths.filter(p => classifyPath(p, modules));
   assert.deepEqual(Object.keys(data.catalog.files).sort(), expected.sort());
   assert.equal(data.catalog.stats.unassigned, 0);
   assert.equal(new Set(data.catalog.features.map(f => f.id)).size, data.catalog.features.length);
@@ -86,4 +89,42 @@ test('功能详情有来源、用途、入口、边界和有效双向归属', ()
     for (const hash of f.commits) assert.ok(data.commits.some(c => c.hash === hash));
   }
   for (const provider of ['openai','anthropic','google']) assert.ok(data.catalog.features.some(f => f.id === `ai-provider-${provider}`), provider);
+});
+
+test('生成版本与当前源码一致，新包和所有包 src 独立核验无遗漏', () => {
+  const root = join(dir, '../..');
+  assert.equal(data.meta.commit, execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim());
+  const pkg = JSON.parse(readFileSync(join(root, 'packages/coding-agent/package.json'), 'utf8'));
+  assert.equal(data.meta.version, pkg.version);
+  const paths = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
+  const packages = paths.filter(p => /^packages\/[^/]+\/package\.json$/.test(p));
+  assert.equal(data.packages.length, packages.length);
+  for (const path of paths.filter(p => /^packages\/[^/]+\/src\//.test(p))) assert.ok(data.catalog.files[path], path);
+  for (const id of ['mcp-client','mcp-oauth-flow','codemode-host','codemode-store','coding-mcp-runtime','coding-codemode','coding-tool-search','coding-loadout','coding-fullscreen','durable-generation','durable-inbox','durable-subagents','durable-task-graph','engineering-model-hydration','engineering-install-lock']) {
+    const f = data.catalog.features.find(f => f.id === id);
+    assert.ok(f, id);
+    assert.equal(f.evidence, '中文能力解说', id);
+  }
+  assert.equal(data.catalog.features.filter(f => f.module === 'durable-examples' && f.evidence === '中文能力解说').length, 32);
+  assert.ok(data.catalog.features.some(f => f.id === 'agent-examples-mcp-codemode'));
+  assert.ok(!data.catalog.features.some(f => ['sqlite','agent-harness','experimental-mini','experimental-micro'].includes(f.id)));
+  assert.ok(Object.keys(data.catalog.files).every(p => !p.startsWith('packages/agent/src/harness/') && !p.startsWith('packages/session-backends/sqlite-node/')));
+});
+
+test('版本差异基于固定旧快照，新增解说均可导航且状态完整', () => {
+  const baseline = JSON.parse(readFileSync(join(dir, 'src/edition-baseline.json'), 'utf8'));
+  const edition = data.catalog.edition;
+  assert.equal(edition.from, baseline.commit);
+  assert.equal(edition.to, data.meta.commit);
+  assert.deepEqual(edition, JSON.parse(readFileSync(join(dir, 'data/edition.json'), 'utf8')));
+  for (const id of edition.addedExplanations) {
+    const f = data.catalog.features.find(f => f.id === id);
+    assert.equal(f?.update, '本次补充', id);
+    assert.equal(f.evidence, '中文能力解说', id);
+  }
+  assert.ok(edition.addedExplanations.length >= 60);
+  assert.ok(edition.retiredFeatures.some(f => f.id === 'sqlite-storage'));
+  assert.ok(edition.removedFiles.every(p => !data.catalog.files[p]));
+  assert.ok(edition.changedFiles.every(p => data.sourceHashes[p] !== baseline.sourceHashes[p]));
+  assert.ok(data.catalog.features.every(f => ['本次补充','来源更新','已有条目'].includes(f.update)));
 });

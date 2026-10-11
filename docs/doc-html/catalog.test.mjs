@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { parseSource, classifyPath, resolveImport } from './src/catalog.mjs';
+import { parseSource, classifyPath, resolveImport, buildCatalog, discoverModules } from './src/catalog.mjs';
 import { moduleOrder, featureOrder, compareFeatures } from './src/feature-order.mjs';
+import { featureModules } from './src/features.mjs';
+import { compareEdition } from './src/edition.mjs';
 
 test('函数变量保留真实输入与显式输出', () => {
   const record = parseSource('sample.ts', 'export const twice = (value: number): number => value * 2;');
@@ -19,7 +21,7 @@ test('功能浏览器支持概览、过滤、详情和符号定位', () => {
     return nodes.get(id);
   } };
   const file = 'demo.ts';
-  const feature = { id: 'demo', module: 'sample', title: '读取文件', purpose: '读取内容', entry: 'read', behavior: '返回文本', status: '库能力', evidence: '中文能力解说', files: [file], docs: [], tests: [], commits: [] };
+  const feature = { id: 'demo', module: 'sample', title: '读取文件', purpose: '读取内容', entry: 'read', behavior: '返回文本', status: '库能力', evidence: '中文能力解说', update: '本次补充', files: [file], docs: [], tests: [], commits: [] };
   const data = { meta: { commit: 'abc' }, sources: { [file]: 'function read() {}' }, commits: [], catalog: { modules: [{ id: 'sample', title: '示例模块', root: '', description: '模块说明', fileCount: 1 }], features: [feature], stats: { documented: 1, features: 1, files: 1, symbols: 1, unassigned: 0 }, scope: '测试范围', files: { [file]: { lines: 1, imports: [], consumers: [], features: ['demo'], symbols: [{ name: 'read', kind: '函数', line: 1, endLine: 1, signature: 'read()', comment: '读取', inputs: [], output: '' }] } } } };
   const factory = runInNewContext(`${readFileSync(new URL('./src/feature-flow.js', import.meta.url), 'utf8')}\n${readFileSync(new URL('./src/features-app.js', import.meta.url), 'utf8')}; createFeatureBrowser`, { document, setTimeout, clearTimeout });
   const browser = factory(data, value => String(value).replaceAll('<', '&lt;'));
@@ -31,6 +33,19 @@ test('功能浏览器支持概览、过滤、详情和符号定位', () => {
   nodes.get('featureStatus').listeners.change();
   assert.match(nodes.get('featurePanel').innerHTML, /没有匹配项/);
   nodes.get('featureReset').listeners.click();
+  nodes.get('featureUpdate').value = '来源更新';
+  nodes.get('featureUpdate').listeners.change();
+  assert.match(nodes.get('featurePanel').innerHTML, /没有匹配项/);
+  nodes.get('featureUpdate').value = '本次补充';
+  nodes.get('featureUpdate').listeners.change();
+  assert.match(nodes.get('featurePanel').innerHTML, /读取文件/);
+  nodes.get('featureReset').listeners.click();
+  data.meta.version = '1.0.2';
+  data.catalog.edition = { from: 'previous123', to: 'current123', addedExplanations: ['demo'], addedFiles: [file], changedFiles: [], removedFiles: ['old.ts'], retiredFeatures: [{ id: 'old', title: '旧入口', files: ['old.ts'] }] };
+  const editionHtml = browser.render('');
+  assert.match(editionHtml, /版本更新 · 1.0.2 · 补充 1 项中文解说/);
+  assert.match(editionHtml, /旧入口/);
+  assert.match(editionHtml, /href="#functions\/demo"/);
   const menu = nodes.get('featureMenu');
   const originalMenuHtml = menu.innerHTML;
   const details = [{ dataset: { module: 'sample' }, open: true }, { dataset: { module: 'another' }, open: true }];
@@ -55,7 +70,8 @@ test('功能浏览器支持概览、过滤、详情和符号定位', () => {
 });
 
 test('业务阅读顺序保留全部模块与功能，支撑项置后', () => {
-  assert.equal(new Set(moduleOrder).size, 16);
+  assert.equal(new Set(moduleOrder).size, featureModules.length);
+  assert.deepEqual([...moduleOrder].sort(), featureModules.map(m => m.id).sort());
   for (const keys of Object.values(featureOrder)) assert.equal(new Set(keys).size, keys.length);
   const features = ['write', 'prompt', 'support', 'settings', 'startup', 'resources', 'sdk', 'read'].map(key => ({ id: `coding-${key}`, module: 'coding' }));
   assert.deepEqual(features.sort(compareFeatures).map(f => f.id), ['coding-startup', 'coding-settings', 'coding-resources', 'coding-sdk', 'coding-prompt', 'coding-read', 'coding-write', 'coding-support']);
@@ -104,6 +120,11 @@ test('显式区分实验应用、示例、原生和包源码', () => {
   assert.equal(classifyPath('packages/tui/native/win32/src/win32-platform.c'), 'native');
   assert.equal(classifyPath('packages/ai/scripts/generate-models.ts'), 'engineering');
   assert.equal(classifyPath('packages/ai/test/foo.test.ts'), null);
+  assert.equal(classifyPath('packages/mcp/src/client.ts'), 'mcp');
+  assert.equal(classifyPath('packages/codemode/src/host.ts'), 'codemode');
+  assert.equal(classifyPath('packages/agent/examples/mcp-codemode/main.ts'), 'agent-examples');
+  assert.equal(classifyPath('packages/durable/test/examples/31-reload-and-restart.ts'), 'durable-examples');
+  assert.equal(classifyPath('packages/durable/test/agent.test.ts'), null);
 });
 test('引用解析仅接受真实文件，支持源代码中的 .js 后缀和包 exports', () => {
   const files = new Set(['packages/demo/src/a.ts', 'packages/demo/src/types.ts', 'packages/lib/src/api.ts']);
@@ -112,4 +133,53 @@ test('引用解析仅接受真实文件，支持源代码中的 .js 后缀和包
   assert.equal(resolveImport('packages/demo/src/a.ts', '@scope/lib/api', files, manifests), 'packages/lib/src/api.ts');
   assert.equal(resolveImport('packages/demo/src/a.ts', './missing', files, manifests), null);
   assert.equal(resolveImport('packages/demo/src/a.ts', '@scope/lib/private', files, manifests), null);
+});
+
+test('引用索引识别字面量动态导入与混合类型导入，不猜计算路径', () => {
+  const record = parseSource('demo.ts', 'import { type X } from "./types.js";\nimport { type T, value } from "./mixed.js";\nexport { type Y } from "./other.js";\nasync function load() { await import("./lazy.js"); await import(prefix + name); }');
+  assert.deepEqual(record.imports.map(r => [r.spec, r.kind, r.typeOnly]), [
+    ['./types.js', '导入', true], ['./mixed.js', '导入', false], ['./other.js', '再导出', true], ['./lazy.js', '动态导入', false]
+  ]);
+});
+
+test('未知工作区包自动发现并进入有归属的待解读索引', () => {
+  const sources = {
+    'packages/future/package.json': '{"name":"@scope/future","version":"2.0.0"}',
+    'packages/future/README.md': '# Future',
+    'packages/future/src/index.ts': 'export { work } from "./nested/work.js";',
+    'packages/future/src/nested/work.ts': 'export function work(): number { return 1; }'
+  };
+  const paths = Object.keys(sources);
+  const read = p => sources[p];
+  const modules = discoverModules(paths, read);
+  assert.equal(classifyPath(paths[2], modules), 'package-future');
+  const { catalog, snapshots } = buildCatalog({ paths, read, commits: [] });
+  assert.equal(catalog.modules.length, 1);
+  assert.equal(catalog.modules[0].status, '待解读');
+  assert.equal(catalog.stats.files, 2);
+  assert.equal(catalog.stats.unassigned, 0);
+  assert.equal(catalog.stats.documented, 0);
+  assert.ok(catalog.features.every(f => f.evidence === '源码覆盖索引' && f.files.length === 1));
+  assert.equal(catalog.files[paths[2]].imports[0].target, paths[3]);
+  assert.ok(snapshots[paths[1]]);
+});
+
+test('版本对照区分新增讲解、既有来源变化与移出文件', () => {
+  const catalog = { files: { 'same.ts': {}, 'changed.ts': {}, 'new.ts': {} }, features: [
+    { id: 'same', files: ['same.ts'], evidence: '中文能力解说' },
+    { id: 'changed', files: ['changed.ts'], evidence: '中文能力解说' },
+    { id: 'new', files: ['new.ts'], evidence: '中文能力解说' },
+    { id: 'new-support-root', files: ['new.ts'], evidence: '源码覆盖索引' }
+  ] };
+  const baseline = { commit: 'old', features: [
+    { id: 'same', files: ['same.ts'] }, { id: 'changed', files: ['changed.ts'] },
+    { id: 'gone', title: '旧功能', files: ['gone.ts'] }, { id: 'old-support', files: ['gone.ts'] }
+  ], sourceHashes: { 'same.ts': 's', 'changed.ts': 'before', 'gone.ts': 'g' } };
+  const edition = compareEdition(catalog, { 'same.ts': 's', 'changed.ts': 'after', 'new.ts': 'n' }, baseline, 'current');
+  assert.deepEqual(catalog.features.map(f => f.update), ['已有条目', '来源更新', '本次补充', '本次补充']);
+  assert.deepEqual(edition.addedExplanations, ['new']);
+  assert.deepEqual(edition.changedFiles, ['changed.ts']);
+  assert.deepEqual(edition.addedFiles, ['new.ts']);
+  assert.deepEqual(edition.removedFiles, ['gone.ts']);
+  assert.deepEqual(edition.retiredFeatures.map(f => f.id), ['gone']);
 });
