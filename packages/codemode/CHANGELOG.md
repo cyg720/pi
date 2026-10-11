@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added `RemoteCodemodeSandbox`, which runs each script's VM in another isolate while tools run in the caller. `CodemodeSandboxDurableObject` from the new `@earendil-works/pi-codemode/cloudflare` entry is its remote end, deployed as its own Cloudflare Worker. `examples/cloudflare` shows the setup
+- Added `InlineCodemodeSandbox`, which runs the VM on the calling thread for runtimes without worker threads. Its `interruptBudget` limits scripts that compute without awaiting a tool
+- Added the `@earendil-works/pi-codemode/portable` entry, which has no Node imports, and `CodemodeSandboxBase`, the API all three sandboxes share
+
+### Changed
+
+- The VM now polls for interrupts while it drains promise jobs, so a script such as `while (true) await null` is stopped at the same points as a synchronous loop
+
+### Fixed
+
+- Fixed `CodemodeSandbox` failing with a broken bridge error when the host runs under `node --watch` on Node 24 or 26, which posts `watch:import`/`watch:require` messages on the worker channel ([#10725](https://github.com/earendil-works/pi/issues/10725))
+
+## [1.1.0] - 2026-10-07
+
+### Added
+
+- Added `console: true` to text output items produced by `console.*`, so hosts can tell them apart from `text()` output
+
+## [1.0.4] - 2026-10-05
+
+### Changed
+
+- Built-ins are frozen and built-in globals are read-only before the script runs, so patches such as `Array.prototype.toJSON = ...` have no effect. Instances can still override `constructor`, `name`, `message`, `toString`, `toLocaleString`, `valueOf`, `toJSON`, and `Object.prototype` members ([#10444](https://github.com/earendil-works/pi/issues/10444))
+
+### Fixed
+
+- Fixed a script that patched built-ins crashing the host process and leaving `execute()` unsettled. Malformed payloads from the worker now fail the execution with a `sandbox` error ([#10444](https://github.com/earendil-works/pi/issues/10444))
+
+## [1.0.3] - 2026-10-05
+
 ## [1.0.2] - 2026-10-04
 
 ## [1.0.1] - 2026-10-03
