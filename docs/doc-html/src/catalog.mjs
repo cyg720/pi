@@ -1,5 +1,6 @@
-import ts from 'typescript';
-import { posix } from 'node:path';
+import * as ts from 'typescript/unstable/ast';
+import { API } from 'typescript/unstable/sync';
+import { posix, resolve } from 'node:path';
 import { featureModules, featureSpecs } from './features.mjs';
 import { moduleOrder, compareFeatures } from './feature-order.mjs';
 import { exampleNotes } from './example-notes.mjs';
@@ -27,9 +28,35 @@ export function classifyPath(path, modules = featureModules) {
 }
 
 export function parseSource(path, text) {
+  return parseSources({ [path]: text })[path];
+}
+
+function parseSources(texts) {
+  const records = Object.fromEntries(Object.keys(texts).map(path => [path, { symbols: [], imports: [], comment: '' }]));
+  const paths = Object.keys(texts).filter(path => scriptFile.test(path) && !/(?:\.min\.js$|\.generated\.|\/providers\/data\/|\.models\.ts$|\/doom\/build\/)/.test(path));
+  if (!paths.length) return records;
+  const configPath = resolve('tsconfig.doc-html.json');
+  const virtualFiles = new Map(paths.map(path => [resolve(path), texts[path]]));
+  virtualFiles.set(configPath, JSON.stringify({ compilerOptions: { noResolve: true, noLib: true, types: [], allowJs: true }, files: paths.map(path => resolve(path)) }));
+  const api = new API({ cwd: process.cwd(), fs: {
+    fileExists: path => virtualFiles.has(resolve(path)) ? true : undefined,
+    readFile: path => virtualFiles.get(resolve(path))
+  } });
+  try {
+    const program = api.updateSnapshot({ openProjects: [configPath] }).getProject(configPath).program;
+    for (const path of paths) {
+      const source = program.getSourceFile(resolve(path));
+      if (!source) throw new Error(`无法解析源码: ${path}`);
+      records[path] = extractSource(source, texts[path]);
+    }
+  } finally {
+    api.close();
+  }
+  return records;
+}
+
+function extractSource(source, text) {
   const record = { symbols: [], imports: [], comment: '' };
-  if (!scriptFile.test(path) || /(?:\.min\.js$|\.generated\.|\/providers\/data\/|\.models\.ts$|\/doom\/build\/)/.test(path)) return record;
-  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
   const clean = raw => raw.replace(/^\/\*\*?\s?/, '').replace(/\*\/$/, '').split('\n').map(s => s.replace(/^\s*\* ?/, '').replace(/^\s*\/\/ ?/, '')).join('\n').trim();
   const comments = node => (ts.getLeadingCommentRanges(text, node.getFullStart()) || []).map(r => clean(text.slice(r.pos, r.end))).join('\n\n');
   record.comment = (ts.getLeadingCommentRanges(text, 0) || []).map(r => clean(text.slice(r.pos, r.end))).join('\n\n');
@@ -44,10 +71,10 @@ export function parseSource(path, text) {
     else if (ts.isClassDeclaration(node)) kind = '类';
     else if (ts.isInterfaceDeclaration(node)) kind = '接口';
     else if (ts.isTypeAliasDeclaration(node)) kind = '类型';
-    else if (ts.isMethodDeclaration(node) || ts.isMethodSignature(node)) kind = '方法';
+    else if (ts.isMethodDeclaration(node) || ts.isMethodSignatureDeclaration(node)) kind = '方法';
     else if (ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) kind = '访问器';
     else if (ts.isConstructorDeclaration(node)) kind = '构造器';
-    else if (ts.isPropertySignature(node) || ts.isPropertyDeclaration(node)) kind = '属性';
+    else if (ts.isPropertySignatureDeclaration(node) || ts.isPropertyDeclaration(node)) kind = '属性';
     else if (ts.isVariableDeclaration(node) && ts.isVariableDeclarationList(node.parent) && ts.isVariableStatement(node.parent.parent) && node.parent.parent.parent === source) kind = node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer)) ? '函数变量' : '变量';
     const rawName = node.name?.getText(source) || (ts.isConstructorDeclaration(node) ? 'constructor' : ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) ? 'default' : '');
     const name = owner && kind !== '变量' ? `${owner}.${rawName}` : rawName;
@@ -65,7 +92,7 @@ export function parseSource(path, text) {
         visibility: node.modifiers?.find(m => [ts.SyntaxKind.PrivateKeyword, ts.SyntaxKind.ProtectedKeyword, ts.SyntaxKind.PublicKeyword].includes(m.kind))?.getText(source) || '' });
     }
     const nextOwner = kind === '类' || kind === '接口' ? name : owner;
-    ts.forEachChild(node, child => visit(child, nextOwner));
+    node.forEachChild(child => visit(child, nextOwner));
   }
   visit(source);
   return record;
@@ -107,16 +134,18 @@ export function buildCatalog({ paths, read, commits }) {
   const manifests = paths.filter(p => /^packages\/(?:[^/]+|session-backends\/[^/]+)\/package\.json$/.test(p)).map(p => ({ dir: posix.dirname(p), ...JSON.parse(read(p)) }));
   const files = {};
   const snapshots = {};
+  const texts = Object.fromEntries(paths.filter(path => textFile.test(path) && (classifyPath(path, discovered) || (testFile.test(path) && scriptFile.test(path)))).map(path => [path, read(path)]));
+  const parsed = parseSources(texts);
   for (const path of paths) {
     const module = classifyPath(path, discovered);
     if (!module) continue;
-    const text = textFile.test(path) ? read(path) : null;
-    const info = text === null ? { symbols: [], imports: [], comment: '' } : parseSource(path, text);
+    const text = texts[path] ?? null;
+    const info = parsed[path] ?? { symbols: [], imports: [], comment: '' };
     files[path] = { module, ...info, resource: !scriptFile.test(path) || /(?:\.generated\.|\.models\.ts$|\.min\.js$)/.test(path), text: text !== null, lines: text?.split('\n').length ?? null, consumers: [], tests: [], features: [] };
     if (text !== null) snapshots[path] = text;
   }
   for (const path of paths.filter(p => files[p] || (testFile.test(p) && scriptFile.test(p)))) {
-    const imports = files[path]?.imports ?? parseSource(path, read(path)).imports;
+    const imports = files[path]?.imports ?? parsed[path].imports;
     for (const ref of imports) {
       ref.target = resolveImport(path, ref.spec, pathSet, manifests);
       if (ref.target && files[ref.target]) {

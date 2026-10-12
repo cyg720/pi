@@ -7,8 +7,8 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { developmentGuide } from './src/development.mjs';
-import { packReleasePackages, installCodingAgentConsumer, smokeTestCodingAgentConsumer } from '../../scripts/coding-agent-consumer.mjs';
-import { getPublicWorkspacePackages } from '../../scripts/release-packages.mjs';
+import { produceArtifactSet } from '../../scripts/package-artifacts.mjs';
+import { installConsumer, smokeTestNpmConsumer } from '../../scripts/local-package-install.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(dir, '../..');
@@ -30,7 +30,7 @@ test('开发说明的命令和来源均落在当前仓库契约内', () => {
     assert.ok(command.title && command.code && command.expected);
     for (const [, name] of command.code.matchAll(/npm(?:\.cmd)? run ([\w:-]+)/g)) assert.ok(pkg.scripts[name], name);
   }
-  for (const helper of [packReleasePackages, installCodingAgentConsumer, smokeTestCodingAgentConsumer, getPublicWorkspacePackages]) assert.equal(typeof helper, 'function');
+  for (const helper of [produceArtifactSet, installConsumer, smokeTestNpmConsumer]) assert.equal(typeof helper, 'function');
 });
 
 test('断点配置指向源码并预加载解析器，附加端口与说明一致', () => {

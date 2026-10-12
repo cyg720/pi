@@ -27,12 +27,8 @@ const launch = {
 
 const deploy = `import { existsSync, mkdirSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import {
-  packReleasePackages,
-  installCodingAgentConsumer,
-  smokeTestCodingAgentConsumer,
-} from "../scripts/coding-agent-consumer.mjs";
-import { getPublicWorkspacePackages } from "../scripts/release-packages.mjs";
+import { produceArtifactSet } from "../scripts/package-artifacts.mjs";
+import { installConsumer, smokeTestNpmConsumer } from "../scripts/local-package-install.mjs";
 
 if (!process.argv[2]) throw new Error("传入仓库外的新输出目录");
 const repository = process.cwd();
@@ -43,10 +39,11 @@ if (!rel || (rel !== ".." && !rel.startsWith(".." + sep) && !isAbsolute(rel))) {
 }
 if (existsSync(output)) throw new Error("目录已存在，请改用新的目录名");
 mkdirSync(output, { recursive: true });
-const tarballs = packReleasePackages(getPublicWorkspacePackages(), join(output, "tarballs"));
+const artifactSet = produceArtifactSet({ repoRoot: repository, outDir: join(output, "artifacts"), build: false });
 const installation = join(output, "node");
-installCodingAgentConsumer(installation, tarballs);
-smokeTestCodingAgentConsumer(installation);
+const packageName = "@earendil-works/pi-coding-agent";
+installConsumer({ artifactSet, directory: installation, packageNames: [packageName] });
+smokeTestNpmConsumer({ directory: installation, artifactSet, packageName });
 console.log("本地定制版安装成功：", installation);
 `;
 
@@ -86,7 +83,7 @@ git rev-parse --short HEAD`, expected: '位于含 package.json、packages、scri
 node -p "require('./node_modules/typescript/package.json').version"
 git diff -- package.json package-lock.json`, expected: '已安装版本应与本 checkout 的精确声明一致；不要为旧依赖错误删除类型或降级实现。' }
       ],
-      callout: '当前机器的旧 node_modules 是 TypeScript 5.9.3，而仓库声明 7.0.2，npm run check 会因 typescript/unstable/ast 缺失中断。这是升级后的环境问题，不是通过修改检查脚本来绕开的错误。npm.ps1 被签名策略拦截时改用 npm.cmd；若把含中文的命令保存为 .ps1，Windows PowerShell 5.1 使用 UTF-8 with BOM，PowerShell 7 可使用 UTF-8。',
+      callout: '仓库声明 TypeScript 7.0.2；导览生成器与仓库检查器使用其 unstable AST / sync API。升级后先核对实际依赖版本。npm.ps1 被签名策略拦截时改用 npm.cmd；若把含中文的命令保存为 .ps1，Windows PowerShell 5.1 使用 UTF-8 with BOM，PowerShell 7 可使用 UTF-8。',
       refs: [['AGENTS.md', '## Dependency and Install Security'], ['package.json', '"typescript": "7.0.2"'], ['.npmrc', 'save-exact=true']]
     },
     {
@@ -96,7 +93,7 @@ git diff -- package.json package-lock.json`, expected: '已安装版本应与本
         { title: '先检查模型数据', shell: 'powershell', code: 'npm.cmd run check:model-data', expected: '显示 Generated model data is valid. 才继续；缺失或陈旧时执行下一块。' },
         { title: '检查失败时补齐数据，然后复查', shell: 'powershell', code: 'npm.cmd run hydrate:model-data\nnpm.cmd run check:model-data', expected: '数据与生成代码匹配，manifest 与内容指纹校验通过。水合需要可访问目录服务。' }
       ],
-      callout: '本次只核对并记录启动问题，没有安装依赖或水合：当前源码 --version 实测因 providers/data/meta.json 缺失失败。不要手写空 JSON、删除 imports，或直接修改 models.generated.ts。离线构建需要预先准备与源码一致的数据。',
+      callout: '模型数据是否可用以本次 check:model-data 输出为准，不能沿用旧验证记录。不要手写空 JSON、删除 imports，或直接修改 models.generated.ts。离线构建需要预先准备与源码一致的数据。',
       refs: [['packages/ai/scripts/check-model-data.ts', 'Model data is missing or stale'], ['packages/ai/scripts/model-data.ts', 'validateGeneratedModelData'], ['.gitignore', 'packages/ai/src/providers/data/']]
     },
     {
@@ -214,13 +211,13 @@ try {
     },
     {
       title: '14 · 部署 A：本地定制 npm 包，不发布 registry',
-      text: '源码已构建且检查通过后，将下面 JavaScript 保存为 dev/deploy-local.mjs（先创建 dev 目录）。这个可复制模板调用仓库已有 pack/install/smoke helper，为所有公开工作区包打 tarball，用 overrides 选定你改过的本地依赖，再在仓库外安装。只打包 coding-agent 一个包会使其他修改落回 registry 依赖。',
+      text: '源码已构建且检查通过后，将下面 JavaScript 保存为 dev/deploy-local.mjs（先创建 dev 目录）。模板复用 package-artifacts 与 local-package-install，生成带完整性校验的 artifact manifest，为所有公开包打 tarball，再用 overrides 在仓库外安装。build: false 只打包已有产物；源码有变化必须先重建。',
       commands: [
         { title: '保存为 dev/deploy-local.mjs 的模板', shell: 'javascript', code: deploy, expected: '仅添加开发辅助文件；模板不会删除旧目录。保存位置决定 ../scripts 的相对导入。' },
         { title: '生成一个新的仓库外安装目录', shell: 'powershell', code: `New-Item -ItemType Directory -Force -Path 'dev' | Out-Null
 # 先把上方模板保存为 dev/deploy-local.mjs，再运行：
 $piDelivery = Join-Path (Split-Path -Parent (Get-Location).Path) ('pi-local-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-node ./dev/deploy-local.mjs $piDelivery`, expected: '生成 tarballs 与 node/ 两个目录；SDK 与 --version 的消费者检查通过。这一步安装外部依赖可能联网。' },
+node ./dev/deploy-local.mjs $piDelivery`, expected: '生成 artifacts/manifest.json、artifacts/tarballs 与 node/；消费者检查核验安装版本、导出文件和本地依赖解析并导入包。下一步另验 CLI 版本。这一步安装外部依赖可能联网。' },
         { title: '离开仓库后验证自己的定制版', shell: 'powershell', code: `Push-Location -LiteralPath (Join-Path $piDelivery 'node')
 try {
     & './node_modules/.bin/pi.cmd' --offline --version
@@ -230,8 +227,8 @@ try {
     Pop-Location
 }`, expected: '启动与版本检查通过后，再验收你修改的具体行为；启动成功不等于功能验证完成。' }
       ],
-      steps: ['迁移到同系统/同架构机器时保留整个安装目录和 tarballs；目标机需要满足 engines 的 Node。跨平台应在目标环境用 tarballs 重新安装。', '给交付物记录源码 commit、包版本、修改点与检查结果；上游包版本相同不代表定制内容相同。', '开发时用 Invoke-PiSource，部署时用上面的绝对安装路径或明确 PATH；不要让全局 pi 混淆结果。', '升级采用新的交付目录，验证后切换启动路径；回退时切回上一份完整交付物。'],
-      refs: [['scripts/coding-agent-consumer.mjs', 'export function packReleasePackages'], ['scripts/coding-agent-consumer.mjs', 'export function installCodingAgentConsumer'], ['scripts/coding-agent-consumer.mjs', 'export function smokeTestCodingAgentConsumer'], ['scripts/release-packages.mjs', 'getPublicWorkspacePackages']]
+      steps: ['迁移到同系统/同架构机器时保留整个安装目录和 artifacts；目标机需要满足 engines 的 Node。跨平台应在目标环境用 tarballs 重新安装。', '给交付物记录源码 commit、包版本、修改点与检查结果；上游包版本相同不代表定制内容相同。', '开发时用 Invoke-PiSource，部署时用上面的绝对安装路径或明确 PATH；不要让全局 pi 混淆结果。', '升级采用新的交付目录，验证后切换启动路径；回退时切回上一份完整交付物。'],
+      refs: [['scripts/package-artifacts.mjs', 'export function produceArtifactSet'], ['scripts/local-package-install.mjs', 'export function installConsumer'], ['scripts/local-package-install.mjs', 'export function smokeTestNpmConsumer'], ['scripts/pack-packages.mjs', '--skip-build'], ['scripts/use-local-packages.mjs', '--consumer']]
     },
     {
       title: '15 · 部署 B：独立可执行文件与完整资源',

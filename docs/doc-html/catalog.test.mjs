@@ -14,6 +14,20 @@ test('函数变量保留真实输入与显式输出', () => {
   assert.match(record.symbols[0].signature, /value: number/);
 });
 
+test('TS 7 索引保留接口成员、访问权限、Unicode 行号和 JS/TSX', () => {
+  const record = parseSource('fixture.ts', '// 中文与 😀\r\nexport interface Store { value: string; save(input: string): void; }\r\nexport class Box { private value = 1; constructor() {} get size(): number { return this.value; } }');
+  assert.match(record.comment, /中文与 😀/);
+  assert.equal(record.symbols.find(s => s.name === 'Store.save').line, 2);
+  assert.equal(record.symbols.find(s => s.name === 'Store.value').kind, '属性');
+  assert.deepEqual(record.symbols.find(s => s.name === 'Store.save').inputs, ['input: string']);
+  assert.equal(record.symbols.find(s => s.name === 'Box.value').visibility, 'private');
+  assert.equal(record.symbols.find(s => s.name === 'Box.constructor').kind, '构造器');
+  assert.equal(record.symbols.find(s => s.name === 'Box.size').output, 'number');
+  assert.equal(parseSource('fixture.js', 'export const run = (x) => x;').symbols[0].exported, true);
+  assert.equal(parseSource('fixture.tsx', 'export const View = () => <span>中文</span>;').symbols[0].kind, '函数变量');
+  assert.deepEqual(parseSource('README.md', '# 文档').symbols, []);
+});
+
 test('功能浏览器支持概览、过滤、详情和符号定位', () => {
   const nodes = new Map();
   const document = { getElementById(id) {
