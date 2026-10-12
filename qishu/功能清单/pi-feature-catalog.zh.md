@@ -4,10 +4,10 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 核对日期 | 2026-10-07（Asia/Shanghai）。 |
-| 当前版本口径 | 以本地仓库 HEAD `517e9fdb5` 与当前源码为准；`pi-coding-agent` 包版本为 `1.0.2`。包版本不代表所有源码都已进入公开发行版。 |
-| 清单范围 | 覆盖普通 Pi CLI、SDK、13 个顶层工作区包、扩展与集成示例、实验应用，以及不能独立归入产品模块的工程和平台能力。 |
-| 清单规模 | 21 个模块、531 项功能条目、53 处来源文档或源码，并补充 21 项能力边界说明；条目包含不同层级的库、集成和示例能力，不代表 531 个互不重叠的 CLI 功能。 |
+| 核对日期 | 2026-10-12（Asia/Shanghai）。 |
+| 当前版本口径 | 以本地仓库 HEAD `fe2b9da4c` 与当前源码为准；`pi-coding-agent` 包版本为 `1.1.0`，另含各包 Unreleased 改动。以本次本地合并结果为准，不代表这些源码能力都已发布。 |
+| 清单范围 | 覆盖普通 Pi CLI、SDK、14 个有 package.json 的顶层工作区包、扩展与集成示例、实验应用，以及不能独立归入产品模块的工程和平台能力。 |
+| 清单规模 | 22 个模块、588 项功能条目、65 处来源文档或源码，并补充 21 项能力边界说明；条目包含不同层级的库、集成和示例能力，不代表 588 个互不重叠的 CLI 功能。 |
 | 功能粒度 | 按可使用、可集成或可配置的能力拆分；不把每个内部函数、类型、模型 ID、翻译文件或测试用例都当作独立功能。类似配置归并在对应功能内。 |
 | 层级 | 二级标题为模块；每个表格行是一项功能。CLI 的多个业务模块都归属于 `packages/coding-agent`，并不意味着它们都是独立 npm 包。 |
 | 状态：内置 | 普通 CLI 或对应库已经提供；仍可能需要模型凭据、平台能力或用户主动调用。 |
@@ -42,7 +42,8 @@
 | 18 Protocol 通信协议 | 握手、路由信封、CBOR 与字节流分帧。 | protocol（实验） |
 | 19 Telemetry 遥测 | 显式调用跟踪、参考适配器和类型化诊断模式。 | telemetry |
 | 20 Evals 行为评测 | 宿主评测、文档对照实验、隔离执行及报告。 | evals |
-| 21 其他 | 扩展示例、实验应用、平台与工程支持、能力边界。 | 跨模块或非独立产品能力 |
+| 21 Env 远程执行环境 | SSH 连接、守护进程部署、远程文件与命令、监听与断连处理。 | env（Durable 配套库） |
+| 22 其他 | 扩展示例、实验应用、平台与工程支持、能力边界。 | 跨模块或非独立产品能力 |
 
 ## 01 CLI 交互与运行模式
 
@@ -72,6 +73,8 @@
 | UI-22 | 斜杠命令发现 | 输入 `/` 搜索内置命令、扩展命令、模板和技能；当前菜单随加载资源变化。 | `/` | 内置 | [命令参考][slash] |
 | UI-23 | Markdown 与 Mermaid 展示 | 在终端呈现 Markdown 和代码；Mermaid 可设置关闭、仅最终渲染或流式渲染。 | `markdown.*` | 内置 | [设置][settings] |
 | UI-24 | 启动信息与诊断 | 查看已加载资源、版本、活动快捷键和更新日志；`/debug` 导出终端渲染与会话数据便于排错。 | `/hotkeys`、`/changelog`、`/debug` | 内置 | [使用说明][usage]、[命令参考][slash] |
+| UI-25 | 终端程序状态报告 | 向支持 OSC 7501 的终端／仪表盘报告 working、blocked、done、error、idle；仅发送会话名、对话框标题或错误首行，不发送提示及回答，默认先探测支持。 | `PI_PROGRAM_STATUS=1` 强制开启，`0` 关闭 | 内置／终端相关 | [终端设置][terminal] |
+| UI-26 | 输出留白与导航键分离 | outputPad 同时作用于消息、工具、! 命令及摘要；Home／End 始终移动编辑器行首尾，全屏记录首尾使用 Ctrl+Home／Ctrl+End。 | `outputPad`、可配置快捷键 | 内置 | [设置][settings]、[快捷键][keys] |
 
 ## 02 文件、搜索与命令工具
 
@@ -85,14 +88,15 @@
 | TOOL-06 | 文件内容搜索 | 根据查询定位文件内容中的匹配，缩小代码阅读范围，避免逐个打开文件。 | `grep`，需启用 | 可选 | [工具清单][cli] |
 | TOOL-07 | 路径模式搜索 | 使用 glob 模式寻找文件路径，例如按后缀或目录寻找测试、配置和入口。 | `find`，需启用 | 可选 | [工具清单][cli] |
 | TOOL-08 | 目录列举 | 查看目录内容，帮助模型了解工程结构和可访问文件。 | `ls`，需启用 | 可选 | [工具清单][cli] |
-| TOOL-09 | 工具允许／排除选择 | 按名称替换允许列表、排除指定工具、关闭默认内置工具或关闭所有工具，以控制模型得到的能力集。 | `--tools`、`--exclude-tools`、`--no-builtin-tools`、`--no-tools` | 内置 | [CLI][cli] |
-| TOOL-10 | 默认工具增量配置 | 全局或项目设置可用 `+name`、`-name` 对继承的工具集增删；CLI `--tools` 则是整组替换。 | `defaultTools` | 内置 | [设置][settings] |
+| TOOL-09 | 工具允许／排除选择 | 用名称或 `*` 模式选择／排除工具；纯 `+name`／`-name` 列表增减默认集合，不能与普通名称混用，增减项不接受通配符。MCP 的间接可调用范围另有规则。 | `--tools`、`--exclude-tools`、`--no-builtin-tools`、`--no-tools` | 内置 | [CLI][cli] |
+| TOOL-10 | 默认工具增量配置 | 全局／项目 defaultTools 支持增删继承集合；CLI 纯增减列表也基于最终默认集合工作，`/reload` 后仍保持显式减去的工具关闭。含普通名称的 CLI 列表替换选择。 | `defaultTools`、`pi -t +codemode,-write` | 内置 | [设置][settings]、[CLI][cli] |
 | TOOL-11 | 只读工具组合 | SDK 提供 read、grep、find、ls 的组合便于构建审查任务；这只是工具选择，不是操作系统权限隔离。 | `createReadOnlyTools()` | 库 | [工具源码][tools] |
 | TOOL-12 | 用户主动执行命令 | `!` 执行命令并将结果放入对话；`!!` 执行命令但不把输出发给模型，便于区分任务证据与本地操作。 | 编辑器中的 `!`、`!!` | 内置 | [使用说明][usage] |
 | TOOL-13 | Shell 环境定制 | 设置 Shell 可执行文件和统一命令前缀，例如进入虚拟环境或添加初始化步骤。 | `shellPath`、`shellCommandPrefix` | 可选 | [设置][settings] |
 | TOOL-14 | 大结果截断 | 向模型提供有限结果并在相应工具中保留完整输出路径，避免大日志消耗过多上下文；各工具上限并不相同。 | 工具截断辅助函数、Shell／MCP／Codemode | 内置／库 | [工具源码][tools]、[Codemode][code] |
 | TOOL-15 | 文件修改串行保护 | 对同一文件的读取—修改—写入过程排队，避免并行工具修改互相覆盖；自定义写文件工具可复用。 | `withFileMutationQueue()` | 库 | [扩展][ext] |
 | TOOL-16 | 可替换执行后端 | 工具工厂暴露读写、搜索与命令 operations，使宿主或扩展能把相同工具接到 SSH、容器或虚拟机。 | `create*Tool()` 与 operations | 库 | [工具源码][tools]、[示例][examples] |
+| TOOL-17 | 执行时长持久化 | 使用单调时钟记录实际 execute 耗时并写入工具结果；恢复会话后仍能显示 Took，不包含前后 Hook 耗时，未执行的调用没有时长。 | `durationMs`、bash／PowerShell 显示 | 内置／库 | [Agent 更新记录][agentlog]、[更新记录][clilog] |
 
 ## 03 会话、历史与上下文
 
@@ -152,6 +156,9 @@
 | MOD-23 | 本地模型加载／卸载 | 观察路由器真实状态，主动加载、卸载模型，并处理睡眠或自动加载模型；不删除磁盘模型文件。 | `/llama` | 可选 | [llama.cpp][llama] |
 | MOD-24 | Hugging Face 模型下载 | 在界面搜索仓库、选择量化版本或输入精确仓库标识；由 llama.cpp 服务端实际下载。 | `/llama` 的下载操作 | 可选 | [llama.cpp][llama] |
 | MOD-25 | 本地分类推理 | 把 llama.cpp 聊天模型作为 choice、bool、score 分类器，读取候选标签的 token 概率而不是生成普通长回答。 | Codemode 或扩展分类 API | 可选 | [llama.cpp][llama] |
+| MOD-26 | llama.cpp 原生决策模型 | 识别 router 元数据中 decisions 输出类型，将 Julia-1、Laya、Kev、lev、OpenJev 等只列作分类模型，通过 /v1/systemone 原生调用；无需先加载即可识别睡眠模型。 | llama.cpp 0.6.0+；`typesafe-system-one` | 可选 | [llama.cpp][llama] |
+| MOD-27 | OpenAI Decisions 凭据边界 | gpt-6-luna 用 API key 做分类及图像判断；若 openai 已通过 /login 保存 OAuth，即使有 OPENAI_API_KEY 也不列为可用，需退出该登录后使用 key。 | `models.classify()`；非 `/model` 聊天选项 | 可选 | [模型][models] |
+| MOD-28 | 订阅刷新与本地回调恢复 | 已经开始的 OAuth 刷新会完成并保存轮换令牌，避免取消请求造成凭据失效；Anthropic 登录默认回调端口被占用时改用空闲 loopback 端口。 | OAuth 登录与刷新 | 内置认证行为 | [AI 更新记录][ailog] |
 
 ## 05 配置、技能、模板、主题与包
 
@@ -184,6 +191,8 @@
 | CFG-25 | 包清单与依赖集成 | `package.json` 的 `pi` 字段声明资源路径；扩展可携带自身依赖，并按宿主包 peer 约定复用 Pi 运行时。 | `pi` manifest | 可选 | [资源包][packages] |
 | CFG-26 | 包版本固定与去重 | 固定 npm 版本、Git tag／commit，按包名、仓库 URL 或绝对路径识别同一包，避免等价来源重复加载。 | 包源规范 | 内置 | [资源包][packages] |
 | CFG-27 | 临时试用扩展包 | 只在当前进程加载指定资源包，便于试验而不写入长期设置。 | `pi -e <source>` | 可选 | [资源包][packages] |
+| CFG-28 | 编辑器 JSON Schema | 发布 settings、models、keybindings、theme 四份 JSON Schema，用于编辑器补全和格式检查；从 TypeScript schema 生成，减少运行时规则与文档定义漂移。 | `packages/coding-agent/schemas/*.schema.json` | 开发／配置支持 | [Schema 生成器][schemas] |
+| CFG-29 | 严格主题属性检查 | 拒绝未知顶层字段及 colors／export 内未知键，自定义复用颜色放 vars；主题 schema 已迁到 schemas/theme.schema.json，旧引用需更新。 | 主题加载、`$schema` | 内置 | [主题][themes] |
 
 ## 06 扩展系统
 
@@ -203,7 +212,7 @@
 | EXT-12 | 工具暴露级别 | 区分 direct、model-only、codemode、deferred、hidden，分别控制声明、嵌套可调用性、延迟发现和隐藏。 | 工具 `exposure` | 库 | [扩展][ext] |
 | EXT-13 | 工具命名空间与行为提示 | 将工具分组，附上用途和长说明；可标注只读、破坏性、幂等和开放世界提示供宿主策略使用。 | `namespace`、`annotations` | 库 | [扩展][ext] |
 | EXT-14 | 动态工具激活 | 在工具已注册的前提下调整活跃集合，变更在下次请求前写入会话，支持按需加载能力。 | `getActiveTools()`、`setActiveTools()` | 库 | [扩展][ext] |
-| EXT-15 | 模型可见工具集整形 | 编排工具可调整其他工具的声明描述或隐藏声明，同时保留内部调用能力。 | `prepareLoadout()` | 库 | [扩展][ext] |
+| EXT-15 | 模型可见工具集整形 | 编排工具可改写声明或隐藏声明，并通过 getPromptGuidelines 读取工具指导。默认系统提示不再提及被隐藏工具，编排工具负责将其指导带入自己的声明。 | `prepareLoadout()`、`ToolLoadout.getPromptGuidelines()` | 库 | [扩展][ext] |
 | EXT-16 | 自定义命令、参数和快捷键 | 注册斜杠命令及参数补全、命令行长参数和快捷键，将常见工作流变成直接操作。 | `registerCommand/Flag/Shortcut()` | 库 | [扩展][ext] |
 | EXT-17 | 工具呈现覆盖 | 为工具调用与结果提供紧凑或详细显示，并可为尚未注册的 MCP 工具匹配渲染器；适用于 TUI 和 HTML 导出。 | `renderCall`、`renderResult`、`registerToolRenderer()` | 库 | [扩展][ext] |
 | EXT-18 | 对话框与通知 | 向用户提供选择、确认、输入、多行编辑、状态和通知；RPC 可转发支持的 UI 请求。 | `ctx.ui` | 库 | [扩展][ext]、[RPC UI][rpcui] |
@@ -212,13 +221,14 @@
 | EXT-21 | 自定义消息与条目渲染 | 将扩展保存的消息或非模型条目显示为专门界面，例如调试记录、状态卡片。 | message／entry renderer | 库 | [示例][examples] |
 | EXT-22 | 会话控制与安全切换 | 命令上下文可等待空闲、重载、导航与替换会话；替换后应使用新上下文和重新绑定监听。 | `ExtensionCommandContext` | 库 | [扩展][ext] |
 | EXT-23 | 继续／结束运行控制 | 在轮次结束或最终收尾前请求下一次模型调用；工具结果可提示批次结束后无需再回答。 | `turn_end`、`agent_before_settle`、`terminate` | 库 | [扩展][ext] |
-| EXT-24 | 确定最终静止状态 | 区别低层 `agent_end` 与自动恢复、排队任务都完成后的 `agent_settled`，适合完成通知。 | `agent_settled` | 库 | [扩展][ext] |
+| EXT-24 | 确定最终静止及取消状态 | 区别低层 agent_end 与自动恢复、排队任务完成后的 agent_settled；其 aborted 字段表明是否因取消结束，供通知、JSON 消费端和仪表盘正确分类。 | `agent_settled.aborted` | 库 | [JSON 事件][json]、[更新记录][clilog] |
 | EXT-25 | 提供商和虚拟模型扩展 | 注册自定义流式协议、认证和模型发现，或逐请求进行模型路由，复用 Pi 会话和选择器。 | `registerProvider()`、`registerVirtualModel()` | 库 | [扩展][ext]、[虚拟模型][virtual] |
 | EXT-26 | 动态 MCP 服务注册 | 扩展按当前环境注册或移除服务器，连接由内置 MCP 支持管理；注册本身不写入配置文件。 | `registerMcpServer()`、`unregisterMcpServer()` | 库 | [扩展][ext] |
 | EXT-27 | 扩展间事件总线 | 在同一进程的多个扩展间传递事件，减少彼此直接引用内部实现。 | `pi.events` | 库 | [扩展][ext] |
 | EXT-28 | 原始提供商事件观察 | 在标准化前读取解析后的提供商事件以排查专有字段；不是原始网络字节，也不会默认持久化。 | `provider_stream_event` | 库 | [扩展][ext] |
 | EXT-29 | 缓存预热决策覆盖 | 根据宿主策略允许或停止空闲缓存刷新，以控制收益和额外用量。 | `cache_warming_decision` | 库 | [扩展][ext] |
 | EXT-30 | 用户命令重定向与资源清理 | 拦截 `!` 执行到替代后端，并通过 session_start／session_shutdown 管理进程、监听等资源。 | `user_bash`、关闭事件 | 库 | [扩展][ext] |
+| EXT-31 | 工具呈现的耗时与留白上下文 | 渲染器读取最终结果 durationMs 和 outputPad，使自定义工具显示与普通工具的耗时和横向留白一致；工具结束事件也携带耗时。 | 工具 render context、tool_execution_end | 库 | [更新记录][clilog] |
 
 ## 07 MCP 接入与协议客户端
 
@@ -229,9 +239,9 @@
 | MCP-03 | 全局／项目 MCP 配置 | 全局服务可供所有项目使用，受信任项目可覆盖同名配置，也可仅覆盖启用和暴露策略。 | agent 目录及 `.pi/mcp.json` | 内置 | [MCP 接入][mcp] |
 | MCP-04 | 服务增删命令 | 从 Shell 添加、替换或移除 MCP 配置，支持本地范围；删除配置不自动删除已存 OAuth 凭据。 | `pi mcp add/remove` | 内置 | [CLI][cli] |
 | MCP-05 | 连接与工具状态诊断 | 实际连接所有已启用服务并报告状态、工具与错误，失败可提供非零退出码用于自动化检测。 | `pi mcp list [--json]` | 内置 | [MCP 接入][mcp] |
-| MCP-06 | 会话内服务管理 | 显示状态、来源、工具数、完整错误和 stderr 尾部，支持登录、退出、重连、启停和暴露修改。 | `/mcp` | 内置扩展 | [MCP 接入][mcp] |
+| MCP-06 | 会话内服务管理 | 显示连接状态、来源、工具数、完整错误和 stderr 尾部；面板立即打开并实时更新，在启停或重连期间仍可操作，无需等待所有服务连接。 | `/mcp` | 内置扩展 | [MCP 接入][mcp]、[更新记录][clilog] |
 | MCP-07 | 后台连接与按需等待 | 会话启动后台连接；直接声明工具在首次请求前有限等待，间接发现和调用在需要时等待连接。 | MCP 会话生命周期 | 内置 | [MCP 接入][mcp] |
-| MCP-08 | OAuth 登录及刷新 | 发现认证服务，执行 PKCE／客户端注册、回调或手动重定向流程，保存并刷新令牌。 | `/mcp login`、`pi mcp login` | 可选 | [MCP 接入][mcp] |
+| MCP-08 | OAuth 登录、刷新与取消 | 发现认证服务，执行 PKCE／客户端注册并保存刷新令牌；Esc 可在各阶段取消，会话关闭会中止登录，每次授权服务请求有 15 秒超时，CLI timeout 限制整个登录过程。 | `/mcp login`、`pi mcp login --timeout` | 可选 | [MCP 接入][mcp]、[更新记录][clilog] |
 | MCP-09 | OAuth 高级兼容配置 | 支持预注册 client ID、可选密钥、回调端口、scope、客户端元数据文档及指定认证元数据地址。 | `oauth` 配置 | 可选 | [MCP 接入][mcp] |
 | MCP-10 | 按服务身份隔离凭据 | 以服务名称和 URL 关联认证，同 URL 的不同账户名称可独立登录；登出删除该身份凭据。 | `mcp-auth.json` | 内置 | [MCP 接入][mcp] |
 | MCP-11 | 直接、延迟与脚本暴露 | direct 直接声明；deferred 通过 tool_search 发现；默认 codemode 通过脚本发现；hidden 不可达。 | `exposure` | 内置 | [MCP 接入][mcp] |
@@ -249,7 +259,8 @@
 | MCP-23 | stdio 进程组关闭 | 关闭 stdin，逐步发送终止信号到进程组，尽量回收经 npx／uvx 启动的子进程。 | StdioTransport | 库 | [MCP 库][mcplib] |
 | MCP-24 | 传输无关客户端 | 独立包负责 JSON-RPC 初始化、请求关联、服务器请求、根目录查询和通用通知，可脱离 Pi 使用。 | `McpClient` | 库 | [MCP 库][mcplib] |
 | MCP-25 | 内存测试传输 | 在同一进程构造成对传输，测试客户端与适配器而不启动真实外部服务。 | `createInMemoryTransportPair()` | 库 | [MCP 库][mcplib] |
-| MCP-26 | 替换内置适配器 | 安装注册同名 `/mcp` 的扩展可接管会话 MCP；也可禁用 builtin:mcp，Shell 级命令仍使用内置实现。 | Pi 包、`pi config` | 可选 | [MCP 接入][mcp] |
+| MCP-26 | 替换或单次禁用内置适配器 | 同名 /mcp 扩展可接管会话集成；配置可长期禁用 builtin:mcp，--no-mcp 可单次禁止内置连接、工具及命令，但不影响替代扩展；Shell 级 mcp 命令仍用内置实现。 | `pi config`、`--no-mcp` | 可选 | [MCP 接入][mcp]、[CLI][cli] |
+| MCP-27 | MCP 通配选择与可达性区分 | --tools 未含 mcp__ 前缀项时保留 MCP 的间接调用范围，但未匹配工具不直接声明；出现前缀项后按模式过滤 MCP。--exclude-tools 可统一排除，资源工具也按 MCP 处理。 | `--tools read,codemode,mcp__radius__*`、`--exclude-tools` | 可选 | [CLI][cli]、[MCP][mcp] |
 
 ## 08 Codemode 脚本编排
 
@@ -263,18 +274,23 @@
 | CODE-06 | 按需查看工具接口 | 获取指定工具的 TypeScript 声明和说明，或命名空间的完整指导，降低猜接口风险。 | `describeTool()`、`describeNamespace()` | 可选 | [Codemode][code] |
 | CODE-07 | 延迟工具直接激活 | tool_search 搜索未声明工具并让结果在下一次模型调用中直接可用，已加载工具随分支保存。 | `tool_search` | 可选 | [CLI][cli] |
 | CODE-08 | 工具声明预算 | 控制内嵌声明 token 预算，超出部分仍可检索；only 模式将其他活跃工具的模型入口集中到脚本。 | `codemode.inlineBudget`、`codemode.mode` | 可选 | [设置][settings] |
-| CODE-09 | 文本、日志和提前结束 | text、console 系列和 return 形成输出；exit 立即成功结束并保留当前输出及成功存储写入。 | 脚本 globals | 库／可选 | [Codemode][code] |
+| CODE-09 | 分块文本、日志和提前结束 | text 和 return 的多个文本项带序号分隔；console 调用集中放在末尾 console_output 块，每次调用占一行；exit 成功结束并保留输出和存储写入，便于区分结果与调试日志。 | `text()`、`console.*()`、`return`、`exit()` | 库／可选 | [Codemode][code] |
 | CODE-10 | 图片输出与临时保存 | image 接收 base64 data URL 或图片内容块，将图片交给模型并保存临时文件供后续操作；不接受远程图片 URL。 | `image()` | 可选 | [Codemode][code] |
 | CODE-11 | 分支持久小型状态 | store/load 保存 JSON 值，成功脚本才提交写入；CLI 会话恢复和分支读取各自路径上的值。 | `store()`、`load()` | 可选 | [Codemode][code] |
 | CODE-12 | 非聊天模型发现 | 查看聊天、图像和分类模型目录与可用认证；脚本只执行分类和图像操作，不能通过该 models 对象调用聊天模型。 | `models.getAvailableOfType()` 等 | 可选 | [Codemode][code] |
-| CODE-13 | 类型化分类 | 对 JSON 状态进行类别选择、布尔判断或有序评分，返回概率／置信度，适合分流和过滤。 | `models.classify()` | 可选 | [Codemode][code] |
+| CODE-13 | 文本／图像类型化分类 | 对 JSON 状态以及模型支持的 images 进行类别、布尔或评分判断；read 图片所得内容块可直接传入。图像支持须由分类模型声明，不支持时返回错误。 | `models.classify(model, { state, images, questions })` | 可选 | [Codemode][code] |
 | CODE-14 | 图像生成与参考图编辑 | 用提示及可选图片调用图像模型，返回图片与可能的文本；具体输入能力由模型决定。 | `models.generateImages()` | 可选 | [Codemode][code] |
 | CODE-15 | 模型调用并发与费用 | 每脚本的非聊天模型调用最多四路并发，其余排队；报告的用量归入外层工具和会话成本。 | models globals | 内置于该集成 | [Codemode][code] |
 | CODE-16 | 输出预算与硬限制 | 可指定 max_output_tokens 和 timeout_ms；CLI 默认 VM 256 MB，输出和 store 另有容量上限，超限会报错。 | 首行 `// @options:` | 可选 | [Codemode][code] |
-| CODE-17 | 取消与失败结果 | 超时或取消可终止 worker；失败保留已产生输出，未等待调用取消，但已完成外部动作不会回滚。 | AbortSignal、执行结果 | 库 | [Codemode 库][codelib] |
+| CODE-17 | 取消与失败结果 | Node／Bun worker 可因超时或取消而终止；失败保留已产生输出，取消未等待调用，已完成外部动作不回滚。远程和 inline 后端有独立中断限制，不能套用 worker 的终止保证。 | AbortSignal、执行结果 | 库 | [Codemode 库][codelib] |
 | CODE-18 | 独立沙箱嵌入 | 其他应用可注入工具、globals、store 和内存限制，使用独立 Codemode 包，无需依赖 Pi CLI。 | `CodemodeSandbox` | 库 | [Codemode 库][codelib] |
 | CODE-19 | 声明生成与源码格式校验 | 将输入／输出 schema 渲染为模型可读 TypeScript 声明，解析选项行并支持语法约束工具输入。声明生成本身不校验业务参数。 | `renderDeclarations()`、`parseCodemodeSource()` | 库 | [Codemode 库][codelib] |
 | CODE-20 | 打包宿主支持 | 显式提供 WASM 和 worker 入口，使沙箱可用于单文件或 Bun 编译宿主。 | `wasm`、`workerUrl` | 库 | [Codemode 库][codelib] |
+| CODE-21 | 图片工具结果组合 | tools.read 读取图片时返回含 type、data、mimeType、note 的图片块，可交给 image 输出或视觉分类，不再把图片丢成纯文本结果。 | `tools.read()` → `image()`／`models.classify()` | 可选 | [Codemode][code] |
+| CODE-22 | Cloudflare 远程沙箱 | 在独立部署 Worker 的 Durable Object 中运行 VM，工具和调用记录保留在 Agent 宿主，经 Workers RPC 回调；可按会话或按次分配对象，避免计算长时间阻塞会话对象。 | `RemoteCodemodeSandbox`、`/portable`、`/cloudflare` | 库／需部署 | [Codemode 库][codelib] |
+| CODE-23 | 同线程可移植沙箱 | 在调用线程运行 QuickJS，用于可接受同步计算阻塞的 WebAssembly 环境；Cloudflare 提供编译模块辅助入口，不需要额外部署沙箱 Worker。 | `InlineCodemodeSandbox`、`createInlineCodemodeSandbox()` | 库 | [Codemode 库][codelib] |
+| CODE-24 | 远程 CPU 与内存预算 | Cloudflare 默认中断轮询预算 100000、每 VM 内存 32 MiB，服务端限制请求上限；纯计算时用预算而非定时器保障结束，取消立即结束调用方等待，远端至下一工具调用或预算耗尽才停。 | `interruptBudget`、远端 maxMemoryLimitBytes | 库 | [Codemode 库][codelib] |
+| CODE-25 | 沙箱内置对象与悬空 Promise 防护 | 冻结 VM 内置对象防止原型篡改破坏宿主管线；没有工具在途且无法再结算的 Promise 立即失败，避免不可完成的脚本无限等待。 | QuickJS 执行器 | 库 | [Codemode 库][codelib]、[更新记录][clilog] |
 
 ## 09 SDK、RPC 与 JSON 集成
 
@@ -328,6 +344,7 @@
 | AG-17 | 动态认证与会话亲和 | 宿主提供动态凭据解析、sessionId 和推理预算，将认证刷新及提供商缓存接入循环。 | Agent 选项 | 库 | [Agent][agent] |
 | AG-18 | 底层无类循环 | 直接使用异步事件流驱动循环，便于定制宿主；底层流不会像 Agent 类那样等待消费者处理事件。 | `agentLoop()`、`agentLoopContinue()` | 库 | [Agent][agent] |
 | AG-19 | 浏览器后端代理 | 浏览器侧把流请求交给后端代理，让业务服务管理模型认证与访问。 | `streamProxy()` | 库 | [Agent][agent] |
+| AG-20 | 工具执行耗时事件 | AgentToolCallOutcome、工具结果消息和 tool_execution_end 附带 execute 的单调时钟耗时，不包含 Hook；未实际执行的调用不产生该字段。 | `durationMs` | 库 | [Agent 更新记录][agentlog] |
 
 ## 11 AI 统一模型接口
 
@@ -354,8 +371,8 @@
 | AI-19 | 紧凑可持久化消息帧 | 将流事件编码成增量帧，并通过纯 reducer 重建部分消息，避免每个 token 都复制整个累积响应。 | AssistantMessageFrameEncoder | 库 | [AI][ai] |
 | AI-20 | 视觉输入 | 将用户或工具结果中的图片交给支持视觉的聊天模型；模型元数据表示是否具备图片输入能力。 | ImageContent | 库／模型相关 | [AI][ai] |
 | AI-21 | 图像生成接口 | 用图像模型生成图片或处理参考图，返回图片及可能的文本；当前文档列出的内置图像提供商为 OpenRouter。 | `generateImages()` | 库／可选 | [AI][ai] |
-| AI-22 | 结构化分类接口 | 输入 JSON 状态及多项 choice、bool、score 问题，获取概率、置信度或期望分值，可用于路由和标签。 | `classify()` | 库／可选 | [AI][ai] |
-| AI-23 | Token、缓存和成本统计 | 规范输入、输出、缓存读写及费用数据，让 Agent／CLI 汇总任务成本；未报告的服务数据不能当作实测零值。 | Usage | 库 | [AI][ai] |
+| AI-22 | 结构化及视觉分类接口 | 输入 JSON 状态、多项 choice／bool／score 问题及可选 images，获取概率、置信度或期望分值；图像能力由模型 input 和 API 共同限定，不支持时返回错误结果。 | `classify()`、`ClassifierContext.images` | 库／可选 | [AI][ai] |
+| AI-23 | Token、缓存和分档成本统计 | 统一输入、输出、缓存读写及费用；按模型目录的提示长度价格档计费，修正长提示成本低估。未报告数据不能视为实测零值；OpenRouter 时段价格尚未建模。 | Usage、模型 cost tiers | 库 | [AI][ai]、[AI 更新记录][ailog] |
 | AI-24 | 停止原因与错误归一化 | 区分正常停止、长度限制、工具使用、错误和取消，失败结果可携带已收到的内容和用量。 | stopReason、error 事件 | 库 | [AI][ai] |
 | AI-25 | 请求取消与续接 | AbortSignal 中断请求，保留部分响应供后续上下文使用；不会把“取消”误当成正常完成。 | `signal` | 库 | [AI][ai] |
 | AI-26 | 提供商请求／事件调试 | 观察实际请求负载、响应及标准化前已解析事件，帮助分析网关兼容性和字段差异。 | `onPayload`、`onResponse`、`onProviderStreamEvent` | 库 | [AI][ai] |
@@ -367,19 +384,22 @@
 | AI-32 | Faux 测试提供商 | 使用预设响应、thinking、工具调用、流速和模拟用量构建确定性测试，无需真实模型凭据。 | `fauxProvider()` | 库／测试 | [AI][ai] |
 | AI-33 | 浏览器与按需打包 | 可只导入所需提供商和轻量 models 入口，避免携带全部 SDK；浏览器不支持 Bedrock 调用和 Node OAuth 登录。 | 子路径导出、lazy API | 库 | [AI][ai] |
 | AI-34 | 旧接口迁移入口 | compat 子路径暂存旧全局模型接口，供已有应用迁移；新接口以 Models 实例和 provider 工厂为主。 | `@earendil-works/pi-ai/compat` | 兼容入口 | [AI][ai] |
+| AI-35 | 统一响应耗时 | AssistantMessageEventStream 从请求开始到最终消息记录 durationMs，代理流也使用相同流类型；后续获取的 deferred 结果不补计时，自定义流函数须返回该具体流类型。 | `AssistantMessage.durationMs` | 库 | [AI 更新记录][ailog] |
+| AI-36 | Decisions 协议适配 | 把 JSON 状态、可选图片及 choice／score／bool 问题映射到 OpenAI Decisions；bool 转 predicate，拒答使整次结果失败，按输入 token 和目录价格统计费用。 | `openai-decisions`、`gpt-6-luna` | 库／API key | [AI][ai] |
+| AI-37 | 宿主登录名称定制 | 宿主可替换 ChatGPT 登录的 agent name 提示及 Codex 浏览器 originator，供嵌入式产品展示自身身份。 | `LoginOptions.agentName` | 库 | [AI 更新记录][ailog] |
 
 ## 12 AI 提供商接入清单
 
 | 编号 | 提供商／功能 | 详细作用 | 接入标识／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
-| PROV-01 | OpenAI | 将 OpenAI 模型接入统一模型和工具接口，仓库也实现该 provider 的 ChatGPT 登录路径；实际账户权限按服务端结果确定。 | `openai` | 可选 | [AI][ai]、[注册表][allproviders] |
+| PROV-01 | OpenAI | 接入聊天／工具与 ChatGPT 登录路径，并支持 Decisions 分类 API 的 gpt-6-luna；分类需 API key，使用 ChatGPT OAuth 时该分类模型不列为可用。 | `openai`；分类 API `openai-decisions` | 可选 | [AI][ai]、[注册表][allproviders] |
 | PROV-02 | OpenAI Codex 旧接入 | 保留旧 Codex Responses／订阅认证接入，文档标为 legacy，区别于 OpenAI provider 的新登录路径。 | `openai-codex` | 可选／legacy | [AI][ai] |
-| PROV-03 | Anthropic | 接入 Claude 的 Messages、工具和推理能力，并按配置解析 API key 或支持的 OAuth 凭据。 | `anthropic` | 可选 | [AI][ai] |
+| PROV-03 | Anthropic | 接入 Claude Messages、工具、推理与认证；当前新增 Haiku 5.5，含长提示分档定价、adaptive thinking 的 xhigh／max、逐消息 effort 及会话中系统和工具变化。 | `anthropic`、`claude-haiku-5-5` | 可选 | [AI][ai]、[AI 更新记录][ailog] |
 | PROV-04 | Google Gemini | 接入 Google Generative AI 的聊天、图像输入与函数调用等模型能力。 | `google` | 可选 | [AI][ai] |
 | PROV-05 | Google Vertex AI | 在 Google Cloud 环境使用 Gemini，通过 API key 或 ADC 等方式解析身份和区域。 | `google-vertex` | 可选 | [AI][ai] |
-| PROV-06 | Azure OpenAI | 使用 Azure Responses 接口，支持资源地址标准化和模型到 deployment 的映射。 | `azure-openai-responses` | 可选 | [AI][ai] |
+| PROV-06 | Azure OpenAI／Foundry | provider 已更名为 azure，同时支持 OpenAI Responses 和 Foundry Chat Completions，内置 DeepSeek V4 Pro；部署映射适用于两种 API，原 AZURE_OPENAI 环境变量保持不变。 | `azure`；`azure-openai-responses` 仅保留为 API 标识 | 可选 | [提供商配置][providers]、[AI 更新记录][ailog] |
 | PROV-07 | Amazon Bedrock | 通过 AWS Converse Stream 接入模型并复用 AWS 凭据链；Node 环境调用，不是浏览器后端。 | `amazon-bedrock` | 可选 | [AI][ai] |
-| PROV-08 | Radius | 接入 Pi 网关，支持静态目录、认证后的动态目录覆盖及 API key／OAuth。 | `radius` | 可选 | [AI][ai] |
+| PROV-08 | Radius | 接入 Pi 网关与 API key／OAuth；获取或缓存的组织模型目录替换随包默认目录，避免继续显示组织管理员已禁用的模型。 | `radius` | 可选 | [AI][ai]、[AI 更新记录][ailog] |
 | PROV-09 | OpenRouter | 通过统一网关接入多家聊天模型，以及仓库支持的图像与分类模型，复用同一提供商认证。 | `openrouter` | 可选 | [AI][ai] |
 | PROV-10 | Vercel AI Gateway | 经 Vercel 网关接入模型，并提供目录中对应的分类模型能力。 | `vercel-ai-gateway` | 可选 | [AI][ai] |
 | PROV-11 | GitHub Copilot | 使用 Copilot OAuth 或相应环境令牌访问账户可用模型，按模型选择底层 API。 | `github-copilot` | 可选 | [AI][ai] |
@@ -436,11 +456,13 @@
 | TUI-18 | 加载与可取消进度组件 | 显示运行指示器，可响应取消并暴露 AbortSignal 供异步任务使用。 | Loader、CancellableLoader | 库 | [TUI][tui] |
 | TUI-19 | 列表与设置控件 | 候选筛选、键鼠选择、分页，以及设置值轮换和子菜单，适合模型和偏好选择器。 | SelectList、SettingsList | 库 | [TUI][tui] |
 | TUI-20 | 终端图片渲染 | 支持 Kitty／iTerm2 图片协议及 PNG、JPEG、GIF、WebP；不支持时用占位文本，备用屏 iTerm2 图片有降级限制。 | Image | 库 | [TUI][tui] |
-| TUI-21 | 输入法光标定位 | 通过 Focusable 和光标标记定位终端硬件光标，使中文等输入法候选窗口跟随输入位置。 | Focusable、CURSOR_MARKER | 库 | [TUI][tui] |
+| TUI-21 | 输入法与硬件光标切换 | Focusable 和 CURSOR_MARKER 定位输入法候选窗口；renderFakeCursor 标记绘制光标，开启 showHardwareCursor 时移除紧随定位标记的绘制光标，只显示终端光标。 | Focusable、CURSOR_MARKER、`renderFakeCursor()` | 库 | [TUI][tui] |
 | TUI-22 | 键盘协议与组合键识别 | 解析普通按键、修饰键及 Kitty 键盘协议，提供统一匹配函数和 Key 辅助对象。 | `matchesKey()`、Key | 库 | [TUI][tui] |
 | TUI-23 | 色彩转换与混合 | 支持 ANSI、sRGB、OKLCH、OKHSL，并根据终端输出真彩或 256 色，供主题和自定义组件使用。 | Color、parseColor、mixColors | 库 | [TUI][tui] |
 | TUI-24 | ANSI 安全文本布局 | 忽略控制码计算可见宽度，在截断和换行时保留颜色与链接边界，防止越界绘制。 | visibleWidth、truncateToWidth、wrapTextWithAnsi | 库 | [TUI][tui] |
 | TUI-25 | 终端抽象与测试终端 | ProcessTerminal 对接真实 stdin/stdout，VirtualTerminal 供测试；可记录原始 ANSI 输出排查渲染。 | Terminal、`PI_TUI_WRITE_LOG` | 库／测试 | [TUI][tui] |
+| TUI-26 | 程序状态协议接口 | Terminal 新增 setProgramStatus，formatProgramStatus 编码 OSC 7501 状态；ProcessTerminal 启动时探测支持，自定义终端即使不支持也需提供可空操作的实现。 | `Terminal.setProgramStatus()`、`formatProgramStatus()` | 库 | [TUI 更新记录][tuilog] |
+| TUI-27 | 动态内边距与选择清理 | Box／Text 可运行中调整横向内边距；备用屏可显式清除文本选择及多次点击状态，便于宿主替换 transcript 时避免旧高亮残留。 | `setPaddingX()`、`TuiAltScreen.resetTextSelection()` | 库 | [TUI 更新记录][tuilog] |
 
 ## 14 Chord 服务与插件组合
 
@@ -481,7 +503,7 @@
 | DUR-08 | 模型生成与工具子任务 | 每轮生成为 pi.generation，其工具调用是被拥有的 pi.tool 任务；父任务等待工具后继续回答。 | 内置生成／工具任务 | 实验／库 | [Durable][durable] |
 | DUR-09 | 工具安全重放 | 执行意图先提交；崩溃后仅 replay:safe 工具自动重跑，其他调用向模型报告 interrupted 与已提交输出。 | 工具 replay 声明 | 实验／库 | [Durable][durable] |
 | DUR-10 | 持久工具输出 | 工具可边执行边提交输出、details 和 usage，界面订阅已提交状态而不直接依赖进程内事件。 | `api.output()` 等 | 实验／库 | [Durable][durable] |
-| DUR-11 | 基础编码工具 | 提供 read、write、edit、bash 的 CodingTools 扩展，通过环境对象访问文件和进程；该版本尚不支持 read 图片。 | `@earendil-works/pi-durable/tools` | 实验／库 | [Durable][durable] |
+| DUR-11 | 基础编码与图片读取工具 | CodingTools 提供 read、write、edit、bash，通过 ExecutionEnv 访问文件和进程；read 已能返回符合尺寸及编码上限的 PNG／JPEG／GIF／WebP 图片块，超限转换另需处理器。 | `@earendil-works/pi-durable/tools` | 实验／库 | [Durable][durable] |
 | DUR-12 | 执行环境抽象 | 按会话目录或容器构造环境，统一文件、进程操作，允许不同会话使用不同存储／沙箱后端。 | ExecutionEnv、NodeExecutionEnv | 实验／库 | [Durable][durable] |
 | DUR-13 | 宿主文件和进程访问 | 环境支持二进制区间读取、目录分页及无 Shell 的 argv 执行，并区分 stdout/stderr 输出。 | 环境 reader、exec | 实验／库 | [Durable][durable] |
 | DUR-14 | 按环境文件修改排队 | 以环境 ID 和路径协调 edit／write，避免同一底层文件被并行读改写覆盖。 | ExecutionEnv `id` | 实验／库 | [Durable][durable] |
@@ -508,9 +530,30 @@
 | DUR-35 | 实时任务图 | 显示活跃任务、拥有关系、等待集合、后台标记与拥有的会话，方便构建任务面板和排错。 | `taskGraph()`、`watchTaskGraph()` | 实验／库 | [Durable][durable] |
 | DUR-36 | 自定义类型化文档 | 与 transcript 同事务保存业务 JSON，支持 latest／rewindable 历史及 initial／current／asOf 分叉策略。 | `defineDoc()`、snapshotAsOf | 实验／库 | [Durable][durable] |
 | DUR-37 | 文档初始化与单独订阅 | 会话创建回调或 init 在创建事务中初始化文档；可仅订阅某份文档而非整个会话。 | conversationCreated、watchDoc | 实验／库 | [Durable][durable] |
-| DUR-38 | 会话亲和与累计费用 | 为每会话持久保存 provider session ID，并按模型和工具汇总用量；失败、中止和摘要请求也可计入。 | pi.provider、pi.usage | 实验／库 | [Durable][durable] |
+| DUR-38 | 会话亲和与累计费用 | 持久保存每会话 provider session ID，并按模型和工具汇总用量；嵌套调用用量归到自己的工具，外层再次转报会重复计费。失败、中止和摘要请求也可计入。 | pi.provider、pi.usage | 实验／库 | [Durable][durable] |
 | DUR-39 | 内存／SQLite／JSONL 存储 | 可选择临时内存、SQLite WAL 或追加式 JSONL，支持相应耐久参数；包本身要求单进程拥有存储，不提供跨进程锁。 | storage 子路径 | 实验／库 | [Durable][durable] |
 | DUR-40 | 可移植存储与一致性测试 | 注入异步 SQLite 或文件系统适配到其他运行环境，并用公共 conformance 验证存储和执行环境契约。 | testing、portable storage | 实验／库 | [Durable][durable] |
+| DUR-41 | PowerShell 工具工厂 | 用 argv 直接运行 pwsh 或 Windows PowerShell，配置 UTF-8 输出，复用 bash 的保留窗口、落盘和错误行为；需宿主注册，不改变 CodingTools 默认四工具集合。 | `createPowerShellTool()` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-42 | 图片定向、转换与缩放 | 可选 Photon WASM 处理器解码图片，按 EXIF 转正、BMP 转 PNG，并缩放到模型限制；默认限制 2000×2000 和 4.5 MB base64。非视觉模型得到占位说明。 | `createCodingTools({ images })`、`/images` | 实验／库 | [Durable][durable] |
+| DUR-43 | Node 图片后台处理 | /images/node 默认在 worker 准备图片，避免大图阻塞事件循环；空闲 30 秒释放线程及 WASM 内存。Cloudflare／通用加载器在调用线程处理，不保证相同隔离。 | `createNodePhotonImages({ worker, idleMs })` | 实验／库 | [Durable][durable] |
+| DUR-44 | 持久嵌套工具调用 | executeTool 为每次嵌套调用创建由调用者拥有的 pi.tool 任务，执行校验、Hook、输出限制与重放策略；返回程序结果而不直接写入模型 transcript。 | `ToolExecutionApi.executeTool()` | 实验／库 | [Durable][durable] |
+| DUR-45 | 嵌套调用键与恢复 | 调用键默认按顺序，也可显式指定；可重放调用者重启后重新连接既有子调用，避免重复创建。NestedCallDoc 暂存结果到调用者结算，任务记录保留小型回执。 | `executeTool(..., { key })`、NestedCallDoc | 实验／库 | [Durable][durable] |
+| DUR-46 | 结构化工具输出分流 | output 给模型、structuredOutput 给调用程序、details 给 UI；schema 校验失败使嵌套调用报错，模型发起调用只丢弃无效结构化值并报告宿主。无 schema 时从有界输出推导程序结果。 | `structuredOutputSchema`、`structuredOutput`、`retainedOutput()` | 实验／库 | [Durable][durable] |
+| DUR-47 | 工具调用者范围控制 | callers 限制工具可由模型、其他工具或两者调用；modelTools 只缩小模型可见集合，不移除允许的嵌套调用，不能越过总工具集合增加能力。 | `ToolRegistration.callers`、`pi.agent.modelTools`、`Agent.callable` | 实验／库 | [Durable][durable] |
+| DUR-48 | 嵌套进度与父子关联 | pi.live.nestedTools 展示参数和完成摘要，事件带 taskId、parentTaskId、parentToolCallId；progress:false 隐藏运行输出，调用者结束前会取消未结束嵌套工作。 | 嵌套工具状态与事件 | 实验／库 | [Durable][durable] |
+| DUR-49 | 重启时放弃临时任务 | abandonOnRestart 标记仅被内存等待的工作，在后续 Harness 调度前连同拥有的任务终止；非重放安全工具的嵌套和 createTask 子任务默认获得该标记。 | `TaskOptions.abandonOnRestart` | 实验／库 | [Durable][durable] |
+| DUR-50 | 查询和取消直接拥有任务 | 读取任务当前直接拥有的活跃任务副本，或取消其中指定任务并等到终态，便于工具可靠清理跨尝试遗留的工作。 | `TaskRuntime.ownedTasks()`、`abortOwned()` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-51 | 历史位置上下文读取 | 读取某个可见历史条目时的模型上下文，与从该处分叉的起始视图一致，无需为只读检查实际创建新会话。 | `Conversation.context(context, { at })` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-52 | 双向游标分页 | 会话、记录、任务和 submission 扫描支持 ascending／descending；游标延续原顺序，不能混用反向参数。默认记录从新到旧，其余从旧到新。 | `ScanOrder`、`Conversation.entries()` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-53 | 任务时间与尝试耗时 | 任务 startedAt／endedAt 保存首次运行和终态墙钟时间；工具 durationMs 为该次实际执行的单调时钟耗时，未执行及被中断／取消的调用不填，旧记录也可能缺失。 | TaskRecord、pi.tool-result | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-54 | 共享模型访问入口 | 工具及 Hook 使用 Harness 的模型目录、认证和请求变换执行自己的模型调用，避免重复建立不一致的模型客户端。 | `ToolExecutionApi.models`、`HookApi.models` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-55 | Cloudflare SQLite 存储 | 在 SQLite-backed Durable Object 上以其存储事务提交会话，提供现成适配器，宿主无需自行实现 SQLite facade。 | `openDurableObjectSqliteStorage(ctx.storage)` | 实验／库 | [Durable][durable] |
+| DUR-56 | 增量上下文与有界缓存 | 重复读取同一会话仅扫描和推导新条目；空闲上下文及无人观察的文档默认十分钟后可释放，设置为 0 可在空闲或使用后释放，再访问时从存储加载。 | `contextRetentionMs`、`documentRetentionMs` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-57 | 存储故障关闭与可观察恢复 | 普通存储异常使整个 Harness 失败并关闭，后续调用和等待拒绝为 SessionFailed，观察流以 session_failed 结束；closed 告知完成原因。无自动重试，宿主可重开并用 requestId 恢复。 | `SessionFailed`、`harness.closed` | 实验／库 | [Durable][durable] |
+| DUR-58 | 请求错误与监听器隔离 | StorageRequestError 只让无效请求失败；用户监听器异常经 onReport 报告而不阻断其他监听器，回调事务失败回滚。调度基础提交或 registry snapshot 故障仍可使整个 Harness 失败。 | StorageRequestError、onReport | 实验／库 | [Durable][durable]、[Durable 更新记录][durlog] |
+| DUR-59 | 文件变更监听与按行扫描 | ExecutionEnv 可监听文件／目录、递归与排除路径，报告 overflow/error；Node 在 Windows 和网络／FUSE 文件系统轮询。scanLines 在环境内扫描行跨度，read 避免整文件载入。 | `FileSystem.watch()`、`BinaryReader.scanLines()` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-60 | 远程输出窗口与省略计数 | Shell 可在源端省略保留尾部以外的输出并报告 skipped；工具传递 outputWindow，使远程后端减少无用传输且保持截断统计。 | `ShellExecOptions.window`、`ToolExecutionApi.outputWindow` | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-61 | 活跃任务索引与规模控制 | 调度只遍历相关拥有关系和候选集合，结束任务仅在仍有后代活跃时保留索引，减少长驻 Harness 的历史任务内存与全表扫描开销。 | scheduler ownership indexes | 实验／库 | [Durable 更新记录][durlog] |
 
 ## 16 Client 服务客户端
 
@@ -586,7 +629,27 @@
 | EV-09 | 结果与会话归档 | 保存协议、预期队列、观测 JSONL、Vitest JSON、原始 Pi 会话及文本／JSON 比较报告，支持复查。 | `.eval/<run>/` | 开发工具 | [Evals][evals] |
 | EV-10 | 自定义场景和确定性评分 | 通过 describeEval、run 和 judge 定义任务与评分；低分作为实验数据，基础设施错误另行报告。 | evals 目录 | 开发工具 | [Evals][evals] |
 
-## 21 其他：扩展示例、实验应用、平台与工程支持
+## 21 Env 远程执行环境
+
+| 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
+| --- | --- | --- | --- | --- | --- |
+| ENV-01 | 远程执行与本地代理分离 | 文件和命令在远端运行，Durable worker、存储与模型凭据保留本地；实现与远端 NodeExecutionEnv 对齐的契约。 | RemoteExecutionEnv | 库 | [Env][env] |
+| ENV-02 | SSH 立即／惰性连接 | connectSsh 立即探测和部署；sshConnection 在首次操作时执行，连接失败成为该操作的错误，下一操作重新尝试。 | connectSsh、sshConnection | 库 | [Env][env] |
+| ENV-03 | 平台探测与守护进程部署 | 识别远端 OS 和架构，从随包二进制选择 Rust daemon；以 SHA-256 命名、缺失时部署且每次启动前校验。 | detectPlatform、deployDaemon、packagedDaemon | 库 | [Env][env]、[导出接口][envapi] |
+| ENV-04 | 主机密钥显式信任 | 扫描指纹供所有者独立核对，接受或移除后保存在应用独立 known-hosts 中；连接严格检查固定别名，不自动信任未知或已变密钥。 | scanHostKey、acceptHostKey、forgetHostKey | 库／需宿主交互 | [Env][env]、[导出接口][envapi] |
+| ENV-05 | SSH 连接约束 | 使用 BatchMode、严格 host-key 验证，禁用转发、共享连接及配置中的命令，不转发本地 locale，减少 SSH 用户配置对执行行为的意外影响。 | sshArguments、SshTarget | 库 | [Env][env] |
+| ENV-06 | 跨平台远程运行 | 支持 Linux、macOS、Android Termux、Windows 的 x86-64／arm64；Windows 探测部署经 PowerShell，字符串命令用 Git Bash，argv 命令直接执行。 | 远端 daemon + SSH | 平台支持 | [Env][env] |
+| ENV-07 | 路径与文件操作 | 按远端规则解析相对路径、home、file URI 和 Windows 驱动器路径；支持元数据、读写追加、截断、重命名、建删目录、临时目录及 fsync。 | RemoteExecutionEnv 文件接口 | 库 | [语义][envsem]、[协议][envproto] |
+| ENV-08 | 区间读取与目录分页 | 在远端打开文件句柄读取字节范围、扫描行跨度、分批取目录项；noFollow 可拒绝最终路径符号链接，避免大文件和目录全量传回。 | openBinaryReader、scanLines、openDirReader | 库 | [协议][envproto] |
+| ENV-09 | 命令执行与环境定制 | 支持 Shell 字符串或无 Shell argv，设置 cwd、环境继承、shellEnv 和超时；按 stdout／stderr 区分输出，完整超长结果可落盘远端。 | exec、spill、inheritEnv | 库 | [语义][envsem] |
+| ENV-10 | 输出窗口与传输背压 | 在远端合并节流输出，只传保留窗口并报告省略字节／换行；没有窗口时限制积压并反向减速命令，控制消息优先于批量输出。 | window、skipped、协议发送队列 | 库 | [协议][envproto] |
+| ENV-11 | 远程文件监听 | daemon 在文件旁执行快照差异与原生事件／轮询，支持递归和排除；失去原生覆盖会报告 overflow 并轮询，断连后新 daemon 重新建立监听并提示重扫。 | RemoteWatcher、watch | 库 | [语义][envsem]、[协议][envproto] |
+| ENV-12 | 取消与断线进程回收 | 单请求取消 exec 会终止进程组；cleanup 按杀进程结果收尾。每五秒 ping，daemon 在三十秒无字节或 stdin 关闭时清理其进程组并退出。 | Context 取消、cleanup、liveness | 库 | [协议][envproto] |
+| ENV-13 | 连接丢失与句柄失效 | 丢线请求以 lost:true 失败，后续请求可新建 daemon；旧文件句柄拒绝使用，不偷偷转到新连接或重放已经发出的副作用操作。 | Connection、isConnectionLost | 库 | [协议][envproto]、[导出接口][envapi] |
+| ENV-14 | 二进制分帧与并发请求 | 协议 v1 用长度前缀、请求 ID、JSON 元数据及原始二进制 payload，单帧上限 16 MiB；支持事件、取消、ping，并过滤 SSH 启动杂音。 | pi-env serve、Connection | 库 | [协议][envproto] |
+| ENV-15 | 执行环境一致性验证 | 仓库提供 Durable conformance、随机操作差分及真实 SSH 可选测试，比较 RemoteExecutionEnv 与同平台 NodeExecutionEnv 行为。 | PI_ENV_DAEMON、PI_ENV_SSH_HOST | 开发测试支持 | [Env][env] |
+
+## 22 其他：扩展示例、实验应用、平台与工程支持
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -670,7 +733,7 @@
 | OTH-78 | 整进程 Docker 隔离方案 | 把 Pi、工具和扩展全部放入容器，通过挂载与网络配置决定可访问资源；这是外部隔离方案。 | Docker | 外部集成指南 | [隔离运行][containers] |
 | OTH-79 | Docker Sandboxes 凭据代理方案 | 管理沙箱运行完整 Pi，并由代理替换占位凭据，使真实 provider key 可留在宿主。 | Docker Sandboxes | 外部集成指南 | [隔离运行][containers] |
 | OTH-80 | OpenShell 策略隔离方案 | 通过外部网关与 sandbox 管理文件、进程、网络、凭据和推理路由，适合需要系统级边界的运行方式。 | OpenShell | 外部集成指南 | [隔离运行][containers] |
-| OTH-81 | 安装与自更新 | 提供 macOS、Linux、Windows 安装入口和 npm 安装方式；`pi update` 更新自身，包管理器安装则走对应升级路径。 | installer、`pi update` | 工程／产品支持 | [项目 README][root]、[CLI][cli] |
+| OTH-81 | 安装与自更新 | 提供多平台安装入口和 npm 安装；managed 安装的 pi update 仅保留新版本和升级前版本，避免长期堆积；包管理器安装走其对应升级路径。 | installer、`pi update` | 工程／产品支持 | [项目 README][root]、[更新记录][clilog] |
 | OTH-82 | Nix 安装与固定版本 | 使用 stable、tag 或源码版本构建／安装，离线构建用仓库固定的模型目录修订。 | Nix flake | 工程支持 | [项目 README][root] |
 | OTH-83 | 独立二进制与源码归档 | 发布流程可构建含运行资产的独立程序，并从带校验信息的发行源码重建。 | scripts/build-binaries.sh | 工程支持 | [项目 README][root] |
 | OTH-84 | 依赖供应链检查 | 固定直接外部依赖，检查锁文件及安装锁，默认忽略依赖生命周期脚本，并进行相应审计。 | npm scripts、install-lock | 工程支持 | [项目 README][root]、[开发规范][rules] |
@@ -678,7 +741,7 @@
 | OTH-86 | 模型目录生成 | 从生成脚本维护模型目录和各 provider 数据，避免直接手改生成文件，并提供固定目录更新流程。 | ai/scripts/generate-models.ts | 工程支持 | [开发规范][rules]、[AI][ai] |
 | OTH-87 | 安装与发布验证 | 仓库提供本地包构建、隔离 consumer 安装及 release smoke 流程，检查 npm／Bun 分发路径。 | release:local 等 | 工程支持 | [项目 README][root] |
 | OTH-88 | 安装遥测与分析开关 | 区分匿名安装／更新报告及部分归因头，与实验首启分析 opt-in；这些设置不同于 Telemetry 库的接口。 | enableInstallTelemetry、enableAnalytics | 可配置支持 | [设置][settings] |
-| OTH-89 | 当前仓库中文离线导览 | 本地 docs/doc-html 提供离线源码、功能、目录、历史和架构浏览；属于本仓库附加文档，不是 Pi CLI 内置界面。目录当时存在未提交改动，本文不声称其生成统计与 HEAD 完全一致。 | `docs/doc-html/index.html` | 本地文档产物 | [离线导览][offlineguide] |
+| OTH-89 | 当前仓库中文离线导览 | docs/doc-html 提供离线源码、功能、目录、历史和二次开发导览，已随本地文档提交保留；属于本仓库附加文档，生成内容是否同步需单独核查，不能等同于当前源码事实。 | `docs/doc-html/index.html` | 本地文档产物 | [离线导览][offlineguide] |
 
 ## 能力边界与容易混淆的地方
 
@@ -698,13 +761,25 @@
 | 普通会话分叉 | 分叉保存对话分支，不自动恢复 Git 工作目录。 | 代码恢复另见 git-checkpoint 示例。 | [会话][sessions]、[示例][examples] |
 | Durable 存储锁 | 库要求一次由一个进程拥有存储，不自带跨进程锁；实验 coding-agent 宿主另加目录锁。 | 库的耐久性与宿主的并发所有权保护分开说明。 | [Durable][durable]、[Durable 应用][durableapp] |
 | 实验 Client／Server 发行状态 | 对应 coding-agent 入口和实验子路径从 npm 包与 standalone 排除，需源码及实验开关。 | 不把源码可见命令宣称为普通发行 CLI 命令。 | [实验服务][services] |
-| 实验服务尚缺能力 | 服务层暂缺树导航、nextRun、对子会话的 keyed 暴露，以及活动上下文外历史分页等。 | 不从稳定 CLI 或 Durable 原语推断服务层也有同等接口。 | [实验服务][services] |
+| 实验服务尚缺能力 | 服务层 README 仍列出树导航、nextRun、对子会话的 keyed 暴露和活动上下文外历史分页等缺项；Durable 底层已支持双向存储扫描。 | 底层分页不等于实验服务已暴露历史分页接口。 | [实验服务][services] |
 | 实验服务认证 | Unix 实验传输没有实现对端认证和完整授权；工作区授权等仍是继续建设点。 | serverId 校验和 attachment 防串路不是账户认证。 | [Server][server]、[Protocol][protocol] |
-| Durable 独立 TUI 差异 | 文档明确尚无会话列表选择、树／fork、普通扩展、模板、图片和 `/login`。 | 复用组件不表示复制了普通 CLI 的全部功能。 | [Durable 应用][durableapp] |
+| Durable 独立 TUI 差异 | 应用 README 仍将图片输入等列为缺项，但 Durable 库的 read 已支持图像；另缺会话选择器、树／fork、普通扩展、模板和 `/login`。 | 工具读取图像不等于独立 TUI 已支持图片粘贴或附件；库和界面分别核对。 | [Durable 应用][durableapp] |
 | Vacation 搜索 | search 使用预置演示结果。 | 仅列为持久后台任务示范，不列为旅行搜索、订票或实时价格能力。 | [Vacation][vacation] |
 | Chord RPC 规划 | 当前具备远程服务绑定和状态复制，但 README 将对称 RPC peer 列为计划方向。 | 不把 PLANNING.md 全部内容当作已交付实现。 | [Chord][chord] |
 | 外部生态 | Slack／聊天自动化指向独立 pi-chat 仓库；会话发布到 Hugging Face 使用外部工具。 | 不作为本仓库内置业务模块。 | [项目 README][root] |
 | 其他代理常见功能 | 普通内置工具清单未提供通用浏览器自动化、专用网页搜索、语音转写、邮件客户端或定时任务调度模块。 | 可借 Shell、MCP、技能或扩展实现，但不能将可扩展性写成现成功能。 | [CLI][cli]、[扩展][ext] |
+
+## 本次更新记录（2026-10-12）
+
+| 范围 | 据实调整 |
+| --- | --- |
+| 核对基线 | 从原清单 517e9fdb5 对比到当前合并提交 fe2b9da4c，结合当前 README、CHANGELOG、配置与接口源码；未联网拉取或替换分支。 |
+| 新模块 | 新增 Env 远程执行环境，原“其他”顺延为 22，保留既有功能 ID 方便对照。 |
+| CLI 与集成 | 更新工具增减和 MCP 通配规则、状态报告、取消标记、耗时、输出显示、严格主题校验及 Schema。 |
+| 模型 | 更正 Azure provider 标识与 Foundry 支持，补充 Decisions、视觉分类、Haiku 5.5、llama.cpp 原生决策模型与认证变化。 |
+| 执行与持久化 | 新增 Codemode portable／remote／inline；补充 Durable 图片、嵌套工具、调用者范围、历史读取、存储与缓存、故障关闭。 |
+| 文档迁移 | 来源链接按 qishu/功能清单 的位置重新计算；原未提交导览说明更新为当前状态。 |
+| 发布边界 | 库能力以当前源码为准；Durable 新增嵌套／图像／缓存、Codemode remote／inline、严格主题检查与 TUI 新光标行为含 Unreleased 内容。库功能不自动等同于 CLI 或实验 TUI 功能。见 [Durable][durlog]、[Codemode][codelog]、[TUI][tuilog] 更新记录。 |
 
 ## 来源与维护说明
 
@@ -713,60 +788,73 @@
 | 首要来源 | 各 package README、coding-agent 的 CLI／设置／扩展／SDK／RPC／MCP 等参考文档，并核对工具工厂、提供商注册与实验源码入口。 |
 | 来源优先级 | 当前源码和接口声明优先于旧示例中的过时片段；出现文档冲突时按具体调用层级说明，不把一层能力外推到另一层。 |
 | 提供商口径 | 模块 12 按接入家族归并区域 provider，非模型数量统计；模型清单和可用账户能力以实际目录与凭据为准。 |
-| 示例口径 | 模块 21 将相近的展示示例及 SDK／Durable 演练集归并；示例 API、角色和提示不是普通 CLI 新增的独立内置模块。 |
+| 示例口径 | 模块 22 将相近的展示示例及 SDK／Durable 演练集归并；示例 API、角色和提示不是普通 CLI 新增的独立内置模块。 |
 | 本地导览口径 | 现有 HTML 导览仅用于辅助检查遗漏；最终功能说明主要回链到原始包文档，不把导览内自动文件归属索引计作独立功能。 |
 | 更新方式 | 升级仓库后重新核对 CLI 选项、工具集合、内置扩展、provider 注册、各包 README 与 experimental TODO，再更新版本口径和对应行。 |
 
-[root]: ../README.md
-[rules]: ../AGENTS.md
-[usage]: ../packages/coding-agent/docs/usage.md
-[cli]: ../packages/coding-agent/docs/cli.md
-[slash]: ../packages/coding-agent/docs/slash-commands.md
-[json]: ../packages/coding-agent/docs/json.md
-[keys]: ../packages/coding-agent/docs/keybindings.md
-[settings]: ../packages/coding-agent/docs/settings.md
-[sessions]: ../packages/coding-agent/docs/sessions.md
-[compact]: ../packages/coding-agent/docs/compaction.md
-[models]: ../packages/coding-agent/docs/models.md
-[virtual]: ../packages/coding-agent/docs/virtual-models.md
-[llama]: ../packages/coding-agent/docs/llama-cpp.md
-[config]: ../packages/coding-agent/docs/configuration.md
-[security]: ../packages/coding-agent/docs/security.md
-[skills]: ../packages/coding-agent/docs/skills.md
-[templates]: ../packages/coding-agent/docs/prompt-templates.md
-[themes]: ../packages/coding-agent/docs/themes.md
-[packages]: ../packages/coding-agent/docs/packages.md
-[ext]: ../packages/coding-agent/docs/extensions.md
-[examples]: ../packages/coding-agent/examples/extensions/README.md
-[tools]: ../packages/coding-agent/src/core/tools/index.ts
-[mcp]: ../packages/coding-agent/docs/mcp.md
-[mcplib]: ../packages/mcp/README.md
-[code]: ../packages/coding-agent/docs/codemode.md
-[codelib]: ../packages/codemode/README.md
-[sdk]: ../packages/coding-agent/docs/sdk.md
-[rpc]: ../packages/coding-agent/docs/rpc.md
-[rpccmd]: ../packages/coding-agent/docs/rpc-commands.md
-[rpcui]: ../packages/coding-agent/docs/rpc-extension-ui.md
-[agent]: ../packages/agent/README.md
-[ai]: ../packages/ai/README.md
-[allproviders]: ../packages/ai/src/providers/all.ts
-[tui]: ../packages/tui/README.md
-[chord]: ../packages/chord/README.md
-[durable]: ../packages/durable/README.md
-[client]: ../packages/client/README.md
-[server]: ../packages/server/README.md
-[protocol]: ../packages/protocol/README.md
-[telemetry]: ../packages/telemetry/README.md
-[evals]: ../packages/evals/README.md
-[subagents]: ../packages/coding-agent/examples/extensions/subagent/README.md
-[durableapp]: ../packages/coding-agent/src/experimental/durable/README.md
-[vacation]: ../packages/coding-agent/src/experimental/vacation/README.md
-[services]: ../packages/coding-agent/src/experimental/services/README.md
-[nativewin]: ../packages/tui/native/win32/README.md
-[nativemac]: ../packages/tui/native/darwin/README.md
-[nativelinux]: ../packages/tui/native/linux/README.md
-[terminal]: ../packages/coding-agent/docs/terminal-setup.md
-[tmux]: ../packages/coding-agent/docs/tmux.md
-[termux]: ../packages/coding-agent/docs/termux.md
-[containers]: ../packages/coding-agent/docs/containerization.md
-[offlineguide]: doc-html/README.md
+[root]: ../../README.md
+[rules]: ../../AGENTS.md
+[usage]: ../../packages/coding-agent/docs/usage.md
+[cli]: ../../packages/coding-agent/docs/cli.md
+[slash]: ../../packages/coding-agent/docs/slash-commands.md
+[json]: ../../packages/coding-agent/docs/json.md
+[keys]: ../../packages/coding-agent/docs/keybindings.md
+[settings]: ../../packages/coding-agent/docs/settings.md
+[sessions]: ../../packages/coding-agent/docs/sessions.md
+[compact]: ../../packages/coding-agent/docs/compaction.md
+[models]: ../../packages/coding-agent/docs/models.md
+[virtual]: ../../packages/coding-agent/docs/virtual-models.md
+[llama]: ../../packages/coding-agent/docs/llama-cpp.md
+[config]: ../../packages/coding-agent/docs/configuration.md
+[security]: ../../packages/coding-agent/docs/security.md
+[skills]: ../../packages/coding-agent/docs/skills.md
+[templates]: ../../packages/coding-agent/docs/prompt-templates.md
+[themes]: ../../packages/coding-agent/docs/themes.md
+[packages]: ../../packages/coding-agent/docs/packages.md
+[ext]: ../../packages/coding-agent/docs/extensions.md
+[examples]: ../../packages/coding-agent/examples/extensions/README.md
+[tools]: ../../packages/coding-agent/src/core/tools/index.ts
+[mcp]: ../../packages/coding-agent/docs/mcp.md
+[mcplib]: ../../packages/mcp/README.md
+[code]: ../../packages/coding-agent/docs/codemode.md
+[codelib]: ../../packages/codemode/README.md
+[sdk]: ../../packages/coding-agent/docs/sdk.md
+[rpc]: ../../packages/coding-agent/docs/rpc.md
+[rpccmd]: ../../packages/coding-agent/docs/rpc-commands.md
+[rpcui]: ../../packages/coding-agent/docs/rpc-extension-ui.md
+[agent]: ../../packages/agent/README.md
+[ai]: ../../packages/ai/README.md
+[allproviders]: ../../packages/ai/src/providers/all.ts
+[tui]: ../../packages/tui/README.md
+[chord]: ../../packages/chord/README.md
+[durable]: ../../packages/durable/README.md
+[client]: ../../packages/client/README.md
+[server]: ../../packages/server/README.md
+[protocol]: ../../packages/protocol/README.md
+[telemetry]: ../../packages/telemetry/README.md
+[evals]: ../../packages/evals/README.md
+[subagents]: ../../packages/coding-agent/examples/extensions/subagent/README.md
+[durableapp]: ../../packages/coding-agent/src/experimental/durable/README.md
+[vacation]: ../../packages/coding-agent/src/experimental/vacation/README.md
+[services]: ../../packages/coding-agent/src/experimental/services/README.md
+[nativewin]: ../../packages/tui/native/win32/README.md
+[nativemac]: ../../packages/tui/native/darwin/README.md
+[nativelinux]: ../../packages/tui/native/linux/README.md
+[terminal]: ../../packages/coding-agent/docs/terminal-setup.md
+[tmux]: ../../packages/coding-agent/docs/tmux.md
+[termux]: ../../packages/coding-agent/docs/termux.md
+[containers]: ../../packages/coding-agent/docs/containerization.md
+[offlineguide]: ../../docs/doc-html/README.md
+
+[env]: ../../packages/env/README.md
+[envsem]: ../../packages/env/docs/semantics.md
+[envproto]: ../../packages/env/docs/protocol.md
+[envapi]: ../../packages/env/src/index.ts
+[providers]: ../../packages/coding-agent/docs/providers.md
+[schemas]: ../../packages/coding-agent/scripts/generate-schemas.ts
+[clilog]: ../../packages/coding-agent/CHANGELOG.md
+[ailog]: ../../packages/ai/CHANGELOG.md
+[agentlog]: ../../packages/agent/CHANGELOG.md
+[durlog]: ../../packages/durable/CHANGELOG.md
+[tuilog]: ../../packages/tui/CHANGELOG.md
+[codelog]: ../../packages/codemode/CHANGELOG.md
