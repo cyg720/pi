@@ -2,6 +2,9 @@
 // Seventh field adds primary evidence documents to the module's overview document.
 export const additionalFeatures = {
   coding: [
+    ['program-status', '终端程序状态与取消结果', ['modes/interactive/program-status-reporter.ts','core/agent-session.ts'], '向支持 OSC 7501 的终端报告工作、等待交互、完成或失败；agent_settled 的 aborted 区分取消与完成。', 'PI_PROGRAM_STATUS；agent_settled.aborted', '状态协议依赖终端能力；会话最终通知仍在自动重试与压缩处理之后。', ['packages/coding-agent/docs/terminal-setup.md','packages/coding-agent/CHANGELOG.md']],
+    ['tool-selection', '默认工具的增减选择', ['cli/args.ts','core/sdk.ts'], '在默认工具集合上添加或排除指定工具，例如 -t +codemode,-write。', '--tools +name,-name', '与直接列名称替换默认集合区分；最终工具还受排除与暴露设置约束。', ['packages/coding-agent/docs/cli.md']],
+    ['config-schemas', '配置与主题 Schema 校验', ['core/settings-schema.ts','core/keybindings-schema.ts','modes/interactive/theme/theme-schema.ts'], '用显式 Schema 校验设置、快捷键与主题。主题拒绝顶层和 colors/export 内未知属性。', 'schemas/theme.schema.json；vars', '旧主题的自定义颜色应放 vars，更新 $schema 路径并清理不支持的元数据。', ['packages/coding-agent/docs/themes.md','packages/coding-agent/CHANGELOG.md']],
     ['builtin', '内置扩展装配与替换', ['extensions/index.ts','core/extensions/loader.ts','core/resource-loader.ts'], 'CLI 把 llama.cpp、codemode、tool-search、MCP 作为内置扩展装配；同名用户扩展可替换可替换项。', 'builtInExtensions；pi config；builtin: 资源设置', 'SDK 默认不加载内置扩展；宿主需要显式加入对应工厂。', ['packages/coding-agent/docs/sdk.md','packages/coding-agent/docs/mcp.md']],
     ['mcp-config', 'MCP 分层配置与服务器注册', ['core/mcp-servers.ts','extensions/mcp/config.ts','extensions/mcp/index.ts'], '合并用户 mcp.json、已信任项目配置与扩展注册，验证服务器及单工具暴露设置。', 'pi.registerMcpServer；~/.pi/agent/mcp.json；.pi/mcp.json', '同名文件配置优先于扩展；项目仅覆盖开关或暴露时保留用户端连接配置。项目来源受信任控制。', ['packages/coding-agent/docs/mcp.md']],
     ['mcp-runtime', 'MCP 后台连接、等待与重连', ['extensions/mcp/runtime.ts','extensions/mcp/runtime.lazy.ts'], '会话启动时后台连接服务器，按需等待、更新工具目录，并在断连后下一次调用重连。', 'session_start；MCP 工具调用；/reload', '首个 prompt 只为 direct 服务器等待；调用工具不会因临时错误盲目重试，资源读取可重试。', ['packages/coding-agent/docs/mcp.md']],
@@ -33,6 +36,7 @@ export const additionalFeatures = {
     ['testing', '内存传输与协议测试支撑', ['transports/in-memory.ts','testing/index.ts'], '在进程内成对交换 MCP 消息，为客户端与适配器验证提供无需网络的传输。', 'createInMemoryTransportPair', '用于测试与宿主适配，不是生产外部服务器。']
   ],
   codemode: [
+    ['portable', '可移植、同线程与远程沙箱', ['portable.ts','cloudflare.ts','runtime/inline.ts','runtime/remote.ts','runtime/vm.ts','runtime/execution.ts'], '用统一 CodemodeSandboxBase 契约支持 Node Worker、同线程 VM 与远程 isolate 三种部署方式。', 'InlineCodemodeSandbox；RemoteCodemodeSandbox；CodemodeSandboxDurableObject', 'portable 入口无 Node 导入；远程 VM 执行脚本，工具仍在调用者一侧执行；同线程 interruptBudget 限制不等待工具的计算。', ['packages/codemode/README.md','packages/codemode/CHANGELOG.md']],
     ['source', '脚本格式、选项行与语法契约', ['source.ts'], '解析原始脚本和首行 @options，保留行号，并提供支持语法约束模型的 Lark grammar。', 'parseCodemodeSource；CODEMODE_SOURCE_GRAMMAR', '解析器不自行执行 timeout/output 选项；宿主决定策略。'],
     ['declarations', '工具 TypeScript 声明与标识符映射', ['declarations.ts','identifier.ts'], '从 JSON Schema 生成模型可读工具声明，规范化工具与命名空间标识符。', 'renderDeclarations；toCodemodeIdentifier', '声明不是运行时参数校验；递归或远程 schema 引用降为 unknown。'],
     ['host', '沙箱宿主、工具桥接与截止时间', ['index.ts','runtime/host.ts','runtime/protocol.ts','types.ts'], '每次 execute 创建 Worker 和独立 VM，向宿主转发工具消息并管理取消、超时与关闭。', 'CodemodeSandbox.execute；close', '脚本错误以结果返回；未等待工具在结束时取消，外部操作副作用不自动回滚。'],
@@ -42,6 +46,9 @@ export const additionalFeatures = {
     ['wasm', 'WASM 编译缓存与打包宿主接入', ['wasm.ts','index.ts'], '加载缓存 QuickJS wasm，允许打包宿主显式传入 wasm 与 Worker 位置。', 'loadQuickJSWasm；wasm；workerUrl', '包资源路径不一定存在于单文件可执行程序，打包宿主需提供相应入口。']
   ],
   durable: [
+    ['nested-output', '持久嵌套调用与结构化输出', ['harness/tool.ts','harness/output.ts','harness/types.ts'], 'executeTool 将子调用记录为调用者拥有的 pi.tool 任务，经过校验、hook、输出限制和重放策略；structuredOutput 给程序调用者使用。', 'ToolExecutionApi.executeTool；structuredOutputSchema；ToolRegistration.callers', '模型结果使用 output；嵌套调用以 key 重新关联，调用者结束前取消遗留子调用。modelTools 与 callers 分开控制模型声明和调用资格。', ['packages/durable/CHANGELOG.md']],
+    ['failure-retention', '存储故障与有界缓存', ['session/session.ts','errors.ts','harness/scheduler.ts'], '存储异常使 Session 失败关闭并拒绝后续操作；未被观察的文档按 documentRetentionMs 释放，活跃工作决定调度索引保留范围。', 'Session.closed；SessionFailed；documentRetentionMs', 'StorageRequestError 只使当前调用失败；普通存储错误不由 Session 自动重试。文档缓存默认十分钟，0 表示使用后释放，再次访问从存储加载。', ['packages/durable/CHANGELOG.md']],
+    ['images', '图像读取与可选 WASM 处理器', ['images/','tools/image.ts','tools/image-processor.ts','tools/read.ts'], 'read 返回模型支持且符合限制的图像，注入 images 处理器可旋转、转换和缩小图片。', 'createCodingTools({ images })；images/node；images/cloudflare', 'Node loader 在 worker 中处理图像，空闲 30 秒后退出；模型无图像输入能力时返回占位诊断。', ['packages/durable/CHANGELOG.md']],
     ['registry', '扩展注册、工具覆写与在线替换', ['harness/registry.ts','harness/define.ts'], '把工具、提示区块、hook、wrapper 与任务定义组成命名扩展，支持同名替换。', 'createRegistry；defineExtension；defineTool；wrapTool', '运行中的阶段保留已解析代码，新阶段使用新注册表；会话保存名字而不是代码对象。'],
     ['agent-config', '逐会话模型、工具和工作目录配置', ['harness/agent.ts','harness/types.ts'], '在 pi.agent 文档保存会话级 agent 选择，继承或修改宿主默认配置。', 'Conversation.configure；agent；extensions/tools 选择', '请求准备时固定模型和提示；当前 cwd 与扩展在后续工具阶段可重新解析。'],
     ['prompt', '提示区块、上下文投影与位置化系统条目', ['harness/prompt.ts','harness/json.ts'], '按已选扩展组织 system sections、会话说明、上下文重置与压缩投影。', 'section；Conversation.reset；pi.system', '提示或工具变化被记录成系统条目；只发变化可保留提供商缓存，历史不会被 reset 物理删除。'],
@@ -54,8 +61,12 @@ export const additionalFeatures = {
     ['task-graph', '任务所有权、子任务等待与实时任务图', ['harness/task-graph.ts','harness/scheduler.ts','tasks.ts'], '观察活跃任务状态及 owner/子会话关系，调度 allSettled 或 failFast 等待并收尾。', 'taskGraph；watchTaskGraph；waiting；completing', '后台任务构成取消与空闲边界；任务图显示活跃任务，不替代完整审计历史。'],
     ['subagents', '持久子会话、背景任务与取消传播', ['harness/harness.ts','harness/scheduler.ts','session/transaction.ts'], '工具在原子提交中创建 task-owned 子会话，由所有权传播终止；背景锚点让子会话独立继续。', 'createConversation ownership；abort；background: true', '安全重放需复用子会话和 requestId；前台和后台的取消/空闲行为不同。'],
     ['usage', '按模型、工具与会话累计用量', ['harness/usage.ts'], '把生成、压缩、嵌套工具的 token 和费用写入 pi.usage，支持会话和整个 Harness 汇总。', 'Harness.usage；pi.usage', '失败或取消但已有用量的尝试也计入；数值依赖提供商实际报告。'],
-    ['coding-tools', 'Durable 编码工具与环境隔离', ['tools/'], '提供 read/write/edit/bash 与 CodingTools 扩展，通过逐调用的 ExecutionEnv 访问文件与进程。', 'CodingTools；createReadTool；createBashTool', '当前 README 声明 read 不支持图像；文件修改按 env.id 与路径串行，避免并发覆盖。'],
+    ['coding-tools', 'Durable 编码工具与环境隔离', ['tools/'], '提供 read/write/edit/bash/powershell，通过逐调用的 ExecutionEnv 访问文件与进程。', 'createCodingTools；createReadTool；createBashTool', 'read 支持图像和可选处理器；文件修改按 env.id 与路径串行。bash/powershell 非零退出返回带 exit_code 诊断的错误结果。'],
     ['watch', '文件监视、字节解码与大文件扫描', ['env/node-watch.ts','env/decode.ts','env/line-scan.ts','env/node.ts'], '为执行环境提供可靠监视、分块解码、行扫描、目录分页与字节范围读取。', 'NodeExecutionEnv；openBinaryReader；openDirReader', 'Windows 监视采用轮询以避免目录句柄阻止重命名；实际平台分支以实现为准。']
+  ],
+  env: [
+    ['remote', '远程文件、命令与连接', ['remote-env.ts','connection.ts','watch.ts','errors.ts','index.ts'], '通过分帧 stdio 协议连接远端 Rust daemon，为 Durable 工具提供远程 ExecutionEnv。', 'RemoteExecutionEnv；Connection', '远端执行文件和命令操作，Durable worker、存储与凭据留在本机；错误文本可能与本地环境不同。', ['packages/env/docs/protocol.md','packages/env/docs/semantics.md']],
+    ['ssh', 'SSH 主机信任与 daemon 部署', ['ssh.ts'], '发现远端系统、部署按 SHA-256 命名的 daemon，并在启动前校验；也可在首个操作时惰性连接。', 'scanHostKey；acceptHostKey；connectSsh；sshConnection', '主机指纹由用户带外确认；严格检查应用独立 known-hosts，禁用转发。首次操作失败后由下一操作重新尝试连接。']
   ],
   ai: [
     ['chatgpt-login', 'OpenAI ChatGPT 登录与 OAuth 回调', ['auth/oauth/openai-chatgpt.ts','auth/oauth/callback-server.ts','providers/openai.ts'], '让 OpenAI 提供商使用 ChatGPT 登录凭据，并支持浏览器回调处理。', '/login openai；OpenAI OAuth 子路径', '认证方法选择与模型服务不同；deviceId 和凭据由产品层配置存储。'],

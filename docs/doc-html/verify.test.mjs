@@ -100,7 +100,7 @@ test('生成版本与当前源码一致，新包和所有包 src 独立核验无
   const packages = paths.filter(p => /^packages\/[^/]+\/package\.json$/.test(p));
   assert.equal(data.packages.length, packages.length);
   for (const path of paths.filter(p => /^packages\/[^/]+\/src\//.test(p))) assert.ok(data.catalog.files[path], path);
-  for (const id of ['mcp-client','mcp-oauth-flow','codemode-host','codemode-store','coding-mcp-runtime','coding-codemode','coding-tool-search','coding-loadout','coding-fullscreen','durable-generation','durable-inbox','durable-subagents','durable-task-graph','engineering-model-hydration','engineering-install-lock']) {
+  for (const id of ['env-remote','env-ssh','codemode-portable','coding-program-status','coding-tool-selection','coding-config-schemas','durable-images','durable-nested-output','durable-failure-retention','mcp-client','mcp-oauth-flow','codemode-host','codemode-store','coding-mcp-runtime','coding-codemode','coding-tool-search','coding-loadout','coding-fullscreen','durable-generation','durable-inbox','durable-subagents','durable-task-graph','engineering-model-hydration','engineering-install-lock']) {
     const f = data.catalog.features.find(f => f.id === id);
     assert.ok(f, id);
     assert.equal(f.evidence, '中文能力解说', id);

@@ -11,6 +11,7 @@ export const featureModules = [
   ['tui', 'TUI · 终端界面', 'packages/tui/src/', '渲染、布局、编辑、补全、键鼠输入和终端能力。', '库能力', 'packages/tui/README.md'],
   ['chord', 'Chord · 服务与插件组合', 'packages/chord/src/', 'Facet 组合、服务绑定、复制状态与不可变 delta。', '库能力', 'packages/chord/README.md'],
   ['durable', 'Durable · 持久任务与文档', 'packages/durable/src/', '提交优先的会话、任务、模型生成、子智能体与存储。', '实验性', 'packages/durable/README.md'],
+  ['env', 'Env · 远程执行环境', 'packages/env/src/', '通过 SSH 与远端 Rust daemon 执行文件和进程操作，Durable 与凭据留在本机。', '实验性', 'packages/env/README.md'],
   ['client', 'Client · 远程客户端', 'packages/client/src/', '实验性服务协议的连接、请求与订阅客户端。', '实验性', 'packages/client/README.md'],
   ['server', 'Server · 会话服务端', 'packages/server/src/', '实验性连接、会话路由与 attachment 生命周期。', '实验性', 'packages/server/README.md'],
   ['protocol', 'Protocol · 通信协议', 'packages/protocol/src/', '消息信封、CBOR 编码和字节流分帧。', '实验性', 'packages/protocol/README.md'],

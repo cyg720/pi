@@ -50,6 +50,11 @@ export const chapters = [
     { title: '验证扩展的最小矩阵', text: '先用 hello 理解契约，再给目标扩展设计：正常输入、schema 错误、execute 抛错、取消、并发、重载、分支恢复、print/JSON 无 UI 的用例。在 coding-agent/test/suite 下测试时遵循仓库 harness + faux provider，不调用真实付费模型。扩展本身运行在 Pi 进程权限下；事件拦截不是通用操作系统沙箱。', refs: [['packages/coding-agent/test/suite/README.md', ''], ['packages/coding-agent/test/suite/harness.ts', ''], ['packages/coding-agent/docs/containerization.md', '']] }
   ]},
   { id: 'advanced', title: '服务与持久化进阶', eyebrow: '07 / BEYOND THE CLI', intro: '看清当前默认主线与独立、实验性组件的边界。', sections: [
+    { title: '本次同步：1.1.0 与后续未发布改动', text: '本地包版本为 1.1.0，当前提交还包含 Unreleased 改动。新增 Env 远程执行包；Durable 新增嵌套工具、结构化输出、图像处理和文档缓存保留策略；codemode 增加 portable、同线程和远程沙箱。版本号不能替代源码提交，以下说明以本页快照为准。', refs: [['packages/durable/CHANGELOG.md', '## [Unreleased]'], ['packages/codemode/CHANGELOG.md', '## [Unreleased]'], ['packages/env/README.md', 'RemoteExecutionEnv']] },
+    { title: 'Env：工具远端执行，Harness 留在本机', text: 'RemoteExecutionEnv 通过 Connection 与远端 Rust daemon 交换分帧消息，使 Durable 的文件和命令工具运行在另一台机器。connectSsh 探测平台、部署并校验 daemon；sshConnection 延迟到首个操作时连接。用户先带外确认主机指纹，应用使用独立 known-hosts。它不是 CLI JSONL RPC，也不是 Pi service 协议。', refs: [['packages/env/README.md', 'connectSsh'], ['packages/env/docs/protocol.md', ''], ['packages/env/src/remote-env.ts', '']] },
+    { title: 'Durable：嵌套工具与错误边界变化', text: '工具通过 api.executeTool 调用子工具；子调用是持久 pi.tool 任务，以 key 在安全重放时重新关联，输出经过 schema 和容量检查。面向模型的 ToolExecutionResult.content 改名为 output，程序使用 structuredOutput。普通存储异常使 Session 失败关闭；StorageRequestError 只拒绝当前调用。接入新版前应核对这些破坏性变更。', refs: [['packages/durable/CHANGELOG.md', 'ToolExecutionResult.content'], ['packages/durable/src/harness/tool.ts', ''], ['packages/durable/src/errors.ts', '']] },
+    { title: 'Durable：图像与内存保留', text: 'read 可直接返回符合模型限制的 PNG、JPEG、GIF、WebP；注入 images 可旋转、转换与缩小。images/node 的处理在 worker 中完成，空闲 30 秒退出。文档缓存默认十分钟未使用且未被观察后释放；documentRetentionMs: 0 在使用后释放，下一次再从存储读取。调度所有权索引也只为活跃工作保留必要关系。', refs: [['packages/durable/CHANGELOG.md', 'documentRetentionMs'], ['packages/durable/src/images/node.ts', ''], ['packages/durable/src/session/session.ts', '']] },
+    { title: 'codemode：三种沙箱宿主', text: '默认 CLI 仍使用 Node Worker 沙箱。库新增 InlineCodemodeSandbox 供没有 worker 的环境使用，以 interruptBudget 限制连续计算；RemoteCodemodeSandbox 将 VM 放在远端 isolate，工具留在调用者进程。Cloudflare Durable Object 提供远端实现，portable 入口不引入 Node。它们共享 CodemodeSandboxBase，但部署与隔离边界不同。', refs: [['packages/codemode/README.md', ''], ['packages/codemode/src/portable.ts', ''], ['packages/codemode/src/cloudflare.ts', '']] },
     { title: '两种 RPC 不能混为一谈', text: 'CLI 的 RPC 模式在 stdin/stdout 上传输 JSONL。packages/client、server、protocol 则是实验性 Pi service 协议：具有 serverId、sessionId、attachmentId 路由，并使用长度前缀与 CBOR 帧。不能因为两边都提供远程控制，就把它们画成同一条默认调用链。', refs: [['packages/coding-agent/docs/rpc.md', ''], ['packages/protocol/README.md', 'Each wire frame'], ['packages/client/README.md', '']] },
     { title: 'Chord 解决的是应用组合', text: 'Chord 是可独立使用的包，不依赖其他 Pi 工作区包。插件中的 facet 声明提供和依赖的服务，host 校验依赖图，按提供者先于消费者的顺序激活，并反向释放。服务既可在本进程内使用，也可由应用适配器提供远程边界；状态复制与 delta 跟踪属于它的能力范围。它与 CLI 的 ExtensionAPI 不是同一个注册接口。', refs: [['packages/chord/README.md', '## What Chord is for']] },
     { title: 'Protocol 路由，Chord 解释服务', text: 'protocol 校验路由信封、strict-JSON 边界和帧格式；服务调用、服务目录、订阅快照与增量语义由 Chord 处理。server 验证活跃 attachment 路由，业务 payload 交给拥有服务的应用解释。真实 Session 和 Harness 留在所属进程，不跨进程传递 JavaScript 对象。', refs: [['packages/protocol/README.md', 'Chord owns'], ['packages/server/README.md', 'Applications supply']] },
@@ -76,6 +81,7 @@ export const packageNotes = {
   tui: '呈现层：终端组件、输入编辑、自动补全与差分渲染。',
   chord: '独立应用组合运行时：facet、service、复制状态、delta 与取消上下文。',
   durable: '实验性持久 Agent Harness：逐会话配置、生成/工具任务、队列、子会话、Watch 与内存/JSONL/SQLite 存储。',
+  env: 'Durable 远程执行环境：SSH 信任与 daemon 部署、分帧连接、远端文件/进程操作；Harness 与凭据留在本机。',
   protocol: '实验性远程协议的路由信封、CBOR 编码与字节流分帧。',
   client: '实验性协议客户端：请求关联、服务订阅、连接与 attachment 路由。',
   server: '实验性本地服务端：连接和 Session 路由；业务服务由应用提供。',

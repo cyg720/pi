@@ -1,6 +1,6 @@
 // Reading order: entry -> assembly -> execution -> persistence -> presentation.
 // Independent SDKs and optional paths do not form a single runtime trace.
-export const moduleOrder = ['coding', 'agent', 'ai', 'codemode', 'mcp', 'durable', 'tui', 'native', 'chord', 'client', 'protocol', 'server', 'experimental', 'telemetry', 'examples', 'agent-examples', 'durable-examples', 'evals', 'engineering'];
+export const moduleOrder = ['coding', 'agent', 'ai', 'codemode', 'mcp', 'durable', 'env', 'tui', 'native', 'chord', 'client', 'protocol', 'server', 'experimental', 'telemetry', 'examples', 'agent-examples', 'durable-examples', 'evals', 'engineering'];
 export const featureOrder = {
   coding: ['startup', 'settings', 'trust', 'packages', 'resources', 'builtin', 'extensions', 'mcp-config', 'mcp-auth', 'mcp-management', 'mcp-runtime', 'mcp-tools', 'mcp-resources', 'skills', 'templates', 'auth', 'models', 'virtual', 'llama', 'sdk', 'sessions', 'system', 'input', 'interactive', 'fullscreen', 'print', 'rpc', 'keys', 'clipboard', 'prompt', 'loadout', 'tool-search', 'codemode', 'codemode-store', 'codemode-models', 'output-files', 'nested-tools', 'tool-support', 'read', 'grep', 'find', 'ls', 'edit', 'write', 'bash', 'powershell', 'compaction', 'branch', 'cache', 'export', 'components', 'theme', 'system-theme', 'radius-login', 'catalog-refresh', 'experimental-cli', 'http', 'diagnostics'],
   agent: ['loop', 'run-tool', 'proxy'],

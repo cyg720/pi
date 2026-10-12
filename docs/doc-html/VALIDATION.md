@@ -1,5 +1,20 @@
 # 验证记录
 
+## 最新代码同步 · 2026-10-12
+
+源码基准：`fe2b9da4c56ae2d9faad897baae5267a900809b0`，分支 `dev`，包版本 `1.1.0`（含 Unreleased）。以下旧记录仅代表各自日期。
+
+- 生成器改用仓库现有 TypeScript 7 的 AST / sync API，一次虚拟项目批量解析，结束后关闭 API；没有添加解析依赖或降级 TypeScript。保留注释、签名、输入输出、权限、行号及静态引用。
+- 更新当前开发部署模板：用 `produceArtifactSet`、`installConsumer`、`smokeTestNpmConsumer` 替代已删除的旧 helper；仅验证模板契约与语法，没有执行安装或部署。
+- 新增 Env、Durable 图像/嵌套调用/缓存与故障边界、codemode portable/远程沙箱和产品配置能力说明。生成 20 个模块、373 项功能与索引、201 项中文能力解说、1,057 个归属文件、26,331 个声明，未归属文件为 0；1,791 份源码/文档、6,848 条提交，约 40.1 MiB。
+- 目录 2,176 文件、224 文件夹；1,199 就绪、270 待复核、931 待补充。显式初始化只填已有中文依据的空说明，保留人工说明和待复核状态；固定旧版对照基准未改变。
+- `node --test docs/doc-html/catalog.test.mjs docs/doc-html/development.test.mjs docs/doc-html/directory.test.mjs docs/doc-html/verify.test.mjs`：39 项全部通过。新增 TS 7 接口成员、访问权限、Unicode/CRLF 行号、JS/TSX 回归及新增能力索引检查。
+- `npm.cmd run check`：Biome 检查 1,550 文件、无修改；精确依赖、运行依赖、相对导入、入口图、install-lock 检查通过。类型检查失败于 Azure 模型类型和缺少 `@silvia-odwyer/photon/photon_rs.js`，后续 browser-smoke 未执行。
+- `npm.cmd run check:model-data`：失败，缺少 `packages/ai/src/providers/data/azure.json`。本次未水合模型数据或安装新依赖，未修改业务源码与锁文件。
+- 没有执行项目 build、全量测试、真实模型调用或提交。浏览器视觉、离线打开与实际部署未重新验收；页面验证覆盖脚本语法、数据完整性与 DOM 替身交互。五幅静态架构图及原始归档保持历史版本，当前静态源码引用图随索引刷新。
+
+手工复核：打开 Env、Durable 图像与嵌套工具、codemode portable 条目，检查中文边界及源码定位；开发菜单核对 artifact manifest 模板；目录筛选“待复核”，逐项确认旧说明后再更新指纹。
+
 ## 源码目录说明菜单 · 2026-10-05
 
 - 新增独立 `#directory` 菜单，以文件夹 / 文件树显示当前仓库的所有已跟踪文件与未忽略的新文件。完整收录 1,904 个文件、203 个文件夹（含根目录）；覆盖源码、测试、配置、脚本、文档和资源。目录由文件路径还原，空目录及 Git 忽略的依赖 / 本地产物不在范围内。
