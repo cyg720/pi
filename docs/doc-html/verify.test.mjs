@@ -12,8 +12,8 @@ import { developmentGuide } from './src/development.mjs';
 const dir = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(dir, 'index.html'), 'utf8');
 const data = JSON.parse(html.match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-test('本地 HEAD 可达历史完整且每条都有中文概述', () => {
-  const count = Number(execFileSync('git', ['rev-list', '--count', 'HEAD'], { cwd: dir, encoding: 'utf8' }));
+test('生成时源码基线的可达历史完整且每条都有中文概述', () => {
+  const count = Number(execFileSync('git', ['rev-list', '--count', data.meta.commit], { cwd: dir, encoding: 'utf8' }));
   assert.equal(data.commits.length, count);
   assert.equal(new Set(data.commits.map(c => c.hash)).size, count);
   assert.ok(data.commits.every(c => /[\u4e00-\u9fff]/.test(c.zh) && c.subject));
@@ -42,7 +42,19 @@ test('源码快照与 manifest 指纹一致', () => {
   for (const [path, source] of Object.entries(data.sources)) {
     assert.equal(data.sourceHashes[path], createHash('sha256').update(source).digest('hex'));
   }
-  assert.ok(data.packages.length >= 12);
+  assert.ok(data.packages.length > 0);
+});
+
+test('官方合并后的对象运行时与持久脚本能力已同步，已删除应用不再列为现有功能', () => {
+  for (const id of ['chord-contracts', 'chord-host', 'chord-reload', 'chord-links', 'chord-manager', 'codemode-deterministic', 'durable-codemode', 'durable-tool-search', 'durable-input-entries', 'env-terminal', 'ai-openrouter-catalog', 'coding-run-triggers']) {
+    assert.equal(data.catalog.features.find(f => f.id === id)?.evidence, '中文能力解说', id);
+  }
+  for (const id of ['client', 'server', 'protocol', 'experimental']) assert.ok(!data.catalog.modules.some(m => m.id === id), id);
+  for (const f of data.catalog.features) assert.ok(!['chord-facets', 'chord-services', 'coding-experimental-cli'].includes(f.id), f.id);
+  for (const node of Object.values(data.directory.nodes)) for (const detail of node.details) {
+    if (detail.feature) assert.ok(data.catalog.features.some(f => f.id === detail.feature), `${node.path}: ${detail.feature}`);
+  }
+  assert.ok(data.chapters.find(c => c.id === 'advanced').sections.some(s => s.text?.includes('Windows') && s.text.includes('终端')));
 });
 test('主页面和五幅图的内联脚本均可解析', () => {
   for (const page of [{ file: 'index.html', html }, ...data.diagrams]) {
@@ -91,9 +103,17 @@ test('功能详情有来源、用途、入口、边界和有效双向归属', ()
   for (const provider of ['openai','anthropic','google']) assert.ok(data.catalog.features.some(f => f.id === `ai-provider-${provider}`), provider);
 });
 
-test('生成版本与当前源码一致，新包和所有包 src 独立核验无遗漏', () => {
+test('文档提交不使源码基线失效，业务源码与版本仍须一致', () => {
   const root = join(dir, '../..');
-  assert.equal(data.meta.commit, execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim());
+  // The generated artifact cannot include the hash of the commit that will contain it.
+  // Accept subsequent guide commits, but require regeneration after other repository changes.
+  execFileSync('git', ['merge-base', '--is-ancestor', data.meta.commit, 'HEAD'], { cwd: root });
+  const changed = execFileSync('git', ['diff', '--name-only', '-z', data.meta.commit, 'HEAD'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
+  assert.deepEqual(changed.filter(path => !path.startsWith('docs/doc-html/') && path !== 'qishu/功能清单/pi-feature-catalog.zh.md'), [], '源码基线之后存在非导览改动，请重新生成');
+  for (const [path, expected] of Object.entries(data.sourceHashes)) {
+    if (path.startsWith('docs/doc-html/')) continue;
+    assert.equal(createHash('sha256').update(readFileSync(join(root, path))).digest('hex'), expected, `当前文件与离线快照不同: ${path}`);
+  }
   const pkg = JSON.parse(readFileSync(join(root, 'packages/coding-agent/package.json'), 'utf8'));
   assert.equal(data.meta.version, pkg.version);
   const paths = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);

@@ -8,6 +8,10 @@ import { developmentGuide } from './src/development.mjs';
 import { buildCatalog } from './src/catalog.mjs';
 import { compareEdition } from './src/edition.mjs';
 import { buildDirectory, initializeDirectoryNotes } from './src/directory.mjs';
+import { attachCapabilities, capabilitySource } from './src/capabilities.mjs';
+import { buildPackageTutorials } from './src/package-tutorials.mjs';
+import { buildMastery } from './src/mastery.mjs';
+import { buildVersions } from './src/versions.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(dir, '../..');
@@ -66,6 +70,19 @@ const packages = allPaths.filter(p => /^packages\/[^/]+\/package\.json$/.test(p)
   return { path, name: pkg.name, version: pkg.version, description, dependencies: Object.keys(pkg.dependencies || {}).filter(x => x.startsWith('@earendil-works/')) };
 });
 const { catalog, snapshots } = buildCatalog({ paths: allPaths, read, commits });
+Object.assign(snapshots, attachCapabilities({ catalog, markdown: read(capabilitySource), read }));
+const { tutorials, snapshots: tutorialSnapshots } = buildPackageTutorials({ paths: allPaths, directories: readdirSync(join(root, 'packages'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name), read, catalog });
+Object.assign(snapshots, tutorialSnapshots);
+const currentCommit = git(['rev-parse', 'HEAD']).trim();
+const tags = git(['for-each-ref', '--merged=HEAD', '--format=%(refname:short)%09%(objectname)%09%(*objectname)%09%(creatordate:iso-strict)', 'refs/tags']).trim().split('\n').filter(Boolean).map(line => {
+  const [name, object, peeled, date] = line.replace(/\r$/, '').split('\t');
+  return { name, hash: peeled || object, date };
+});
+const { versions, snapshots: versionSnapshots } = buildVersions({ paths: allPaths, read, packages, commits, tags, head: currentCommit });
+Object.assign(snapshots, versionSnapshots);
+writeFileSync(join(dir, 'data/versions.json'), JSON.stringify(versions, null, 2));
+writeFileSync(join(dir, 'data/package-tutorials.json'), JSON.stringify(tutorials, null, 2));
+writeFileSync(join(dir, 'data/capabilities.json'), JSON.stringify({ modules: catalog.capabilityModules, features: catalog.capabilities, coverage: catalog.capabilityCoverage }, null, 2));
 const selected = new Set(chapters.flatMap(c => c.sections.flatMap(s => (s.refs || []).map(r => r[0]))));
 for (const t of trace) selected.add(t[3]);
 for (const pkg of packages) {
@@ -78,7 +95,19 @@ for (const c of chapters) for (const s of c.sections) for (const [path, needle] 
   if (!sources[path].includes(needle)) throw new Error(`引用失效: ${path} :: ${needle}`);
 }
 const sourceHashes = Object.fromEntries(Object.entries(sources).map(([p, v]) => [p, sha(v)]));
-const currentCommit = git(['rev-parse', 'HEAD']).trim();
+const mastery = buildMastery({ catalog, sources, plan: JSON.parse(readFileSync(join(dir, 'src/mastery-plan.json'), 'utf8')) });
+const deckManifestPath = join(dir, 'learning-slides/manifest.json');
+if (existsSync(deckManifestPath)) {
+  const manifest = JSON.parse(readFileSync(deckManifestPath, 'utf8'));
+  mastery.decksStale = manifest.courseHash !== sha(JSON.stringify(mastery.routes)) || manifest.baseline !== mastery.plan.baseline || manifest.baseline !== currentCommit;
+  mastery.decks = mastery.decksStale ? [] : manifest.decks.map(deck => {
+    if (!/^[a-z-]+\.pptx$/.test(deck.filename)) throw new Error(`非法课件路径: ${deck.filename}`);
+    const bytes = readFileSync(join(dir, 'learning-slides', deck.filename));
+    if (sha(bytes) !== deck.sha256) throw new Error(`课件指纹失效: ${deck.filename}`);
+    return { ...deck, base64: bytes.toString('base64') };
+  });
+}
+writeFileSync(join(dir, 'data/mastery.json'), JSON.stringify(mastery, null, 2));
 const directoryPaths = git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean);
 const directoryNotesPath = join(dir, 'src/directory-notes.json');
 let directoryNotes = JSON.parse(readFileSync(directoryNotesPath, 'utf8'));
@@ -89,20 +118,20 @@ directory = buildDirectory({ paths: directoryPaths, trackedPaths: allPaths, cata
 const baseline = JSON.parse(readFileSync(join(dir, 'src/edition-baseline.json'), 'utf8'));
 catalog.edition = compareEdition(catalog, sourceHashes, baseline, currentCommit);
 const trackedPaths = git(['ls-files', '--', 'packages', 'scripts', '.pi']).trim().split('\n');
-const data = { chapters, trace, packages, sources, sourceHashes, diagrams, commits, trackedPaths, catalog, directory, meta: {
+const data = { chapters, trace, packages, tutorials, mastery, versions, sources, sourceHashes, diagrams, commits, trackedPaths, catalog, directory, meta: {
   commit: currentCommit, version: JSON.parse(read('packages/coding-agent/package.json')).version, branch: git(['branch', '--show-current']).trim(), builtAt: new Date().toISOString(),
   shallow: git(['rev-parse', '--is-shallow-repository']).trim() === 'true', status: git(['status', '--short', '--', 'packages', 'scripts']).trim(),
   historyScope: '本地 HEAD 可达的全部提交；按 Git date-order 排列。合并关系保留父提交 ID。'
 }};
 const serialized = JSON.stringify(data).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const template = readFileSync(join(dir, 'src/template.html'), 'utf8');
-const css = ['style.css', 'features.css', 'development.css', 'directory.css'].map(file => readFileSync(join(dir, 'src', file), 'utf8')).join('\n');
-const js = ['feature-flow.js', 'features-app.js', 'development-app.js', 'directory-app.js', 'app.js'].map(file => readFileSync(join(dir, 'src', file), 'utf8')).join('\n');
+const css = ['style.css', 'features.css', 'development.css', 'directory.css', 'package-tutorials.css', 'mastery.css', 'versions.css'].map(file => readFileSync(join(dir, 'src', file), 'utf8')).join('\n');
+const js = ['feature-flow.js', 'features-app.js', 'development-app.js', 'directory-app.js', 'package-tutorials-app.js', 'mastery-app.js', 'versions-app.js', 'app.js'].map(file => readFileSync(join(dir, 'src', file), 'utf8')).join('\n');
 const output = template.replace('/* INLINE_STYLE */', () => css).replace('/* INLINE_DATA */', () => serialized).replace('/* INLINE_APP */', () => js);
 writeFileSync(join(dir, 'index.html'), output);
 writeFileSync(join(dir, 'data/history.json'), JSON.stringify(commits, null, 2));
 writeFileSync(join(dir, 'data/features.json'), JSON.stringify(catalog, null, 2));
 writeFileSync(join(dir, 'data/edition.json'), JSON.stringify(catalog.edition, null, 2));
 writeFileSync(join(dir, 'data/directory.json'), JSON.stringify(directory, null, 2));
-writeFileSync(join(dir, 'data/manifest.json'), JSON.stringify({ ...data.meta, sourceHashes, diagramHashes: Object.fromEntries(diagrams.map(d => [d.file, d.hash])), commitCount: commits.length, catalog: catalog.stats, directory: directory.stats }, null, 2));
+writeFileSync(join(dir, 'data/manifest.json'), JSON.stringify({ ...data.meta, sourceHashes, diagramHashes: Object.fromEntries(diagrams.map(d => [d.file, d.hash])), commitCount: commits.length, catalog: catalog.stats, directory: directory.stats, versions: versions.stats }, null, 2));
 console.log(`已生成 ${relative(root, join(dir, 'index.html'))}: ${commits.length} 条提交 / ${Object.keys(sources).length} 份源码与文档 / ${catalog.stats.features} 项功能与索引 / ${catalog.stats.files} 个归属文件 / ${catalog.stats.symbols} 个声明 / 目录 ${directory.stats.files} 文件、${directory.stats.folders} 文件夹、${directory.stats.pending} 待补充 / ${(Buffer.byteLength(output) / 1024 / 1024).toFixed(1)} MiB`);

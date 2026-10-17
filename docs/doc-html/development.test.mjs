@@ -41,11 +41,13 @@ test('断点配置指向源码并预加载解析器，附加端口与说明一�
     assert.equal(config.type, 'node');
     assert.equal(config.console, 'integratedTerminal');
     assert.ok(config.runtimeArgs.includes('./packages/coding-agent/src/experimental/source-resolver.ts'));
-    assert.equal(config.program, '${workspaceFolder}/packages/coding-agent/src/experimental/cli.ts');
+    assert.equal(config.program, '${workspaceFolder}/packages/coding-agent/src/cli.ts');
+    assert.ok(readFileSync(config.program.replace('${workspaceFolder}', root), 'utf8').includes('main(process.argv.slice(2))'));
     assert.equal(config.sourceMaps, false);
   }
   assert.equal(launch.configurations[2].address, '127.0.0.1');
   assert.equal(launch.configurations[2].port, 9229);
+  for (const command of commands) assert.doesNotMatch(command.code, /experimental\/cli\.ts|\.\/pi-test\.sh/);
 });
 
 test('原生 TypeScript 与工作区 source-resolver 可在不加载模型时解析到 src', () => {
@@ -112,10 +114,12 @@ test('本地开发菜单接入页面路由、复制、进度恢复和全文搜�
   let copied;
   const location = { hash: '#development' };
   const document = { title: '', body: makeNode(), getElementById(id) { return nodes.get(id) || null; }, querySelector() { return makeNode(); }, querySelectorAll() { return []; }, addEventListener(type, fn) { events[type] = fn; } };
-  runInNewContext(`${readFileSync(join(dir, 'src/development-app.js'), 'utf8')}\n${readFileSync(join(dir, 'src/directory-app.js'), 'utf8')}\n${readFileSync(join(dir, 'src/app.js'), 'utf8')}`, {
+  runInNewContext(`${readFileSync(join(dir, 'src/development-app.js'), 'utf8')}\n${readFileSync(join(dir, 'src/directory-app.js'), 'utf8')}\n${readFileSync(join(dir, 'src/package-tutorials-app.js'), 'utf8')}\n${readFileSync(join(dir, 'src/app.js'), 'utf8')}`, {
     document, location, window: { addEventListener(type, fn) { windowEvents[type] = fn; }, scrollTo() {} },
     localStorage: { getItem(key) { return storage.get(key) || null; }, setItem(key, value) { storage.set(key, value); } },
     navigator: { clipboard: { async writeText(text) { copied = text; } } },
+    createMasteryBrowser() { return { search() { return []; } }; },
+    createVersionBrowser() { return { search() { return []; } }; },
     createFeatureBrowser() { return { search() { return []; }, render() { return '<div>功能清单</div>'; }, activate() {}, rememberMenu() {} }; },
     setTimeout() { return 1; }, clearTimeout() {}, clearInterval() {}
   });

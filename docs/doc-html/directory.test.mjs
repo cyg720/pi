@@ -167,7 +167,9 @@ test('源码目录菜单接入整页路由和全文搜索，内部选取不触�
   const windowEvents = {}, location = { hash: '#directory' };
   let scrolled = 0;
   const document = { title: '', body: makeNode(), getElementById(id) { return nodes.get(id) || null; }, querySelector() { return makeNode(); }, querySelectorAll() { return []; }, addEventListener() {} };
-  runInNewContext(['development-app.js','directory-app.js','app.js'].map(p => readFileSync(join(dir, 'src', p), 'utf8')).join('\n'), {
+  runInNewContext(['development-app.js','directory-app.js','package-tutorials-app.js','app.js'].map(p => readFileSync(join(dir, 'src', p), 'utf8')).join('\n'), {
+    createMasteryBrowser() { return { search() { return []; } }; },
+    createVersionBrowser() { return { search() { return []; } }; },
     document, location, window: { addEventListener(type, fn) { windowEvents[type] = fn; }, scrollTo() { scrolled++; } }, localStorage: { getItem() { return null; }, setItem() {} }, createFeatureBrowser() { return { search() { return []; }, rememberMenu() {} }; }, clearInterval() {}
   });
   assert.match(nodes.get('nav').innerHTML, /href="#directory"[^>]*class="nav-link active"/);

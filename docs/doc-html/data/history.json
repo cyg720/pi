@@ -1,5 +1,3564 @@
 [
   {
+    "hash": "3c3c60182a2d290e0ae5d315cf674654604548b4",
+    "date": "2026-10-17T18:08:02+08:00",
+    "author": "CYG",
+    "parents": [
+      "6cd9d957a9fd50bc504d45b72834ed9dd85a20b6"
+    ],
+    "subject": "fix: 补齐 Chord WebSocket 测试依赖并同步安装锁",
+    "body": "fix: 补齐 Chord WebSocket 测试依赖并同步安装锁",
+    "files": [
+      {
+        "path": "package-lock.json",
+        "added": "16",
+        "removed": "4"
+      },
+      {
+        "path": "packages/chord/package.json",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/install-lock/package-lock.json",
+        "added": "3",
+        "removed": "3"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "chord",
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 22,
+    "removed": 8,
+    "zh": "补齐 Chord WebSocket 测试直接依赖：声明 ws 8.22.0 与 @types/ws 8.18.2，修复完整类型检查缺少声明的问题；同步根锁文件和 coding-agent 安装锁。WebSocket 本地测试及仓库整体检查通过，不改动 Chord 运行逻辑。",
+    "curated": true
+  },
+  {
+    "hash": "6cd9d957a9fd50bc504d45b72834ed9dd85a20b6",
+    "date": "2026-10-12T20:38:43+08:00",
+    "author": "CYG",
+    "parents": [
+      "5da53e15e3833721195fdc8ce8e6081b4f406397",
+      "f4cca2dc22ee4ce05ad75e185a025f6c664829c8"
+    ],
+    "subject": "Merge branch 'main' into dev",
+    "body": "Merge branch 'main' into dev",
+    "files": [],
+    "scopes": [],
+    "type": "merge",
+    "added": 0,
+    "removed": 0,
+    "zh": "合并官方 main 到本地 dev。本轮带来 Chord 对象运行时替换、实验服务栈移除及 Durable/Env 新能力；合并本身应结合父提交阅读。",
+    "curated": true
+  },
+  {
+    "hash": "5da53e15e3833721195fdc8ce8e6081b4f406397",
+    "date": "2026-10-12T20:24:45+08:00",
+    "author": "CYG",
+    "parents": [
+      "179e7ca533aab9a14e6d02f88c24be161fe285d0"
+    ],
+    "subject": "docs: 更新项目认知与功能清单并移除旧评审",
+    "body": "docs: 更新项目认知与功能清单并移除旧评审\n\n补充 2026-10-12 源码、包版本、Env 及 Durable/codemode 能力边界，保留历史勘察结论并明确其日期；功能清单扩展为 22 个模块、588 项条目，修正相对链接。纳入工作区已有的旧原型接入方案评审文档删除，可通过 Git 历史恢复。\n\n验证：39 项文档定向测试全部通过，暂存差异检查通过。npm run check 未通过：Azure 模型及相关测试有 unknown/never 类型错误，Durable 缺少 @silvia-odwyer/photon/photon_rs.js，browser-smoke 未执行；原型和二开验收未重跑。经用户明确授权，提交这些文档变更及现有删除，不推送远程。",
+    "files": [
+      {
+        "path": "docs/原型接入方案评审.md",
+        "added": "0",
+        "removed": "254"
+      },
+      {
+        "path": "docs/项目认知报告.md",
+        "added": "17",
+        "removed": "0"
+      },
+      {
+        "path": "qishu/功能清单/pi-feature-catalog.zh.md",
+        "added": "171",
+        "removed": "83"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "docs",
+    "added": 188,
+    "removed": 337,
+    "zh": "同步项目认知与中文功能清单，移除旧评审资料；这是文档维护。",
+    "curated": true
+  },
+  {
+    "hash": "179e7ca533aab9a14e6d02f88c24be161fe285d0",
+    "date": "2026-10-12T20:24:22+08:00",
+    "author": "CYG",
+    "parents": [
+      "d3f64c5a0c37cad3ad4ce23cc0be223185325556"
+    ],
+    "subject": "docs: 同步 1.1.0 离线导览与源码索引",
+    "body": "docs: 同步 1.1.0 离线导览与源码索引\n\n同步 fe2b9da4c 源码快照及未发布能力：补充 Env 远程执行、Durable 图像和嵌套工具、codemode 可移植沙箱与产品配置说明；更新目录、功能、历史和单文件页面，保留旧版对照及待复核状态。同步中英文说明与验证记录。\n\n验证：39 项文档定向测试全部通过，暂存差异检查通过。npm run check 仍因 Azure 模型 unknown/never 类型错误及缺失 @silvia-odwyer/photon/photon_rs.js 失败，browser-smoke 未执行；未重新验收浏览器视觉或部署。经用户明确授权，在已注明检查失败的情况下提交。",
+    "files": [
+      {
+        "path": "docs/doc-html/README.md",
+        "added": "8",
+        "removed": "7"
+      },
+      {
+        "path": "docs/doc-html/README.zh.md",
+        "added": "8",
+        "removed": "7"
+      },
+      {
+        "path": "docs/doc-html/VALIDATION.md",
+        "added": "15",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/VALIDATION.zh.md",
+        "added": "15",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/data/directory.json",
+        "added": "14530",
+        "removed": "5971"
+      },
+      {
+        "path": "docs/doc-html/data/edition.json",
+        "added": "163",
+        "removed": "2"
+      },
+      {
+        "path": "docs/doc-html/data/features.json",
+        "added": "56705",
+        "removed": "37108"
+      },
+      {
+        "path": "docs/doc-html/data/history.json",
+        "added": "7958",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/data/manifest.json",
+        "added": "461",
+        "removed": "327"
+      },
+      {
+        "path": "docs/doc-html/index.html",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "docs/doc-html/src/content.mjs",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/src/directory-notes.json",
+        "added": "2590",
+        "removed": "5"
+      },
+      {
+        "path": "docs/doc-html/src/feature-additions.mjs",
+        "added": "12",
+        "removed": "1"
+      },
+      {
+        "path": "docs/doc-html/src/feature-order.mjs",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "docs/doc-html/src/features.mjs",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/verify.test.mjs",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "docs",
+    "added": 82475,
+    "removed": 43431,
+    "zh": "同步 1.1.0 离线导览与源码索引，刷新功能、目录和验证记录。",
+    "curated": true
+  },
+  {
+    "hash": "d3f64c5a0c37cad3ad4ce23cc0be223185325556",
+    "date": "2026-10-12T20:23:56+08:00",
+    "author": "CYG",
+    "parents": [
+      "fe2b9da4c56ae2d9faad897baae5267a900809b0"
+    ],
+    "subject": "fix: 适配导览生成器的 TS 7 接口与部署模板",
+    "body": "fix: 适配导览生成器的 TS 7 接口与部署模板\n\n通过 TypeScript AST/sync API 批量解析源码并关闭解析资源，保留成员、权限和行号；部署模板改用当前 artifact manifest 与消费者安装接口，并补充回归验证。\n\n验证：39 项文档定向测试全部通过。npm run check 未通过：Azure 模型类型及相关测试出现 unknown/never 类型错误，Durable 缺少 @silvia-odwyer/photon/photon_rs.js；browser-smoke 未执行。经用户明确授权，保留这些既有检查失败并提交，不修改依赖或业务源码。",
+    "files": [
+      {
+        "path": "docs/doc-html/catalog.test.mjs",
+        "added": "14",
+        "removed": "0"
+      },
+      {
+        "path": "docs/doc-html/development.test.mjs",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "docs/doc-html/src/catalog.mjs",
+        "added": "39",
+        "removed": "10"
+      },
+      {
+        "path": "docs/doc-html/src/development.mjs",
+        "added": "12",
+        "removed": "15"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "fix",
+    "added": 68,
+    "removed": 28,
+    "zh": "适配导览生成器所用 TypeScript 7 AST/sync 接口，并更新本地部署模板。",
+    "curated": true
+  },
+  {
+    "hash": "f4cca2dc22ee4ce05ad75e185a025f6c664829c8",
+    "date": "2026-10-12T14:15:00+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "6a51a39d4230c6a98948c14202ec76ae220232a6"
+    ],
+    "subject": "fix(coding-agent): stop listing MCP resources when connecting",
+    "body": "fix(coding-agent): stop listing MCP resources when connecting\n\nServers with resources registered no tools until resources/list and\nresources/templates/list finished, so a slow listing (a large drive)\nkept their tools out of the first prompt. The lists only fed counts in\n/mcp and pi mcp list; both now show that a server offers resources.\nThe resource tools still list and read resources on demand.\n\nfixes #10526",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/cli.ts",
+        "added": "4",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/index.ts",
+        "added": "2",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/resources.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/runtime.ts",
+        "added": "5",
+        "removed": "42"
+      },
+      {
+        "path": "packages/coding-agent/test/mcp-extension.test.ts",
+        "added": "20",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 34,
+    "removed": 58,
+    "zh": "MCP 连接阶段不再自动枚举资源，减少启动连接的额外请求；资源由显式列表工具获取。",
+    "curated": true
+  },
+  {
+    "hash": "6a51a39d4230c6a98948c14202ec76ae220232a6",
+    "date": "2026-10-12T14:02:31+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "6db4070f175b55c76dfb4a292716c76368e7f31d"
+    ],
+    "subject": "fix(coding-agent): expand ~ in resource setting patterns",
+    "body": "fix(coding-agent): expand ~ in resource setting patterns\n\nEntries like !~/skills/pdf, +~/x and -~/x in the extensions, skills,\nprompts, and themes settings were compared with a literal ~ and never\nmatched.\n\nfixes #10765",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/package-manager.ts",
+        "added": "9",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/test/package-manager.test.ts",
+        "added": "31",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 41,
+    "removed": 3,
+    "zh": "资源设置的路径匹配模式支持展开用户主目录符号 ~。",
+    "curated": true
+  },
+  {
+    "hash": "6db4070f175b55c76dfb4a292716c76368e7f31d",
+    "date": "2026-10-12T10:47:09Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "066ebe4ca117eb20bdc145d285fc7e4726bc831e"
+    ],
+    "subject": "docs: describe only the current Chord, Durable, and coding-agent code",
+    "body": "docs: describe only the current Chord, Durable, and coding-agent code\n\nChord: README rewritten for the new runtime; notes.md and requests.md removed, their open limits and\ndecisions folded into spec.md section 12; guide and spec status lines updated. Durable: drops the\npico-v5 handoff and delta findings, renames the Pico spec, and uses current Chord terms. Delta README,\nissue categories, and PI_RADIUS_GATEWAY updated.",
+    "files": [
+      {
+        "path": "packages/chord/README.md",
+        "added": "66",
+        "removed": "25"
+      },
+      {
+        "path": "packages/chord/docs/guide.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/docs/notes.md",
+        "added": "0",
+        "removed": "521"
+      },
+      {
+        "path": "packages/chord/docs/requests.md",
+        "added": "0",
+        "removed": "122"
+      },
+      {
+        "path": "packages/chord/docs/spec.md",
+        "added": "45",
+        "removed": "9"
+      },
+      {
+        "path": "packages/chord/docs/tutorial.md",
+        "added": "1",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/src/delta/README.md",
+        "added": "4",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/test/readiness.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/test/requests.test.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/docs/environment-variables.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/chord-delta-findings.md",
+        "added": "0",
+        "removed": "358"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "0",
+        "removed": "913"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "26",
+        "removed": "30"
+      },
+      {
+        "path": "scripts/issues/categories/durable.md",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "chord",
+      "coding-agent",
+      "durable",
+      "仓库级"
+    ],
+    "type": "docs",
+    "added": 148,
+    "removed": 1989,
+    "zh": "重写文档以描述现有 Chord、Durable 和 coding-agent，清理过时架构说法。",
+    "curated": true
+  },
+  {
+    "hash": "066ebe4ca117eb20bdc145d285fc7e4726bc831e",
+    "date": "2026-10-12T10:43:35Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "0104fef1e95e07c19d63e4eb9f63c7ca1dc01b2d"
+    ],
+    "subject": "docs(coding-agent): changelog entries for the chord runtime replacement",
+    "body": "docs(coding-agent): changelog entries for the chord runtime replacement\n\nAdds packages/chord/CHANGELOG.md (and ships it with the package) and coding-agent's Removed entries.",
+    "files": [
+      {
+        "path": "packages/chord/CHANGELOG.md",
+        "added": "15",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/package.json",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "5",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "chord",
+      "coding-agent"
+    ],
+    "type": "docs",
+    "added": 21,
+    "removed": 0,
+    "zh": "补充 Chord 运行时替换相关 changelog，说明此次架构变更。",
+    "curated": true
+  },
+  {
+    "hash": "0104fef1e95e07c19d63e4eb9f63c7ca1dc01b2d",
+    "date": "2026-10-12T10:29:06Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "7472cda0d6e51dfbf53c03f46b47aa42ac64bf64"
+    ],
+    "subject": "feat(chord): replace the facet and service runtime with the chord2 host runtime",
+    "body": "feat(chord): replace the facet and service runtime with the chord2 host runtime\n\nMoves chord2 (contracts, objects, cells, roots, plugins, hot reload, memory/IPC/WebSocket links)\nfrom p2 into packages/chord, with its tests (now on vitest) and docs. The root export is the new\nruntime plus the shared base (Context, JsonValue, JsonRepresentation, Draft, copyJson, isJsonValue,\nreplicatedState and its types). ./node now holds the host manager, child control, process locks,\nand nodeLoader. ./context and ./delta are unchanged; ./bundler is removed.\n\nreplicatedState stays a standalone module with the same exports. It no longer exposes the exact-op\nsubscription the removed service provider used, so listener failures of mutable states are always\nreported asynchronously. The package depends on typebox instead of esbuild. The wire format stays JSON.",
+    "files": [
+      {
+        "path": "README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "package-lock.json",
+        "added": "28",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/PLANNING.md",
+        "added": "0",
+        "removed": "859"
+      },
+      {
+        "path": "packages/chord/README.md",
+        "added": "72",
+        "removed": "230"
+      },
+      {
+        "path": "packages/chord/docs/guide.md",
+        "added": "750",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/docs/notes.md",
+        "added": "521",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/docs/requests.md",
+        "added": "122",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/docs/spec.md",
+        "added": "225",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/docs/tutorial.md",
+        "added": "910",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/package.json",
+        "added": "4",
+        "removed": "8"
+      },
+      {
+        "path": "packages/chord/src/api.ts",
+        "added": "0",
+        "removed": "110"
+      },
+      {
+        "path": "packages/chord/src/bundler.ts",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/chord/src/cell.ts",
+        "added": "352",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/cluster.ts",
+        "added": "235",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/connection.ts",
+        "added": "808",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/context/index.ts",
+        "added": "13",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/contract.ts",
+        "added": "289",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/declare.ts",
+        "added": "99",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/delta/README.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/src/delta/apply-immutable-trusted.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/delta/diff.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/delta/index.ts",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/chord/src/delta/revision-validator.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/delta/tracker.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/errors.ts",
+        "added": "74",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/facets/host.ts",
+        "added": "0",
+        "removed": "906"
+      },
+      {
+        "path": "packages/chord/src/facets/loader.ts",
+        "added": "0",
+        "removed": "6"
+      },
+      {
+        "path": "packages/chord/src/host.ts",
+        "added": "1010",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/index.ts",
+        "added": "66",
+        "removed": "81"
+      },
+      {
+        "path": "packages/chord/src/json.ts",
+        "added": "16",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/src/link.ts",
+        "added": "209",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/loader.ts",
+        "added": "63",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/manager.ts",
+        "added": "416",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/node.ts",
+        "added": "15",
+        "removed": "23"
+      },
+      {
+        "path": "packages/chord/src/node/bundle-loader.ts",
+        "added": "0",
+        "removed": "416"
+      },
+      {
+        "path": "packages/chord/src/node/bundle.ts",
+        "added": "0",
+        "removed": "222"
+      },
+      {
+        "path": "packages/chord/src/node/manifest.ts",
+        "added": "0",
+        "removed": "39"
+      },
+      {
+        "path": "packages/chord/src/node/package.ts",
+        "added": "0",
+        "removed": "232"
+      },
+      {
+        "path": "packages/chord/src/publish.ts",
+        "added": "39",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/record.ts",
+        "added": "1516",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/registry.ts",
+        "added": "30",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/reload.ts",
+        "added": "659",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/remote.ts",
+        "added": "357",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/schema.ts",
+        "added": "219",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/services/consumer.ts",
+        "added": "0",
+        "removed": "713"
+      },
+      {
+        "path": "packages/chord/src/services/errors.ts",
+        "added": "0",
+        "removed": "26"
+      },
+      {
+        "path": "packages/chord/src/services/handle.ts",
+        "added": "0",
+        "removed": "113"
+      },
+      {
+        "path": "packages/chord/src/services/instances.ts",
+        "added": "0",
+        "removed": "151"
+      },
+      {
+        "path": "packages/chord/src/services/loopback.ts",
+        "added": "0",
+        "removed": "17"
+      },
+      {
+        "path": "packages/chord/src/services/provider.ts",
+        "added": "0",
+        "removed": "633"
+      },
+      {
+        "path": "packages/chord/src/services/state-codec.ts",
+        "added": "0",
+        "removed": "176"
+      },
+      {
+        "path": "packages/chord/src/services/state-internals.ts",
+        "added": "0",
+        "removed": "19"
+      },
+      {
+        "path": "packages/chord/src/services/state.ts",
+        "added": "0",
+        "removed": "457"
+      },
+      {
+        "path": "packages/chord/src/services/wire.ts",
+        "added": "0",
+        "removed": "248"
+      },
+      {
+        "path": "packages/chord/src/state.ts",
+        "added": "423",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/types.ts",
+        "added": "57",
+        "removed": "317"
+      },
+      {
+        "path": "packages/chord/src/websocket.ts",
+        "added": "34",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/wire.ts",
+        "added": "222",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/bundle.test.ts",
+        "added": "0",
+        "removed": "259"
+      },
+      {
+        "path": "packages/chord/test/cluster.test.ts",
+        "added": "278",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/contract.test.ts",
+        "added": "124",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/delta-diff.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/test/eager-reload.test.ts",
+        "added": "306",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/facet-loader.test.ts",
+        "added": "0",
+        "removed": "394"
+      },
+      {
+        "path": "packages/chord/test/facets.test.ts",
+        "added": "0",
+        "removed": "676"
+      },
+      {
+        "path": "packages/chord/test/fixtures/echo.ts",
+        "added": "10",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/fixtures/loader.ts",
+        "added": "54",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/fixtures/worker.ts",
+        "added": "40",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/helpers.ts",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/test/host.test.ts",
+        "added": "561",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/link.test.ts",
+        "added": "343",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/links-review.test.ts",
+        "added": "527",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/loader.test.ts",
+        "added": "21",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/manager.test.ts",
+        "added": "144",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/readiness.test.ts",
+        "added": "258",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/reload.test.ts",
+        "added": "568",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/replicated-state-delivery.test.ts",
+        "added": "248",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/replicated-state.test.ts",
+        "added": "351",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/requests.test.ts",
+        "added": "478",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/review.test.ts",
+        "added": "653",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/service-delivery.test.ts",
+        "added": "0",
+        "removed": "335"
+      },
+      {
+        "path": "packages/chord/test/service-wire.test.ts",
+        "added": "0",
+        "removed": "322"
+      },
+      {
+        "path": "packages/chord/test/services.test.ts",
+        "added": "0",
+        "removed": "790"
+      },
+      {
+        "path": "packages/chord/test/state-delivery.test.ts",
+        "added": "0",
+        "removed": "300"
+      },
+      {
+        "path": "packages/chord/test/state-diff.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/chord/test/state.test.ts",
+        "added": "249",
+        "removed": "377"
+      },
+      {
+        "path": "packages/chord/test/tutorial.test.ts",
+        "added": "527",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/websocket.test.ts",
+        "added": "101",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/chord-delta-findings.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/test/session-states.test.ts",
+        "added": "1",
+        "removed": "12"
+      },
+      {
+        "path": "scripts/browser-smoke-entry.ts",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "scripts/check-entry-graphs.mjs",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "tsconfig.json",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "vitest.base.ts",
+        "added": "0",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "chord",
+      "durable"
+    ],
+    "type": "feat",
+    "added": 15714,
+    "removed": 9497,
+    "zh": "以对象契约、句柄、状态与热重载宿主替换旧 facet/service 运行时，加入链接和 Node 子宿主管理。",
+    "curated": true
+  },
+  {
+    "hash": "7472cda0d6e51dfbf53c03f46b47aa42ac64bf64",
+    "date": "2026-10-12T10:19:42Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "2ee5c1e56d51694d113c3f1f1c9c2d7386cbfacd"
+    ],
+    "subject": "feat(coding-agent): remove the experimental server stack and the client, protocol, and server packages",
+    "body": "feat(coding-agent): remove the experimental server stack and the client, protocol, and server packages\n\nDeletes packages/client, packages/protocol (CBOR codec), packages/server, coding-agent's\nsrc/experimental (except source-resolver.ts, which source runs still preload), src/cli/experimental,\nsrc/client, the example plugin, and their tests. coding-agent no longer depends on @earendil-works/chord.\nThe installer lock drops esbuild, so its platform-package sanity check goes too.",
+    "files": [
+      {
+        "path": "package-lock.json",
+        "added": "0",
+        "removed": "64"
+      },
+      {
+        "path": "package.json",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/client/CHANGELOG.md",
+        "added": "0",
+        "removed": "51"
+      },
+      {
+        "path": "packages/client/README.md",
+        "added": "0",
+        "removed": "72"
+      },
+      {
+        "path": "packages/client/package.json",
+        "added": "0",
+        "removed": "57"
+      },
+      {
+        "path": "packages/client/src/client.ts",
+        "added": "0",
+        "removed": "479"
+      },
+      {
+        "path": "packages/client/src/connection.ts",
+        "added": "0",
+        "removed": "245"
+      },
+      {
+        "path": "packages/client/src/errors.ts",
+        "added": "0",
+        "removed": "34"
+      },
+      {
+        "path": "packages/client/src/index.ts",
+        "added": "0",
+        "removed": "12"
+      },
+      {
+        "path": "packages/client/src/promise.ts",
+        "added": "0",
+        "removed": "16"
+      },
+      {
+        "path": "packages/client/src/transport.ts",
+        "added": "0",
+        "removed": "18"
+      },
+      {
+        "path": "packages/client/src/types.ts",
+        "added": "0",
+        "removed": "32"
+      },
+      {
+        "path": "packages/client/src/unix.ts",
+        "added": "0",
+        "removed": "299"
+      },
+      {
+        "path": "packages/client/test/client.test.ts",
+        "added": "0",
+        "removed": "384"
+      },
+      {
+        "path": "packages/client/test/fixtures/stale-socket-server.mjs",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/client/test/support.ts",
+        "added": "0",
+        "removed": "84"
+      },
+      {
+        "path": "packages/client/test/unix-transport.test.ts",
+        "added": "0",
+        "removed": "147"
+      },
+      {
+        "path": "packages/client/test/unix.test.ts",
+        "added": "0",
+        "removed": "184"
+      },
+      {
+        "path": "packages/client/tsconfig.build.json",
+        "added": "0",
+        "removed": "12"
+      },
+      {
+        "path": "packages/client/tsconfig.test.json",
+        "added": "0",
+        "removed": "17"
+      },
+      {
+        "path": "packages/client/vitest.config.ts",
+        "added": "0",
+        "removed": "17"
+      },
+      {
+        "path": "packages/coding-agent/examples/README.md",
+        "added": "0",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/examples/plugins/pi-example-plugin/README.md",
+        "added": "0",
+        "removed": "38"
+      },
+      {
+        "path": "packages/coding-agent/examples/plugins/pi-example-plugin/package.json",
+        "added": "0",
+        "removed": "10"
+      },
+      {
+        "path": "packages/coding-agent/examples/plugins/pi-example-plugin/src/contract.ts",
+        "added": "0",
+        "removed": "13"
+      },
+      {
+        "path": "packages/coding-agent/examples/plugins/pi-example-plugin/src/session.ts",
+        "added": "0",
+        "removed": "24"
+      },
+      {
+        "path": "packages/coding-agent/examples/plugins/pi-example-plugin/src/tui.ts",
+        "added": "0",
+        "removed": "31"
+      },
+      {
+        "path": "packages/coding-agent/install-lock/package-lock.json",
+        "added": "0",
+        "removed": "469"
+      },
+      {
+        "path": "packages/coding-agent/package.json",
+        "added": "1",
+        "removed": "14"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/experimental/cli.ts",
+        "added": "0",
+        "removed": "16"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/experimental/command-options.ts",
+        "added": "0",
+        "removed": "106"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/experimental/command.ts",
+        "added": "0",
+        "removed": "225"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/experimental/commands/client.ts",
+        "added": "0",
+        "removed": "91"
+      },
+      {
+        "path": "packages/coding-agent/src/cli/experimental/commands/server.ts",
+        "added": "0",
+        "removed": "66"
+      },
+      {
+        "path": "packages/coding-agent/src/client/index.ts",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/cli.ts",
+        "added": "0",
+        "removed": "12"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/client-runtime.ts",
+        "added": "0",
+        "removed": "230"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/client-tui-chat.ts",
+        "added": "0",
+        "removed": "232"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/client-tui.ts",
+        "added": "0",
+        "removed": "809"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/client.ts",
+        "added": "0",
+        "removed": "86"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/commands.ts",
+        "added": "0",
+        "removed": "98"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/coordinator-entry.ts",
+        "added": "0",
+        "removed": "10"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/coordinator.ts",
+        "added": "0",
+        "removed": "612"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/README.md",
+        "added": "0",
+        "removed": "66"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/harness-setup.ts",
+        "added": "0",
+        "removed": "123"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/main.ts",
+        "added": "0",
+        "removed": "20"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/prompt.ts",
+        "added": "0",
+        "removed": "74"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/runtime.ts",
+        "added": "0",
+        "removed": "373"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/sessions.ts",
+        "added": "0",
+        "removed": "56"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/subagent.ts",
+        "added": "0",
+        "removed": "55"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/tui.ts",
+        "added": "0",
+        "removed": "660"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/plugin.ts",
+        "added": "0",
+        "removed": "16"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/plugins/bundled.ts",
+        "added": "0",
+        "removed": "55"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/plugins/package.ts",
+        "added": "0",
+        "removed": "171"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/process.ts",
+        "added": "0",
+        "removed": "106"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/radius-auth.ts",
+        "added": "0",
+        "removed": "67"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/radius-relay.ts",
+        "added": "0",
+        "removed": "724"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/server.ts",
+        "added": "0",
+        "removed": "770"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/README.md",
+        "added": "0",
+        "removed": "45"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/agent-controller-provider.ts",
+        "added": "0",
+        "removed": "95"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/agent-controller.ts",
+        "added": "0",
+        "removed": "57"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/connection.ts",
+        "added": "0",
+        "removed": "399"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/models-provider.ts",
+        "added": "0",
+        "removed": "173"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/models.ts",
+        "added": "0",
+        "removed": "35"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/plugins.ts",
+        "added": "0",
+        "removed": "19"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/presentation-ui.ts",
+        "added": "0",
+        "removed": "20"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/server.ts",
+        "added": "0",
+        "removed": "151"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/sessions.ts",
+        "added": "0",
+        "removed": "35"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/slash-commands-provider.ts",
+        "added": "0",
+        "removed": "225"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/slash-commands.ts",
+        "added": "0",
+        "removed": "30"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/transcript-provider.ts",
+        "added": "0",
+        "removed": "15"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/transcript.ts",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/services/worker.ts",
+        "added": "0",
+        "removed": "157"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/session-catalog.ts",
+        "added": "0",
+        "removed": "87"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/session-worker-manager.ts",
+        "added": "0",
+        "removed": "848"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/session-worker.ts",
+        "added": "0",
+        "removed": "840"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/README.md",
+        "added": "0",
+        "removed": "53"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/harness-setup.ts",
+        "added": "0",
+        "removed": "89"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/main.ts",
+        "added": "0",
+        "removed": "20"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/runtime.ts",
+        "added": "0",
+        "removed": "369"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/sessions.ts",
+        "added": "0",
+        "removed": "56"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/tui.ts",
+        "added": "0",
+        "removed": "660"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/vacation.ts",
+        "added": "0",
+        "removed": "142"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-agent-controller.test.ts",
+        "added": "0",
+        "removed": "113"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-command.test.ts",
+        "added": "0",
+        "removed": "147"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-entry.test.ts",
+        "added": "0",
+        "removed": "67"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-cli-resolution.test.ts",
+        "added": "0",
+        "removed": "51"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-client-tui.test.ts",
+        "added": "0",
+        "removed": "356"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-durable-support.ts",
+        "added": "0",
+        "removed": "39"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-internal-process.test.ts",
+        "added": "0",
+        "removed": "61"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-plugin-reload.test.ts",
+        "added": "0",
+        "removed": "56"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-presentation-facets.test.ts",
+        "added": "0",
+        "removed": "173"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-radius-relay.test.ts",
+        "added": "0",
+        "removed": "286"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-remote-runtime.test.ts",
+        "added": "0",
+        "removed": "820"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-server-lifecycle.test.ts",
+        "added": "0",
+        "removed": "49"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-server-profile.test.ts",
+        "added": "0",
+        "removed": "81"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-service-binding.ts",
+        "added": "0",
+        "removed": "90"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-session-directory.test.ts",
+        "added": "0",
+        "removed": "24"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-session-support.ts",
+        "added": "0",
+        "removed": "44"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-session-worker-lifecycle.test.ts",
+        "added": "0",
+        "removed": "157"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-session-worker-manager.test.ts",
+        "added": "0",
+        "removed": "308"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-slash-commands.test.ts",
+        "added": "0",
+        "removed": "96"
+      },
+      {
+        "path": "packages/coding-agent/test/experimental-transcript-provider.test.ts",
+        "added": "0",
+        "removed": "34"
+      },
+      {
+        "path": "packages/coding-agent/test/fixtures/faux-session-worker.ts",
+        "added": "0",
+        "removed": "69"
+      },
+      {
+        "path": "packages/coding-agent/test/fixtures/keyed-service.ts",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/coding-agent/test/package-distribution.test.ts",
+        "added": "0",
+        "removed": "8"
+      },
+      {
+        "path": "packages/coding-agent/tsconfig.build.json",
+        "added": "1",
+        "removed": "4"
+      },
+      {
+        "path": "packages/protocol/CHANGELOG.md",
+        "added": "0",
+        "removed": "53"
+      },
+      {
+        "path": "packages/protocol/README.md",
+        "added": "0",
+        "removed": "41"
+      },
+      {
+        "path": "packages/protocol/package.json",
+        "added": "0",
+        "removed": "49"
+      },
+      {
+        "path": "packages/protocol/src/cbor/decoder.ts",
+        "added": "0",
+        "removed": "168"
+      },
+      {
+        "path": "packages/protocol/src/cbor/encoder.ts",
+        "added": "0",
+        "removed": "216"
+      },
+      {
+        "path": "packages/protocol/src/cbor/index.ts",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/protocol/src/cbor/options.ts",
+        "added": "0",
+        "removed": "52"
+      },
+      {
+        "path": "packages/protocol/src/codec.ts",
+        "added": "0",
+        "removed": "141"
+      },
+      {
+        "path": "packages/protocol/src/framing.ts",
+        "added": "0",
+        "removed": "151"
+      },
+      {
+        "path": "packages/protocol/src/index.ts",
+        "added": "0",
+        "removed": "22"
+      },
+      {
+        "path": "packages/protocol/src/protocol.ts",
+        "added": "0",
+        "removed": "110"
+      },
+      {
+        "path": "packages/protocol/test/cbor/cbor.test.ts",
+        "added": "0",
+        "removed": "175"
+      },
+      {
+        "path": "packages/protocol/test/framing.test.ts",
+        "added": "0",
+        "removed": "110"
+      },
+      {
+        "path": "packages/protocol/test/protocol.test.ts",
+        "added": "0",
+        "removed": "282"
+      },
+      {
+        "path": "packages/protocol/tsconfig.build.json",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/protocol/tsconfig.test.json",
+        "added": "0",
+        "removed": "10"
+      },
+      {
+        "path": "packages/protocol/vitest.config.ts",
+        "added": "0",
+        "removed": "11"
+      },
+      {
+        "path": "packages/server/CHANGELOG.md",
+        "added": "0",
+        "removed": "87"
+      },
+      {
+        "path": "packages/server/README.md",
+        "added": "0",
+        "removed": "63"
+      },
+      {
+        "path": "packages/server/package.json",
+        "added": "0",
+        "removed": "57"
+      },
+      {
+        "path": "packages/server/src/connection.ts",
+        "added": "0",
+        "removed": "37"
+      },
+      {
+        "path": "packages/server/src/errors.ts",
+        "added": "0",
+        "removed": "57"
+      },
+      {
+        "path": "packages/server/src/index.ts",
+        "added": "0",
+        "removed": "4"
+      },
+      {
+        "path": "packages/server/src/listener.ts",
+        "added": "0",
+        "removed": "8"
+      },
+      {
+        "path": "packages/server/src/server.ts",
+        "added": "0",
+        "removed": "576"
+      },
+      {
+        "path": "packages/server/src/session-router.ts",
+        "added": "0",
+        "removed": "312"
+      },
+      {
+        "path": "packages/server/src/testing/client.ts",
+        "added": "0",
+        "removed": "183"
+      },
+      {
+        "path": "packages/server/src/testing/host.ts",
+        "added": "0",
+        "removed": "204"
+      },
+      {
+        "path": "packages/server/src/testing/index.ts",
+        "added": "0",
+        "removed": "5"
+      },
+      {
+        "path": "packages/server/src/testing/server.ts",
+        "added": "0",
+        "removed": "28"
+      },
+      {
+        "path": "packages/server/src/transports/unix/address.ts",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/server/src/transports/unix/index.ts",
+        "added": "0",
+        "removed": "4"
+      },
+      {
+        "path": "packages/server/src/transports/unix/listener.ts",
+        "added": "0",
+        "removed": "421"
+      },
+      {
+        "path": "packages/server/src/transports/unix/preset.ts",
+        "added": "0",
+        "removed": "27"
+      },
+      {
+        "path": "packages/server/src/transports/unix/types.ts",
+        "added": "0",
+        "removed": "15"
+      },
+      {
+        "path": "packages/server/src/types.ts",
+        "added": "0",
+        "removed": "68"
+      },
+      {
+        "path": "packages/server/test/conformance.test.ts",
+        "added": "0",
+        "removed": "499"
+      },
+      {
+        "path": "packages/server/test/fixtures/stale-socket-server.mjs",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/server/test/listener.test.ts",
+        "added": "0",
+        "removed": "52"
+      },
+      {
+        "path": "packages/server/test/protocol.test.ts",
+        "added": "0",
+        "removed": "168"
+      },
+      {
+        "path": "packages/server/test/server.test.ts",
+        "added": "0",
+        "removed": "127"
+      },
+      {
+        "path": "packages/server/test/unix-connection.test.ts",
+        "added": "0",
+        "removed": "65"
+      },
+      {
+        "path": "packages/server/test/unix.test.ts",
+        "added": "0",
+        "removed": "143"
+      },
+      {
+        "path": "packages/server/tsconfig.build.json",
+        "added": "0",
+        "removed": "9"
+      },
+      {
+        "path": "packages/server/tsconfig.test.json",
+        "added": "0",
+        "removed": "13"
+      },
+      {
+        "path": "packages/server/vitest.config.ts",
+        "added": "0",
+        "removed": "28"
+      },
+      {
+        "path": "scripts/browser-smoke-entry.ts",
+        "added": "0",
+        "removed": "5"
+      },
+      {
+        "path": "scripts/build-coding-agent-bundle.mjs",
+        "added": "1",
+        "removed": "6"
+      },
+      {
+        "path": "scripts/coding-agent-smoke.mjs",
+        "added": "1",
+        "removed": "27"
+      },
+      {
+        "path": "scripts/coding-agent-smoke.test.mjs",
+        "added": "26",
+        "removed": "66"
+      },
+      {
+        "path": "scripts/generate-coding-agent-install-lock.mjs",
+        "added": "0",
+        "removed": "7"
+      },
+      {
+        "path": "scripts/profile-coding-agent-node.mjs",
+        "added": "0",
+        "removed": "4"
+      },
+      {
+        "path": "tsconfig.json",
+        "added": "0",
+        "removed": "11"
+      },
+      {
+        "path": "vitest.base.ts",
+        "added": "0",
+        "removed": "10"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "client",
+      "coding-agent",
+      "protocol",
+      "server"
+    ],
+    "type": "feat",
+    "added": 32,
+    "removed": 21561,
+    "zh": "移除实验服务器应用以及 client、protocol、server 三包；这些旧入口不再属于现有运行路径。",
+    "curated": true
+  },
+  {
+    "hash": "2ee5c1e56d51694d113c3f1f1c9c2d7386cbfacd",
+    "date": "2026-10-12T10:19:37Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "148622bc6f8d0ffd64e33cbc0e1e66754f45d32c"
+    ],
+    "subject": "docs(durable): drop the Chord facet usage guide and its test",
+    "body": "docs(durable): drop the Chord facet usage guide and its test\n\nThe guide and chord-guide.test.ts used Chord's facet and service runtime, which is being replaced.",
+    "files": [
+      {
+        "path": "packages/durable/README.md",
+        "added": "0",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-chord-usage.md",
+        "added": "0",
+        "removed": "387"
+      },
+      {
+        "path": "packages/durable/docs/pico-v5-handoff.md",
+        "added": "2",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/chord-guide.test.ts",
+        "added": "0",
+        "removed": "394"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "docs",
+    "added": 4,
+    "removed": 790,
+    "zh": "删除 Durable 中面向旧 Chord facet 的使用指南和对应测试。",
+    "curated": true
+  },
+  {
+    "hash": "148622bc6f8d0ffd64e33cbc0e1e66754f45d32c",
+    "date": "2026-10-12T12:15:53+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "eb2fce43d22cb41771c4538e0c9f5e9614e5e2a1"
+    ],
+    "subject": "fix(coding-agent): describe pi mcp login --timeout as a limit on the whole sign-in",
+    "body": "fix(coding-agent): describe pi mcp login --timeout as a limit on the whole sign-in\n\ncloses #10636",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/cli.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/cli.ts",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 3,
+    "removed": 2,
+    "zh": "澄清 pi mcp login 的 --timeout 限制整个登录流程，而非仅某个回调等待阶段。",
+    "curated": true
+  },
+  {
+    "hash": "eb2fce43d22cb41771c4538e0c9f5e9614e5e2a1",
+    "date": "2026-10-12T10:15:17Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "ee409a85f6ad92bf8c6ab8ed735c6cd24f2e749e"
+    ],
+    "subject": "fix(durable): reject waits that close a wait cycle",
+    "body": "fix(durable): reject waits that close a wait cycle\n\nA wait is rejected when it closes a cycle in the wait-for graph: waits of\ntasks that are not abort-marked, and holds of live ordinary owned work. The\nrejection names the cycle. Replaces the owner-chain rule, so a background task\nmay wait on its conversation's owner. Approach and tests from #10533 by\n@odysseus0.\n\nfixes #10411",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "13",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/harness/scheduler.ts",
+        "added": "64",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/test/harness-scheduler-retention.test.ts",
+        "added": "4",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/test/harness-structured.test.ts",
+        "added": "200",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "fix",
+    "added": 282,
+    "removed": 17,
+    "zh": "拒绝会闭合等待环的任务等待关系，避免任务互相等待而无法结束。",
+    "curated": true
+  },
+  {
+    "hash": "ee409a85f6ad92bf8c6ab8ed735c6cd24f2e749e",
+    "date": "2026-10-12T10:17:40+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "77332f7a34f957f495e23a1b02c70f95db85ad22"
+    ],
+    "subject": "feat(ai,coding-agent): list only the OpenRouter models a key may use (#10672)",
+    "body": "feat(ai,coding-agent): list only the OpenRouter models a key may use (#10672)\n\nOn each OpenRouter refresh, combine the catalog (built-in models plus a newer pi.dev catalog) with GET /models/user for the user's key: keep only the listed chat models and take their context size, max output and prices from it. Image and classifier models are kept. The combined list is saved and replaces the OpenRouter catalog, including offline.\n\n- ai: add personalizeOpenRouterCatalog and RefreshModelsContext.baseUrl, so the request follows a base URL configured in models.json (regional endpoints)\n- ai: share OpenRouter price conversion with the generator; negative prices (router models such as openrouter/auto) become 0\n- coding-agent: add withPersonalizedCatalog next to withRemoteCatalog\n- docs: OpenRouter section in providers.md\n\nfixes #10353",
+    "files": [
+      {
+        "path": "packages/ai/CHANGELOG.md",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/scripts/openrouter-catalog.ts",
+        "added": "6",
+        "removed": "74"
+      },
+      {
+        "path": "packages/ai/src/models.ts",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/providers/openrouter-api.ts",
+        "added": "77",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/src/providers/openrouter.ts",
+        "added": "54",
+        "removed": "2"
+      },
+      {
+        "path": "packages/ai/test/models-runtime.test.ts",
+        "added": "20",
+        "removed": "0"
+      },
+      {
+        "path": "packages/ai/test/openrouter-user-models.test.ts",
+        "added": "113",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/providers.md",
+        "added": "20",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/model-runtime.ts",
+        "added": "15",
+        "removed": "8"
+      },
+      {
+        "path": "packages/coding-agent/src/core/remote-catalog-provider.ts",
+        "added": "109",
+        "removed": "27"
+      },
+      {
+        "path": "packages/coding-agent/test/remote-catalog-provider.test.ts",
+        "added": "74",
+        "removed": "18"
+      }
+    ],
+    "scopes": [
+      "ai",
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 501,
+    "removed": 129,
+    "zh": "按 OpenRouter key 可用范围个性化聊天模型目录，并接入相关产品目录路径；目录过滤依据 /models/user 返回数据。",
+    "curated": true
+  },
+  {
+    "hash": "77332f7a34f957f495e23a1b02c70f95db85ad22",
+    "date": "2026-10-12T08:05:16Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "f11e50f72ef8cdbdc828ad4196956cdc4cbf891e"
+    ],
+    "subject": "feat(durable): deferred tools and the tool_search extension",
+    "body": "feat(durable): deferred tools and the tool_search extension\n\n- ToolRegistration.deferred: not offered to the model until modelTools names it\n- modelTools gains { remove?, add? }; control.addTools writes names to add, so\n  loaded tools follow the others in load order and a load only appends\n- Agent.deferred lists deferred tools not loaded yet\n- @earendil-works/pi-durable/tool-search: the coding agent's tool_search (BM25)\n- the codemode section leaves deferred tools out",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "31",
+        "removed": "6"
+      },
+      {
+        "path": "packages/durable/package.json",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/codemode.ts",
+        "added": "5",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/codemode/search.ts",
+        "added": "0",
+        "removed": "85"
+      },
+      {
+        "path": "packages/durable/src/harness/agent.ts",
+        "added": "55",
+        "removed": "25"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "20",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/search.ts",
+        "added": "85",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/tool-search/index.ts",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/tool-search/tool-search.ts",
+        "added": "92",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode-describe.test.ts",
+        "added": "3",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode.test.ts",
+        "added": "19",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-prompt.test.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/test/tool-search.test.ts",
+        "added": "204",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 531,
+    "removed": 123,
+    "zh": "Durable 增加 deferred 工具及 tool_search 扩展，按需检索并加入模型声明集合。",
+    "curated": true
+  },
+  {
+    "hash": "f11e50f72ef8cdbdc828ad4196956cdc4cbf891e",
+    "date": "2026-10-12T10:03:29+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "a447ba11f3e7760fcff91e924bda8c20033953ea"
+    ],
+    "subject": "fix(coding-agent): make codemode output joining linear",
+    "body": "fix(coding-agent): make codemode output joining linear\n\njoinAdjacentText checked endsWith on the growing joined string, which\nmakes V8 flatten the concatenation on every item. Collect each text run\nin an array, check the separator against the last non-empty part, and\njoin once. Same fix in the durable code mode copy.\n\ncloses #10678",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/codemode/execute.ts",
+        "added": "22",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-codemode.test.ts",
+        "added": "12",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/output.ts",
+        "added": "22",
+        "removed": "6"
+      }
+    ],
+    "scopes": [
+      "coding-agent",
+      "durable"
+    ],
+    "type": "fix",
+    "added": 57,
+    "removed": 12,
+    "zh": "调整 codemode 输出拼接，使拼接工作量随输出规模线性增长。",
+    "curated": true
+  },
+  {
+    "hash": "a447ba11f3e7760fcff91e924bda8c20033953ea",
+    "date": "2026-10-12T09:53:24+02:00",
+    "author": "David Brailovsky",
+    "parents": [
+      "c661bc574f9e9713cc2af567fc1ac00621377a0c"
+    ],
+    "subject": "fix(coding-agent): emit before_agent_start for runs started by custom messages (#10739)",
+    "body": "fix(coding-agent): emit before_agent_start for runs started by custom messages (#10739)\n\nRuns started by pi.sendMessage(..., { triggerTurn: true }) skipped before_agent_start. After their first tool call, the next-turn refresh fell back to the base prompt options and patched away the sections handlers had added, changing the system prompt mid-run and breaking the provider prompt cache.\n\nThese runs now go through the same setup as prompt(): compaction check, before_agent_start, tool loadout, nextTurn messages, handler messages, and the system patch. BeforeAgentStartEvent is a union on messageType (\"user\" or \"custom\"); custom events carry the starting message.\n\nThe session counts as busy from the start of setup, so messages sent while handlers run go into the starting run instead of starting a second one, and an abort requested meanwhile aborts the run once it starts.\n\ncloses #10267, closes #5581, closes #10639, closes #10289\npartly fixes #10606",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "3",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/extensions.md",
+        "added": "2",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/examples/extensions/plan-mode/index.ts",
+        "added": "6",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session.ts",
+        "added": "91",
+        "removed": "67"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/index.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/runner.ts",
+        "added": "9",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "added": "20",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/src/index.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/agent-session-concurrent.test.ts",
+        "added": "4",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/test/extensions-runner.test.ts",
+        "added": "7",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-prompt.test.ts",
+        "added": "166",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 312,
+    "removed": 92,
+    "zh": "自定义消息触发的运行也发出 before_agent_start，通过统一准备路径应用系统提示、工具和消息修改。",
+    "curated": true
+  },
+  {
+    "hash": "c661bc574f9e9713cc2af567fc1ac00621377a0c",
+    "date": "2026-10-12T09:21:04+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "24382bedd03c61c0994628907a017b4491f8fa76"
+    ],
+    "subject": "fix(durable): drop shared MCP types from the codemode section",
+    "body": "fix(durable): drop shared MCP types from the codemode section\n\npi-codemode no longer exports MCP_TYPESCRIPT_PREAMBLE or mcpStructuredContentSchema(); output schemas render as their own types, as in the coding agent.",
+    "files": [
+      {
+        "path": "packages/durable/src/codemode/describe.ts",
+        "added": "3",
+        "removed": "17"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "fix",
+    "added": 3,
+    "removed": 17,
+    "zh": "清理 Durable codemode 说明中的共享 MCP 类型，反映已解耦的依赖边界。",
+    "curated": true
+  },
+  {
+    "hash": "24382bedd03c61c0994628907a017b4491f8fa76",
+    "date": "2026-10-12T09:19:11+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "4270522473e677ddba7b093caa0064a3df51d459"
+    ],
+    "subject": "refactor(codemode,coding-agent): decouple MCP from codemode",
+    "body": "refactor(codemode,coding-agent): decouple MCP from codemode\n\nTools that reach other tools declare it with reachesTools(input); MCP uses it to wait for the servers a call needs and to decide which codemode or tool_search tool to activate, instead of parsing codemode scripts and comparing parameter schemas. Namespaces get aliases, replacing codemode's MCP-specific __ suffix rule.\n\npi-codemode no longer knows MCP: MCP_TYPESCRIPT_PREAMBLE and mcpStructuredContentSchema() are removed, and the MCP result schema describes itself, with the server's local $refs relocated so they resolve as before.",
+    "files": [
+      {
+        "path": "packages/codemode/CHANGELOG.md",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/codemode/src/declarations.ts",
+        "added": "28",
+        "removed": "122"
+      },
+      {
+        "path": "packages/codemode/src/index.ts",
+        "added": "0",
+        "removed": "2"
+      },
+      {
+        "path": "packages/codemode/src/runtime/prelude-source.ts",
+        "added": "4",
+        "removed": "4"
+      },
+      {
+        "path": "packages/codemode/test/declarations.test.ts",
+        "added": "13",
+        "removed": "47"
+      },
+      {
+        "path": "packages/codemode/test/sandbox.test.ts",
+        "added": "4",
+        "removed": "4"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/extensions.md",
+        "added": "5",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/docs/mcp.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/core/extensions/types.ts",
+        "added": "18",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/codemode/execute.ts",
+        "added": "53",
+        "removed": "46"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/codemode/tool.ts",
+        "added": "41",
+        "removed": "50"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/index.ts",
+        "added": "24",
+        "removed": "19"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/mcp/tools.ts",
+        "added": "62",
+        "removed": "6"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/tool-search/tool.ts",
+        "added": "2",
+        "removed": "5"
+      },
+      {
+        "path": "packages/coding-agent/test/mcp-extension.test.ts",
+        "added": "31",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-codemode.test.ts",
+        "added": "42",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/test/suite/agent-session-mcp.test.ts",
+        "added": "36",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "codemode",
+      "coding-agent"
+    ],
+    "type": "refactor",
+    "added": 377,
+    "removed": 314,
+    "zh": "解耦 MCP 与 codemode，工具脚本集成不再依赖共享 MCP 类型。",
+    "curated": true
+  },
+  {
+    "hash": "4270522473e677ddba7b093caa0064a3df51d459",
+    "date": "2026-10-12T00:23:28Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "8bb180bec133199c913ca8ef9bb30bd9ab12a72b"
+    ],
+    "subject": "fix(coding-agent): code mode description says schema tools resolve with their value on failure",
+    "body": "fix(coding-agent): code mode description says schema tools resolve with their value on failure",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/extensions/codemode/tool.ts",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 2,
+    "removed": 1,
+    "zh": "修正脚本说明：声明结构化输出的工具在失败时也可能解析为其返回值，不能一概描述为 Promise 拒绝。",
+    "curated": true
+  },
+  {
+    "hash": "8bb180bec133199c913ca8ef9bb30bd9ab12a72b",
+    "date": "2026-10-12T00:06:09Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "04566631c2b51fb688486bc1f040f60d1518c126"
+    ],
+    "subject": "feat(durable): code mode listing, tool search, output, models.*, grammar; tool error rule",
+    "body": "feat(durable): code mode listing, tool search, output, models.*, grammar; tool error rule\n\n- structuredOutput is always the tool's own value; a schema tool's error text\n  without one becomes a tool_error diagnostic on nested results\n- code mode: a schema tool's error result with its value resolves (bash nonzero\n  exit), schema-less tools resolve with their text, as in the coding agent\n- codemode prompt section with tool declarations by namespace within an inline\n  budget; searchTools/describeTool/describeNamespace from the start data\n- result layout of the coding agent: header, text markers, console block,\n  truncation within max_output_tokens and the tool's output limits, spill and\n  image files in a recorded output directory (a rerun overwrites them)\n- models.*: catalog globals; classify/generateImages as hidden internal tools\n  (nested calls with usage), at most four at once\n- Lark grammar of the script source as constrainedSampling",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "61",
+        "removed": "14"
+      },
+      {
+        "path": "packages/durable/src/codemode/codemode.ts",
+        "added": "305",
+        "removed": "61"
+      },
+      {
+        "path": "packages/durable/src/codemode/describe.ts",
+        "added": "171",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/index.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/models.ts",
+        "added": "285",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/output.ts",
+        "added": "190",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/search.ts",
+        "added": "85",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/harness/tool.ts",
+        "added": "15",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "5",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/test/codemode-describe.test.ts",
+        "added": "96",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode-models.test.ts",
+        "added": "271",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode.test.ts",
+        "added": "229",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/test/harness-structured-output.test.ts",
+        "added": "47",
+        "removed": "7"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 1766,
+    "removed": 103,
+    "zh": "扩充 Durable codemode 的声明列表、工具搜索、输出格式、模型助手和语法约束，并统一工具错误规则。",
+    "curated": true
+  },
+  {
+    "hash": "04566631c2b51fb688486bc1f040f60d1518c126",
+    "date": "2026-10-11T22:04:18Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "127b77121e439a6318b275dbf04505e1a7d8d6a1"
+    ],
+    "subject": "fix(durable): closing the code mode sandbox does not decide the script's outcome",
+    "body": "fix(durable): closing the code mode sandbox does not decide the script's outcome\n\nA host that closes its CodemodeSandbox before the Harness, as on a graceful\nshutdown, made the running code mode call store \"Script error (aborted):\nSandbox closed\" as its result, so the script never resumed. A run the sandbox\naborts without the call asking for it now stores nothing and ends with the\ncall's invocation; the next process replays the script.",
+    "files": [
+      {
+        "path": "packages/durable/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/codemode.ts",
+        "added": "11",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode.test.ts",
+        "added": "30",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "fix",
+    "added": 47,
+    "removed": 1,
+    "zh": "关闭 codemode 沙箱不直接决定持久脚本的结果，保留由任务恢复与结果提交确定结局的边界。",
+    "curated": true
+  },
+  {
+    "hash": "127b77121e439a6318b275dbf04505e1a7d8d6a1",
+    "date": "2026-10-11T22:00:44Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "7b597d148139864d0559be411a58400b582ff11d"
+    ],
+    "subject": "feat(durable): code mode result lists the script's tool calls",
+    "body": "feat(durable): code mode result lists the script's tool calls\n\ndetails.calls (CodemodeToolDetails): each tool call the script made, in call\norder, with status ok/error/cancelled, duration, and cut arguments and error;\ncalls still running or not yet launched when the script ended are cancelled.\nWritten once with the result: live progress is pi.live.nestedTools.\nbench:codemode compares a code mode script with a plain tool making the same\nnested calls: 1,000 parallel calls 0.82 vs 0.78 ms/call, sequential 1.52 vs\n1.10 ms/call (two more commits per call: the journal entry and the count).",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "6",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/package.json",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/codemode.ts",
+        "added": "62",
+        "removed": "5"
+      },
+      {
+        "path": "packages/durable/src/codemode/index.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode-bench.ts",
+        "added": "93",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode.test.ts",
+        "added": "27",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 192,
+    "removed": 6,
+    "zh": "在 Durable codemode 结果中列出脚本调用过的工具及状态，便于查看执行过程。",
+    "curated": true
+  },
+  {
+    "hash": "7b597d148139864d0559be411a58400b582ff11d",
+    "date": "2026-10-11T21:31:38Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "8a9c051f80090895abbc64262bc90d95b42103c4"
+    ],
+    "subject": "feat(durable): durable code mode (@earendil-works/pi-durable/codemode)",
+    "body": "feat(durable): durable code mode (@earendil-works/pi-durable/codemode)\n\nA codemode tool whose scripts call the conversation's tools as nested calls and\nsurvive a restart. The script runs deterministically (pi-codemode start()); each\nresult is journaled before it is delivered. A rerun starts the script again from\nthe stored start data, delivers the journaled results in order (nested calls\nreattach by key c<id>), checks every recorded call count, holds calls the\njournal lacks until replay ends and checks them against earlier attempts' keys,\nthen continues live. A call launches only once the count of the drain that made\nit is committed, so a rerun can prove which calls are new. Divergence, a changed\nmodule version or sandbox fingerprint, and a passed deadline end the call with a\nstored error; a decided outcome is returned without a VM. store()/load() keep\nvalues per conversation, rewindable and forked as of the fork's entry.\n\npi-codemode: CodemodeRun.finished, set when the outcome is decided.",
+    "files": [
+      {
+        "path": "package-lock.json",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/CHANGELOG.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/codemode/src/runtime/execution.ts",
+        "added": "9",
+        "removed": "2"
+      },
+      {
+        "path": "packages/codemode/src/types.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/test/deterministic.test.ts",
+        "added": "10",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "16",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "61",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/package.json",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/codemode.ts",
+        "added": "722",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/src/codemode/index.ts",
+        "added": "10",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/codemode.test.ts",
+        "added": "775",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "仓库级",
+      "codemode",
+      "durable"
+    ],
+    "type": "feat",
+    "added": 1618,
+    "removed": 3,
+    "zh": "新增 Durable codemode 子路径，将确定性脚本与持久任务、响应日志和嵌套工具恢复连接起来。",
+    "curated": true
+  },
+  {
+    "hash": "8a9c051f80090895abbc64262bc90d95b42103c4",
+    "date": "2026-10-11T22:18:47+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "78a3c10ba7f99a12015d6100be264c847abdba53"
+    ],
+    "subject": "feat(codemode): show schema constraints in tool declarations",
+    "body": "feat(codemode): show schema constraints in tool declarations\n\nProperty comments now carry constraints the TypeScript type cannot\nexpress (integer, bounds, lengths, pattern, format, default, ...) as\n@ tags, read from nullable anyOf branches too. Types over the size\nlimit are rendered again without tags before becoming unknown.\n\ncloses #10707",
+    "files": [
+      {
+        "path": "packages/codemode/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/README.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/codemode/src/declarations.ts",
+        "added": "90",
+        "removed": "11"
+      },
+      {
+        "path": "packages/codemode/test/declarations.test.ts",
+        "added": "119",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "codemode",
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 212,
+    "removed": 12,
+    "zh": "工具 TypeScript 声明显示 schema 的数值与默认值等约束，帮助模型理解参数；声明不能替代运行时校验。",
+    "curated": true
+  },
+  {
+    "hash": "78a3c10ba7f99a12015d6100be264c847abdba53",
+    "date": "2026-10-11T23:01:02+03:00",
+    "author": "Can Celik",
+    "parents": [
+      "0fb1aee749fbff729f8f373f3841d787779bebe0"
+    ],
+    "subject": "fix(tui): enable kitty images in herdr (#10774)",
+    "body": "fix(tui): enable kitty images in herdr (#10774)",
+    "files": [
+      {
+        "path": "packages/tui/src/terminal-image.ts",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/tui/test/terminal-image.test.ts",
+        "added": "2",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "tui"
+    ],
+    "type": "fix",
+    "added": 5,
+    "removed": 5,
+    "zh": "为 herdr 终端启用 Kitty 图片能力识别。",
+    "curated": true
+  },
+  {
+    "hash": "0fb1aee749fbff729f8f373f3841d787779bebe0",
+    "date": "2026-10-11T19:50:17Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "56cd194314fa0768ddb2306c3f51adbdd352841e"
+    ],
+    "subject": "feat(codemode): deterministic runs that the host answers (sandbox.start)",
+    "body": "feat(codemode): deterministic runs that the host answers (sandbox.start)\n\nFor durable code mode: a host can rerun a script after a restart and get the\nsame calls with the same arguments. start() runs the script with a virtual\nclock (startedAt, then each result's time, never backwards), randomness from a\nseed, UTC, no WeakRef/FinalizationRegistry, and the run's own tools and\nglobals; every call goes to onCall with the VM's call id, and the host answers\nwith run.deliver(seq, now, id, outcome). The VM applies results strictly in\nseq order whatever the transport does, reports its fingerprint (engine\nversions, prelude hash, limits) before the script runs, the calls issued after\neach result (onIdle), and the result it was processing when the script ended\n(result.during). Rejections can carry properties for the script's Error.\nexecute() is unchanged.",
+    "files": [
+      {
+        "path": "packages/codemode/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/README.md",
+        "added": "31",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/src/index.ts",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/src/portable.ts",
+        "added": "7",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/src/runtime/execution.ts",
+        "added": "163",
+        "removed": "33"
+      },
+      {
+        "path": "packages/codemode/src/runtime/inline.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/src/runtime/prelude-source.ts",
+        "added": "12",
+        "removed": "2"
+      },
+      {
+        "path": "packages/codemode/src/runtime/protocol.ts",
+        "added": "43",
+        "removed": "8"
+      },
+      {
+        "path": "packages/codemode/src/runtime/remote.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/codemode/src/runtime/vm.ts",
+        "added": "146",
+        "removed": "15"
+      },
+      {
+        "path": "packages/codemode/src/types.ts",
+        "added": "88",
+        "removed": "2"
+      },
+      {
+        "path": "packages/codemode/test/deterministic.test.ts",
+        "added": "400",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "codemode"
+    ],
+    "type": "feat",
+    "added": 904,
+    "removed": 60,
+    "zh": "新增 sandbox.start，由宿主按有序响应驱动确定性运行，使用固定时间和随机源支撑重放。",
+    "curated": true
+  },
+  {
+    "hash": "56cd194314fa0768ddb2306c3f51adbdd352841e",
+    "date": "2026-10-11T19:46:00Z",
+    "author": "github-actions[bot]",
+    "parents": [
+      "dbc7ff87c232e1456abe3a8d257aa2f2865e0b6c"
+    ],
+    "subject": "chore: approve contributors from issue #10809",
+    "body": "chore: approve contributors from issue #10809",
+    "files": [
+      {
+        "path": ".github/APPROVED_CONTRIBUTORS",
+        "added": "2",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "chore",
+    "added": 2,
+    "removed": 0,
+    "zh": "更新贡献者批准记录，来源为 issue #10809；不改变运行时行为。",
+    "curated": true
+  },
+  {
+    "hash": "dbc7ff87c232e1456abe3a8d257aa2f2865e0b6c",
+    "date": "2026-10-11T14:45:37-05:00",
+    "author": "Jay Madden",
+    "parents": [
+      "cd8bdf7518c0f9a381deef49bff95163bff127d8"
+    ],
+    "subject": "fix(tui): support override colorFn options in CompactionStatusIndicator (#10810)",
+    "body": "fix(tui): support override colorFn options in CompactionStatusIndicator (#10810)",
+    "files": [
+      {
+        "path": "packages/coding-agent/src/modes/interactive/components/status-indicator.ts",
+        "added": "3",
+        "removed": "3"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
+        "added": "17",
+        "removed": "5"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "fix",
+    "added": 20,
+    "removed": 8,
+    "zh": "允许 CompactionStatusIndicator 使用覆盖的 colorFn 选项。",
+    "curated": true
+  },
+  {
+    "hash": "cd8bdf7518c0f9a381deef49bff95163bff127d8",
+    "date": "2026-10-11T20:25:00+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "edb2eb966d7ed7238e70c2216adab6f69aabe8bb"
+    ],
+    "subject": "fix(durable): allow image conversion tests more time on CI",
+    "body": "fix(durable): allow image conversion tests more time on CI",
+    "files": [
+      {
+        "path": "packages/durable/test/tools-images.test.ts",
+        "added": "2",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "fix",
+    "added": 2,
+    "removed": 1,
+    "zh": "延长 CI 中图像转换测试的允许时间，适配较慢的运行环境。",
+    "curated": true
+  },
+  {
+    "hash": "edb2eb966d7ed7238e70c2216adab6f69aabe8bb",
+    "date": "2026-10-11T20:16:28+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "091bcc099839630da9d20a5aac130beced04fc58"
+    ],
+    "subject": "fix(tui): keep delayed terminal replies out of keyboard input",
+    "body": "fix(tui): keep delayed terminal replies out of keyboard input\n\nPreserve terminal reply strings until their terminator while retaining bounded recovery for ambiguous legacy Alt-key input.\n\nRelated: #10256, #10657. Missing OSC prefixes and fragmented DA1 replies remain separate issues.",
+    "files": [
+      {
+        "path": "packages/tui/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/tui/src/stdin-buffer.ts",
+        "added": "39",
+        "removed": "3"
+      },
+      {
+        "path": "packages/tui/test/stdin-buffer.test.ts",
+        "added": "130",
+        "removed": "1"
+      },
+      {
+        "path": "packages/tui/test/terminal-colors.test.ts",
+        "added": "24",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "tui"
+    ],
+    "type": "fix",
+    "added": 194,
+    "removed": 4,
+    "zh": "过滤延迟到达的终端协议回复，避免误当作键盘输入。",
+    "curated": true
+  },
+  {
+    "hash": "091bcc099839630da9d20a5aac130beced04fc58",
+    "date": "2026-10-11T18:04:43Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "d77d2752e5f92316d510cb4fd5875886d4aecb1f"
+    ],
+    "subject": "fix(chord): append to arrays without walking or copying them twice",
+    "body": "fix(chord): append to arrays without walking or copying them twice\n\nThe delta tracker planned every structural array change with a walk over all\nbase elements; inserts and removals that keep the remaining elements in order\nnow get the same plan from the changed ranges alone. applyImmutable built an\nappended array as a copy that the insert then grew, a second copy; an append now\nbuilds it with one concat. Ops, values, immutability and errors are unchanged.\n32,000 one-item appends, one commit each: 11.3 s -> 1.4 s\n(npm run bench:document-append in packages/durable).",
+    "files": [
+      {
+        "path": "packages/chord/src/delta/index.ts",
+        "added": "39",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/src/delta/tracker.ts",
+        "added": "38",
+        "removed": "4"
+      },
+      {
+        "path": "packages/chord/test/delta-apply-immutable.test.ts",
+        "added": "39",
+        "removed": "0"
+      },
+      {
+        "path": "packages/chord/test/delta-tracker/tracker.test.ts",
+        "added": "53",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/package.json",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/document-append-bench.ts",
+        "added": "52",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "chord",
+      "durable"
+    ],
+    "type": "fix",
+    "added": 223,
+    "removed": 4,
+    "zh": "优化 Chord 数组追加，避免重复遍历或复制数组。",
+    "curated": true
+  },
+  {
+    "hash": "d77d2752e5f92316d510cb4fd5875886d4aecb1f",
+    "date": "2026-10-11T18:04:34Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "97195ec3c4a40665a9008c3658e67b0782f33b18"
+    ],
+    "subject": "feat(durable): a schema tool's error result without structuredOutput gives programs its output",
+    "body": "feat(durable): a schema tool's error result without structuredOutput gives programs its output\n\nPrograms calling a tool with structuredOutputSchema got isError and no text when\nits error result omitted structuredOutput; they now get its bounded output,\ncollapsed like a schema-less tool's, so a code mode script sees the error text.\nA thrown error's message stays in its tool_error diagnostic.",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "12",
+        "removed": "7"
+      },
+      {
+        "path": "packages/durable/src/harness/tool.ts",
+        "added": "5",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "4",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/test/harness-structured-output.test.ts",
+        "added": "35",
+        "removed": "7"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "feat",
+    "added": 59,
+    "removed": 23,
+    "zh": "结构化工具错误结果缺少 structuredOutput 时，将普通 output 提供给程序调用者处理。",
+    "curated": true
+  },
+  {
+    "hash": "97195ec3c4a40665a9008c3658e67b0782f33b18",
+    "date": "2026-10-11T16:36:26Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "0f4b1465a444a53274ba02df6d4d14a2f04b1596"
+    ],
+    "subject": "build: share root config with pi-private",
+    "body": "build: share root config with pi-private\n\nEverything outside apps/ is the same in pi and pi-private; apps/ exists only\nin pi-private, and these files now tolerate its absence:\n- workspaces include apps/*\n- biome.json leaves apps/ to its own config\n- the pre-commit hook runs the apps/mobile check only when it exists\n- the Android APK workflow runs only in earendil-works/pi-private\n- scripts/biome-check.mjs runs native Biome, or Biome WASM on Android\n  (@biomejs/wasm-nodejs 2.3.5), for npm run check\nFrom pi-private bac58de97, c2a8629da, 106714ebc.",
+    "files": [
+      {
+        "path": ".github/workflows/android-apk.yml",
+        "added": "96",
+        "removed": "0"
+      },
+      {
+        "path": ".husky/pre-commit",
+        "added": "18",
+        "removed": "0"
+      },
+      {
+        "path": "biome.json",
+        "added": "2",
+        "removed": "1"
+      },
+      {
+        "path": "package-lock.json",
+        "added": "9",
+        "removed": "0"
+      },
+      {
+        "path": "package.json",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "scripts/biome-check.mjs",
+        "added": "123",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "仓库级"
+    ],
+    "type": "build",
+    "added": 251,
+    "removed": 2,
+    "zh": "调整构建配置共享，供 pi-private 复用根配置。",
+    "curated": true
+  },
+  {
+    "hash": "0f4b1465a444a53274ba02df6d4d14a2f04b1596",
+    "date": "2026-10-11T16:35:13Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "2a33bbee897eee3512cf673c750f6497f6a6bfae"
+    ],
+    "subject": "fix(ai): send the codex request body as a Uint8Array<ArrayBuffer> copy",
+    "body": "fix(ai): send the codex request body as a Uint8Array<ArrayBuffer> copy\n\nfetch accepts it as a body under the DOM lib too. From pi-private e97c4a60e.",
+    "files": [
+      {
+        "path": "packages/ai/src/api/openai-codex-responses.ts",
+        "added": "4",
+        "removed": "3"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "fix",
+    "added": 4,
+    "removed": 3,
+    "zh": "将 Codex 请求体复制为基于 ArrayBuffer 的 Uint8Array，修正请求体类型边界。",
+    "curated": true
+  },
+  {
+    "hash": "2a33bbee897eee3512cf673c750f6497f6a6bfae",
+    "date": "2026-10-11T13:37:35+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "74613de659ed30e2578734c40e775c71e3076c2a"
+    ],
+    "subject": "test(ai): e2e repro for radius dropping replayed Claude thinking",
+    "body": "test(ai): e2e repro for radius dropping replayed Claude thinking\n\nRadius omits providerThinkingLevel from pi-messages done events, so replayed\nsigned thinking has no effort marker and Anthropic drops it (block_binding\ndrop_block). Compares follow-up input tokens with and without the thinking\nblock against an Anthropic control.",
+    "files": [
+      {
+        "path": "packages/ai/test/radius-thinking-replay-e2e.test.ts",
+        "added": "141",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "ai"
+    ],
+    "type": "test",
+    "added": 141,
+    "removed": 0,
+    "zh": "添加 Radius 丢失重放 Claude thinking 的端到端复现测试；测试存在不表示问题已修复。",
+    "curated": true
+  },
+  {
+    "hash": "74613de659ed30e2578734c40e775c71e3076c2a",
+    "date": "2026-10-06T22:38:09+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "367b2bcf59d2cd723b9d2a1f5c4549a8ea0bd4bf"
+    ],
+    "subject": "feat(env): report a terminal's foreground job with ptyForeground",
+    "body": "feat(env): report a terminal's foreground job with ptyForeground\n\nThe process group in front of the pty when it is not the program's own (a job its shell runs), with the leader's name on macOS and Linux. Exposed as RemoteTerminal.foreground().",
+    "files": [
+      {
+        "path": "packages/env/daemon/src/main.rs",
+        "added": "12",
+        "removed": "5"
+      },
+      {
+        "path": "packages/env/daemon/src/pty.rs",
+        "added": "60",
+        "removed": "2"
+      },
+      {
+        "path": "packages/env/docs/protocol.md",
+        "added": "11",
+        "removed": "6"
+      },
+      {
+        "path": "packages/env/src/index.ts",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/env/src/terminal.ts",
+        "added": "17",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/test/terminal.test.ts",
+        "added": "29",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "env"
+    ],
+    "type": "feat",
+    "added": 130,
+    "removed": 14,
+    "zh": "Env 提供终端前台任务信息，支持识别当前前台程序。",
+    "curated": true
+  },
+  {
+    "hash": "367b2bcf59d2cd723b9d2a1f5c4549a8ea0bd4bf",
+    "date": "2026-10-06T18:31:17+02:00",
+    "author": "Armin Ronacher",
+    "parents": [
+      "89e5c2c075535e2f427c30fc74720d65b2944ff9"
+    ],
+    "subject": "feat(env): run programs in pseudo-terminals for interactive terminals",
+    "body": "feat(env): run programs in pseudo-terminals for interactive terminals\n\nThe daemon gets pty, ptyWrite and ptyResize: raw terminal output as events, input in arrival order, SIGWINCH on resize, and the process group killed on cancel or a lost connection. openTerminal() is the client, localDaemon() the daemon for this machine. Unix only; Windows answers ENOTSUP.",
+    "files": [
+      {
+        "path": "packages/env/README.md",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/daemon/src/exec.rs",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/env/daemon/src/main.rs",
+        "added": "25",
+        "removed": "2"
+      },
+      {
+        "path": "packages/env/daemon/src/pty.rs",
+        "added": "498",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/docs/protocol.md",
+        "added": "18",
+        "removed": "3"
+      },
+      {
+        "path": "packages/env/src/index.ts",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/src/ssh.ts",
+        "added": "9",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/src/terminal.ts",
+        "added": "110",
+        "removed": "0"
+      },
+      {
+        "path": "packages/env/test/terminal.test.ts",
+        "added": "131",
+        "removed": "0"
+      }
+    ],
+    "scopes": [
+      "env"
+    ],
+    "type": "feat",
+    "added": 799,
+    "removed": 6,
+    "zh": "Env daemon 可在伪终端中启动程序，支持交互终端的输入输出和窗口调整；Windows PTY 尚未支持。",
+    "curated": true
+  },
+  {
+    "hash": "89e5c2c075535e2f427c30fc74720d65b2944ff9",
+    "date": "2026-10-11T14:35:25+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "15e7bdc14cae38786c4cde24870ffce888e062cd"
+    ],
+    "subject": "fix(durable): fail a run whose blocking compaction failed; keep compaction failures visible",
+    "body": "fix(durable): fail a run whose blocking compaction failed; keep compaction failures visible\n\nA generation waiting on a blocking threshold compaction sent its request\nwhatever the outcome. When summarization failed, the context was still above\nthe blocking threshold: a session at 996K of a 1M window got an empty length\nanswer on every turn and nothing showed the error. The generation now fails\nwith model_error (Compaction failed: <error>) when its compaction failed,\nfaulted, was orphaned, or was aborted directly; a compaction that found\nnothing to compact or was declined still lets the request go ahead.\n\npi.live.compactionFailure keeps the newest failure (task, reason, error)\nuntil a compaction produces a summary. The agent events' snapshot carries it,\nand compaction_end carries error for a failed compaction.",
+    "files": [
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "3",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "3",
+        "removed": "1"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "43",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/src/harness/compaction.ts",
+        "added": "11",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/harness/events.ts",
+        "added": "12",
+        "removed": "4"
+      },
+      {
+        "path": "packages/durable/src/harness/generation.ts",
+        "added": "26",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/harness/live.ts",
+        "added": "23",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-compaction.test.ts",
+        "added": "92",
+        "removed": "23"
+      }
+    ],
+    "scopes": [
+      "durable"
+    ],
+    "type": "fix",
+    "added": 214,
+    "removed": 46,
+    "zh": "阻塞压缩失败时终止依赖该压缩的运行，并持续公开最近压缩失败，直到成功生成摘要。",
+    "curated": true
+  },
+  {
+    "hash": "15e7bdc14cae38786c4cde24870ffce888e062cd",
+    "date": "2026-10-11T13:53:05+02:00",
+    "author": "Mario Zechner",
+    "parents": [
+      "96abe9a5ad45005cae34ed1c52d42f71fc88bedc"
+    ],
+    "subject": "fix(coding-agent,durable): omit thinking from compaction summaries",
+    "body": "fix(coding-agent,durable): omit thinking from compaction summaries\n\nReplayed thinking is often not part of the live context (for example,\nradius drops it, and Anthropic drops blocks that do not match their\nrequest), but serializeConversation included all of it. A Pi Mobile\nsession at ~996K of 1M context tokens produced 1.38M-token summarization\nrequests that failed on every attempt. Providers only return summaries of\nthe reasoning anyway; visible text, tool calls, and tool results record\nwhat happened.",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/compaction.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/core/compaction/utils.ts",
+        "added": "7",
+        "removed": "7"
+      },
+      {
+        "path": "packages/coding-agent/test/compaction-serialization.test.ts",
+        "added": "30",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "5",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/harness/compaction.ts",
+        "added": "6",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/test/harness-compaction.test.ts",
+        "added": "3",
+        "removed": "2"
+      }
+    ],
+    "scopes": [
+      "coding-agent",
+      "durable"
+    ],
+    "type": "fix",
+    "added": 55,
+    "removed": 17,
+    "zh": "CLI 与 Durable 压缩摘要省略 thinking 内容，保留用于上下文的摘要输出。",
+    "curated": true
+  },
+  {
+    "hash": "96abe9a5ad45005cae34ed1c52d42f71fc88bedc",
+    "date": "2026-10-11T14:48:42+01:00",
+    "author": "Christian Klotz",
+    "parents": [
+      "e6b9a6af5d45fd191f8e90b56176a0c41aab3199"
+    ],
+    "subject": "feat(coding-agent): use pi.dev configuration schemas (#10751)",
+    "body": "feat(coding-agent): use pi.dev configuration schemas (#10751)\n\n* feat(coding-agent): use pi.dev configuration schemas\n\n* refactor(coding-agent): separate schema URL from output path\n\n* docs(coding-agent): document published schema URLs",
+    "files": [
+      {
+        "path": "packages/coding-agent/CHANGELOG.md",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/docs/keybindings.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/models.md",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/settings.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/docs/themes.md",
+        "added": "2",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/examples/extensions/dynamic-resources/dynamic.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/schemas/keybindings.schema.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/schemas/models.schema.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/schemas/settings.schema.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/schemas/theme.schema.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/scripts/generate-schemas.ts",
+        "added": "8",
+        "removed": "8"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/dark.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/src/modes/interactive/theme/light.json",
+        "added": "1",
+        "removed": "1"
+      },
+      {
+        "path": "packages/coding-agent/test/config-schemas.test.ts",
+        "added": "1",
+        "removed": "1"
+      }
+    ],
+    "scopes": [
+      "coding-agent"
+    ],
+    "type": "feat",
+    "added": 23,
+    "removed": 19,
+    "zh": "配置 schema 链接迁移至 pi.dev，便于编辑器按当前公开地址校验配置。",
+    "curated": true
+  },
+  {
+    "hash": "e6b9a6af5d45fd191f8e90b56176a0c41aab3199",
+    "date": "2026-10-11T13:12:44Z",
+    "author": "Mario Zechner",
+    "parents": [
+      "cdaf6c227d4718a72b59ccd02152c9614df44cfc"
+    ],
+    "subject": "feat(durable): inputs placed as application entries, display-only writes appended at once",
+    "body": "feat(durable): inputs placed as application entries, display-only writes appended at once\n\n- Input submissions take entry: { kind, data } (InputEntry): placed as that\n  kind with that data and the content as user message, instead of pi.user.\n  Kinds must be non-empty strings outside pi.*. Queued inputs carry it in\n  their pi.inbox item.\n- Writes with only kind and data (no model, head, edits) are appended and\n  settled done at once, busy or not; only a queued reset holds them back.\n- Experimental hosts render such inputs as user messages and title by them.\n\ncloses #10407",
+    "files": [
+      {
+        "path": "packages/coding-agent/src/experimental/client-tui-chat.ts",
+        "added": "4",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/runtime.ts",
+        "added": "8",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/durable/tui.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/runtime.ts",
+        "added": "8",
+        "removed": "2"
+      },
+      {
+        "path": "packages/coding-agent/src/experimental/vacation/tui.ts",
+        "added": "5",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/CHANGELOG.md",
+        "added": "2",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/README.md",
+        "added": "18",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/docs/spec.md",
+        "added": "34",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/src/harness/generation.ts",
+        "added": "3",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/src/harness/inbox.ts",
+        "added": "44",
+        "removed": "8"
+      },
+      {
+        "path": "packages/durable/src/harness/submissions.ts",
+        "added": "45",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/src/harness/types.ts",
+        "added": "12",
+        "removed": "3"
+      },
+      {
+        "path": "packages/durable/src/index.ts",
+        "added": "1",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-compaction.test.ts",
+        "added": "12",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-inbox.test.ts",
+        "added": "16",
+        "removed": "11"
+      },
+      {
+        "path": "packages/durable/test/harness-input-entries.test.ts",
+        "added": "456",
+        "removed": "0"
+      },
+      {
+        "path": "packages/durable/test/harness-ownership.test.ts",
+        "added": "7",
+        "removed": "2"
+      },
+      {
+        "path": "packages/durable/test/types.test.ts",
+        "added": "3",
+        "removed": "3"
+      }
+    ],
+    "scopes": [
+      "coding-agent",
+      "durable"
+    ],
+    "type": "feat",
+    "added": 683,
+    "removed": 57,
+    "zh": "输入支持应用自定义条目，纯展示写入可即时追加；涉及模型或历史编辑的写入仍遵循队列边界。",
+    "curated": true
+  },
+  {
     "hash": "fe2b9da4c56ae2d9faad897baae5267a900809b0",
     "date": "2026-10-11T20:42:06+08:00",
     "author": "CYG",

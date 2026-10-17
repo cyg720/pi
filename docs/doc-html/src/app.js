@@ -10,8 +10,9 @@
   const routes = [
     ['start', '从零认识 Pi', '01'], ['map', '项目源码地图', '02'], ['boot', '从 CLI 到会话', '03'],
     ['loop', '模型与工具循环', '04'], ['session', '会话与上下文', '05'], ['extensions', '智能体扩展详解', '06'],
-    ['advanced', '服务与持久化', '07'], ['practice', '带着问题读源码', '08'],
-    ['development', '本地开发说明', 'Dev'], ['directory', '源码目录说明', 'Dir'], ['functions', '功能清单详情', 'Fn'], ['diagrams', '架构图谱', '图'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
+    ['advanced', '对象与持久化', '07'], ['practice', '带着问题读源码', '08'],
+    ['mastery', '源码精通路线', '学'],
+    ['development', '本地开发说明', 'Dev'], ['packages', 'package 教程', 'Pkg'], ['directory', '源码目录说明', 'Dir'], ['functions', '功能清单详情', 'Fn'], ['diagrams', '架构图谱', '图'], ['versions', '版本介绍', 'Ver'], ['history', 'Git 提交时间线', 'Git'], ['sources', '离线源码书架', '{ }']
   ];
   const types = { feat: '新增', fix: '修复', docs: '文档', refactor: '重构', test: '测试', chore: '维护', perf: '性能', build: '构建', ci: 'CI', merge: '合并', revert: '回退', other: '其他' };
   let current = 'start';
@@ -32,11 +33,14 @@
   if (!['all', 'powershell', 'bash'].includes(commandShell)) commandShell = 'powershell';
   const featureBrowser = createFeatureBrowser(data, esc);
   const directoryBrowser = createDirectoryBrowser(data, esc);
+  const tutorialBrowser = createPackageTutorialBrowser(data, esc);
+  const masteryBrowser = createMasteryBrowser(data, esc);
+  const versionBrowser = createVersionBrowser(data, esc);
   const notify = text => { $('toast').textContent = text; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2500); };
   const sourceLink = (path, needle = '', label) => `<button class="ref" data-source="${esc(path)}" data-needle="${esc(needle)}">${esc(label || path.replace(/^packages\//, ''))}</button>`;
   const hero = (eyebrow, title, intro, number = '') => `<div class="hero-line"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="lead">${esc(intro)}</p></div>${number ? `<div class="chapter-number" aria-hidden="true">${number}</div>` : ''}</div>`;
   function nav() {
-    $('nav').innerHTML = routes.map(([id, title, n], i) => `${i === 0 ? '<div class="nav-group">循序渐进 / LEARN</div>' : i === 8 ? '<div class="nav-group">查阅与探索 / EXPLORE</div>' : ''}<a href="#${id}" class="nav-link ${current === id ? 'active' : ''}" ${current === id ? 'aria-current="page"' : ''}><span>${n}</span>${title}${readChapters.has(id) ? '<em aria-label="已读">✓</em>' : ''}</a>`).join('');
+    $('nav').innerHTML = routes.map(([id, title, n], i) => `${i === 0 ? '<div class="nav-group">循序渐进 / LEARN</div>' : id === 'development' ? '<div class="nav-group">查阅与探索 / EXPLORE</div>' : ''}<a href="#${id}" class="nav-link ${current === id ? 'active' : ''}" ${current === id ? 'aria-current="page"' : ''}><span>${n}</span>${title}${readChapters.has(id) ? '<em aria-label="已读">✓</em>' : ''}</a>`).join('');
     const count = routes.slice(0, 8).filter(([id]) => readChapters.has(id)).length;
     $('progressText').textContent = `${count} / 8`;
     $('progress').value = count;
@@ -132,7 +136,19 @@
   }
   function render() {
     clearInterval(timer); timer = undefined;
-    const [id, anchor] = location.hash.slice(1).split('/');
+    const [id, anchor, section] = location.hash.slice(1).split('/');
+    if (current === 'versions' && id === 'versions' && $('versionPanel')) {
+      versionBrowser.navigate(anchor, section);
+      return;
+    }
+    if (current === 'mastery' && id === 'mastery' && $('masteryPanel')) {
+      masteryBrowser.navigate(anchor, section);
+      return;
+    }
+    if (current === 'packages' && id === 'packages' && $('tutorialPanel')) {
+      tutorialBrowser.navigate(anchor, section);
+      return;
+    }
     if (current === 'directory' && id === 'directory' && $('directoryDetail')) {
       directoryBrowser.navigate(anchor);
       return;
@@ -143,12 +159,15 @@
     }
     if (current === 'functions') featureBrowser.rememberMenu();
     if (current === 'directory') directoryBrowser.rememberMenu();
+    if (current === 'packages') tutorialBrowser.rememberMenu();
+    if (current === 'mastery') masteryBrowser.rememberMenu();
+    if (current === 'versions') versionBrowser.rememberMenu();
     current = routes.some(r => r[0] === id) ? id : 'start';
     nav();
     $('breadcrumb').textContent = `Pi 源码导览 / ${routes.find(r => r[0] === current)[1]}`;
     document.title = `${routes.find(r => r[0] === current)[1]} · Pi 源码导览`;
     const chapter = data.chapters.find(c => c.id === current);
-    const html = chapter ? renderChapter(chapter) : current === 'directory' ? directoryBrowser.render(anchor) : current === 'functions' ? featureBrowser.render(anchor) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
+    const html = chapter ? renderChapter(chapter) : current === 'versions' ? versionBrowser.render(anchor, section) : current === 'mastery' ? masteryBrowser.render(anchor, section) : current === 'packages' ? tutorialBrowser.render(anchor, section) : current === 'directory' ? directoryBrowser.render(anchor) : current === 'functions' ? featureBrowser.render(anchor) : current === 'map' ? renderMap() : current === 'history' ? renderHistory() : current === 'diagrams' ? renderDiagrams() : renderSources();
     $('main').innerHTML = `<div class="page">${html}</div>`;
     if ($('traceDetail')) updateTrace();
     if (current === 'map') { treeSearch(); $('treeSearch').addEventListener('input', treeSearch); }
@@ -160,6 +179,9 @@
     if (current === 'functions') featureBrowser.activate();
     if (current === 'development') activateDevelopment();
     if (current === 'directory') directoryBrowser.activate();
+    if (current === 'packages') tutorialBrowser.activate();
+    if (current === 'mastery') masteryBrowser.activate();
+    if (current === 'versions') versionBrowser.activate();
     if (current === 'sources') { libraryRows(); $('librarySearch').addEventListener('input', libraryRows); }
     document.querySelector('.sidebar').classList.remove('open'); $('menu').setAttribute('aria-expanded', 'false');
     if (anchor && document.getElementById(anchor)) document.getElementById(anchor).scrollIntoView();
@@ -200,8 +222,13 @@
     const sections = data.chapters.flatMap(c => c.sections.map((s, i) => ({ c, s, i }))).filter(({ s }) => JSON.stringify(s).toLowerCase().includes(q));
     const features = featureBrowser.search(q);
     const directories = directoryBrowser.search(q);
+    const tutorials = tutorialBrowser.search(q);
+    const lessons = masteryBrowser.search(q);
+    const versions = versionBrowser.search(q);
     const files = Object.entries(data.sources).filter(([p, text]) => `${p}\n${text}`.toLowerCase().includes(q));
-    $('searchResults').innerHTML = `<p class="meta">${directories.length} 个目录节点 · ${features.length} 项功能 · ${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${directories.slice(0,20).map(n => `<button class="search-result" data-go="directory/${esc(encodeURIComponent(n.path))}">${esc(n.path || '仓库根目录')}<small>源码目录 · ${esc(n.description.slice(0,130))}</small></button>`).join('')}${features.slice(0,20).map(f => `<button class="search-result" data-go="functions/${f.id}">${esc(f.title)}<small>功能清单 · ${esc(f.purpose)}</small></button>`).join('')}${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!directories.length && !features.length && !sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
+    const tutorialResults = lessons.slice(0, 20).map(r => `<button class="search-result" data-go="mastery/${esc(r.id)}">${esc(r.title)} · 源码精通路线<small>${esc(r.scenario)}</small></button>`).join('') + tutorials.map(p => `<button class="search-result" data-go="packages/${esc(p.id)}">${esc(p.id)} · package 教程<small>${esc(p.lesson.intro)}</small></button>`).join('');
+    const versionResults = versions.slice(0,20).map(v=>`<button class="search-result" data-go="versions/${esc(v.id)}/overview">${esc(v.id === 'Unreleased' ? '未发布改动' : `v${v.id}`)} · 版本介绍<small>${esc(v.notes?.title || `${v.packages.length} 个包的日志记录`)}</small></button>`).join('');
+    $('searchResults').innerHTML = `${versionResults}${tutorialResults}<p class="meta">${versions.length} 个版本 · ${lessons.length} 条学习路线 · ${tutorials.length} 个包教程 · ${directories.length} 个目录节点 · ${features.length} 项功能 · ${sections.length} 个讲解段落 · ${files.length} 份文件；各显示前 20 项。</p>${directories.slice(0,20).map(n => `<button class="search-result" data-go="directory/${esc(encodeURIComponent(n.path))}">${esc(n.path || '仓库根目录')}<small>源码目录 · ${esc(n.description.slice(0,130))}</small></button>`).join('')}${features.slice(0,20).map(f => `<button class="search-result" data-go="functions/${f.id}">${esc(f.title)}<small>功能清单 · ${esc(f.purpose)}</small></button>`).join('')}${sections.slice(0, 20).map(({ c, s, i }) => `<button class="search-result" data-go="${c.id}/section-${i}">${esc(s.title)}<small>${esc(c.title)} · ${esc((s.text || '表格与源码引用').slice(0, 100))}</small></button>`).join('')}${files.slice(0, 20).map(([p, text]) => { const line = text.split('\n').find(l => l.toLowerCase().includes(q)); return `<button class="search-result" data-source="${esc(p)}" data-needle="${esc(q)}">${esc(p)}<small>${esc((line || '文件名匹配').slice(0, 130))}</small></button>`; }).join('')}${!versions.length && !lessons.length && !tutorials.length && !directories.length && !features.length && !sections.length && !files.length ? '<div class="empty">没有找到结果。试试函数名或更短的关键词。</div>' : ''}`;
   }
   document.addEventListener('click', async event => {
     const el = event.target.closest('button, [data-source]'); if (!el) return;
