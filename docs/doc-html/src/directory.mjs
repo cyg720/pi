@@ -23,12 +23,12 @@ export function buildDirectory({ paths, trackedPaths = paths, catalog, sources =
     node.features = node.kind === 'file' ? record?.features || [] : [...new Set(Object.entries(catalog.files).filter(([p]) => !node.path || p.startsWith(`${node.path}/`)).flatMap(([, f]) => f.features))];
     const note = Object.hasOwn(notes.nodes, node.path) ? notes.nodes[node.path] : undefined;
     node.description = note?.description || '';
-    node.details = note?.details || [];
+    node.details = (note?.details || []).filter(detail => !detail.feature || features.has(detail.feature));
     node.basis = node.description ? note.basis || '维护者说明' : '';
     node.evidence = note?.evidence || [];
     node.initializedCommit = note?.initializedCommit || '';
     node.sourceHash = Object.hasOwn(sourceHashes, node.path) ? sourceHashes[node.path] : '';
-    node.review = Boolean(node.description && note.sourceHash && node.sourceHash && note.sourceHash !== node.sourceHash);
+    node.review = Boolean(node.description && ((note.sourceHash && node.sourceHash && note.sourceHash !== node.sourceHash) || (note.details || []).some(detail => detail.feature && !features.has(detail.feature))));
     node.status = !node.description ? 'pending' : node.review ? 'review' : 'ready';
     node.snapshot = Object.hasOwn(sources, node.path);
     node.tracked = node.kind === 'file' && tracked.has(node.path);

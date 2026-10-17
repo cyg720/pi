@@ -9,15 +9,11 @@ export const featureModules = [
   ['mcp', 'MCP · 协议客户端与认证', 'packages/mcp/src/', 'MCP 客户端、stdio/HTTP 传输、OAuth、内容与测试传输。', '库能力', 'packages/mcp/README.md'],
   ['ai', 'AI · 模型与提供商', 'packages/ai/src/', '统一消息、流式请求、认证、模型目录与协议适配。', '库能力', 'packages/ai/README.md'],
   ['tui', 'TUI · 终端界面', 'packages/tui/src/', '渲染、布局、编辑、补全、键鼠输入和终端能力。', '库能力', 'packages/tui/README.md'],
-  ['chord', 'Chord · 服务与插件组合', 'packages/chord/src/', 'Facet 组合、服务绑定、复制状态与不可变 delta。', '库能力', 'packages/chord/README.md'],
+  ['chord', 'Chord · 对象与热重载', 'packages/chord/src/', '契约、对象句柄、可观察状态、跨进程连接与热重载。', '库能力', 'packages/chord/README.md'],
   ['durable', 'Durable · 持久任务与文档', 'packages/durable/src/', '提交优先的会话、任务、模型生成、子智能体与存储。', '实验性', 'packages/durable/README.md'],
   ['env', 'Env · 远程执行环境', 'packages/env/src/', '通过 SSH 与远端 Rust daemon 执行文件和进程操作，Durable 与凭据留在本机。', '实验性', 'packages/env/README.md'],
-  ['client', 'Client · 远程客户端', 'packages/client/src/', '实验性服务协议的连接、请求与订阅客户端。', '实验性', 'packages/client/README.md'],
-  ['server', 'Server · 会话服务端', 'packages/server/src/', '实验性连接、会话路由与 attachment 生命周期。', '实验性', 'packages/server/README.md'],
-  ['protocol', 'Protocol · 通信协议', 'packages/protocol/src/', '消息信封、CBOR 编码和字节流分帧。', '实验性', 'packages/protocol/README.md'],
   ['telemetry', 'Telemetry · 遥测契约', 'packages/telemetry/src/', '显式上下文、span、类型化事件和参考实现。', '库能力', 'packages/telemetry/README.md'],
   ['evals', 'Evals · 行为评测', 'packages/evals/src/', '隔离评测、实验分组、重复运行和结果配对。', '开发工具', 'packages/evals/README.md'],
-  ['experimental', '实验应用 · 服务化探索', 'packages/coding-agent/src/experimental/', '独立服务、worker、Durable 编码应用与 Vacation 背景子会话。', '实验性', 'packages/coding-agent/src/experimental/services/README.md'],
   ['examples', '示例 · 扩展与 SDK', 'packages/coding-agent/examples/', '可阅读、可改写的扩展、SDK 和插件示例；不等于默认启用。', '示例', 'packages/coding-agent/examples/extensions/README.md'],
   ['agent-examples', '示例 · Agent + MCP + Codemode', 'packages/agent/examples/', '展示在低层 Agent 中接入 MCP 工具与脚本编排。', '示例', 'packages/agent/README.md'],
   ['durable-examples', '示例 · Durable 能力演练', 'packages/durable/test/examples/', '覆盖队列、恢复、子任务、前后台子会话与扩展配置的可运行示例。', '示例', 'packages/durable/README.md'],
@@ -33,7 +29,7 @@ export const featureSpecs = {
     ['sdk', 'SDK 创建与替换运行时', ['core/sdk.ts','core/agent-session-services.ts','core/agent-session-runtime.ts'], '让应用在进程内创建、继续或替换编码智能体会话。', 'createAgentSession / createAgentSessionRuntime', 'SDK 注入流函数、配置、工具与存储；运行时负责会话替换和重新绑定。'],
     ['interactive', '交互聊天与终端工作流', ['modes/interactive/interactive-mode.ts','modes/interactive/chat-controller.ts','modes/interactive/chat-viewport.ts'], '接收用户交互并呈现模型消息、工具输出与运行状态。', 'pi（终端输入输出）', 'UI 订阅会话事件；不把 UI 控制逻辑等同于模型执行循环。'],
     ['print', '一次性文本与 JSON 事件输出', ['modes/print-mode.ts','modes/json-event.ts','core/output-guard.ts'], '适配脚本与管道：输出最终文本，或逐条输出 JSONL 事件。', '--print；--mode json', '提交输入，等待会话处理并清理；标准输出背压与协议输出单独处理。'],
-    ['rpc', 'CLI RPC 与扩展 UI 代理', ['modes/rpc/'], '让外部程序通过标准输入输出控制会话，并处理支持的扩展交互。', '--mode rpc；RpcClient', 'JSONL 命令/响应协议，与 packages/protocol 的 CBOR 服务协议分开。'],
+    ['rpc', 'CLI RPC 与扩展 UI 代理', ['modes/rpc/'], '让外部程序通过标准输入输出控制会话，并处理支持的扩展交互。', '--mode rpc；RpcClient', '通过 stdin/stdout 交换 JSONL 命令、响应与事件；外部程序管理进程与协议交互。'],
     ['prompt', '输入处理、排队与任务收尾', ['core/agent-session.ts','core/messages.ts'], '协调扩展命令、输入转换、steering/follow-up、重试与最终通知。', 'AgentSession.prompt / steer / followUp', 'agent_end 后仍可能继续；agent_settled 是完成自动处理后的通知边界。'],
     ['sessions', '会话保存、恢复与命名', ['core/session-manager.ts','core/session-cwd.ts','cli/session-picker.ts'], '保存树形会话记录，并按项目、路径或 ID 恢复。', '--continue；--resume；--session；--name', '当前分支重建下一次模型上下文，内存会话可关闭持久化。'],
     ['branch', '会话树、分叉与克隆', ['core/session-manager.ts','core/agent-session-runtime.ts','modes/interactive/components/tree-selector.ts'], '从历史位置继续，或复制历史创建独立会话。', '/tree；/fork；/clone', '区分同文件内的分支和新会话副本；分支敏感扩展状态需要重新恢复。'],
@@ -93,13 +89,123 @@ export const featureSpecs = {
     ['text','Unicode 宽度、ANSI 与 LaTeX',['utils.ts','latex.ts'],'按终端显示列处理文本、链接、换行和公式。','visibleWidth / wrapTextWithAnsi / renderLatex','字符数量不等于终端列宽。']
   ],
   chord: [
-    ['facets','Facet 定义、加载与生命周期',['api.ts','facets/'],'声明插件能力与依赖并由宿主管理激活和清理。','defineFacet / createFacetHost','依赖图先校验，提供者先激活，清理按反向依赖顺序。'],
-    ['services','服务提供、消费与远程绑定',['services/','types.ts'],'暴露 singleton/keyed 服务、处理远程调用与订阅。','defineService / createRemoteServiceBinding','服务语义由 Chord 管理，传输信封由应用管理。'],
-    ['delta','不可变 delta 与复制状态',['delta/'],'跟踪 JSON 修改、应用操作并维护不可变版本。','track / applyImmutable 等 delta API','draft 生命周期与严格 JSON 放置约束以原始注释和类型为准。'],
-    ['context','取消上下文与调用数据',['context/'],'显式传递取消、截止时间和调用范围值。','Context','不依赖 Pi 遥测或权限系统；这些值由应用传入。'],
-    ['bundle','插件包清单、打包与 Node 加载',['node/','node.ts','bundler.ts'],'支持插件包资源解析、打包与加载。','Node / bundler 子路径','环境相关能力与运行时中性根入口隔离。'],
-    ['json','严格 JSON 校验与复制',['json.ts'],'验证跨服务数据并复制 JSON 值。','isJsonValue / copyJson','跨进程可传输数据与任意 JavaScript 对象并不等价。']
+  [
+    "contracts",
+    "契约、变体与方法声明",
+    [
+      "contract.ts",
+      "schema.ts"
+    ],
+    "以 TypeBox 描述对象输入、状态和方法，区分本地与可远程传输的契约。",
+    "local / remote / method / opaque / bind / coverage",
+    "契约版本和 schema 参与兼容性检查；principal 变体只限定对象能力，完整认证由宿主负责。"
   ],
+  [
+    "host",
+    "宿主、对象创建与根调用",
+    [
+      "host.ts",
+      "record.ts",
+      "types.ts"
+    ],
+    "按类型、规范化输入和 principalKey 定位对象，按需创建并通过句柄访问。",
+    "createHost / host.serve / host.root / ctx.get",
+    "工厂同步创建实现；激活等待资源与持有依赖就绪，root 结束释放该调用持有的对象。"
+  ],
+  [
+    "state",
+    "状态单元、派生与资源声明",
+    [
+      "cell.ts",
+      "declare.ts",
+      "publish.ts"
+    ],
+    "将可观察 JSON 状态、派生值、监听与资源纳入对象生命周期。",
+    "self.state / cell / derivation / listener / resource",
+    "句柄与状态读接口跨重载保持稳定；资源释放与迁移按运行时生命周期执行。"
+  ],
+  [
+    "links",
+    "跨进程句柄、连接与 JSON 帧",
+    [
+      "link.ts",
+      "connection.ts",
+      "remote.ts",
+      "wire.ts",
+      "websocket.ts",
+      "cluster.ts"
+    ],
+    "通过内存、IPC 或 WebSocket 连接交换对象调用和状态更新。",
+    "memoryLinkPair / ipcLink / webSocketLink / acceptWebSockets",
+    "断线拒绝未完成调用；不支持连接恢复，断线不证明远端操作尚未执行。"
+  ],
+  [
+    "reload",
+    "代码热重载、迁移与 epoch",
+    [
+      "reload.ts",
+      "host.ts"
+    ],
+    "准备新实现，在迁移或独占资源需要时阻塞进入，再提交新代码并退休旧版本。",
+    "host.reload / ReloadOptions / ReloadReport",
+    "在途工作沿原 epoch 收尾；最多保留当前与前一个 epoch，兼容性和迁移需满足契约。"
+  ],
+  [
+    "registry",
+    "动态注册表与 Facet 装配",
+    [
+      "registry.ts",
+      "host.ts"
+    ],
+    "组合对象提供者与可观察注册项，Facet 的 setup 向宿主登记能力。",
+    "defineFacet / defineRegistry",
+    "新版 defineFacet 属于对象运行时；旧 createFacetHost、defineService 接口已移除。"
+  ],
+  [
+    "manager",
+    "子进程宿主、加载器与进程锁",
+    [
+      "node.ts",
+      "manager.ts",
+      "loader.ts"
+    ],
+    "创建和管理 Node 子宿主，加载 Facet 模块并管理控制与所有权。",
+    "createHostManager / forkDriver / childControl / processLock / nodeLoader",
+    "Node 专用入口与浏览器可用根入口分离。"
+  ],
+  [
+    "delta",
+    "不可变 delta 与复制状态",
+    [
+      "delta/",
+      "state.ts"
+    ],
+    "跟踪 JSON 修改、原子发布版本并供 Durable 文档、视图和任务图订阅。",
+    "track / applyImmutable / replicatedState",
+    "replicatedState 独立于对象宿主；每订阅最多积压 100 份完整值，溢出合并为最新值，不能当成无损审计流。"
+  ],
+  [
+    "context",
+    "取消上下文与调用数据",
+    [
+      "context/"
+    ],
+    "显式传递取消、截止时间和调用范围值。",
+    "Context / withCancel / withContextValue",
+    "调用方负责提供上下文；上下文不是认证系统。"
+  ],
+  [
+    "json",
+    "严格 JSON 边界与错误契约",
+    [
+      "json.ts",
+      "errors.ts"
+    ],
+    "校验和复制 JSON 值，表达 invalid、forbidden 等运行时错误。",
+    "copyJson / isJsonValue / ChordError",
+    "转移所有权后的值不得继续修改；在可变信任边界复制或序列化。"
+  ]
+],
   durable: [
     ['session','会话事务、分叉与观察',['session/'],'组织持久会话、提交事务、分叉与观察。','createSession','存储事务与观察者通知有专门边界。'],
     ['records','文档、条目、任务与 ID 契约',['documents.ts','entries.ts','tasks.ts','types.ts','ids.ts','errors.ts'],'定义持久记录类型、文档语义和任务阶段。','defineDoc / defineEntry / defineTask','这些记录契约与 CLI JSONL 条目不是同一套 API。'],
@@ -110,21 +216,6 @@ export const featureSpecs = {
     ['env','执行环境与输出捕获',['env/'],'提供文件/进程环境与可截断输出管理。','env 子路径','运行环境相关实现与存储契约分别阅读。'],
     ['testing','存储一致性用例与基准',['testing/'],'让存储实现复用相同契约测试及读写负载。','testing 子路径','基准是比较基础，不是生产容量保证。']
   ],
-  client: [
-    ['client','请求、订阅与会话连接',['client.ts','connection.ts','types.ts'],'管理请求关联、服务订阅和实时 attachment。','Client / createClientServiceTransport','不自动重连重放；断线不保证远端操作未执行。'],
-    ['transport','字节传输与 Unix 发现',['transport.ts','unix.ts'],'适配有序字节通道并发现 Unix socket 服务。','ByteTransportFactory','逻辑 serverId 与物理地址区分。'],
-    ['errors','连接错误与 Promise 管理',['errors.ts','promise.ts'],'表示断线、销毁和服务器错误。','客户端错误处理','本地请求拒绝与远端业务结果需要区分。']
-  ],
-  server: [
-    ['route','服务路由与 attachment 管理',['server.ts','connection.ts','session-router.ts','types.ts'],'验证路由并将调用交给拥有会话的应用服务。','Server / ServerHost','连接结束与已接纳调用的收尾由生命周期契约决定。'],
-    ['transport','监听器与 Unix 服务端',['listener.ts','transports/'],'为路由服务提供传输监听与 Unix 预设。','createUnixServer','认证策略由宿主负责，不由实验性传输自动提供。'],
-    ['testing','服务端测试宿主与客户端',['testing/','errors.ts'],'提供服务测试辅助对象与路由错误类型。','testing 子路径','关联测试仅表示引用，不表示用例已经运行。']
-  ],
-  protocol: [
-    ['envelope','版本握手与路由信封',['protocol.ts'],'定义服务/会话目标、请求响应、取消和订阅消息。','PROTOCOL_VERSION / RpcTarget','信封承载 opaque strict-JSON，业务含义由服务解释。'],
-    ['codec','消息编码与字节流分帧',['codec.ts','framing.ts'],'把消息编码成帧并处理任意分段、合并的输入字节。','encodeClientMessage / ServerMessageDecoder','帧长度与结构限制用于拒绝无效消息。'],
-    ['cbor','CBOR 编解码与限制',['cbor/'],'实现二进制值编码和受限解码。','CBOR 子模块','严格 JSON 与协议结构校验是不同层的约束。']
-  ],
   telemetry: [
     ['schema','Span、事件与类型化 schema',['index.ts'],'定义操作跨度、属性与事件，并从 schema 推导调用类型。','defineTelemetrySchema / createTypedSpanStarter','上下文显式传入，没有全局当前 span 或内置 exporter。'],
     ['adapters','空操作与内存参考实现',['noop.ts','memory.ts'],'提供零记录开销路径和可检查的内存记录器。','NOOP_TELEMETRY_CONTEXT / InMemoryTelemetryContext','生产导出后端由应用提供适配。'],
@@ -133,12 +224,6 @@ export const featureSpecs = {
   evals: [
     ['runner','评测计划与容器运行',['cli.ts','docker.ts','plan.ts'],'为不同文档条件、模型和重复次数安排隔离评测。','eval:docs / eval:host','可能需要真实模型与网络；本次索引不执行评测。'],
     ['report','结果配对与效果报告',['report.ts','harness.ts'],'读取评测观测并比较有/无文档的行为结果。','report / harness','缺失、重复或未计分的实验会阻止总体效果结论。']
-  ],
-  experimental: [
-    ['services','应用服务声明与提供者',['services/'],'提供模型、会话、插件、转录和控制等应用服务。','Chord 服务绑定','与传输层分工：应用定义 payload 的业务含义。'],
-    ['workers','协调器、服务与会话 worker',['coordinator.ts','coordinator-entry.ts','server.ts','session-worker.ts','session-worker-manager.ts','process.ts'],'在不同进程间组织连接、会话所有权与 worker 生命周期。','实验服务启动入口','不当作默认单进程 CLI 的必经路径。'],
-    ['plugins','应用插件包与内置插件',['plugins/','plugin.ts','source-resolver.ts'],'解析并组合实验应用使用的插件能力。','实验插件系统','与 CLI TypeScript 扩展体系分别展示。'],
-    ['clients','客户端、TUI 与认证中继',['client.ts','client-runtime.ts','client-tui.ts','client-tui-chat.ts','radius-auth.ts','radius-relay.ts','cli.ts','commands.ts'],'把实验服务连接到交互客户端和认证流程。','实验性客户端入口','服务连接与 CLI stdin/stdout RPC 不同。'],
   ],
   native: [
     ['win','Windows 平台桥接',['win32/'],'提供 Windows 原生平台和剪贴板实现及构建。','native/win32','二进制预构建仅列入资源清单，不解析为 TypeScript 符号。'],

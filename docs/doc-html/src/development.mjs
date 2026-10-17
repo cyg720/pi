@@ -5,7 +5,7 @@ const launch = {
     {
       name: 'Pi 源码 · 启动检查（不调用模型）', type: 'node', request: 'launch',
       runtimeExecutable: 'node', runtimeArgs: ['--import', './packages/coding-agent/src/experimental/source-resolver.ts'],
-      program: '${workspaceFolder}/packages/coding-agent/src/experimental/cli.ts', cwd: '${workspaceFolder}',
+      program: '${workspaceFolder}/packages/coding-agent/src/cli.ts', cwd: '${workspaceFolder}',
       args: ['--offline', '--no-approve', '--no-extensions', '--help'],
       console: 'integratedTerminal', sourceMaps: false, skipFiles: ['<node_internals>/**'],
       env: { PI_CODING_AGENT_DIR: '${env:TEMP}/pi-source-dev-agent', PI_TELEMETRY: '0' }
@@ -13,7 +13,7 @@ const launch = {
     {
       name: 'Pi 源码 · 交互断点', type: 'node', request: 'launch',
       runtimeExecutable: 'node', runtimeArgs: ['--import', './packages/coding-agent/src/experimental/source-resolver.ts'],
-      program: '${workspaceFolder}/packages/coding-agent/src/experimental/cli.ts', cwd: '${workspaceFolder}',
+      program: '${workspaceFolder}/packages/coding-agent/src/cli.ts', cwd: '${workspaceFolder}',
       args: ['--offline', '--no-approve', '--no-session', '--tui-mode', 'regular'],
       console: 'integratedTerminal', sourceMaps: false, skipFiles: ['<node_internals>/**'],
       env: { PI_CODING_AGENT_DIR: '${env:TEMP}/pi-source-dev-agent', PI_TELEMETRY: '0' }
@@ -98,7 +98,7 @@ git diff -- package.json package-lock.json`, expected: '已安装版本应与本
     },
     {
       title: '05 · PowerShell：建立源码启动命令',
-      text: '下面整块在仓库根目录执行一次，创建当前终端中的 Invoke-PiSource 函数。它预加载仓库现有 source-resolver，复用 pi-test.sh 的入口；cwd 仍是你调用时的工作目录。换终端后需重新定义。独立 agentDir 避免开发设置混入日常 Pi 配置；登录不会自动继承。',
+      text: '下面整块在仓库根目录执行一次，创建当前终端中的 Invoke-PiSource 函数。它预加载仓库现有 source-resolver，直接运行当前 src/cli.ts 入口；cwd 仍是你调用时的工作目录。换终端后需重新定义。独立 agentDir 避免开发设置混入日常 Pi 配置；登录不会自动继承。',
       commands: [
         { title: '定义源码启动器并做无模型检查', shell: 'powershell', code: `Set-Location -LiteralPath 'D:\\code\\CYG\\Github\\pi'
 $piRepository = (Resolve-Path -LiteralPath '.').Path
@@ -106,24 +106,24 @@ $piResolverUrl = node -p "require('node:url').pathToFileURL(require('node:path')
 $env:PI_CODING_AGENT_DIR = Join-Path $env:TEMP 'pi-source-dev-agent'
 $env:PI_TELEMETRY = '0'
 function Invoke-PiSource {
-    node --import $piResolverUrl "$piRepository/packages/coding-agent/src/experimental/cli.ts" @args
+    node --import $piResolverUrl "$piRepository/packages/coding-agent/src/cli.ts" @args
 }
 Invoke-PiSource --offline --version
 Invoke-PiSource --offline --no-approve --no-extensions --help`, expected: '在依赖和模型数据准备好后，版本为当前包版本；帮助正常退出，不发模型请求。' },
         { title: '验证工作区包确实解析到源码', shell: 'powershell', code: `node --import $piResolverUrl --input-type=module -e "console.log(import.meta.resolve('@earendil-works/pi-coding-agent'))"`, expected: '输出 packages/coding-agent/src/index.ts 的 file URL，而不是 dist/index.js。' }
       ],
       steps: ['不要用全局 pi 来检验核心源码改动，它通常运行另一份安装。', '普通模块源码改动后重启进程；仅扩展/资源更新可按其生命周期使用 /reload。', '结束开发后关闭该终端；上述环境变量只影响这个终端及其子进程。'],
-      refs: [['pi-test.sh', 'RESOLVER_URL='], ['packages/coding-agent/src/experimental/source-resolver.ts', 'registerHooks'], ['packages/coding-agent/src/experimental/cli.ts', 'await main(args)'], ['packages/coding-agent/docs/configuration.md', 'PI_CODING_AGENT_DIR']]
+      refs: [['pi-test.sh', 'RESOLVER_URL='], ['packages/coding-agent/src/experimental/source-resolver.ts', 'registerHooks'], ['packages/coding-agent/src/cli.ts', 'main(process.argv.slice(2))'], ['packages/coding-agent/docs/configuration.md', 'PI_CODING_AGENT_DIR']]
     },
     {
-      title: '06 · Git Bash / Linux：复用仓库脚本',
-      text: 'Git Bash 在 Windows 原生目录运行时使用对应的 Windows Node；WSL 是独立 Linux 环境，应在该环境准备 Node 与依赖，不共用 Windows node_modules。pi-test.sh 的 --no-env 只是清理脚本列出的环境凭据，并不会隔离已有 auth.json 或项目资源。',
+      title: '06 · Git Bash / Linux：直接运行源码',
+      text: 'Git Bash 在 Windows 原生目录运行时使用对应的 Windows Node；WSL 是独立 Linux 环境，应在该环境准备 Node 与依赖，不共用 Windows node_modules。当前 pi-test.sh 仍指向已删除的 experimental/cli.ts，因此本步骤显式使用 source-resolver 和现有 src/cli.ts；升级后应重新核对脚本。',
       commands: [
         { title: 'Git Bash 的源码运行方式', shell: 'bash', code: `cd /d/code/CYG/Github/pi
 export PI_CODING_AGENT_DIR="$(mktemp -d)/agent"
 export PI_TELEMETRY=0
-./pi-test.sh --offline --no-approve --no-extensions --help
-./pi-test.sh --offline --no-approve --no-session --tui-mode regular`, expected: '帮助退出后可打开源码 TUI；在 Linux/WSL 把 cd 路径改成自己的 Linux checkout。' }
+node --import ./packages/coding-agent/src/experimental/source-resolver.ts ./packages/coding-agent/src/cli.ts --offline --no-approve --no-extensions --help
+node --import ./packages/coding-agent/src/experimental/source-resolver.ts ./packages/coding-agent/src/cli.ts --offline --no-approve --no-session --tui-mode regular`, expected: '帮助退出后可打开源码 TUI；在 Linux/WSL 把 cd 路径改成自己的 Linux checkout。' }
       ],
       refs: [['pi-test.sh', 'node --import'], ['packages/coding-agent/docs/environment-variables.md', 'PI_CODING_AGENT_DIR']]
     },
@@ -164,15 +164,15 @@ Invoke-PiSource --offline --no-approve --no-session --mode rpc`, expected: '前�
       title: '10 · VS Code：可复制的断点配置',
       text: '在仓库根目录创建 .vscode/launch.json，把下方 JSON 合并进去（已有配置时只追加 configurations）。配置由导览提供，仓库目前没有预置 launch.json。第一项检查启动，第二项运行终端交互，第三项附加到已开启 Inspector 的进程。此处直接运行 .ts，关闭 sourceMaps 以免误匹配旧 dist。',
       commands: [{ title: '保存为 .vscode/launch.json', shell: 'json', code: JSON.stringify(launch, null, 2), expected: '选择对应调试项按 F5。启动检查在依赖与模型数据准备好后可运行；交互使用集成终端输入。' }],
-      steps: ['打开 src/experimental/cli.ts，在 setupCli() 或 await main(args) 的可执行行按 F9。', '选“启动检查”并 F5；命中后在 VARIABLES 和 CALL STACK 看 args 与调用位置。', 'F10 单步跳过，F11 进入，Shift+F11 返回，F5 继续；在 type/interface 或空白行上的断点不会执行。', '调试扩展时，在“交互断点”的 args 中加入 --no-extensions、-e、./.pi/extensions/local-hello.ts。', '修改核心后停止并重新启动；不要指望已加载的 Node 模块随文件保存自动更新。'],
+      steps: ['打开 packages/coding-agent/src/cli.ts，在 setupCli() 或 main(process.argv.slice(2)) 的可执行行按 F9。', '选“启动检查”并 F5；命中后在 VARIABLES 和 CALL STACK 看 process.argv 与调用位置。', 'F10 单步跳过，F11 进入，Shift+F11 返回，F5 继续；在 type/interface 或空白行上的断点不会执行。', '调试扩展时，在“交互断点”的 args 中加入 --no-extensions、-e、./.pi/extensions/local-hello.ts。', '修改核心后停止并重新启动；不要指望已加载的 Node 模块随文件保存自动更新。'],
       external: [{ title: 'VS Code 官方 Node 调试文档（联网参考）', url: 'https://code.visualstudio.com/docs/nodejs/nodejs-debugging' }, { title: 'Node 24 原生 TypeScript 文档（联网参考）', url: 'https://nodejs.org/docs/latest-v24.x/api/typescript.html' }],
-      refs: [['packages/coding-agent/src/experimental/cli.ts', 'setupCli()'], ['packages/coding-agent/src/experimental/source-resolver.ts', 'stale package dist files'], ['tsconfig.base.json', '"sourceMap"']]
+      refs: [['packages/coding-agent/src/cli.ts', 'setupCli()'], ['packages/coding-agent/src/experimental/source-resolver.ts', 'stale package dist files'], ['tsconfig.base.json', '"sourceMap"']]
     },
     {
       title: '11 · 附加调试与断点阅读路线',
       text: '若先从终端启动，用 --inspect-brk 在入口前等待调试器，再选择“附加 9229”并 F5。监听只放在本机 127.0.0.1。下面是实际源码阅读路线；经过模型/工具的断点需要对应请求，帮助模式不会触发它们。',
-      commands: [{ title: 'PowerShell 终端启动 Inspector', shell: 'powershell', code: 'node --inspect-brk=127.0.0.1:9229 --import $piResolverUrl "$piRepository/packages/coding-agent/src/experimental/cli.ts" --offline --no-approve --no-session --tui-mode regular', expected: '出现 Debugger listening 后等待附加。连接并继续后进入 TUI；端口被占用时换端口并同步修改 attach 配置。' }],
-      table: [['断点入口', '观察重点', '触发方式'], ['experimental/cli.ts → main.ts', 'args、模式与运行时装配', '启动；--help 可只验证入口'], ['core/sdk.ts → new Agent / new AgentSession', '模型、streamFn、工具和会话依赖', '进入会话启动'], ['core/agent-session.ts → prompt', 'input / before_agent_start、排队与上下文', '提交一条用户输入'], ['agent/src/agent-loop.ts → streamAssistantResponse', '统一消息与注入的模型流', '正常请求或 faux provider 测试'], ['agent/src/agent-loop.ts → prepareToolCall / executePreparedToolCall', 'schema、Hook、结果与错误', '触发工具或定向测试'], ['core/tools/read.ts → execute', '路径、截断与返回内容', '触发 read 工具'], ['core/session-manager.ts', '追加条目、分支与持久化', '运行持久会话；此时移除 --no-session']],
+      commands: [{ title: 'PowerShell 终端启动 Inspector', shell: 'powershell', code: 'node --inspect-brk=127.0.0.1:9229 --import $piResolverUrl "$piRepository/packages/coding-agent/src/cli.ts" --offline --no-approve --no-session --tui-mode regular', expected: '出现 Debugger listening 后等待附加。连接并继续后进入 TUI；端口被占用时换端口并同步修改 attach 配置。' }],
+      table: [['断点入口', '观察重点', '触发方式'], ['cli.ts → main.ts', 'args、模式与运行时装配', '启动；--help 可只验证入口'], ['core/sdk.ts → new Agent / new AgentSession', '模型、streamFn、工具和会话依赖', '进入会话启动'], ['core/agent-session.ts → prompt', 'input / before_agent_start、排队与上下文', '提交一条用户输入'], ['agent/src/agent-loop.ts → streamAssistantResponse', '统一消息与注入的模型流', '正常请求或 faux provider 测试'], ['agent/src/agent-loop.ts → prepareToolCall / executePreparedToolCall', 'schema、Hook、结果与错误', '触发工具或定向测试'], ['core/tools/read.ts → execute', '路径、截断与返回内容', '触发 read 工具'], ['core/session-manager.ts', '追加条目、分支与持久化', '运行持久会话；此时移除 --no-session']],
       callout: '灰色断点先查 Loaded Scripts 是否加载了正确的 .ts、入口是否经过目标行、cwd 与大小写是否一致。扩展由 jiti 加载，或代码在 Worker/子进程执行时，需确认实际执行上下文；普通主进程断点不保证覆盖 QuickJS VM 内的模型脚本。',
       external: [{ title: 'Node 24 Inspector 命令参数（联网参考）', url: 'https://nodejs.org/docs/latest-v24.x/api/cli.html#--inspect-brkhostport' }],
       refs: [['packages/coding-agent/src/main.ts', 'const createRuntime'], ['packages/coding-agent/src/core/sdk.ts', 'const session = new AgentSession'], ['packages/coding-agent/src/core/agent-session.ts', 'async prompt(text: string'], ['packages/agent/src/agent-loop.ts', 'async function executePreparedToolCall'], ['packages/coding-agent/src/core/tools/read.ts', 'execute'], ['packages/coding-agent/src/core/session-manager.ts', 'appendMessage']]
@@ -206,7 +206,7 @@ try {
         { title: '使用已准备的数据构建全部包', shell: 'powershell', code: 'npm.cmd run check:model-data\nnpm.cmd run build:offline', expected: '各包 dist 生成。第一条失败时先回到数据准备步骤，不继续构建。' },
         { title: '检查构建后的 CLI', shell: 'powershell', code: 'node ./packages/coding-agent/dist/bundle/cli.js --offline --version\nnode ./packages/coding-agent/dist/bundle/cli.js --offline --no-approve --no-extensions --help', expected: '运行 package.json 的实际 bin 入口；此时是 dist 路径，要重新构建才能反映下一次核心修改。' }
       ],
-      callout: '正常联网刷新并构建的替代命令是 npm.cmd run build。不要手改 dist；以根构建顺序处理包依赖。单包 build:unbundled 只适用于所需依赖已经构建的情况。实验 client/experimental 目录被产品 tsconfig 与发布 files 排除，不会自动随 CLI npm 包交付。',
+      callout: '正常联网刷新并构建的替代命令是 npm.cmd run build。不要手改 dist；以根构建顺序处理包依赖。单包 build:unbundled 只适用于所需依赖已经构建的情况。官方已移除 client/server/protocol 三包及实验服务应用。源码解析器仍在 experimental 下，该目录被产品构建排除；发布入口以当前 package.json 为准。',
       refs: [['package.json', '"build:offline"'], ['packages/coding-agent/package.json', '"pi": "dist/bundle/cli.js"'], ['packages/coding-agent/tsconfig.build.json', '"exclude"'], ['packages/ai/package.json', '"build:offline"']]
     },
     {
@@ -251,8 +251,8 @@ try {
     },
     {
       title: '17 · 修改源码后同步这份导览',
-      text: '功能索引只扫描 Git 已跟踪的源码；新增文件纳入跟踪后才进入功能索引。“源码目录说明”同时登记未忽略的新文件，未初始化的作用描述保留为空。语义讲解需要同步维护；自动扫描不会替你解释业务。先补充说明依据，再用 --initialize-directory 填充有依据的空项；已有非空说明会保留。正式提交遵守 AGENTS.md，仅明确暂存自己修改的路径，不提交账户数据。',
-      commands: [{ title: '重新生成并验证离线页面', shell: 'powershell', code: 'node docs/doc-html/build.mjs\n# 补充中文讲解后，填充有依据的空目录说明：\n# node docs/doc-html/build.mjs --initialize-directory\nnode --test docs/doc-html/catalog.test.mjs docs/doc-html/development.test.mjs docs/doc-html/directory.test.mjs docs/doc-html/verify.test.mjs', expected: '更新 index.html；正文来源、源码指纹、功能归属、目录覆盖及说明保留、开发说明命令与渲染测试通过。' }],
+      text: '功能索引只扫描 Git 已跟踪的源码；新增文件纳入跟踪后才进入功能索引。“源码目录说明”同时登记未忽略的新文件，未初始化的作用描述保留为空。语义讲解需要同步维护；自动扫描不会替你解释业务。Markdown 新增稳定编号时，同步更新 src/capability-bindings.mjs 的源码专题映射；生成器会拒绝重复编号、漏映射及失效来源。先补充说明依据，再用 --initialize-directory 填充有依据的空项；已有非空说明会保留。正式提交遵守 AGENTS.md，仅明确暂存自己修改的路径，不提交账户数据。',
+      commands: [{ title: '重新生成并验证离线页面', shell: 'powershell', code: 'node docs/doc-html/build.mjs\n# 补充中文讲解后，填充有依据的空目录说明：\n# node docs/doc-html/build.mjs --initialize-directory\nnode --test docs/doc-html/catalog.test.mjs docs/doc-html/capabilities.test.mjs docs/doc-html/development.test.mjs docs/doc-html/directory.test.mjs docs/doc-html/verify.test.mjs', expected: '更新 index.html；正文来源、源码指纹、功能归属、目录覆盖及说明保留、开发说明命令与渲染测试通过。' }],
       refs: [['AGENTS.md', 'Only commit files YOU changed'], ['CONTRIBUTING.md', '## Before Submitting a PR']]
     }
   ]

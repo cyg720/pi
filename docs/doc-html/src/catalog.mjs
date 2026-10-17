@@ -179,6 +179,9 @@ export function buildCatalog({ paths, read, commits }) {
       for (const [key, members] of groups) {
         const note = exampleNotes[module.id]?.[key];
         features.push({ id: `${module.id === 'examples' ? 'example' : module.id}-${key.replace(/[^a-zA-Z0-9-]/g, '-')}`, module: module.id, title: `${note?.[0] || key.replace(/\.[^.]+$/, '')} · 示例`, purpose: note?.[1] || `展示 ${key} 对应的扩展或 SDK 用法。具体场景以入口文件的原始说明、注册代码和配套 README 为依据。`, entry: members.find(p => /(?:main|index|\d[^/]*)\.ts$/.test(p)) || members[0], behavior: '示例不是默认启用功能；阅读注册入口、参数契约和清理行为后再选择使用。', files: members, status: '示例', evidence: note ? '中文能力解说' : '源码规则归类', docs: [...new Set([module.doc, ...members.filter(p => p.endsWith('README.md'))])].filter(p => pathSet.has(p)) });
+        if (key === 'plugins/pi-example-plugin' && !members.some(p => scriptFile.test(p))) {
+          Object.assign(features.at(-1), { title: 'pi-example-plugin · 历史资料', status: '历史资料', purpose: '实验插件的运行实现已移除，目前仅保留中文 README 记录旧设计。', behavior: '原服务栈及示例入口已删除；此资料不能作为当前可运行示例，旧链接保留用于回溯。' });
+        }
       }
     }
     const assigned = new Set(features.filter(f => f.module === module.id).flatMap(f => f.files));

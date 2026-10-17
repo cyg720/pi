@@ -128,7 +128,7 @@ test('语法索引保留注释、行号、类型及异步方法，不把字符�
   assert.equal(record.imports[0].typeOnly, true);
 });
 test('显式区分实验应用、示例、原生和包源码', () => {
-  assert.equal(classifyPath('packages/coding-agent/src/experimental/mini/main.ts'), 'experimental');
+  assert.equal(classifyPath('packages/coding-agent/src/experimental/source-resolver.ts'), 'coding');
   assert.equal(classifyPath('packages/coding-agent/examples/extensions/hello.ts'), 'examples');
   assert.equal(classifyPath('packages/coding-agent/src/core/sdk.ts'), 'coding');
   assert.equal(classifyPath('packages/tui/native/win32/src/win32-platform.c'), 'native');

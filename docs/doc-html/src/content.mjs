@@ -1,10 +1,10 @@
 export const chapters = [
   { id: 'start', title: '从零认识 Pi', eyebrow: '01 / ORIENTATION', intro: '先建立整体认识，再沿一条真实请求进入源码。', sections: [
     { title: 'Pi 到底负责什么？', text: '用户说“读一下 README 并总结”。模型决定调用 read，但真正读取磁盘的是 Pi 注册的工具。Pi 把读取结果放回对话，再请求模型组织答案。项目的核心是把模型、工具、上下文、会话和交互界面连接成可以持续运行的系统。', refs: [['packages/coding-agent/docs/how-pi-works.md', '## Agent loop']] },
-    { title: '三个名字，三层职责', text: 'coding-agent 是可使用的产品：命令行、设置、扩展、会话与终端界面。agent 是执行层：维护消息、运行模型与工具循环、处理排队和取消。ai 是模型接入层：提供模型与消息类型、提供商能力和流式响应。先理解这三层，再进入存储与实验性服务体系。', refs: [['packages/coding-agent/src/core/sdk.ts', 'const agent = new Agent'], ['packages/agent/src/agent.ts', 'export class Agent']] },
+    { title: '三个名字，三层职责', text: 'coding-agent 是可使用的产品：命令行、设置、扩展、会话与终端界面。agent 是执行层：维护消息、运行模型与工具循环、处理排队和取消。ai 是模型接入层：提供模型与消息类型、提供商能力和流式响应。先理解这三层，再进入持久任务和对象运行时。', refs: [['packages/coding-agent/src/core/sdk.ts', 'const agent = new Agent'], ['packages/agent/src/agent.ts', 'export class Agent']] },
     { title: '先掌握这六个词', table: [['术语', '在本项目中的含义'], ['Session / 会话', '可继续、分支和恢复的对话记录。CLI 使用 SessionManager 管理。'], ['Run / 一次运行', '一次 prompt 引发的执行过程，可包含多个模型请求。'], ['Turn / 一轮', '一次模型回答以及这次回答触发的工具执行。'], ['Tool / 工具', '带参数 schema 的可执行操作，由模型发出结构化调用。'], ['Provider / 提供商', '负责把统一请求映射到具体模型服务。'], ['Extension / 扩展', '在 Pi 进程中执行的模块，可注册工具、命令和事件处理器。']] },
-    { title: '建议阅读顺序', text: '第一遍：项目地图 → 启动链 → 请求与工具链 → 会话与恢复。第二遍：扩展机制 → 子智能体 → 服务与持久化。第三遍：结合五类架构图，按 Git 时间线选择一个改动回到源码。每个“查看源码”入口打开的是生成时的完整文件快照，离线也能读。', refs: [['packages/coding-agent/src/cli.ts', 'setupCli();'], ['packages/coding-agent/src/modes/print-mode.ts', 'export async function runPrintMode']] },
-    { title: '阅读边界', text: '这是一版面向源码学习的导览，不是对全部实现的逐函数审计。包依赖由 package.json 自动提取；主调用链依据当前源码；扩展契约依据仓库文档与类型。实验性 server/client/protocol、Durable Harness 与 Chord 单独讲解；MCP 和 codemode 有独立包及产品内置扩展。架构图是迁入的既有资料，遇到差异以此版本源码为准。离线的是这份文档；运行 Pi 是否需要网络取决于所选模型与工具。' }
+    { title: '建议阅读顺序', text: '第一遍：项目地图 → 启动链 → 请求与工具链 → 会话与恢复。第二遍：扩展机制 → 子智能体 → 对象与持久化。第三遍：结合五类架构图，按 Git 时间线选择一个改动回到源码。每个“查看源码”入口打开的是生成时的完整文件快照，离线也能读。', refs: [['packages/coding-agent/src/cli.ts', 'setupCli();'], ['packages/coding-agent/src/modes/print-mode.ts', 'export async function runPrintMode']] },
+    { title: '阅读边界', text: '这是一版面向源码学习的导览，不是对全部实现的逐函数审计。包依赖由 package.json 自动提取；主调用链依据当前源码；扩展契约依据仓库文档与类型。已删除的 server/client/protocol 与实验服务应用只在历史中保留；现有 Durable Harness 与 Chord 单独讲解；MCP 和 codemode 有独立包及产品内置扩展。架构图是迁入的既有资料，遇到差异以此版本源码为准。离线的是这份文档；运行 Pi 是否需要网络取决于所选模型与工具。' }
   ]},
   { id: 'boot', title: '启动：从 CLI 到会话', eyebrow: '03 / BOOTSTRAP', intro: '用 print 模式先看清主线，再理解交互模式额外承担的工作。', sections: [
     { title: '入口足够小：cli.ts', text: 'cli.ts 先执行 setupCli()，再把 process.argv.slice(2) 交给 main()。不要从终端 UI 的大文件开始阅读，入口本身只负责初始化与转交参数。', refs: [['packages/coding-agent/src/cli.ts', 'setupCli();']] },
@@ -15,13 +15,13 @@ export const chapters = [
   ]},
   { id: 'loop', title: '请求：模型与工具循环', eyebrow: '04 / CALL CHAIN', intro: '贯穿示例：输入“读取 README 并总结”，直到文本答案与会话记录完成。', sections: [
     { title: '输入并不直接成为模型请求', text: 'AgentSession.prompt 先尝试执行扩展命令，再发出 input 事件；扩展可接管或变换输入。之后展开 skill 命令和提示模板。若已有运行，需要明确采用 steer 或 followUp 排队。空闲时还要校验模型与认证、检查压缩、执行 before_agent_start，再组装用户消息。', refs: [['packages/coding-agent/src/core/agent-session.ts', 'async prompt(text: string'], ['packages/coding-agent/src/core/agent-session.ts', 'private async _runInputHandlers']] },
-    { title: 'Agent 启动低层循环', text: '_runAgentPrompt 调用 agent.prompt。Agent 规范化输入，通过 runPromptMessages 建立上下文快照，调用 runAgentLoop。事件依次交给 processEvents 更新内存状态，再等待订阅者。一次运行内不能直接并发调用第二个 prompt；应使用队列。', refs: [['packages/coding-agent/src/core/agent-session.ts', 'private async _runAgentPrompt'], ['packages/agent/src/agent.ts', 'private async runPromptMessages'], ['packages/agent/src/agent.ts', 'private async processEvents']] },
+    { title: 'Agent 启动低层循环', text: '_startRun 先标记忙碌，再由 _prepareRun 检查压缩、触发 before_agent_start、组装消息和工具声明，随后调用 agent.prompt。用户与自定义消息触发的运行共用该路径。Agent 规范化输入，通过 runPromptMessages 建立上下文快照，调用 runAgentLoop。事件依次交给 processEvents 更新内存状态，再等待订阅者。一次运行内不能直接并发调用第二个 prompt；应使用队列。', refs: [['packages/coding-agent/src/core/agent-session.ts', 'private async _startRun'], ['packages/agent/src/agent.ts', 'private async runPromptMessages'], ['packages/agent/src/agent.ts', 'private async processEvents']] },
     { title: '真正出站前才转换消息', text: 'streamAssistantResponse 先调用 transformContext，再调用 convertToLlm，把 AgentMessage[] 转成模型可接受的消息；随后 normalizeContext，解析请求所需的 API key，再调用注入的 streamFunction。CLI 的 SDK 包装函数将请求交给 ModelRuntime。扩展自定义消息因此不必直接等同于提供商请求格式。', refs: [['packages/agent/src/agent-loop.ts', 'async function streamAssistantResponse'], ['packages/coding-agent/src/core/messages.ts', 'export function convertToLlm'], ['packages/coding-agent/src/core/model-runtime.ts', 'streamSimple(']] },
     { title: '流式文本和工具调用共用消息事件', text: '提供商返回 start、text_delta、thinking_delta、toolcall_delta 等事件。低层循环把它们映射成 message_start / message_update / message_end。界面可以边收边显示，但完整工具调用要等回答完成后才进入执行阶段。工具参数并不是看到一点流式 JSON 就立即执行。', refs: [['packages/agent/src/agent-loop.ts', 'for await (const event of response)']] },
     { title: '工具执行有完整的前后边界', text: 'prepareToolCall 找到工具、准备并校验参数，再调用 beforeToolCall。执行工具时传入调用 ID、参数、AbortSignal 和更新回调；afterToolCall 可以调整结果。工具异常被转换成错误结果，随后写成 toolResult 消息。注册工具的名称和 schema 决定模型能调用什么，execute 决定实际执行什么。', refs: [['packages/agent/src/agent-loop.ts', 'async function prepareToolCall('], ['packages/agent/src/agent-loop.ts', 'async function executePreparedToolCall('], ['packages/agent/src/agent-loop.ts', 'async function finalizeExecutedToolCall(']] },
     { title: '为什么会再请求一次模型？', text: 'read 返回文件后，循环把 toolResult 加入上下文，继续下一次模型请求；模型才有机会根据内容写总结。runLoop 内层处理工具与 steering，外层处理本来将结束时到来的 follow-up。finishTurn 还可要求继续或结束；工具批次只有全部结果都设置 terminate 才抑制该批次自动续跑。', refs: [['packages/agent/src/agent-loop.ts', 'async function runLoop('], ['packages/agent/src/agent-loop.ts', 'function shouldTerminateToolBatch']] },
     { title: '两个必须留意的异常分支', text: '如果 stopReason 是 error 或 aborted，低层循环发出结束事件并返回。若 stopReason 是 length，工具参数可能已被截断，该条回答里的工具调用全部返回错误而不执行，允许模型重新发出完整调用。默认工具执行策略为 parallel；批次里存在 sequential 工具时走串行分支。', refs: [['packages/agent/src/agent-loop.ts', 'message.stopReason === "length"'], ['packages/agent/src/agent-loop.ts', 'async function executeToolCalls('], ['packages/agent/src/agent.ts', 'this.toolExecution =']] },
-    { title: 'agent_end 不是整个任务的最终边界', text: 'AgentSession._handlePostAgentRun 可能准备重试、压缩恢复或处理新队列。agent_before_settle 是最后一个可行动边界，还可以提出一次续跑。agent_settled 是通知边界，用于确认这轮自动处理结束。做完成通知或外部集成时，不能简单把每个 agent_end 当作整个任务完成。', refs: [['packages/coding-agent/src/core/agent-session.ts', 'private async _runAgentPrompt'], ['packages/coding-agent/src/core/agent-session.ts', 'private async _emitAgentSettled']] }
+    { title: 'agent_end 不是整个任务的最终边界', text: 'AgentSession._handlePostAgentRun 可能准备重试、压缩恢复或处理新队列。agent_before_settle 是最后一个可行动边界，还可以提出一次续跑。agent_settled 是通知边界，用于确认这轮自动处理结束。做完成通知或外部集成时，不能简单把每个 agent_end 当作整个任务完成。', refs: [['packages/coding-agent/src/core/agent-session.ts', 'private async _startRun'], ['packages/coding-agent/src/core/agent-session.ts', 'private async _emitAgentSettled']] }
   ]},
   { id: 'session', title: '会话、上下文与恢复', eyebrow: '05 / STATE & RECOVERY', intro: '模型看到的是当前分支投影，磁盘保存的是可以回溯的会话树。', sections: [
     { title: '四种数据不要混在一起', table: [['数据', '用途'], ['Agent 内存状态', '当前消息、流式消息、待执行工具、运行状态。'], ['会话树条目', '带 ID 和 parentId 的持久化历史，可以形成不同分支。'], ['模型上下文', '从当前分支恢复，并经过压缩、变换、消息转换后的请求内容。'], ['界面事件', '让 TUI 或 RPC 客户端更新，不等同于每条事件都持久化。']], refs: [['packages/agent/src/agent.ts', 'private async processEvents'], ['packages/coding-agent/src/core/session-manager.ts', 'export function buildSessionContext']] },
@@ -49,28 +49,280 @@ export const chapters = [
     {"title": "14 · 脚本状态与分类、图像模型", "text": "成功脚本用 codemode-store 条目保存 store/load，恢复时沿当前分支重建；失败写入不提交。models.classify 对 JSON 数据回答类型化问题，models.generateImages 生成图像，两者沿会话凭据与用量路径执行，脚本不能执行聊天模型。image(block) 同时输出图像并保存临时文件，大文本截断也保留完整文件路径。", "refs": [["packages/coding-agent/docs/codemode.md", "## Store values"], ["packages/coding-agent/docs/codemode.md", "## Models"], ["packages/coding-agent/src/utils/output-files.ts", ""]]},
     { title: '验证扩展的最小矩阵', text: '先用 hello 理解契约，再给目标扩展设计：正常输入、schema 错误、execute 抛错、取消、并发、重载、分支恢复、print/JSON 无 UI 的用例。在 coding-agent/test/suite 下测试时遵循仓库 harness + faux provider，不调用真实付费模型。扩展本身运行在 Pi 进程权限下；事件拦截不是通用操作系统沙箱。', refs: [['packages/coding-agent/test/suite/README.md', ''], ['packages/coding-agent/test/suite/harness.ts', ''], ['packages/coding-agent/docs/containerization.md', '']] }
   ]},
-  { id: 'advanced', title: '服务与持久化进阶', eyebrow: '07 / BEYOND THE CLI', intro: '看清当前默认主线与独立、实验性组件的边界。', sections: [
-    { title: '本次同步：1.1.0 与后续未发布改动', text: '本地包版本为 1.1.0，当前提交还包含 Unreleased 改动。新增 Env 远程执行包；Durable 新增嵌套工具、结构化输出、图像处理和文档缓存保留策略；codemode 增加 portable、同线程和远程沙箱。版本号不能替代源码提交，以下说明以本页快照为准。', refs: [['packages/durable/CHANGELOG.md', '## [Unreleased]'], ['packages/codemode/CHANGELOG.md', '## [Unreleased]'], ['packages/env/README.md', 'RemoteExecutionEnv']] },
-    { title: 'Env：工具远端执行，Harness 留在本机', text: 'RemoteExecutionEnv 通过 Connection 与远端 Rust daemon 交换分帧消息，使 Durable 的文件和命令工具运行在另一台机器。connectSsh 探测平台、部署并校验 daemon；sshConnection 延迟到首个操作时连接。用户先带外确认主机指纹，应用使用独立 known-hosts。它不是 CLI JSONL RPC，也不是 Pi service 协议。', refs: [['packages/env/README.md', 'connectSsh'], ['packages/env/docs/protocol.md', ''], ['packages/env/src/remote-env.ts', '']] },
-    { title: 'Durable：嵌套工具与错误边界变化', text: '工具通过 api.executeTool 调用子工具；子调用是持久 pi.tool 任务，以 key 在安全重放时重新关联，输出经过 schema 和容量检查。面向模型的 ToolExecutionResult.content 改名为 output，程序使用 structuredOutput。普通存储异常使 Session 失败关闭；StorageRequestError 只拒绝当前调用。接入新版前应核对这些破坏性变更。', refs: [['packages/durable/CHANGELOG.md', 'ToolExecutionResult.content'], ['packages/durable/src/harness/tool.ts', ''], ['packages/durable/src/errors.ts', '']] },
-    { title: 'Durable：图像与内存保留', text: 'read 可直接返回符合模型限制的 PNG、JPEG、GIF、WebP；注入 images 可旋转、转换与缩小。images/node 的处理在 worker 中完成，空闲 30 秒退出。文档缓存默认十分钟未使用且未被观察后释放；documentRetentionMs: 0 在使用后释放，下一次再从存储读取。调度所有权索引也只为活跃工作保留必要关系。', refs: [['packages/durable/CHANGELOG.md', 'documentRetentionMs'], ['packages/durable/src/images/node.ts', ''], ['packages/durable/src/session/session.ts', '']] },
-    { title: 'codemode：三种沙箱宿主', text: '默认 CLI 仍使用 Node Worker 沙箱。库新增 InlineCodemodeSandbox 供没有 worker 的环境使用，以 interruptBudget 限制连续计算；RemoteCodemodeSandbox 将 VM 放在远端 isolate，工具留在调用者进程。Cloudflare Durable Object 提供远端实现，portable 入口不引入 Node。它们共享 CodemodeSandboxBase，但部署与隔离边界不同。', refs: [['packages/codemode/README.md', ''], ['packages/codemode/src/portable.ts', ''], ['packages/codemode/src/cloudflare.ts', '']] },
-    { title: '两种 RPC 不能混为一谈', text: 'CLI 的 RPC 模式在 stdin/stdout 上传输 JSONL。packages/client、server、protocol 则是实验性 Pi service 协议：具有 serverId、sessionId、attachmentId 路由，并使用长度前缀与 CBOR 帧。不能因为两边都提供远程控制，就把它们画成同一条默认调用链。', refs: [['packages/coding-agent/docs/rpc.md', ''], ['packages/protocol/README.md', 'Each wire frame'], ['packages/client/README.md', '']] },
-    { title: 'Chord 解决的是应用组合', text: 'Chord 是可独立使用的包，不依赖其他 Pi 工作区包。插件中的 facet 声明提供和依赖的服务，host 校验依赖图，按提供者先于消费者的顺序激活，并反向释放。服务既可在本进程内使用，也可由应用适配器提供远程边界；状态复制与 delta 跟踪属于它的能力范围。它与 CLI 的 ExtensionAPI 不是同一个注册接口。', refs: [['packages/chord/README.md', '## What Chord is for']] },
-    { title: 'Protocol 路由，Chord 解释服务', text: 'protocol 校验路由信封、strict-JSON 边界和帧格式；服务调用、服务目录、订阅快照与增量语义由 Chord 处理。server 验证活跃 attachment 路由，业务 payload 交给拥有服务的应用解释。真实 Session 和 Harness 留在所属进程，不跨进程传递 JavaScript 对象。', refs: [['packages/protocol/README.md', 'Chord owns'], ['packages/server/README.md', 'Applications supply']] },
-    { title: 'Durable Harness 与提交优先存储', text: '新版 pi-durable 是实验性的持久 Agent Harness：会话输入、模型回答、工具意图、任务阶段和文档状态先原子提交，再向界面发布。可用 memory、JSONL 与 SQLite；Node 子路径提供文件和数据库适配。旧 agent/harness 和 session-backends/sqlite-node 已从当前源码移除，阅读持久执行请沿 durable/harness。CLI 仍用自身 SessionManager。', refs: [['packages/durable/README.md', ''], ['packages/durable/src/harness/harness.ts', '']] },
-    {"title": "持久生成与工具恢复", "text": "submit 先接纳并提交输入，pi.generation 保存请求与 partial，再为每个调用创建 pi.tool 任务。工具意图提交后才执行。重启时 replay: safe 的调用可重跑，其他调用得到 interrupted 结果与已提交输出，防止不安全副作用重复。取消等待只影响等待者，abort 才终止所属工作。", "refs": [["packages/durable/README.md", "## Persist and Resume"], ["packages/durable/src/harness/generation.ts", ""], ["packages/durable/src/harness/tool.ts", ""]]},
-    {"title": "队列、结构视图与任务图", "text": "忙碌会话把 steer、follow-up、write 保存在 pi.inbox，requestId 避免重复提交。viewState/watch 只显示提交后的状态，慢监听积压过多会改为最新快照。watchEvents 从提交派生事件。taskGraph 显示活跃任务及 owner、waiting、completing 和背景状态，供界面追踪运行中的子任务。", "refs": [["packages/durable/README.md", "## Busy Conversations"], ["packages/durable/src/harness/task-graph.ts", ""], ["packages/durable/src/harness/view.ts", ""]]},
-    {"title": "前台与后台子智能体", "text": "Durable 子会话由任务拥有。前台调用拥有的子会话随调用取消，并影响父任务收尾；后台锚点形成独立边界，主会话空闲或取消后仍可继续。示例用子会话查找和 requestId 保证重启不重复创建、投递或回传。CLI subagent 子进程示例与 Durable 子会话是两种实现。", "refs": [["packages/durable/README.md", "## Abort and Subagents"], ["packages/durable/test/examples/22-subagent-foreground.ts", ""], ["packages/durable/test/examples/23-subagent-background.ts", ""]]},
-    {"title": "两份可运行的实验应用", "text": "experimental/durable 在一个进程中组合 SQLite Harness、编码工具、TUI 和前台 subagent，/agents 切换会话，/tasks 展示任务图。experimental/vacation 用背景研究子会话示范并行工具与重启恢复；其 search 返回预设结果。两者是独立实验入口，功能集并不等同于默认 CLI。", "refs": [["packages/coding-agent/src/experimental/durable/README.md", ""], ["packages/coding-agent/src/experimental/vacation/README.md", ""]]},
-    { title: '下一轮深入路线', text: '完成 CLI 主线后，依次阅读 Chord README 的 facet/service/state，protocol 的路由与帧边界，server 的 Session attachment 所有权，client 的断线行为，再读 durable 的存储契约。client 不自动重连或重放请求：断线不保证远端已接受的工作未执行，因此重试必须先判断操作是否安全。', refs: [['packages/client/README.md', 'On disconnect'], ['packages/agent/README.md', '']] }
-  ]},
+  {
+  "id": "advanced",
+  "title": "对象运行时与持久化进阶",
+  "eyebrow": "07 / BEYOND THE CLI",
+  "intro": "以当前源码区分 CLI 主线、独立库与已移除的实验应用。",
+  "sections": [
+    {
+      "title": "本次合并：版本仍为 1.1.0，架构已变化",
+      "text": "当前有 11 个工作区包。Chord 已替换旧 facet/service 运行时；官方移除 client、server、protocol 三包和实验服务、Durable/Vacation 应用。Durable 新增持久 codemode 与 tool_search，Env 新增终端。包版本不足以识别这些变化，请结合页面上的源码提交。",
+      "refs": [
+        [
+          "packages/chord/CHANGELOG.md",
+          ""
+        ],
+        [
+          "packages/durable/CHANGELOG.md",
+          ""
+        ],
+        [
+          "packages/env/README.md",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "Chord：契约 → 宿主 → 对象 → 句柄",
+      "text": "先用 remote/local 和 TypeBox 描述输入、状态与方法，再由 createHost 创建宿主、serve 注册工厂。ctx.get 返回句柄，对象身份由类型、规范化输入和 principalKey 决定。句柄延迟绑定实现，root 为短调用树提供上下文与持有范围；工厂同步创建实现，激活等待资源与依赖就绪。",
+      "refs": [
+        [
+          "packages/chord/README.md",
+          ""
+        ],
+        [
+          "packages/chord/src/contract.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/host.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/record.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "状态、资源与权限变体",
+      "text": "self.state 管理 cell；derivation、listener 和 resource 把派生、订阅和资源纳入对象生命周期。不同 principal 可选择不同对象变体与方法。principal 的建立和认证仍由宿主应用负责，不能把变体当成完整认证系统。",
+      "refs": [
+        [
+          "packages/chord/docs/guide.md",
+          ""
+        ],
+        [
+          "packages/chord/src/declare.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/cell.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "热重载：准备、门控、提交与退休",
+      "text": "新代码先准备，只有迁移或独占资源需要时才阻止新工作进入；提交后新调用使用新 epoch，在途调用沿原 epoch 完成。最多保留当前和前一个 epoch，契约 schema 与版本决定兼容性。句柄可以跨重载存活，不必由使用者重新寻找对象。",
+      "refs": [
+        [
+          "packages/chord/docs/spec.md",
+          ""
+        ],
+        [
+          "packages/chord/src/reload.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "连接与 Node 子宿主",
+      "text": "memoryLinkPair、ipcLink、webSocketLink 和 acceptWebSockets 承载 JSON 帧、方法调用及状态更新。断线拒绝未完成请求，不支持连接恢复；不能由断线推断远端未执行。Node 子路径提供 createHostManager、forkDriver、childControl、processLock 和 nodeLoader。",
+      "refs": [
+        [
+          "packages/chord/src/link.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/connection.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/manager.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/node.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "复制状态与 Durable 的关系",
+      "text": "replicatedState 是独立可观察 JSON 值，Durable 用它发布文档、视图和任务图。变更成功才发布原子版本；抛错保留原状态。每个订阅最多积压 100 份完整值，溢出后合并为最新待投递值，序号可能跳过。转移所有权或已发布的值不得继续修改。",
+      "refs": [
+        [
+          "packages/chord/README.md",
+          ""
+        ],
+        [
+          "packages/chord/src/state.ts",
+          ""
+        ],
+        [
+          "packages/chord/src/delta/README.md",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "Durable：先提交，再执行与展示",
+      "text": "Harness 将输入、模型回答、工具意图和任务阶段持久化，界面只观察提交后的状态。memory、JSONL、SQLite 提供不同存储适配。工具恢复依赖 replay: safe；不能安全重放的中断调用形成 interrupted 结果，避免重复副作用。CLI 仍使用自身 SessionManager。",
+      "refs": [
+        [
+          "packages/durable/README.md",
+          ""
+        ],
+        [
+          "packages/durable/src/harness/generation.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/harness/tool.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "持久 codemode 的恢复链",
+      "text": "createCodemodeExtension 注册脚本工具。沙箱用固定时间、随机种子和 UTC 启动，宿主先把外部响应写入日志，再按连续序号投递。重启重跑相同代码并重放日志，按 key 关联嵌套任务；已完成工具不重新执行。代码指纹、模块版本或日志顺序不兼容时失败；关闭沙箱本身不确定脚本结果。",
+      "refs": [
+        [
+          "packages/durable/src/codemode/index.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/codemode/codemode.ts",
+          ""
+        ],
+        [
+          "packages/codemode/README.md",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "工具发现、模型助手与脚本输出",
+      "text": "脚本声明按命名空间生成，默认内联预算为 3000 tokens，searchTools/describeTool 按需发现其他工具。models.classify 和 models.generateImages 使用持久嵌套调用，可用 models: false 关闭。输出包括脚本、耗时、文本、控制台、图像文件和调用状态；store/load 按会话分支恢复。",
+      "refs": [
+        [
+          "packages/durable/src/codemode/describe.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/codemode/models.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/codemode/output.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "Durable tool_search 与应用输入",
+      "text": "deferred 工具不会立即声明给模型。tool_search 用 BM25 搜索参数与元数据，通过 control.addTools 加入后续模型声明，默认最多 8 项。输入还可携带自定义 entry.kind/data，模型仍接收用户内容。纯展示 write 可在忙碌时直接提交；带 model、head、edits 的写入按运行边界排队。",
+      "refs": [
+        [
+          "packages/durable/README.md",
+          ""
+        ],
+        [
+          "packages/durable/src/tool-search/tool-search.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/harness/submissions.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "压缩失败、等待环与子智能体",
+      "text": "阻塞压缩失败时停止依赖它的生成，不继续发送该次模型请求；pi.live.compactionFailure 保留最近失败，成功摘要后清除。调度器拒绝形成等待环的依赖。前台子会话随所属任务收尾，背景任务形成独立取消与空闲边界；恢复需复用子会话和 requestId。",
+      "refs": [
+        [
+          "packages/durable/src/harness/generation.ts",
+          ""
+        ],
+        [
+          "packages/durable/src/harness/scheduler.ts",
+          ""
+        ],
+        [
+          "packages/durable/test/examples/22-subagent-foreground.ts",
+          ""
+        ],
+        [
+          "packages/durable/test/examples/23-subagent-background.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "Env：远端工具与交互终端",
+      "text": "RemoteExecutionEnv 通过 SSH 和 Rust daemon 在远端执行文件与命令操作，Harness、存储与凭据留在本机。openTerminal 提供原始字节输入输出、窗口尺寸、退出码与前台程序查询；localDaemon 支持不经 SSH 的本机 daemon。当前 Windows 不支持伪终端，不能把远端文件/命令支持等同于 Windows 终端支持。",
+      "refs": [
+        [
+          "packages/env/README.md",
+          ""
+        ],
+        [
+          "packages/env/src/terminal.ts",
+          ""
+        ],
+        [
+          "packages/env/docs/protocol.md",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "codemode：执行环境与确定性接口",
+      "text": "Node Worker、InlineCodemodeSandbox 和 RemoteCodemodeSandbox 共享沙箱契约，部署位置和隔离边界不同。start 返回由宿主投递响应的运行对象；虚拟时钟和随机源支持确定性重放，execute 保留普通一次性调用形态。持久化不是沙箱库自动提供的能力，需要 Durable 等宿主保存日志。",
+      "refs": [
+        [
+          "packages/codemode/README.md",
+          ""
+        ],
+        [
+          "packages/codemode/src/types.ts",
+          ""
+        ],
+        [
+          "packages/codemode/src/portable.ts",
+          ""
+        ]
+      ]
+    },
+    {
+      "title": "历史资料与当前阅读路线",
+      "text": "experimental 下遗留的中文 README 是历史资料，原应用入口已经移除。CLI RPC 仍是 stdin/stdout JSONL。先读当前 Chord README、tutorial、guide、spec，再读 Durable README 和示例，最后追 Env。迁入的五幅架构图保留为历史阅读资料；当前引用关联流程图由源码导入关系重新生成。",
+      "refs": [
+        [
+          "packages/coding-agent/docs/rpc.md",
+          ""
+        ],
+        [
+          "packages/chord/docs/tutorial.md",
+          ""
+        ],
+        [
+          "packages/durable/README.md",
+          ""
+        ]
+      ]
+    }
+  ]
+},
   { id: 'practice', title: '带着问题读源码', eyebrow: '08 / READING PRACTICE', intro: '每轮只追一个行为，先预测，再用源码验证。', sections: [
     { title: '练习 A：为什么 read 后还有一次模型请求？', text: '在 runLoop 找 toolCalls、executeToolCalls 和 hasMoreToolCalls。手写一条 user → assistant(toolCall) → toolResult → assistant(text) 的消息链。确认第二次请求发生前 toolResult 已加入 currentContext.messages。', refs: [['packages/agent/src/agent-loop.ts', 'const toolCalls = message.content.filter']] },
     { title: '练习 B：工具报错会不会让进程退出？', text: '沿 executePreparedToolCall 的 catch 进入 createErrorToolResult，再到 createToolResultMessage。区分工具错误消息与进程退出，继续看模型能否获得该结果。然后对照 print-mode 如何决定退出码，不要把两类错误混在一起。', refs: [['packages/agent/src/agent-loop.ts', 'async function executePreparedToolCall'], ['packages/coding-agent/src/modes/print-mode.ts', 'assistantMsg.stopReason']] },
     { title: '练习 C：修改一个扩展会影响哪些模式？', text: '从 registerTool 或 pi.on 出发，查绑定上下文与事件分发，分别检查 TUI、print、JSON、RPC。若扩展调用 ctx.ui.custom，先判断是否只用于终端模式；若持久化状态，验证 reload 与分支切换后的恢复。', refs: [['packages/coding-agent/docs/extensions.md', '### UI and modes'], ['packages/coding-agent/src/core/extensions/runner.ts', 'createContext():']] },
     { title: '练习 D：用提交倒推设计问题', text: '在时间线搜索 duplicate extension runtimes、provider stream 或 autocomplete。先读原提交说明和中文概述，再查看受影响文件与测试路径。时间线的全量记录来自本地 HEAD 可达历史，不包含其他未合并分支；普通记录的中文说明是元数据概述，不代表已逐行审查 diff。' },
-    { title: '维护这份导览', text: '编辑 src/content.mjs 更新讲解，编辑 src/history-notes.json 为某个完整提交 hash 添加人工中文说明。运行 node docs/doc-html/build.mjs 重新提取当前 Git 历史、包清单和源码快照，再运行 node --test docs/doc-html/catalog.test.mjs docs/doc-html/verify.test.mjs。功能讲解由 features.mjs 与 feature-additions.mjs 维护；生成器自动发现新包并输出版本差异。生成器只使用本地仓库，不调用翻译服务或模型 API。原“图架构”删除后仍使用本目录 diagrams 中的迁入资源。' }
+    { title: '维护这份导览', text: '编辑 src/content.mjs 更新讲解，编辑 src/history-notes.json 为某个完整提交 hash 添加人工中文说明。运行 node docs/doc-html/build.mjs 重新提取当前 Git 历史、包清单和源码快照，再运行 node --test docs/doc-html/catalog.test.mjs docs/doc-html/capabilities.test.mjs docs/doc-html/development.test.mjs docs/doc-html/directory.test.mjs docs/doc-html/verify.test.mjs。编号功能来自 qishu/功能清单/pi-feature-catalog.zh.md，通过 capability-bindings.mjs 显式关联源码专题。功能讲解由 features.mjs 与 feature-additions.mjs 维护；生成器自动发现新包并输出版本差异。生成器只使用本地仓库，不调用翻译服务或模型 API。原“图架构”删除后仍使用本目录 diagrams 中的迁入资源。' }
   ]}
 ];
 
@@ -79,12 +331,9 @@ export const packageNotes = {
   agent: '执行层：内存 Agent / agent-loop、工具管线、状态事件与取消；持久 Harness 位于 durable。',
   ai: '模型层：统一消息、模型能力、流式事件、提供商接入与模型目录。',
   tui: '呈现层：终端组件、输入编辑、自动补全与差分渲染。',
-  chord: '独立应用组合运行时：facet、service、复制状态、delta 与取消上下文。',
+  chord: '独立对象运行时：契约、句柄、状态、principal 变体、跨进程连接与热重载。',
   durable: '实验性持久 Agent Harness：逐会话配置、生成/工具任务、队列、子会话、Watch 与内存/JSONL/SQLite 存储。',
   env: 'Durable 远程执行环境：SSH 信任与 daemon 部署、分帧连接、远端文件/进程操作；Harness 与凭据留在本机。',
-  protocol: '实验性远程协议的路由信封、CBOR 编码与字节流分帧。',
-  client: '实验性协议客户端：请求关联、服务订阅、连接与 attachment 路由。',
-  server: '实验性本地服务端：连接和 Session 路由；业务服务由应用提供。',
   telemetry: '显式传递的遥测契约、内存参考实现与类型化 schema，不绑定导出后端。',
   evals: '行为评测与文档效果评测；与无需真实模型的单元测试不同。',
   codemode: '独立 QuickJS/WASM 脚本沙箱：工具桥接、输出、Store、声明与限制。',
@@ -99,5 +348,5 @@ export const trace = [
   ['模型', 'streamAssistantResponse()', '上下文变换、消息转换、调用注入的流函数。', 'packages/agent/src/agent-loop.ts', 'async function streamAssistantResponse'],
   ['工具', 'prepare → execute → finalize', '校验与拦截后执行 read，构造 toolResult。', 'packages/agent/src/agent-loop.ts', 'async function prepareToolCall('],
   ['续轮', 'toolResult → 下一次模型请求', '把结果写入上下文，再请模型给出总结。', 'packages/agent/src/agent-loop.ts', 'toolResults.push(...executedToolBatch.messages)'],
-  ['收尾', 'agent_end → agent_settled', '低层循环结束后，会话层仍检查重试、压缩和续跑。', 'packages/coding-agent/src/core/agent-session.ts', 'private async _runAgentPrompt']
+  ['收尾', 'agent_end → agent_settled', '低层循环结束后，会话层仍检查重试、压缩和续跑。', 'packages/coding-agent/src/core/agent-session.ts', 'private async _startRun']
 ];
