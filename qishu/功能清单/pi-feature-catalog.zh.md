@@ -5,9 +5,9 @@
 | 项目 | 说明 |
 | --- | --- |
 | 核对日期 | 2026-10-12（Asia/Shanghai）。 |
-| 当前版本口径 | 以本地仓库 HEAD `fe2b9da4c` 与当前源码为准；`pi-coding-agent` 包版本为 `1.1.0`，另含各包 Unreleased 改动。以本次本地合并结果为准，不代表这些源码能力都已发布。 |
-| 清单范围 | 覆盖普通 Pi CLI、SDK、14 个有 package.json 的顶层工作区包、扩展与集成示例、实验应用，以及不能独立归入产品模块的工程和平台能力。 |
-| 清单规模 | 22 个模块、588 项功能条目、65 处来源文档或源码，并补充 21 项能力边界说明；条目包含不同层级的库、集成和示例能力，不代表 588 个互不重叠的 CLI 功能。 |
+| 当前版本口径 | 以本地仓库 HEAD `6cd9d957a` 与当前源码为准；`pi-coding-agent` 包版本为 `1.1.0`，另含各包 Unreleased 改动。以本次本地合并结果为准，不代表这些源码能力都已发布。 |
+| 清单范围 | 覆盖普通 Pi CLI、SDK、11 个有 package.json 的顶层工作区包、扩展与集成示例，以及不能独立归入产品模块的工程和平台能力。 |
+| 清单规模 | 19 个模块、587 项功能条目、64 处来源文档或源码，并补充 18 项能力边界说明；条目包含不同层级的库、集成和示例能力，不代表 587 个互不重叠的 CLI 功能。 |
 | 功能粒度 | 按可使用、可集成或可配置的能力拆分；不把每个内部函数、类型、模型 ID、翻译文件或测试用例都当作独立功能。类似配置归并在对应功能内。 |
 | 层级 | 二级标题为模块；每个表格行是一项功能。CLI 的多个业务模块都归属于 `packages/coding-agent`，并不意味着它们都是独立 npm 包。 |
 | 状态：内置 | 普通 CLI 或对应库已经提供；仍可能需要模型凭据、平台能力或用户主动调用。 |
@@ -35,15 +35,12 @@
 | 11 AI 统一模型接口 | 多提供商模型访问、统一消息、流式输出和类型化工具。 | ai |
 | 12 AI 提供商接入清单 | 当前内置提供商及各接入方向的作用。 | ai + coding-agent 内置扩展 |
 | 13 TUI 终端界面库 | 渲染、组件、布局、焦点、键鼠与终端能力。 | tui |
-| 14 Chord 服务与插件组合 | Facet 生命周期、类型化服务、状态复制及 Delta。 | chord |
+| 14 Chord 类型化对象与跨宿主运行时 | 对象契约、身份、引用生命周期、状态复制、插件热重载和子进程管理。 | chord |
 | 15 Durable 持久化运行时 | 提交、恢复、多会话、任务图、子任务和存储。 | durable（实验） |
-| 16 Client 服务客户端 | 实验服务协议的请求、订阅、连接与发现。 | client（实验） |
-| 17 Server 会话服务端 | 服务路由、多客户端附着和 worker 生命周期衔接。 | server（实验） |
-| 18 Protocol 通信协议 | 握手、路由信封、CBOR 与字节流分帧。 | protocol（实验） |
-| 19 Telemetry 遥测 | 显式调用跟踪、参考适配器和类型化诊断模式。 | telemetry |
-| 20 Evals 行为评测 | 宿主评测、文档对照实验、隔离执行及报告。 | evals |
-| 21 Env 远程执行环境 | SSH 连接、守护进程部署、远程文件与命令、监听与断连处理。 | env（Durable 配套库） |
-| 22 其他 | 扩展示例、实验应用、平台与工程支持、能力边界。 | 跨模块或非独立产品能力 |
+| 16 Telemetry 遥测 | 显式调用跟踪、参考适配器和类型化诊断模式。 | telemetry |
+| 17 Evals 行为评测 | 宿主评测、文档对照实验、隔离执行及报告。 | evals |
+| 18 Env 远程执行环境 | SSH 连接、守护进程部署、远程文件与命令、监听与断连处理。 | env（Durable 配套库） |
+| 19 其他 | 扩展与库示例、平台与工程支持、能力边界。 | 跨模块或非独立产品能力 |
 
 ## 01 CLI 交互与运行模式
 
@@ -126,6 +123,7 @@
 | SES-22 | HTML／JSONL 导出 | 输出可阅读 HTML 或可处理 JSONL；命令行还可直接把已有会话文件导出为 HTML。 | `/export`、`--export` | 内置 | [CLI][cli]、[会话][sessions] |
 | SES-23 | 会话分享 | 上传记录生成查看链接；有 Radius 认证时使用组织 artifact，否则通过 GitHub CLI 创建私有 gist。 | `/share`，需相应外部服务 | 可选 | [使用说明][usage] |
 | SES-24 | 私有问题报告 | 收集环境、错误与可选会话／摘要，支持上传或导出 ZIP，失败时可退回本地导出。 | `/bug [description]` | 内置 | [会话][sessions] |
+| SES-25 | 摘要序列化排除推理块 | 压缩、分支摘要及 bug 报告序列化不再包含 thinking，避免不在实时上下文中的重放推理使摘要请求反而大于原上下文。 | serializeConversation | 内置 | [更新记录][clilog] |
 
 ## 04 模型选择、认证与本地模型
 
@@ -159,6 +157,7 @@
 | MOD-26 | llama.cpp 原生决策模型 | 识别 router 元数据中 decisions 输出类型，将 Julia-1、Laya、Kev、lev、OpenJev 等只列作分类模型，通过 /v1/systemone 原生调用；无需先加载即可识别睡眠模型。 | llama.cpp 0.6.0+；`typesafe-system-one` | 可选 | [llama.cpp][llama] |
 | MOD-27 | OpenAI Decisions 凭据边界 | gpt-6-luna 用 API key 做分类及图像判断；若 openai 已通过 /login 保存 OAuth，即使有 OPENAI_API_KEY 也不列为可用，需退出该登录后使用 key。 | `models.classify()`；非 `/model` 聊天选项 | 可选 | [模型][models] |
 | MOD-28 | 订阅刷新与本地回调恢复 | 已经开始的 OAuth 刷新会完成并保存轮换令牌，避免取消请求造成凭据失效；Anthropic 登录默认回调端口被占用时改用空闲 loopback 端口。 | OAuth 登录与刷新 | 内置认证行为 | [AI 更新记录][ailog] |
+| MOD-29 | 按 OpenRouter 密钥更新目录 | 交互启动、打开 /model、登录及 update --models 时刷新并保存个性化聊天目录；离线、print、RPC 使用缓存，外部换 key 后需下次刷新才替换旧目录。代理无 /models/user 或拒绝 key 时退回全目录。 | OpenRouter 目录刷新 | 内置／可选认证 | [提供商][providers] |
 
 ## 05 配置、技能、模板、主题与包
 
@@ -171,7 +170,7 @@
 | CFG-05 | 分层工程指令 | 自动发现 agent 目录、当前目录和父目录的 AGENTS／CLAUDE 指令，形成工作约束。 | 上下文文件 | 内置 | [配置][config] |
 | CFG-06 | 同目录指令覆盖 | `AGENTS.override.md` 替代同目录普通指令文件，不会消除其他目录的指令。 | `AGENTS.override.md` | 可选 | [配置][config] |
 | CFG-07 | 系统提示替换／追加 | 通过文件或 CLI 替换默认提示，或添加补充要求；受信任项目同名系统文件优先于用户文件。 | `SYSTEM.md`、`APPEND_SYSTEM.md`、CLI 选项 | 可选 | [配置][config] |
-| CFG-08 | 资源路径和过滤 | 从显式目录、文件、glob 或包加载资源，并按排除、精确包含／排除规则控制加载范围。 | extensions、skills、prompts、themes 设置 | 可选 | [设置][settings] |
+| CFG-08 | 资源路径和过滤 | 从目录、文件、glob 或包加载资源，支持排除与精确包含／排除；!pattern、+path、-path 内的 ~ 也展开为用户目录，避免带前缀路径无法匹配。 | extensions、skills、prompts、themes 设置 | 可选 | [设置][settings]、[更新记录][clilog] |
 | CFG-09 | 禁用资源类别 | 单次启动可关闭扩展、技能、模板、主题或上下文文件发现，显式路径按各选项规则仍可加载。 | `--no-extensions` 等 | 内置 | [CLI][cli] |
 | CFG-10 | 运行中重载 | 重新读取快捷键、扩展、技能、模板、主题和上下文配置，方便开发和调整资源。 | `/reload` | 内置 | [命令参考][slash] |
 | CFG-11 | 技能渐进加载 | 初始只将技能名称、描述和路径告知模型，真正需要时才读完整 SKILL.md，减少常驻上下文。 | 用户／项目技能目录 | 内置 | [技能][skills] |
@@ -191,8 +190,8 @@
 | CFG-25 | 包清单与依赖集成 | `package.json` 的 `pi` 字段声明资源路径；扩展可携带自身依赖，并按宿主包 peer 约定复用 Pi 运行时。 | `pi` manifest | 可选 | [资源包][packages] |
 | CFG-26 | 包版本固定与去重 | 固定 npm 版本、Git tag／commit，按包名、仓库 URL 或绝对路径识别同一包，避免等价来源重复加载。 | 包源规范 | 内置 | [资源包][packages] |
 | CFG-27 | 临时试用扩展包 | 只在当前进程加载指定资源包，便于试验而不写入长期设置。 | `pi -e <source>` | 可选 | [资源包][packages] |
-| CFG-28 | 编辑器 JSON Schema | 发布 settings、models、keybindings、theme 四份 JSON Schema，用于编辑器补全和格式检查；从 TypeScript schema 生成，减少运行时规则与文档定义漂移。 | `packages/coding-agent/schemas/*.schema.json` | 开发／配置支持 | [Schema 生成器][schemas] |
-| CFG-29 | 严格主题属性检查 | 拒绝未知顶层字段及 colors／export 内未知键，自定义复用颜色放 vars；主题 schema 已迁到 schemas/theme.schema.json，旧引用需更新。 | 主题加载、`$schema` | 内置 | [主题][themes] |
+| CFG-28 | 编辑器 JSON Schema | models、settings、keybindings、theme 的生成 schema 已发布到 pi.dev，供编辑器验证和补全；仓库 schemas 产物由 TypeScript 定义生成。 | `$schema: https://pi.dev/schemas/*.schema.json` | 开发／配置支持 | [设置][settings]、[Schema 生成器][schemas] |
+| CFG-29 | 严格主题属性检查 | 启动和 reload 使用一致 schema 校验，拒绝未知顶层及 colors／export 字段，自定义复用颜色放 vars；建议 $schema 改为官方 pi.dev 地址。 | `https://pi.dev/schemas/theme.schema.json` | 内置 | [主题][themes] |
 
 ## 06 扩展系统
 
@@ -201,7 +200,7 @@
 | EXT-01 | TypeScript／JavaScript 扩展加载 | 以工厂函数注册能力，单文件或目录入口均可；jiti 使本地 TypeScript 扩展无需单独编译，异步工厂会等待完成。 | extensions 目录、`-e` | 可选 | [扩展][ext] |
 | EXT-02 | 生命周期事件 | 观察或调整资源发现、会话、输入、模型、消息、工具和运行生命周期；按注册顺序调用并可取消订阅。 | `pi.on()` | 库 | [扩展][ext] |
 | EXT-03 | 输入变换 | 在普通输入进入代理前处理内容、命令或引用，可按流式状态选择不同处理逻辑。 | `input` 事件 | 库 | [扩展][ext]、[示例][examples] |
-| EXT-04 | 系统提示与上下文变换 | 修改提示区块、工具或消息；需要完整控制时可使用包含系统消息的上下文事件。 | `before_agent_start`、`context`、`context_with_system` | 库 | [扩展][ext] |
+| EXT-04 | 系统提示与上下文变换 | before_agent_start 的 messageType 区分用户 prompt/images 与自定义起始 message；两类运行都可添加消息和提示区块，后续工具轮次保持该运行的系统提示修改。 | before_agent_start、context、context_with_system | 库 | [扩展][ext] |
 | EXT-05 | 最终消息改写 | 在完成消息边界替换内容，同时保留消息角色，便于过滤或规范化输出。 | `message_end` | 库 | [扩展][ext] |
 | EXT-06 | 自定义模型工具 | 注册带 TypeBox 参数、执行函数、模型内容和 UI details 的工具；支持进度、错误和用量上报。 | `registerTool()` | 库 | [扩展][ext] |
 | EXT-07 | 工具输入拦截 | 校验后、执行前改写参数或阻止调用，适合审批和路径保护；处理器失败时阻止执行。 | `tool_call` | 库 | [扩展][ext] |
@@ -210,7 +209,7 @@
 | EXT-10 | 嵌套工具调用 | 一个工具可经统一管线调用其他工具，保留参数校验、前后 Hook、父调用 ID 和进度事件。 | `ctx.executeTool()` | 库 | [扩展][ext] |
 | EXT-11 | 嵌套调用记录与用量汇总 | 外层结果保存有界的嵌套调用元数据，供导出和压缩文件跟踪使用；嵌套用量自动向外汇总。 | `nestedCalls`、结果 `usage` | 库 | [扩展][ext] |
 | EXT-12 | 工具暴露级别 | 区分 direct、model-only、codemode、deferred、hidden，分别控制声明、嵌套可调用性、延迟发现和隐藏。 | 工具 `exposure` | 库 | [扩展][ext] |
-| EXT-13 | 工具命名空间与行为提示 | 将工具分组，附上用途和长说明；可标注只读、破坏性、幂等和开放世界提示供宿主策略使用。 | `namespace`、`annotations` | 库 | [扩展][ext] |
+| EXT-13 | 命名空间、别名与行为提示 | namespace 组织工具并提供长指导，aliases 支持按服务别名或脚本标识符查找；annotations 标注只读、破坏性和幂等等提示，不代表已验证安全属性。 | namespace.aliases、annotations | 库 | [扩展][ext] |
 | EXT-14 | 动态工具激活 | 在工具已注册的前提下调整活跃集合，变更在下次请求前写入会话，支持按需加载能力。 | `getActiveTools()`、`setActiveTools()` | 库 | [扩展][ext] |
 | EXT-15 | 模型可见工具集整形 | 编排工具可改写声明或隐藏声明，并通过 getPromptGuidelines 读取工具指导。默认系统提示不再提及被隐藏工具，编排工具负责将其指导带入自己的声明。 | `prepareLoadout()`、`ToolLoadout.getPromptGuidelines()` | 库 | [扩展][ext] |
 | EXT-16 | 自定义命令、参数和快捷键 | 注册斜杠命令及参数补全、命令行长参数和快捷键，将常见工作流变成直接操作。 | `registerCommand/Flag/Shortcut()` | 库 | [扩展][ext] |
@@ -229,6 +228,8 @@
 | EXT-29 | 缓存预热决策覆盖 | 根据宿主策略允许或停止空闲缓存刷新，以控制收益和额外用量。 | `cache_warming_decision` | 库 | [扩展][ext] |
 | EXT-30 | 用户命令重定向与资源清理 | 拦截 `!` 执行到替代后端，并通过 session_start／session_shutdown 管理进程、监听等资源。 | `user_bash`、关闭事件 | 库 | [扩展][ext] |
 | EXT-31 | 工具呈现的耗时与留白上下文 | 渲染器读取最终结果 durationMs 和 outputPad，使自定义工具显示与普通工具的耗时和横向留白一致；工具结束事件也携带耗时。 | 工具 render context、tool_execution_end | 库 | [更新记录][clilog] |
+| EXT-32 | 间接工具可达范围声明 | 编排工具用 reachesTools 返回 all 或可指向工具／命名空间的输入词，MCP 据此等待所需连接并判断替代 codemode／tool_search 是否真能访问 MCP。 | ToolDefinition.reachesTools、getAllTools | 库 | [扩展][ext] |
+| EXT-33 | 运行启动期排队与取消 | 压缩检查及 before_agent_start 阶段已计为 busy；sendMessage 进入当前启动的运行，sendUserMessage 需 deliverAs，期间 abort 会在运行启动后取消，防止重入创建第二次运行。 | ctx.isIdle、sendMessage、sendUserMessage | 库 | [更新记录][clilog] |
 
 ## 07 MCP 接入与协议客户端
 
@@ -238,9 +239,9 @@
 | MCP-02 | 远程 Streamable HTTP | 连接远端 MCP 服务，支持自定义请求头、bearer token 与 OAuth；不支持旧版 HTTP+SSE 接法。 | `pi mcp add --url` | 可选 | [MCP 接入][mcp] |
 | MCP-03 | 全局／项目 MCP 配置 | 全局服务可供所有项目使用，受信任项目可覆盖同名配置，也可仅覆盖启用和暴露策略。 | agent 目录及 `.pi/mcp.json` | 内置 | [MCP 接入][mcp] |
 | MCP-04 | 服务增删命令 | 从 Shell 添加、替换或移除 MCP 配置，支持本地范围；删除配置不自动删除已存 OAuth 凭据。 | `pi mcp add/remove` | 内置 | [CLI][cli] |
-| MCP-05 | 连接与工具状态诊断 | 实际连接所有已启用服务并报告状态、工具与错误，失败可提供非零退出码用于自动化检测。 | `pi mcp list [--json]` | 内置 | [MCP 接入][mcp] |
-| MCP-06 | 会话内服务管理 | 显示连接状态、来源、工具数、完整错误和 stderr 尾部；面板立即打开并实时更新，在启停或重连期间仍可操作，无需等待所有服务连接。 | `/mcp` | 内置扩展 | [MCP 接入][mcp]、[更新记录][clilog] |
-| MCP-07 | 后台连接与按需等待 | 会话启动后台连接；直接声明工具在首次请求前有限等待，间接发现和调用在需要时等待连接。 | MCP 会话生命周期 | 内置 | [MCP 接入][mcp] |
+| MCP-05 | 连接与能力诊断 | 连接已启用服务并报告状态、工具与错误；连接阶段不再枚举所有资源，JSON 用 resources:true 表示支持资源，不再返回资源和模板数量。 | `pi mcp list [--json]` | 内置 | [更新记录][clilog]、[MCP][mcp] |
+| MCP-06 | 会话内服务管理 | 即时展示状态、来源、工具数、资源支持标志、错误与 stderr 尾部；连接、启停和重连期间实时更新且仍可操作，不再统计全部资源数量。 | `/mcp` | 内置扩展 | [MCP][mcp]、[更新记录][clilog] |
+| MCP-07 | 后台连接与按需等待 | 启动时后台连接；间接调用通过 reachesTools 声明确定需等待哪些服务器，搜索或列举工具等待全部相关连接；资源按需查询，不因枚举资源阻挡工具注册。 | MCP 生命周期、tool_call | 内置 | [扩展][ext]、[更新记录][clilog] |
 | MCP-08 | OAuth 登录、刷新与取消 | 发现认证服务，执行 PKCE／客户端注册并保存刷新令牌；Esc 可在各阶段取消，会话关闭会中止登录，每次授权服务请求有 15 秒超时，CLI timeout 限制整个登录过程。 | `/mcp login`、`pi mcp login --timeout` | 可选 | [MCP 接入][mcp]、[更新记录][clilog] |
 | MCP-09 | OAuth 高级兼容配置 | 支持预注册 client ID、可选密钥、回调端口、scope、客户端元数据文档及指定认证元数据地址。 | `oauth` 配置 | 可选 | [MCP 接入][mcp] |
 | MCP-10 | 按服务身份隔离凭据 | 以服务名称和 URL 关联认证，同 URL 的不同账户名称可独立登录；登出删除该身份凭据。 | `mcp-auth.json` | 内置 | [MCP 接入][mcp] |
@@ -284,13 +285,16 @@
 | CODE-16 | 输出预算与硬限制 | 可指定 max_output_tokens 和 timeout_ms；CLI 默认 VM 256 MB，输出和 store 另有容量上限，超限会报错。 | 首行 `// @options:` | 可选 | [Codemode][code] |
 | CODE-17 | 取消与失败结果 | Node／Bun worker 可因超时或取消而终止；失败保留已产生输出，取消未等待调用，已完成外部动作不回滚。远程和 inline 后端有独立中断限制，不能套用 worker 的终止保证。 | AbortSignal、执行结果 | 库 | [Codemode 库][codelib] |
 | CODE-18 | 独立沙箱嵌入 | 其他应用可注入工具、globals、store 和内存限制，使用独立 Codemode 包，无需依赖 Pi CLI。 | `CodemodeSandbox` | 库 | [Codemode 库][codelib] |
-| CODE-19 | 声明生成与源码格式校验 | 将输入／输出 schema 渲染为模型可读 TypeScript 声明，解析选项行并支持语法约束工具输入。声明生成本身不校验业务参数。 | `renderDeclarations()`、`parseCodemodeSource()` | 库 | [Codemode 库][codelib] |
+| CODE-19 | 声明生成与源码格式校验 | 输入属性描述和 integer、上下界、长度、pattern、default 等约束显示为注释标签，超过预算先省略标签；MCP 结果展开实际结构而非未定义的 CallToolResult<T>，不替代运行时参数验证。 | renderDeclarations、schemaToType、parseCodemodeSource | 库 | [Codemode][codelib]、[更新记录][codelog] |
 | CODE-20 | 打包宿主支持 | 显式提供 WASM 和 worker 入口，使沙箱可用于单文件或 Bun 编译宿主。 | `wasm`、`workerUrl` | 库 | [Codemode 库][codelib] |
 | CODE-21 | 图片工具结果组合 | tools.read 读取图片时返回含 type、data、mimeType、note 的图片块，可交给 image 输出或视觉分类，不再把图片丢成纯文本结果。 | `tools.read()` → `image()`／`models.classify()` | 可选 | [Codemode][code] |
 | CODE-22 | Cloudflare 远程沙箱 | 在独立部署 Worker 的 Durable Object 中运行 VM，工具和调用记录保留在 Agent 宿主，经 Workers RPC 回调；可按会话或按次分配对象，避免计算长时间阻塞会话对象。 | `RemoteCodemodeSandbox`、`/portable`、`/cloudflare` | 库／需部署 | [Codemode 库][codelib] |
 | CODE-23 | 同线程可移植沙箱 | 在调用线程运行 QuickJS，用于可接受同步计算阻塞的 WebAssembly 环境；Cloudflare 提供编译模块辅助入口，不需要额外部署沙箱 Worker。 | `InlineCodemodeSandbox`、`createInlineCodemodeSandbox()` | 库 | [Codemode 库][codelib] |
 | CODE-24 | 远程 CPU 与内存预算 | Cloudflare 默认中断轮询预算 100000、每 VM 内存 32 MiB，服务端限制请求上限；纯计算时用预算而非定时器保障结束，取消立即结束调用方等待，远端至下一工具调用或预算耗尽才停。 | `interruptBudget`、远端 maxMemoryLimitBytes | 库 | [Codemode 库][codelib] |
 | CODE-25 | 沙箱内置对象与悬空 Promise 防护 | 冻结 VM 内置对象防止原型篡改破坏宿主管线；没有工具在途且无法再结算的 Promise 立即失败，避免不可完成的脚本无限等待。 | QuickJS 执行器 | 库 | [Codemode 库][codelib]、[更新记录][clilog] |
+| CODE-26 | 确定性脚本运行入口 | start 允许宿主自行处理每个 onCall 并用 deliver 提交结果，支持从持久日志重跑；execute 保持原语义，只有宿主另行持久化才有跨进程恢复能力。 | sandbox.start、run.deliver、run.result | 库 | [Codemode][codelib] |
+| CODE-27 | 可重放的时间、随机与顺序 | start 固定 startedAt、seed、UTC，按连续结果序号处理结果，禁用 WeakRef／FinalizationRegistry；同指纹、脚本、初始环境和结果序列可重复产生同样调用。 | startedAt、seed、onStarted、onIdle | 库 | [Codemode][codelib] |
+| CODE-28 | 结构化失败结果判断 | 有 schema 且返回自有结构化值的工具可在失败时正常 resolve，例如 bash 非零 exit_code；无此值的失败、拦截或无效参数才 reject，脚本须检查退出码或 isError。 | tools 调用与输出 schema | 可选／接口约定 | [更新记录][clilog] |
 
 ## 09 SDK、RPC 与 JSON 集成
 
@@ -387,6 +391,8 @@
 | AI-35 | 统一响应耗时 | AssistantMessageEventStream 从请求开始到最终消息记录 durationMs，代理流也使用相同流类型；后续获取的 deferred 结果不补计时，自定义流函数须返回该具体流类型。 | `AssistantMessage.durationMs` | 库 | [AI 更新记录][ailog] |
 | AI-36 | Decisions 协议适配 | 把 JSON 状态、可选图片及 choice／score／bool 问题映射到 OpenAI Decisions；bool 转 predicate，拒答使整次结果失败，按输入 token 和目录价格统计费用。 | `openai-decisions`、`gpt-6-luna` | 库／API key | [AI][ai] |
 | AI-37 | 宿主登录名称定制 | 宿主可替换 ChatGPT 登录的 agent name 提示及 Codex 浏览器 originator，供嵌入式产品展示自身身份。 | `LoginOptions.agentName` | 库 | [AI 更新记录][ailog] |
+| AI-38 | 按密钥个性化 OpenRouter 目录 | 独立函数用 /models/user 缩小聊天目录并覆盖该 key 的上下文、输出与价格；与通用静态模型目录分离，供非 CLI 宿主复用。 | personalizeOpenRouterCatalog | 库 | [AI 更新记录][ailog] |
+| AI-39 | 动态目录跟随配置端点 | refresh 上下文传入注册提供商的最终 baseUrl，包括 wrappers 对 models.json 的覆盖，让动态目录使用同一地域／代理端点。 | RefreshModelsContext.baseUrl | 库 | [AI 更新记录][ailog] |
 
 ## 12 AI 提供商接入清单
 
@@ -400,7 +406,7 @@
 | PROV-06 | Azure OpenAI／Foundry | provider 已更名为 azure，同时支持 OpenAI Responses 和 Foundry Chat Completions，内置 DeepSeek V4 Pro；部署映射适用于两种 API，原 AZURE_OPENAI 环境变量保持不变。 | `azure`；`azure-openai-responses` 仅保留为 API 标识 | 可选 | [提供商配置][providers]、[AI 更新记录][ailog] |
 | PROV-07 | Amazon Bedrock | 通过 AWS Converse Stream 接入模型并复用 AWS 凭据链；Node 环境调用，不是浏览器后端。 | `amazon-bedrock` | 可选 | [AI][ai] |
 | PROV-08 | Radius | 接入 Pi 网关与 API key／OAuth；获取或缓存的组织模型目录替换随包默认目录，避免继续显示组织管理员已禁用的模型。 | `radius` | 可选 | [AI][ai]、[AI 更新记录][ailog] |
-| PROV-09 | OpenRouter | 通过统一网关接入多家聊天模型，以及仓库支持的图像与分类模型，复用同一提供商认证。 | `openrouter` | 可选 | [AI][ai] |
+| PROV-09 | OpenRouter | 统一调用聊天、图像和分类模型；有 key 时聊天目录按该 key 的 guardrails、区域与权限缩小并覆盖窗口、输出上限和价格，图像及分类目录不筛选。 | `openrouter`、`/models/user` | 可选 | [提供商配置][providers] |
 | PROV-10 | Vercel AI Gateway | 经 Vercel 网关接入模型，并提供目录中对应的分类模型能力。 | `vercel-ai-gateway` | 可选 | [AI][ai] |
 | PROV-11 | GitHub Copilot | 使用 Copilot OAuth 或相应环境令牌访问账户可用模型，按模型选择底层 API。 | `github-copilot` | 可选 | [AI][ai] |
 | PROV-12 | Cloudflare AI Gateway | 根据账号和网关配置解析端点，让请求通过 Cloudflare AI Gateway。 | `cloudflare-ai-gateway` | 可选 | [AI][ai] |
@@ -464,30 +470,48 @@
 | TUI-26 | 程序状态协议接口 | Terminal 新增 setProgramStatus，formatProgramStatus 编码 OSC 7501 状态；ProcessTerminal 启动时探测支持，自定义终端即使不支持也需提供可空操作的实现。 | `Terminal.setProgramStatus()`、`formatProgramStatus()` | 库 | [TUI 更新记录][tuilog] |
 | TUI-27 | 动态内边距与选择清理 | Box／Text 可运行中调整横向内边距；备用屏可显式清除文本选择及多次点击状态，便于宿主替换 transcript 时避免旧高亮残留。 | `setPaddingX()`、`TuiAltScreen.resetTextSelection()` | 库 | [TUI 更新记录][tuilog] |
 
-## 14 Chord 服务与插件组合
+## 14 Chord 类型化对象与跨宿主运行时
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
-| CH-01 | Facet 插件拆分 | 一个插件按 worker、TUI 或其他环境拆成独立部分，各自声明提供和消费的服务。 | FacetHost 与 facets | 库 | [Chord][chord] |
-| CH-02 | 服务依赖图校验 | 先收集所有 facet 声明，再验证依赖，按提供者先于消费者的顺序激活，避免不完整装配即执行。 | `provide/use/observe` | 库 | [Chord][chord] |
-| CH-03 | 逆序资源回收 | 在关闭或替换时逆依赖顺序释放生命周期资源，避免提供者先消失而消费者仍在使用。 | FacetHost | 库 | [Chord][chord] |
-| CH-04 | 单例与键控服务 | 单例对应一个提供者；keyed 对应动态多个实例，让插件既能提供全局能力也能管理多会话对象。 | 服务 token、keyed providers | 库 | [Chord][chord] |
-| CH-05 | 稳定服务句柄 | 提供者断连或替换时消费者保留同一 facade，连接恢复后重新就绪，而无需重写所有引用。 | 服务 bindings | 库 | [Chord][chord] |
-| CH-06 | 本地与远程服务边界 | 本地服务可使用一般 JavaScript 契约，远程服务严格采用 JSON 安全数据；Chord 不规定底层网络协议。 | local／remote token | 库 | [Chord][chord] |
-| CH-07 | 远程服务目录 | 发布可用服务目录并按消费者需求建立绑定，应用负责路由和传输，Chord 负责服务语义。 | RemoteServiceSource | 库 | [Chord][chord] |
-| CH-08 | 服务控制和错误规范 | 解析服务调用、catalogue、subscribe、unsubscribe、快照及更新，并定义可跨边界的错误码。 | `$chord.service` helpers | 库 | [Chord][chord] |
-| CH-09 | 原子状态修改 | 在 change 回调的临时草稿上编辑，成功后一次发布不可变修订；异常不修改原值，草稿随后失效。 | `replicatedState().change()` | 库 | [Chord][chord] |
-| CH-10 | 状态快照与增量复制 | 先发送完整状态，再发送有序变化；连接断开或提供者替换后重新水合，再恢复可用状态。 | replicated state subscriptions | 库 | [Chord][chord] |
-| CH-11 | JSON Delta 跟踪 | 记录对象设置／删除、字符串追加／前截断、数组 splice／重排等操作，支持结构共享与不可变应用。 | `@earendil-works/chord/delta` | 库 | [Chord][chord] |
-| CH-12 | 准备与采用分离 | prepare 生成候选值与操作批次，adopt 才切换权威值，适合先持久化后发布的宿主流程。 | tracker prepare／adopt | 库 | [Chord][chord] |
-| CH-13 | 独立路径编码与序列检查 | 每客户端、每订阅状态持有自己的 Delta 路径字典；校验连续性，重置时重建基线。 | state encoder／decoder | 库 | [Chord][chord] |
-| CH-14 | 慢消费者有界积压 | 远程待发送更新超限时改为当前完整 reset；公共完整值订阅合并为新值，避免无限堆积。 | 每订阅 pending 限制 | 库 | [Chord][chord] |
-| CH-15 | 订阅回调隔离 | 同一订阅的异步回调串行化，不同订阅独立；取消订阅丢弃后续任务，错误被报告而不破坏其他订阅。 | `state.subscribe()` | 库 | [Chord][chord] |
-| CH-16 | 显式取消上下文 | 传递取消与调用范围应用值，宿主可用它携带权限或遥测，无需 Chord 依赖这些业务实现。 | `@earendil-works/chord/context` | 库 | [Chord][chord] |
-| CH-17 | Facet 打包 | 根据包清单或约定入口用 esbuild 生成独立内容寻址 CJS 文件与 manifest；不会自行安装依赖。 | `bundleFacetPackage()`、`bundleFacets()` | 库 | [Chord][chord] |
-| CH-18 | 完整性校验与独立加载 | 校验 SHA-256，按宿主提供的 external 解析加载新代代码，避免普通模块缓存阻碍替换。 | Node facet loader | 库 | [Chord][chord] |
-| CH-19 | 插件代际热替换 | 先加载并验证候选，再切换服务实现；普通单例替换可保持稳定句柄不断连，失败保留旧代。 | `FacetHost.reload()` | 库 | [Chord][chord] |
-| CH-20 | 跨宿主传递插件产物 | 把已校验条目的源码和 manifest 作为 artifact 传到另一 Node 宿主并创建新的临时代次。 | artifact reader／loader | 库 | [Chord][chord] |
+| CHR-01 | 本地／远程类型契约 | 以 TypeBox runtime schema 描述对象输入、状态、方法及远程变体，推导 TypeScript 类型；local 可声明原生 opaque 成员，remote 只传受校验数据。 | local、remote、method、opaque | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-02 | 规范化对象身份 | 对象按 type、规范化 input、principalKey 定位；应用默认值、移除未知输入并省略等于默认值的字段，使相同地址共享 record。改变默认值语义需新类型名。 | canonical input、principalKey | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-03 | 契约版本兼容检查 | 同版本要求提供者覆盖消费者所需字段和方法；跨版本通过 accepts 适配，缺少适配或漏升版本的破坏性变更拒绝绑定。 | serve options.accepts、contract_mismatch | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-04 | 按需创建与稳定句柄 | get 返回句柄而非对象；相同地址并发访问共享激活，句柄成员保持稳定并分派到相应代码代次，重载保留对象身份。 | createHost、host.serve、ctx.get | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-05 | 异步资源与依赖激活 | 同步工厂只声明资源和依赖，随后等待资源打开及依赖就绪；失败向依赖者传播，下次 get 可重试，无持有者的未完成激活会释放。 | self.get、self.resources、handle.ready | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-06 | 启动就绪屏障 | load／install 默认等待本批 eager 对象激活；awaitEager:false 先启动而不等待，host.ready 再等待当前 eager 集合，支持 worker 本地启动与父连接接纳分阶段完成。 | host.load／install／ready | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-07 | 主体身份隔离 | 每个 principal key 获得自己的对象，连接由接受方赋身份，调用者不能自行伪造；宿主内部以 host 主体共享内部对象。 | principalKey、host.accept | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-08 | 远程能力变体 | 工厂按身份选择 viewer／participant 等已声明变体，只暴露对应方法和状态；业务方法仍须校验参数与资源归属。 | remote variants、handle.kind | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-09 | 身份撤销与对象失效 | 撤销匹配主体后强制释放相关对象、取消在途调用并更新或关闭连接；句柄进入 gone，重新 get 才能以新授权建立对象。 | host.invalidatePrincipal | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-10 | 句柄状态和延迟调用 | 可观察 loading、live、released、gone；loading 时方法等待就绪并尊重取消，变体缺失成员及释放后的调用明确报错。 | ready、onStatus、shape、release | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-11 | 有主引用生命周期 | 对象、调用、连接或宿主持有引用；最后引用释放后可 linger 再销毁，依次取消任务、移除监听、关闭资源和释放依赖，宿主内拒绝循环引用。 | self.get、ctx.get、eager、linger | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-12 | 命名单元状态与原子修改 | 状态以命名 cell 保存并跨重载保留；change 使用草稿，成功发布一次修订，抛错不生效；replace 可选择完整替换或结构差异。 | self.state、cell、change、replace | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-13 | 派生状态 | 同步 derivation 从多个状态源计算视图，依赖变化时更新，重载保留派生节点并替换计算函数。 | self.derive、derivation | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-14 | 订阅式远程状态复制 | 订阅后先取快照再收 Delta，重连或重载发 reset；最后订阅离开后清空远端缓存，避免新订阅读取旧值。 | state.subscribe、events、snap／ops／reset | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-15 | 资源修订与独占替换 | 资源 rev 或 deps 未变则重用；普通新资源在准备期打开，独占资源在切换屏障交换，失败时尝试恢复旧资源。 | resource({ rev, deps, exclusive, open, close }) | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-16 | 跨重载监听保持 | 同来源和相同 select 保留订阅，只替换回调，避免 Durable 单订阅源被重复打开；来源选择变化可改名重新声明。 | self.listen、listener | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-17 | 后台代码任务 | self.tasks 保存长驻任务声明，重载时取消旧任务并启动新代码；任务发起的 Chord 调用使用短 root，不把整个长任务锁在一代。 | self.tasks、ctx.signal | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-18 | 调用树与代次固定 | 短 root 携带 rootId 和 epoch，嵌套跨宿主调用使用同代代码，结束释放调用范围持有；过期或外来上下文会被拒绝。 | host.root、方法 ctx | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-19 | 注册表原子切换 | eager 对象贡献注册项，各 epoch 维护完整表；旧请求继续读旧表，重载原子替换，重复键按冲突策略报错。 | defineRegistry、self.register、host.registry | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-20 | 按宿主拆分插件 | 插件按 server／worker／browser 等宿主拆 facet，通过 defineFacet 注册对象工厂；加载代码为受信任的进程内代码。 | defineFacet、host.load、host.install | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-21 | 模块代际加载 | nodeLoader 对 facet 模块目录传播缓存破坏查询参数，使相对导入也获得新代码；模块不会被卸载，不提供插件安全隔离。 | @earendil-works/chord/node、nodeLoader | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-22 | 兼容代码热替换 | 按 load、prepare、必要时 gate、commit、retire 流程更新；准备期禁止状态写入并校验契约，兼容变化无需等待旧 root 完成即可提交。 | host.reload | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-23 | 状态升级与安全切换 | 状态 schema 或语义变化需提升 version 并 migrate；等待已进入对象的 root 离开，对尚未进入的旧 root 返回 upgrade_conflict，超时中止重载。 | state.version、state.migrate、gate | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-24 | 两代共存与退休 | 最多保留 current 和 previous epoch，旧 root 使用旧行为直到完成或被强制退休；无法匹配的代次返回 superseded，不偷偷替换代码执行。 | epoch、retire | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-25 | 多插件联合重载 | 同批准备相互依赖的新工厂和契约，使生产者与消费者可一起升级，失败保留原运行状态。 | host.reload([a, b]) | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-26 | 跨宿主重载协调 | 协调宿主对直接子宿主进行准备、投票和提交，报告各子宿主结果；落后 worker 在路由前对齐代次，浏览器通过 shape／reset 感知变化。 | reload options.remote、report.children | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-27 | 内存、IPC 和 WebSocket 链路 | 以 JSON 帧连接浏览器、Node 和多个宿主；提供内存测试链路、Node IPC 以及结构化 WebSocket 适配，不依赖旧 CBOR Pi 协议包。 | memoryLinkPair、ipcLink、webSocketLink、acceptWebSockets | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-28 | 按前缀路由与中继 | server 可按目标名前缀解析或启动 worker，路由前后检查 authorize，并把浏览器或其他 worker 的对象访问转发到目标。 | host.route、authorize、resolve | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-29 | 链路验证与失连处理 | 校验帧 schema、重复 ID 和控制帧来源，ping 检测失活；断链释放持有，在途调用报 unavailable，不保证请求是否执行，也不自动重放。 | link、connection、pingTimeout | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-30 | 子宿主进程管理 | Node manager 串行启动、停止和替换子进程，等待控制 ready，处理 fatal；根据 activeCalls、viewers、durableTasks 和 idleFor 执行 keepAlive 策略。 | createHostManager、forkDriver、childControl | 库／当前源码 | [进程管理源码][chordmanager]、[规范][chordspec] |
+| CHR-31 | 跨进程所有权锁 | 子进程在打开存储前获取内核锁，Linux／Android 用抽象 socket，Windows 用命名管道，其他平台用探测式 socket 文件，限制同锁名多进程占用。 | processLock、childControl().lock() | 库／当前源码 | [进程管理源码][chordmanager]、[规范][chordspec] |
+| CHR-32 | Durable 宿主组合 | 可把 Harness 作为 eager local 资源，注册表贡献 Durable 扩展；正在运行的 Durable 阶段保持自己的快照，下阶段再使用新扩展。 | Chord guide 的 Durable 集成模式 | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-33 | 独立事务 JSON Delta | 保留不依赖 host 的 track、结构差异和 immutable apply，支持字符串追加／前截断、数组 splice／排列、设置和删除。 | @earendil-works/chord/delta | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-34 | 准备与采用分离 | prepare 计算候选值和操作，adopt 才切换权威修订；适合先持久化后通知消费者，修改草稿会复制新赋值容器。 | track、prepare、adopt | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-35 | 独立可复制状态 | replicatedState 可自主管理值，也可挂到权威 revision source 按已提交帧发布；Durable 文档和视图继续复用，未随旧服务 runtime 删除。 | replicatedState、ReplicatedStateSource | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-36 | 有界完整值订阅 | 独立 replicatedState 的每订阅异步回调串行，最多保留 100 个待投递完整值，超限折叠为最新值；取消清空待处理但不取消正在执行回调。 | replicatedState().subscribe | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-37 | 显式取消与上下文值 | 保留 Context、AbortSignal 桥接及调用范围数据，辅助跨层传播取消；与对象方法 ctx 的 root／epoch 职责配合。 | @earendil-works/chord/context | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
+| CHR-38 | 类型化失败原因 | 用 ChordError 区分无权限、无效输入、未就绪、失效句柄、契约冲突、升级冲突、代次退休和不可达，供宿主决定重新获取或重试。 | ChordError、isChordError、reason | 库／当前源码 | [指南][chordguide]、[规范][chordspec]、[Chord][chord] |
 
 ## 15 Durable 持久化运行时
 
@@ -517,7 +541,7 @@
 | DUR-22 | 精确提交观察 | 订阅值和该次提交的 Chord 操作，支持远程复制；慢观察者积压超过上限时替换成最新完整视图。 | `watch()` | 实验／库 | [Durable][durable] |
 | DUR-23 | 晚加入与事件适配 | 新消费者先拿当前快照，再收提交派生的 Agent 风格事件；不会从头重放所有运行过程。 | `watchEvents()` | 实验／库 | [Durable][durable] |
 | DUR-24 | 流输出提交节流 | 默认按一定间隔提交部分回答与工具输出，可权衡存储压力和崩溃时未提交输出窗口。 | `settings.progress` | 实验／库 | [Durable][durable] |
-| DUR-25 | 忙碌输入队列 | 支持 steer、follow-up、忙碌即拒绝，以及只写条目不请求模型；排队 submission 可以撤回。 | whenBusy、pi.inbox | 实验／库 | [Durable][durable] |
+| DUR-25 | 忙碌输入与显示写入 | steer、follow-up、忙碌拒绝和输入撤回仍支持；只有 kind/data 的显示写入忙碌时也立即提交，只有排队 reset 可挡住它；带 model/head/edits 的写入仍等边界。 | whenBusy、pi.inbox、submit(write) | 实验／库 | [Durable][durable] |
 | DUR-26 | 上下文重置与交接 | 从空上下文或 handoff 说明开始新上下文，旧记录仍留存；工具也可请求交接。 | `reset()`、`control.handoff` | 实验／库 | [Durable][durable] |
 | DUR-27 | 手动与后台压缩 | 可并行生成摘要并在空闲或轮次边界安放，过期摘要按 stale 处理；支持提前后台压缩。 | `compact()`、`backgroundTokens` | 实验／库 | [Durable][durable] |
 | DUR-28 | 溢出恢复与自定义压缩 | 模型拒绝过长上下文时压缩后重试一次；扩展可以阻止或提供自己的摘要。 | CompactionTask、beforeCompact | 实验／库 | [Durable][durable] |
@@ -554,51 +578,16 @@
 | DUR-59 | 文件变更监听与按行扫描 | ExecutionEnv 可监听文件／目录、递归与排除路径，报告 overflow/error；Node 在 Windows 和网络／FUSE 文件系统轮询。scanLines 在环境内扫描行跨度，read 避免整文件载入。 | `FileSystem.watch()`、`BinaryReader.scanLines()` | 实验／库 | [Durable 更新记录][durlog] |
 | DUR-60 | 远程输出窗口与省略计数 | Shell 可在源端省略保留尾部以外的输出并报告 skipped；工具传递 outputWindow，使远程后端减少无用传输且保持截断统计。 | `ShellExecOptions.window`、`ToolExecutionApi.outputWindow` | 实验／库 | [Durable 更新记录][durlog] |
 | DUR-61 | 活跃任务索引与规模控制 | 调度只遍历相关拥有关系和候选集合，结束任务仅在仍有后代活跃时保留索引，减少长驻 Harness 的历史任务内存与全表扫描开销。 | scheduler ownership indexes | 实验／库 | [Durable 更新记录][durlog] |
+| DUR-62 | 可恢复 Codemode 工具 | 独立扩展将脚本工具接入 Harness，脚本调用均为持久嵌套工具；崩溃后可继续脚本，不再运行已经完成并记入日志的调用。 | @earendil-works/pi-durable/codemode、createCodemodeExtension | 实验／库 | [Durable][durable] |
+| DUR-63 | 脚本结果日志与分歧检查 | 每次交付 VM 前先持久化结果，重启按顺序重放并凭 key 重新附着调用；脚本分歧、沙箱指纹／模块版本改变或已过 deadline 会使调用失败，在途子调用遵守自己的 replay 策略。 | 确定性 start + Codemode journal | 实验／库 | [Durable][durable] |
+| DUR-64 | 持久脚本发现与命名空间 | codemode 提示区块按预算展示 TypeScript 工具声明，name prefix 划分 namespaces，脚本用 searchTools／describeTool／describeNamespace 查其他工具。 | createCodemodeExtension options | 实验／库 | [Durable][durable] |
+| DUR-65 | 持久脚本模型调用与输出 | models 目录、分类和图像生成由内部嵌套工具处理，模型调用最多四路；支持图像保存、分块日志和超长结果临时文件，可传 RemoteCodemodeSandbox 运行于 Cloudflare。 | models.*、models:false、max_output_tokens | 实验／库 | [Durable][durable]、[更新记录][durlog] |
+| DUR-66 | 脚本分支状态 | store/load 按 conversation 持久保存 JSON，fork 读取分叉条目时的值；关闭沙箱是宿主停机而非脚本最终结果，下进程可恢复。 | Codemode store/load | 实验／库 | [Durable][durable] |
+| DUR-67 | 延迟声明工具与搜索加载 | deferred 工具暂不向模型声明但仍可由工具调用；tool_search 用 BM25 搜索并以 control.addTools 加入 modelTools，加载顺序追加，分支和压缩后保留。 | createToolSearchExtension、ToolRegistration.deferred | 实验／库 | [Durable][durable]、[更新记录][durlog] |
+| DUR-68 | 自定义输入记录 | 输入可携带 entry.kind/data，以业务类型存入 transcript，同时把 content 作为用户消息发给模型；仍支持启动、纠偏、排队及结算，类型不得使用 pi. 前缀。 | InputEntry、submit(input) | 实验／库 | [Durable][durable] |
+| DUR-69 | 压缩失败状态与阻塞策略 | pi.live.compactionFailure 保留最近失败直到新摘要成功；compaction_end 携带 error。阻塞阈值压缩失败会使生成以 model_error 结束，不再继续发送超限请求；无内容或 Hook 拒绝可继续。 | compactionFailure、compaction_end | 实验／库 | [Durable][durable] |
 
-## 16 Client 服务客户端
-
-| 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
-| --- | --- | --- | --- | --- | --- |
-| CL-01 | 传输无关连接 | 在任意保序字节传输上建立 Pi 实验服务连接，业务客户端不必绑定某一种 socket 类型。 | Client、ByteTransportFactory | 实验／库 | [Client][client] |
-| CL-02 | 服务身份校验 | 连接握手检查实际端点报告的逻辑 serverId，避免物理地址复用后误连不同服务器。 | `Client.connect()` | 实验／库 | [Client][client] |
-| CL-03 | 请求关联与服务错误 | 为请求关联响应，把服务端错误暴露为 ServerError，使多个并行请求不依赖响应顺序。 | `request()` | 实验／库 | [Client][client] |
-| CL-04 | 实时会话路由 | Session 请求携带 serverId、sessionId、attachmentId，处理有序带外附着变化并清理过期路线。 | live attachment route | 实验／库 | [Client][client] |
-| CL-05 | 服务状态订阅 | 先安装完整快照，再通过 start 放行缓冲更新，保证初始水合与后续变化顺序正确。 | `subscribeService()` | 实验／库 | [Client][client] |
-| CL-06 | Chord 传输桥 | 将懒解析服务器／会话地址适配为 Chord 服务传输，由应用服务契约构建类型化绑定。 | `createClientServiceTransport()` | 实验／库 | [Client][client] |
-| CL-07 | 显式重连 | 断线时本地 pending 请求失败并清理路由；用户代码重连并重新附着，不自动重放可能有副作用的请求。 | `reconnect()` | 实验／库 | [Client][client] |
-| CL-08 | Unix socket 连接 | Node／Bun 可使用现成 Unix transport，管理有序写入、背压和连接关闭。 | `pi-client/unix` | 实验／库 | [Client][client] |
-| CL-09 | 本地服务发现 | 扫描指定 socket 目录并通过握手验证身份，跳过无效、失效或身份不匹配端点，最多 16 路探测。 | `discoverUnixServers()` | 实验／库 | [Client][client] |
-| CL-10 | 客户端容量限制 | 限制协议帧大小与 Unix 待写字节数，防止失控端点或慢传输造成无界缓冲。 | maxFrameLength、maxPendingBytes | 实验／库 | [Client][client] |
-
-## 17 Server 会话服务端
-
-| 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
-| --- | --- | --- | --- | --- | --- |
-| SV-01 | 服务器级服务托管 | 为每条连接建立独立服务端点，使目录和管理等应用服务通过同一协议对外提供。 | RoutedServerServiceHost | 实验／库 | [Server][server] |
-| SV-02 | 会话解析与打开 | 由宿主按 sessionId 查找元数据并创建 routed handle，存储布局和业务生命周期由应用决定。 | ServerHost resolver／factory | 实验／库 | [Server][server] |
-| SV-03 | 不透明业务调用路由 | 校验路由后转发服务／成员信封，不在通用服务器内解码或依赖具体聊天业务契约。 | `invokeService()` | 实验／库 | [Server][server] |
-| SV-04 | 多展示端附着 | 一个 Session 可被多个客户端同时附着，同连接重复 attach 幂等；每次有效附着具有独立身份。 | RoutedSessionHandle | 实验／库 | [Server][server] |
-| SV-05 | 过期请求隔离 | 使用 attachmentId 拒绝切换或重连前的延迟帧，避免旧请求进入新会话。 | 完整 route 校验 | 实验／库 | [Server][server] |
-| SV-06 | 附着变更带外通知 | 安装或移除路线后独立发布 attachment 变化，业务管理结果不直接暴露路由 ID。 | attachment 控制消息 | 实验／库 | [Server][server] |
-| SV-07 | 订阅隔离 | 每条订阅的状态更新仅发给请求它的附着，避免多客户端之间串流。 | routed service subscription | 实验／库 | [Server][server] |
-| SV-08 | 连接与任务收尾 | 断连后等待已接纳调用结算再释放附着；worker 是否退休由展示需求和实际 Harness 活动共同决定。 | host 生命周期 | 实验／库 | [Server][server] |
-| SV-09 | 可组合监听与 Unix 服务 | ServerListener 抽象允许接入传输，Unix 预设使用明确 socket 路径和独立逻辑 serverId。 | `createUnixServer()`、`createUnixListener()` | 实验／库 | [Server][server] |
-| SV-10 | 服务关闭与资源释放 | 关闭服务时关闭全部 routed Session handle，释放 worker 及会话写入所有权。 | Server shutdown | 实验／库 | [Server][server] |
-
-## 18 Protocol 通信协议
-
-| 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
-| --- | --- | --- | --- | --- | --- |
-| PT-01 | 版本握手 | 建连时协商协议版本并报告逻辑 serverId；当前仓库文档版本为 8，没有稳定兼容承诺。 | hello | 实验／库 | [Protocol][protocol] |
-| PT-02 | 两级请求目标 | 区分服务器目标与包含会话、附着 ID 的 Session 目标，把调用限制在正确路由范围。 | target envelope | 实验／库 | [Protocol][protocol] |
-| PT-03 | 请求、响应、取消与更新 | 定义相关联的控制信封、取消、订阅更新和 attachment 消息，业务载荷保持不透明。 | client／server messages | 实验／库 | [Protocol][protocol] |
-| PT-04 | CBOR 二进制编码 | 用定长 CBOR item 表达协议消息，减少纯文本信封的体积；不是旧 CLI RPC 的 JSONL 格式。 | encodeClientMessage／encodeServerMessage | 实验／库 | [Protocol][protocol] |
-| PT-05 | 字节流分帧 | 四字节大端长度前缀，解码器支持消息被任意分片或多个消息粘在同一数据块中。 | ClientMessageDecoder／ServerMessageDecoder | 实验／库 | [Protocol][protocol] |
-| PT-06 | 严格 JSON 载荷边界 | 拒绝未知信封属性，以及 undefined、非有限数、循环对象、特殊原型等非 JSON 载荷。 | ProtocolValidationError | 实验／库 | [Protocol][protocol] |
-| PT-07 | 消息复杂度限制 | 默认限制帧 16 MiB、集合元素数和嵌套深度，控制解码器处理不可信输入的资源消耗。 | protocol limits | 实验／库 | [Protocol][protocol] |
-| PT-08 | 服务语义分层 | 仅验证路由与 JSON 边界；Chord 解释服务调用和状态增量，应用解释 transcript、模型和插件内容。 | 协议职责边界 | 实验／库 | [Protocol][protocol] |
-
-## 19 Telemetry 遥测
+## 16 Telemetry 遥测
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -614,7 +603,7 @@
 | TEL-10 | 适配器一致性测试 | 验证单次调用、返回值保持、异步生命周期、父子关系及后端失败不影响业务等契约。 | testing 子路径 | 库／测试 | [Telemetry][telemetry] |
 | TEL-11 | Pi 领域诊断词汇 | agent 包提供 AI 请求与 harness 的 schema 和 typed helpers，ai 包负责传递显式上下文。 | AGENT_TELEMETRY_SCHEMAS | 库 | [Telemetry][telemetry] |
 
-## 20 Evals 行为评测
+## 17 Evals 行为评测
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -629,7 +618,7 @@
 | EV-09 | 结果与会话归档 | 保存协议、预期队列、观测 JSONL、Vitest JSON、原始 Pi 会话及文本／JSON 比较报告，支持复查。 | `.eval/<run>/` | 开发工具 | [Evals][evals] |
 | EV-10 | 自定义场景和确定性评分 | 通过 describeEval、run 和 judge 定义任务与评分；低分作为实验数据，基础设施错误另行报告。 | evals 目录 | 开发工具 | [Evals][evals] |
 
-## 21 Env 远程执行环境
+## 18 Env 远程执行环境
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -648,8 +637,11 @@
 | ENV-13 | 连接丢失与句柄失效 | 丢线请求以 lost:true 失败，后续请求可新建 daemon；旧文件句柄拒绝使用，不偷偷转到新连接或重放已经发出的副作用操作。 | Connection、isConnectionLost | 库 | [协议][envproto]、[导出接口][envapi] |
 | ENV-14 | 二进制分帧与并发请求 | 协议 v1 用长度前缀、请求 ID、JSON 元数据及原始二进制 payload，单帧上限 16 MiB；支持事件、取消、ping，并过滤 SSH 启动杂音。 | pi-env serve、Connection | 库 | [协议][envproto] |
 | ENV-15 | 执行环境一致性验证 | 仓库提供 Durable conformance、随机操作差分及真实 SSH 可选测试，比较 RemoteExecutionEnv 与同平台 NodeExecutionEnv 行为。 | PI_ENV_DAEMON、PI_ENV_SSH_HOST | 开发测试支持 | [Env][env] |
+| ENV-16 | 远程交互伪终端 | 在 daemon 中启动指定程序或用户 login shell，提供按序原始字节输出、输入及退出码，用于编辑器或完整交互终端，区别于 exec 文本输出。 | openTerminal、RemoteTerminal | 库／非 Windows | [Env][env]、[终端接口][envterminal] |
+| ENV-17 | 终端尺寸与前台任务 | resize 更新行列并发 SIGWINCH；foreground 查询前台进程组及可用名称，区分 shell 提示与运行中的编辑器／任务，不列后台作业。 | RemoteTerminal.resize／foreground | 库／非 Windows | [终端接口][envterminal]、[协议][envproto] |
+| ENV-18 | 本地 daemon 终端与关闭 | localDaemon 可直接连接本机随包 daemon，无需 SSH；close 或连接丢失终止终端工作，exited 报告结果，关闭后输入丢弃。Windows 目前不支持 PTY。 | localDaemon、RemoteTerminal.close／exited | 库／平台相关 | [Env][env]、[终端接口][envterminal] |
 
-## 22 其他：扩展示例、实验应用、平台与工程支持
+## 19 其他：扩展与库示例、平台与工程支持
 
 | 编号 | 功能 | 详细作用 | 入口／条件 | 状态 | 依据 |
 | --- | --- | --- | --- | --- | --- |
@@ -714,17 +706,6 @@
 | OTH-59 | Durable 输出与队列示例 | 14—21 展示问答、系统提示、真实流式模型、编码工具、print／JSON 输出、忙碌收件箱和晚加入观察。 | `durable/test/examples/` | 实验／示例 | [Durable][durable] |
 | OTH-60 | Durable 子智能体示例 | 22—23 演示前台子任务拥有关系，以及后台子智能体的创建、投递、等待、停止、列举和重启安全回报。 | foreground／background 示例 | 实验／示例 | [Durable][durable] |
 | OTH-61 | Durable 高级工作流示例 | 24—31 覆盖子任务失败收尾、压缩、编码代理、计划模式、审查者、每会话独立环境、工具包装和重载恢复。 | `durable/test/examples/` | 实验／示例 | [Durable][durable] |
-| OTH-62 | Durable 独立编码 TUI | 单进程组合 SQLite、Harness 和稳定版 UI 组件，提供可恢复工具工作、会话视图、子智能体和任务面板。 | `experimental/durable/main.ts` | 实验／源码入口 | [Durable 应用][durableapp] |
-| OTH-63 | Durable 子会话交互 | `/agents` 可切换正在运行的子会话并直接纠偏或继续聊天；`/tasks` 显示任务图，Esc 作用于当前展示会话。 | 实验 Durable TUI | 实验／源码入口 | [Durable 应用][durableapp] |
-| OTH-64 | Vacation 后台研究演示 | 旅行规划外壳演示边聊天边后台研究、并行持久工具和崩溃恢复；search 返回预置结果，不是真实旅行搜索服务。 | `experimental/vacation/main.ts` | 实验／演示 | [Vacation][vacation] |
-| OTH-65 | 实验 Client／Server 应用 | 在源码入口启动服务和客户端，自动创建或附着持久会话，通过服务接口驱动共享 TUI。 | `PI_EXPERIMENTAL=1` 下 server／client | 实验／源码限定 | [实验服务][services] |
-| OTH-66 | 实验会话目录与管理服务 | 由应用的 SessionDirectory 投影目录，SessionManagement 提供创建、移除、附着、脱离；业务契约不在通用协议内。 | server services | 实验／源码限定 | [实验服务][services] |
-| OTH-67 | 实验模型与对话服务 | Models 提供状态、默认选择和刷新；AgentController 提供 prompt、纠偏、follow-up、取消、压缩和等待。 | session services | 实验／源码限定 | [实验服务][services] |
-| OTH-68 | 实验 Transcript 状态 | 直接提供 durable root conversation 的完整活动视图作为复制状态，客户端通过 Chord 接收增量，无需自建消息 reducer。 | Transcript service | 实验／源码限定 | [实验服务][services] |
-| OTH-69 | 实验 Session／TUI 插件 | 按会话分支选择插件包，分别构建并加载 src/session.ts 与 src/tui.ts，客户端获取匹配产物。 | `-e`、PresentationPlugins／SessionPlugins | 实验／源码限定 | [实验服务][services] |
-| OTH-70 | 实验插件热重载 | 重建候选 facet、校验并切换，再释放旧代；只影响选定会话分支，不修改其他 worker 默认配置。 | 实验 `/reload` | 实验／源码限定 | [实验服务][services] |
-| OTH-71 | 实验展示端扩展点 | SlashCommands 管理命令贡献，PresentationUI 暴露窄化选择与状态接口；示例插件增加 `/hello`。 | `examples/plugins/pi-example-plugin/` | 实验／示例 | [实验服务][services] |
-| OTH-72 | 实验 worker 生命周期 | 每会话目录保存 meta.json 和 SQLite；worker 持有目录锁，活跃任务存在时保持运行，协调器负责稳定路由。 | 实验 server host | 实验／源码限定 | [实验服务][services] |
 | OTH-73 | Windows 原生支持 | 原生模块配置控制台输入、读取修饰键并异步访问文本／图片剪贴板，提供 x64 与 arm64 预构建。 | tui/native/win32 | 平台支持 | [Windows 原生][nativewin] |
 | OTH-74 | macOS 原生支持 | 通过 AppKit 获取修饰键及文本、图片、文件路径剪贴板，支持 Intel 与 Apple Silicon。 | tui/native/darwin | 平台支持 | [macOS 原生][nativemac] |
 | OTH-75 | Linux 剪贴板支持 | X11 使用原生 XCB 异步读取；不可用时降级，Wayland 使用 wl-paste，写入使用既有命令或终端路径。 | tui/native/linux | 平台支持 | [Linux 原生][nativelinux] |
@@ -740,7 +721,7 @@
 | OTH-85 | 静态检查与定向测试 | 根 check 检查格式、类型及依赖等；测试按包和具体文件运行，交互测试另有专门流程。 | `npm run check`、包测试入口 | 工程支持 | [开发规范][rules] |
 | OTH-86 | 模型目录生成 | 从生成脚本维护模型目录和各 provider 数据，避免直接手改生成文件，并提供固定目录更新流程。 | ai/scripts/generate-models.ts | 工程支持 | [开发规范][rules]、[AI][ai] |
 | OTH-87 | 安装与发布验证 | 仓库提供本地包构建、隔离 consumer 安装及 release smoke 流程，检查 npm／Bun 分发路径。 | release:local 等 | 工程支持 | [项目 README][root] |
-| OTH-88 | 安装遥测与分析开关 | 区分匿名安装／更新报告及部分归因头，与实验首启分析 opt-in；这些设置不同于 Telemetry 库的接口。 | enableInstallTelemetry、enableAnalytics | 可配置支持 | [设置][settings] |
+| OTH-88 | 安装遥测与保留分析设置 | enableInstallTelemetry 控制匿名安装／更新报告及部分归因头；enableAnalytics 字段仍保留，但原实验首启入口已删除，不能据旧文档将其列作现有首启分析流程。 | enableInstallTelemetry、enableAnalytics | 可配置支持／保留字段 | [设置][settings]、[CLI 变更][clilog] |
 | OTH-89 | 当前仓库中文离线导览 | docs/doc-html 提供离线源码、功能、目录、历史和二次开发导览，已随本地文档提交保留；属于本仓库附加文档，生成内容是否同步需单独核查，不能等同于当前源码事实。 | `docs/doc-html/index.html` | 本地文档产物 | [离线导览][offlineguide] |
 
 ## 能力边界与容易混淆的地方
@@ -757,40 +738,46 @@
 | 图像生成保存行为 | 模型接口返回图像内容；Codemode 的 `image()` 会另存临时文件。models.md 中“生成图不落盘”与 codemode.md 的表述层级不同且容易混淆。 | 清单将生成接口和 image 输出／临时保存分开，不承诺永久资产库。 | [模型][models]、[Codemode][code] |
 | 模型硬输入限制 | 目录可以声明 request bytes 或每请求图片数，但文档明确 Pi 尚不据此重写或拒绝全部历史。 | 图片缩放支持不等于所有元数据限制均被运行时强制执行。 | [模型][models] |
 | 分类和图像模型 | 不出现在普通聊天 `/model` 选择器，须通过 Codemode／扩展／库的专用接口使用。 | 不把这些模型列成可直接替代聊天 Agent 的模型。 | [模型][models] |
-| 自动重试 | 模型暂时错误、MCP 连接／资源重试、服务客户端重连是不同机制；工具已执行的副作用不能随意重放。 | 分模块说明恢复边界，不承诺所有请求都自动安全重试。 | [设置][settings]、[MCP][mcp]、[Client][client] |
+| 自动重试 | 模型暂时错误、MCP 重连和 Chord 断链是不同机制，Chord 在途请求断链后无法保证是否已执行。 | 不承诺工具副作用自动重放，重试需由业务决定。 | [设置][settings]、[MCP][mcp]、[Chord 规范][chordspec] |
 | 普通会话分叉 | 分叉保存对话分支，不自动恢复 Git 工作目录。 | 代码恢复另见 git-checkpoint 示例。 | [会话][sessions]、[示例][examples] |
-| Durable 存储锁 | 库要求一次由一个进程拥有存储，不自带跨进程锁；实验 coding-agent 宿主另加目录锁。 | 库的耐久性与宿主的并发所有权保护分开说明。 | [Durable][durable]、[Durable 应用][durableapp] |
-| 实验 Client／Server 发行状态 | 对应 coding-agent 入口和实验子路径从 npm 包与 standalone 排除，需源码及实验开关。 | 不把源码可见命令宣称为普通发行 CLI 命令。 | [实验服务][services] |
-| 实验服务尚缺能力 | 服务层 README 仍列出树导航、nextRun、对子会话的 keyed 暴露和活动上下文外历史分页等缺项；Durable 底层已支持双向存储扫描。 | 底层分页不等于实验服务已暴露历史分页接口。 | [实验服务][services] |
-| 实验服务认证 | Unix 实验传输没有实现对端认证和完整授权；工作区授权等仍是继续建设点。 | serverId 校验和 attachment 防串路不是账户认证。 | [Server][server]、[Protocol][protocol] |
-| Durable 独立 TUI 差异 | 应用 README 仍将图片输入等列为缺项，但 Durable 库的 read 已支持图像；另缺会话选择器、树／fork、普通扩展、模板和 `/login`。 | 工具读取图像不等于独立 TUI 已支持图片粘贴或附件；库和界面分别核对。 | [Durable 应用][durableapp] |
-| Vacation 搜索 | search 使用预置演示结果。 | 仅列为持久后台任务示范，不列为旅行搜索、订票或实时价格能力。 | [Vacation][vacation] |
-| Chord RPC 规划 | 当前具备远程服务绑定和状态复制，但 README 将对称 RPC peer 列为计划方向。 | 不把 PLANNING.md 全部内容当作已交付实现。 | [Chord][chord] |
+| Durable 存储锁 | Durable 仍要求单进程拥有存储；新 Chord node 提供独立 processLock，须宿主显式集成。 | 旧 experimental 宿主已删除，不能把其目录锁视为当前 CLI 能力。 | [Durable][durable]、[Chord 规范][chordspec] |
 | 外部生态 | Slack／聊天自动化指向独立 pi-chat 仓库；会话发布到 Hugging Face 使用外部工具。 | 不作为本仓库内置业务模块。 | [项目 README][root] |
 | 其他代理常见功能 | 普通内置工具清单未提供通用浏览器自动化、专用网页搜索、语音转写、邮件客户端或定时任务调度模块。 | 可借 Shell、MCP、技能或扩展实现，但不能将可扩展性写成现成功能。 | [CLI][cli]、[扩展][ext] |
+| Chord 热重载边界 | 当前仅协调直接子宿主，commit 决策未持久化，重连不能续接旧 holds；loader 不回收旧模块且不隔离插件。 | 跨进程能力已实现，但不承诺崩溃下原子集群升级、无限层级重载或沙箱。 | [规范][chordspec] |
+| Chord 数据所有权 | track、replicatedState 和 replace 接管可信不可变 JSON，发布值并未冻结。 | 消费者不得修改共享对象，跨可变信任边界须复制或序列化。 | [Chord][chord] |
+| PTY 平台范围 | Env 远程文件／exec 支持 Windows，但新增交互 PTY 暂不支持。 | 不把已有 Windows daemon 支持等同于完整远程终端支持。 | [Env][env] |
 
-## 本次更新记录（2026-10-12）
+## 已移除或替换的能力（不计入当前功能数）
+
+| 原条目／模块 | 当前状态 | 影响与依据 |
+| --- | --- | --- |
+| CL-01—CL-10、SV-01—SV-10、PT-01—PT-08 | pi-client、pi-server、pi-protocol 已删除且不再发布。 | 旧 Unix 服务路由、attachment、CBOR 协议不再作为现有模块列出；普通 CLI JSONL RPC 仍保留。[Chord 变更][chordlog] |
+| 原 CH-01—CH-20 | 旧 facet/service runtime 由 typed host runtime 替换；保留的 Delta／replicatedState 重新列入新表。 | 删除 defineService、createFacetHost、远程 service helpers、bundler 和旧 node bundle loader；新模块使用 CHR 编号，不能把同名 defineFacet 当作旧接口兼容。[Chord 变更][chordlog] |
+| OTH-62—OTH-64 | experimental/durable 与 vacation 源码应用已删除。 | Durable 包及其 test/examples 仍在，独立实验 TUI、/agents、/tasks 和 Vacation 应用不再列作当前入口。[CLI 变更][clilog] |
+| OTH-65—OTH-72 | 实验 server/client/plugin 栈及 pi-example-plugin 已删除。 | PI_EXPERIMENTAL 旧入口、实验 Session／Transcript 服务和 source-only exports 不再可用；Chord 是新底层库，不等于旧应用已迁移完成。[CLI 变更][clilog] |
+| MCP_TYPESCRIPT_PREAMBLE、mcpStructuredContentSchema | 从 Codemode 导出移除。 | 结果类型改由工具 output schema 自包含展开，不再依赖共享 MCP TypeScript 前导定义。[Codemode 变更][codelog] |
+
+## 本次更新记录（2026-10-12，第二次合并）
 
 | 范围 | 据实调整 |
 | --- | --- |
-| 核对基线 | 从原清单 517e9fdb5 对比到当前合并提交 fe2b9da4c，结合当前 README、CHANGELOG、配置与接口源码；未联网拉取或替换分支。 |
-| 新模块 | 新增 Env 远程执行环境，原“其他”顺延为 22，保留既有功能 ID 方便对照。 |
-| CLI 与集成 | 更新工具增减和 MCP 通配规则、状态报告、取消标记、耗时、输出显示、严格主题校验及 Schema。 |
-| 模型 | 更正 Azure provider 标识与 Foundry 支持，补充 Decisions、视觉分类、Haiku 5.5、llama.cpp 原生决策模型与认证变化。 |
-| 执行与持久化 | 新增 Codemode portable／remote／inline；补充 Durable 图片、嵌套工具、调用者范围、历史读取、存储与缓存、故障关闭。 |
-| 文档迁移 | 来源链接按 qishu/功能清单 的位置重新计算；原未提交导览说明更新为当前状态。 |
-| 发布边界 | 库能力以当前源码为准；Durable 新增嵌套／图像／缓存、Codemode remote／inline、严格主题检查与 TUI 新光标行为含 Unreleased 内容。库功能不自动等同于 CLI 或实验 TUI 功能。见 [Durable][durlog]、[Codemode][codelog]、[TUI][tuilog] 更新记录。 |
+| 核对基线 | 从上一版 fe2b9da4c 对比到本次本地合并提交 6cd9d957a；包版本仍为 1.1.0，新改动主要在 Unreleased，未联网拉取或切换分支。 |
+| 模块结构 | 移除三个已删除包的活动模块，Chord 全面重写；其后模块重新编号，其他模块保留功能 ID，OTH-62—72 留空并在历史表说明。 |
+| CLI／AI／MCP | 更新 OpenRouter 按 key 目录、schema 发布地址、自定义消息启动事件、启动期 busy、reachesTools、namespace 别名、资源能力诊断及压缩序列化。 |
+| Codemode／Durable | 补充确定性 start、持久脚本日志恢复、延迟工具搜索、自定义输入和压缩失败；修正结构化失败结果的 resolve／reject 边界。 |
+| Env | 新增远程／本地 PTY、交互输入输出、尺寸和前台进程查询，注明 Windows 暂不支持。 |
+| 发布与验证 | 静态核对源码、文档和差异，验证表格、编号、来源路径及包覆盖；不将库能力外推到 CLI，不逐项调用服务或运行功能。 |
 
 ## 来源与维护说明
 
 | 项目 | 说明 |
 | --- | --- |
-| 首要来源 | 各 package README、coding-agent 的 CLI／设置／扩展／SDK／RPC／MCP 等参考文档，并核对工具工厂、提供商注册与实验源码入口。 |
+| 首要来源 | 各 package README、coding-agent 的 CLI／设置／扩展／SDK／RPC／MCP 等参考文档，并核对工具工厂、提供商注册、包导出和已移除源码。 |
 | 来源优先级 | 当前源码和接口声明优先于旧示例中的过时片段；出现文档冲突时按具体调用层级说明，不把一层能力外推到另一层。 |
 | 提供商口径 | 模块 12 按接入家族归并区域 provider，非模型数量统计；模型清单和可用账户能力以实际目录与凭据为准。 |
-| 示例口径 | 模块 22 将相近的展示示例及 SDK／Durable 演练集归并；示例 API、角色和提示不是普通 CLI 新增的独立内置模块。 |
+| 示例口径 | 模块 19 将相近的展示示例及 SDK／Durable 演练集归并；示例 API、角色和提示不是普通 CLI 新增的独立内置模块。 |
 | 本地导览口径 | 现有 HTML 导览仅用于辅助检查遗漏；最终功能说明主要回链到原始包文档，不把导览内自动文件归属索引计作独立功能。 |
-| 更新方式 | 升级仓库后重新核对 CLI 选项、工具集合、内置扩展、provider 注册、各包 README 与 experimental TODO，再更新版本口径和对应行。 |
+| 更新方式 | 升级仓库后重新核对 CLI 选项、工具集合、内置扩展、provider 注册、各包 README、CHANGELOG 与实际导出，再更新版本口径和对应行。 |
 
 [root]: ../../README.md
 [rules]: ../../AGENTS.md
@@ -828,15 +815,9 @@
 [tui]: ../../packages/tui/README.md
 [chord]: ../../packages/chord/README.md
 [durable]: ../../packages/durable/README.md
-[client]: ../../packages/client/README.md
-[server]: ../../packages/server/README.md
-[protocol]: ../../packages/protocol/README.md
 [telemetry]: ../../packages/telemetry/README.md
 [evals]: ../../packages/evals/README.md
 [subagents]: ../../packages/coding-agent/examples/extensions/subagent/README.md
-[durableapp]: ../../packages/coding-agent/src/experimental/durable/README.md
-[vacation]: ../../packages/coding-agent/src/experimental/vacation/README.md
-[services]: ../../packages/coding-agent/src/experimental/services/README.md
 [nativewin]: ../../packages/tui/native/win32/README.md
 [nativemac]: ../../packages/tui/native/darwin/README.md
 [nativelinux]: ../../packages/tui/native/linux/README.md
@@ -858,3 +839,9 @@
 [durlog]: ../../packages/durable/CHANGELOG.md
 [tuilog]: ../../packages/tui/CHANGELOG.md
 [codelog]: ../../packages/codemode/CHANGELOG.md
+
+[chordguide]: ../../packages/chord/docs/guide.md
+[chordspec]: ../../packages/chord/docs/spec.md
+[chordlog]: ../../packages/chord/CHANGELOG.md
+[chordmanager]: ../../packages/chord/src/manager.ts
+[envterminal]: ../../packages/env/src/terminal.ts
