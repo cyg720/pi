@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {"title":"CLI 一次提示的工作流","locale":"zh-CN","quality_profile":"showcase"},
+  "lanes": [{"id":"product","label":"coding-agent"},{"id":"execution","label":"Agent 与模型"},{"id":"tools","label":"工具与续轮"}],
+  "mainPath":["prompt-input","session-prepare","build-request","model-response","run-finish"],
+  "nodes": [
+    {"id":"prompt-input","lane":"product","col":0,"type":"frontend","label":"提交提示","sublabel":"交互、Print 或 RPC","width":170},
+    {"id":"session-prepare","lane":"product","col":1,"type":"backend","label":"会话准备","sublabel":"资源、模型与上下文","width":170},
+    {"id":"build-request","lane":"execution","col":2,"type":"backend","label":"构造请求","sublabel":"活动分支与工具定义","width":170},
+    {"id":"model-response","lane":"execution","col":3,"type":"cloud","label":"流式模型回复","sublabel":"文本或工具调用","width":170},
+    {"id":"run-finish","lane":"execution","col":5,"type":"frontend","label":"运行结束","sublabel":"agent_end","width":170},
+    {"id":"tool-execute","lane":"tools","col":3,"type":"backend","label":"执行工具","sublabel":"校验参数与取消信号","width":170},
+    {"id":"append-result","lane":"tools","col":2,"type":"database","label":"追加结果","sublabel":"toolResult 进入上下文","width":170},
+    {"id":"follow-up","lane":"product","col":3,"type":"messagebus","label":"排队消息","sublabel":"steer / follow-up","width":170}
+  ],
+  "edges": [
+    {"id":"submit","from":"prompt-input","to":"session-prepare","label":"prompt","role":"main"},
+    {"id":"prepare","from":"session-prepare","to":"build-request","label":"装配完成","role":"main"},
+    {"id":"request","from":"build-request","to":"model-response","label":"流式请求","role":"main"},
+    {"id":"finish","from":"model-response","to":"run-finish","label":"无后续工作或终止","role":"main"},
+    {"id":"call-tool","from":"model-response","to":"tool-execute","label":"工具调用","role":"branch"},
+    {"id":"save-result","from":"tool-execute","to":"append-result","label":"工具结果","role":"return"},
+    {"id":"next-turn","from":"append-result","to":"build-request","label":"下一轮","role":"return"},
+    {"id":"queued-input","from":"follow-up","to":"build-request","label":"边界处取队列","role":"branch"}
+  ],
+  "cards":[
+    {"dot":"cyan","title":"续轮条件","items":["工具结果、steering 或显式继续可触发下一轮","follow-up 在待处理工作完成后进入循环"]},
+    {"dot":"rose","title":"停止与边界","items":["模型 error / aborted 或工具终止可结束运行","工具使用进程权限，项目 trust 不等于工具沙箱"]},
+    {"dot":"slate","title":"源码依据","items":["core/agent-session.ts 与 agent/agent-loop.ts","how-pi-works.md；基线 136b87e8a"]}
+  ]
+}

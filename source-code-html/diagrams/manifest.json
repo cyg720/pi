@@ -1,0 +1,140 @@
+{
+  "baseline": "136b87e8a7f5a3e5186de0289523ba327dc592fc",
+  "sourceHashes": {
+    "packages/agent/package.json": "fe08d021781b66e403fc68da2c4f01cef72b56e261a2b8f42bffa94bf7171207",
+    "packages/ai/package.json": "d0901ae75a68d9a64dc1b87a51956a304cccfa70a9bab24fc7f99e89a1a96b67",
+    "packages/chord/package.json": "b50b0f317d7ff99227b4e7fac1f1c9c442011c06f4b092aec1c7b2c1a654487c",
+    "packages/codemode/package.json": "87231e6e2641b091191360d305a9c6d092aa2fd5c182bc9d5cbc8ddcce691498",
+    "packages/coding-agent/package.json": "0d1b72e3ce28b64e54640b2cd28a147e62f2b4ddd4ffe35482295e0fa81f4336",
+    "packages/durable/package.json": "8a7f9ed39d99fbe595f0a41efdd0491b8908a1c5274e4739da8b15bedd1df4a4",
+    "packages/env/package.json": "76cbd2d03858639aaf1f1786d81831ec25cf99d7ad35af9c1b9119d74ee263e0",
+    "packages/evals/package.json": "3ee243b1100bbbd2ddc278ceebde8209804b68f00f4a470f27736f83bb71124a",
+    "packages/mcp/package.json": "8e4e44d299c4428dfcfdd9dee5b5f79b0b582f2605a4c0664739a6b838946527",
+    "packages/telemetry/package.json": "6da79d236b33ffa93f541ff21a6ed131c80f5e9931ceea0b9c66ec387b6cebb5",
+    "packages/tui/package.json": "49362a3815b3f69728c68243609d63355aa54b4c374414c5b037560b41ca6038",
+    "packages/coding-agent/docs/how-pi-works.md": "7d43ab8e2b886cd1047dcee503588a1c828b92333dd4f177526b89e6db8aaa8b",
+    "packages/coding-agent/src/core/sdk.ts": "05b75c9e1eaf622433083357d385dcc2166eb985c20516cb5690e7f777027057",
+    "packages/coding-agent/src/core/agent-session.ts": "e0a6e3e7b662afff9763a6297e0bb600da75e8eff4df443912f2e215bdc6a8e2",
+    "packages/coding-agent/src/core/session-manager.ts": "6dd4b725c91f7b3102ec30b4e7d26f0ae486e603e9744b2eca781d57c2a7466c",
+    "packages/agent/src/agent.ts": "6d0e56bf4443f0cfc5c6a82ce31a3b99f15ff816075bed36403dfa0c95a609c6",
+    "packages/agent/src/agent-loop.ts": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
+    "packages/agent/src/types.ts": "2e116ef60fdaca4e26be5a1ace8d8b47f545d648d365de60b8c9f9d1ba629ee4",
+    "packages/ai/src/models.ts": "de226bcd332fc660129f87b8c02a12c4862b620201a407998c2cdeacc4f2044a",
+    "packages/durable/src/types.ts": "880c2d712768e763ad4170b9d04357aabf449f40e965f7fc8fdab5c151a1ce96",
+    "packages/durable/src/harness/scheduler.ts": "f95d18f72ec0291b9e8bbcf785ab4625b76106e1d7da389fb457bfe15f4e5080"
+  },
+  "diagrams": [
+    {
+      "type": "architecture",
+      "file": "pi-system-architecture.html",
+      "specification": {
+        "sha256": "430cec3d2682a71a71392e089e0de66e240f0e41bb5219b0342ee4286556fba1",
+        "bytes": 3926
+      },
+      "artifact": {
+        "sha256": "ffeba4102bfb914a6491a006e59fa20d918a0f090ff5555dc9ef4c81606a86a2",
+        "bytes": 715995
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "offlineSha256": "d0f98a669dff8c90dd89311d76cf42744e4fd447e23306b4ec11835ad368e7d1"
+    },
+    {
+      "type": "workflow",
+      "file": "pi-task-workflow.html",
+      "specification": {
+        "sha256": "bfa8d287d66d07627064a19ca86c5d94f784d55e14da4163c2e47afbee99b0ee",
+        "bytes": 2902
+      },
+      "artifact": {
+        "sha256": "6c5876ef577db31b9bd618d37a219bd9224d8393ae9221529ac8e6c598463449",
+        "bytes": 712547
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "offlineSha256": "eeb6823725ea4a3fc182304d7079912042d69eb721abe6561c2a8d0d2cddb7eb"
+    },
+    {
+      "type": "sequence",
+      "file": "pi-task-sequence.html",
+      "specification": {
+        "sha256": "7a1fe637cd7ed4080901a80faa388bfee49d42b3bb9fc0562524b4af2c1b6acb",
+        "bytes": 3077
+      },
+      "artifact": {
+        "sha256": "0bd79cf9f61093543d5d0b7e10421ed73721d3f9dd692c0970c33e0c2d8419b4",
+        "bytes": 713098
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "offlineSha256": "5212f2e2b7ff6aafe7d2295bf6502a010e8e0dc9bb8b060f6267d54924fed3f6"
+    },
+    {
+      "type": "dataflow",
+      "file": "pi-task-dataflow.html",
+      "specification": {
+        "sha256": "41deba2ae4303ca618f7baae821b1ee2643c39b114c8d0f69a42ea9873f536cb",
+        "bytes": 3041
+      },
+      "artifact": {
+        "sha256": "9eddcb142745ce8d12acdbd50306044f96cb7a7a193d18360ccf42c66d1d3a7f",
+        "bytes": 714265
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "offlineSha256": "8669514ca180b9b5062fc1621b02a2805ce11f88aabfc525f1b988c3489e87a9"
+    },
+    {
+      "type": "lifecycle",
+      "file": "pi-task-lifecycle.html",
+      "specification": {
+        "sha256": "ad7fe54eb18517334bfb894535545c35e211ef5e1dbb6ab991f479d61b0b27aa",
+        "bytes": 2360
+      },
+      "artifact": {
+        "sha256": "115c14d2bdd3c04bba1287354a3a9c0194de037ff66cd9c8f3b27e9409504b67",
+        "bytes": 707292
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "offlineSha256": "3ee32e5f58051c3ea5df859eb8b972eba3585f4c2532b5ec334ffe078c1cc878"
+    }
+  ],
+  "review": {
+    "date": "2026-10-24",
+    "scope": "当前包关系、CLI 主线、单次工具调用、会话上下文及 Durable TaskState",
+    "browserEvidence": "not-run-policy-blocked",
+    "visualReview": "not-run-policy-blocked",
+    "offlinePackaging": "移除在线字体 link 并加入 CSP；原始交付字节另存 generated。"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\dataflow.json",
+  "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-dataflow.html",
+  "specification": {
+    "sha256": "41deba2ae4303ca618f7baae821b1ee2643c39b114c8d0f69a42ea9873f536cb",
+    "bytes": 3041
+  },
+  "artifact": {
+    "sha256": "9eddcb142745ce8d12acdbd50306044f96cb7a7a193d18360ccf42c66d1d3a7f",
+    "bytes": 714265
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; frame-src blob:; child-src blob:; connect-src 'none'; font-src data:; base-uri 'none'; form-action 'none'">
+  <title>Pi 源码导览 · 离线阅读室</title>
+  <style>/* INLINE_STYLE */</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<aside class="sidebar" aria-label="章节导航">
+  <a class="brand" href="#start"><b>π</b><span>PI SOURCEBOOK<small>源码阅读室 / 中文版</small></span></a>
+  <div class="edition"><span class="dot"></span> OFFLINE EDITION <span id="version"></span></div>
+  <nav id="nav"></nav>
+  <div class="reading"><div><span>阅读进度</span><b id="progressText">0 / 8</b></div><progress id="progress" max="8" value="0"></progress><small>在章节末尾标记已读</small></div>
+  <footer id="sidebarMeta"></footer>
+</aside>
+<div class="workspace">
+  <header class="topbar"><button id="menu" class="quiet mobile" aria-label="切换导航" aria-expanded="false">目录</button><span id="breadcrumb">阅读路线</span><div class="top-actions"><button id="searchOpen" class="quiet">搜索文档与源码 <kbd>/</kbd></button><button id="theme" class="quiet" aria-label="切换明暗主题">明暗</button></div></header>
+  <main id="main" tabindex="-1"></main>
+</div>
+<dialog id="sourceDialog" class="source-dialog"><div class="dialog-head"><div><small>离线源码快照</small><h2 id="sourceTitle"></h2></div><button id="sourceClose" class="quiet" aria-label="关闭源码">关闭 ×</button></div><div class="source-tools"><label>定位文本 <input id="sourceFind" placeholder="函数名或代码片段"></label><button id="sourceFindButton">查找下一处</button><button id="copySource">复制文件内容</button><span id="sourceStatus" role="status"></span></div><div id="sourceBody" class="source-body"></div></dialog>
+<dialog id="searchDialog"><div class="dialog-head"><h2>搜索阅读室</h2><button id="searchClose" class="quiet" aria-label="关闭搜索">关闭 ×</button></div><label class="search-label">关键词<input id="globalSearch" type="search" placeholder="例如：tool_result、会话、agent-loop"></label><div id="searchResults" aria-live="polite"></div></dialog>
+<dialog id="diagramDialog" class="diagram-dialog"><div class="dialog-head"><h2 id="diagramTitle"></h2><button id="diagramClose" class="quiet">关闭大图 ×</button></div><div id="largeDiagram"></div></dialog>
+<div id="toast" role="status"></div>
+<noscript>请启用浏览器 JavaScript 以使用离线搜索、源码阅读与交互图。内容不需要网络。</noscript>
+<script id="doc-data" type="application/json">/* INLINE_DATA */</script>
+<script>/* INLINE_APP */</script>
+</body>
+</html>

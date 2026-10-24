@@ -1,0 +1,61 @@
+{
+  "baseline": "136b87e8a7f5a3e5186de0289523ba327dc592fc",
+  "courseHash": "cca5d5c6aedcaf4bcb7dd730d0bf728d738e7160ff1155b0cfac9b80fdfaeb92",
+  "contentHash": "4e9d0bfe3d9022ee726e02f79b9fe030fa1ff0cf211d3ad997e560ac596ea967",
+  "decks": [
+    {
+      "stage": "foundations",
+      "filename": "foundations.pptx",
+      "slides": 6,
+      "sha256": "5a4a27027480905d61a6a7539ddbf3a5f6fe67fc3ffa7a57aeee9a26414a112a"
+    },
+    {
+      "stage": "models",
+      "filename": "models.pptx",
+      "slides": 21,
+      "sha256": "4eae5219dabb1c78272c4699549b0743aec9202d0ed232c76a96bdbee01d0d16"
+    },
+    {
+      "stage": "conversation",
+      "filename": "conversation.pptx",
+      "slides": 18,
+      "sha256": "9f24aff7f8ce1658c1e21d3e4b199fec55ca01fa32a1f38ab96cf590915eb8ba"
+    },
+    {
+      "stage": "tools",
+      "filename": "tools.pptx",
+      "slides": 21,
+      "sha256": "a60edf1e9b5b3cba412b5b6433ced96938503b5f7c84b8a9673f92f439b39069"
+    },
+    {
+      "stage": "extensions",
+      "filename": "extensions.pptx",
+      "slides": 15,
+      "sha256": "3600fc2fff39c4fa46375df0a382ed1494a7f0ad54c90ea9225bb23189aef656"
+    },
+    {
+      "stage": "durability",
+      "filename": "durability.pptx",
+      "slides": 33,
+      "sha256": "0436706d670c80eecd5cea71211bba4d1a2fc4a0325faa5493a05dec4230231d"
+    },
+    {
+      "stage": "verification",
+      "filename": "verification.pptx",
+      "slides": 9,
+      "sha256": "9864db29190ebf1bb8980d51257f9ab0c717c207afdecdf3d3b83914ab88bd2a"
+    },
+    {
+      "stage": "mastery",
+      "filename": "mastery.pptx",
+      "slides": 9,
+      "sha256": "501f0d7e16832f37868b1a3aee784ef3cb0e56c9c4b9ec5deed3f3e5a527fff7"
+    }
+  ],
+  "review": {
+    "date": "2026-10-24",
+    "method": "导入原课件，保留微软雅黑与版式；按当前课程替换正文和讲者备注，再结构检查、重新导入比对及逐页渲染检查。",
+    "archive": "history/learning-slides-2026-10-17",
+    "validationSha256": "2f9b835a503bbb4641960e19b4070101383552ed858821cc7a1b04ea594ac8c5"
+  }
+}

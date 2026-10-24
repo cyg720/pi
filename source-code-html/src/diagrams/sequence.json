@@ -1,0 +1,34 @@
+{
+  "schema_version":1,
+  "diagram_type":"sequence",
+  "meta":{"title":"一次工具调用的执行时序","locale":"zh-CN","quality_profile":"showcase","column_fit":"spread","viewBox":[1080,920]},
+  "participants":[
+    {"id":"input-surface","type":"frontend","label":"运行模式","sublabel":"TUI / Print / RPC"},
+    {"id":"agent-session","type":"backend","label":"AgentSession","sublabel":"产品会话"},
+    {"id":"agent-executor","type":"backend","label":"Agent","sublabel":"执行循环"},
+    {"id":"model-provider","type":"cloud","label":"Models","sublabel":"提供商适配"},
+    {"id":"tool-handler","type":"backend","label":"Tool","sublabel":"execute"},
+    {"id":"session-log","type":"database","label":"SessionManager","sublabel":"活动分支 / JSONL"}
+  ],
+  "messages":[
+    {"id":"submit-prompt","from":"input-surface","to":"agent-session","y":180,"label":"prompt(text)"},
+    {"id":"start-agent","from":"agent-session","to":"agent-executor","y":228,"label":"准备后调用 prompt","variant":"emphasis"},
+    {"id":"request-model","from":"agent-executor","to":"model-provider","y":276,"label":"上下文与工具定义"},
+    {"id":"stream-call","from":"model-provider","to":"agent-executor","y":324,"label":"assistant 与 toolCall","variant":"return"},
+    {"id":"assistant-event","from":"agent-executor","to":"agent-session","y":372,"label":"message_end","variant":"return"},
+    {"id":"persist-assistant","from":"agent-session","to":"session-log","y":420,"label":"追加 assistant 条目"},
+    {"id":"execute-call","from":"agent-executor","to":"tool-handler","y":468,"label":"校验后 execute","variant":"emphasis"},
+    {"id":"return-tool","from":"tool-handler","to":"agent-executor","y":516,"label":"结果或错误结果","variant":"return"},
+    {"id":"tool-result-event","from":"agent-executor","to":"agent-session","y":564,"label":"toolResult 事件","variant":"return"},
+    {"id":"persist-tool","from":"agent-session","to":"session-log","y":612,"label":"追加工具结果条目"},
+    {"id":"request-again","from":"agent-executor","to":"model-provider","y":660,"label":"携带结果请求下一轮"},
+    {"id":"final-response","from":"model-provider","to":"agent-executor","y":708,"label":"最终 assistant","variant":"return"},
+    {"id":"run-end","from":"agent-executor","to":"agent-session","y":756,"label":"message_end / agent_end","variant":"return"},
+    {"id":"display-end","from":"agent-session","to":"input-surface","y":804,"label":"展示或输出事件","variant":"return"}
+  ],
+  "cards":[
+    {"dot":"cyan","title":"场景范围","items":["展示一次工具调用后模型收尾的成功路径","最终 assistant 也会追加到会话，重复写入步骤省略"]},
+    {"dot":"emerald","title":"事件与存储","items":["AgentSession 监听消息事件并驱动 SessionManager","持久会话写 JSONL；内存会话保留相同树结构"]},
+    {"dot":"slate","title":"源码依据","items":["agent-loop.ts、core/agent-session.ts、session-manager.ts","取消、并行工具与扩展钩子另见源码；136b87e8a"]}
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {"title": "Pi 当前源码架构", "locale": "zh-CN", "quality_profile": "showcase", "repository": {"url": "https://github.com/cyg720/pi", "revision": "136b87e8a7f5a3e5186de0289523ba327dc592fc"}},
+  "components": [
+    {"id":"terminal-ui","type":"frontend","label":"tui","sublabel":"终端组件与原生能力","pos":[80,100],"size":[190,76],"sources":[{"path":"packages/tui/package.json"}]},
+    {"id":"mcp-client","type":"backend","label":"mcp","sublabel":"协议客户端与认证","pos":[390,100],"size":[190,76],"sources":[{"path":"packages/mcp/package.json"}]},
+    {"id":"script-runtime","type":"backend","label":"codemode","sublabel":"JavaScript 工具编排","pos":[700,100],"size":[190,76],"sources":[{"path":"packages/codemode/package.json"}]},
+    {"id":"eval-runner","type":"backend","label":"evals","sublabel":"私有开发评测包","pos":[80,330],"size":[190,76],"sources":[{"path":"packages/evals/package.json"}]},
+    {"id":"coding-product","type":"frontend","label":"coding-agent","sublabel":"CLI、SDK 与会话装配","pos":[390,330],"size":[190,76],"sources":[{"path":"packages/coding-agent/package.json"},{"path":"packages/coding-agent/src/core/sdk.ts"}]},
+    {"id":"agent-loop","type":"backend","label":"agent","sublabel":"消息与工具循环","pos":[700,330],"size":[190,76],"sources":[{"path":"packages/agent/src/agent-loop.ts"}]},
+    {"id":"model-api","type":"cloud","label":"ai","sublabel":"模型、提供商与流事件","pos":[1010,330],"size":[190,76],"sources":[{"path":"packages/ai/package.json"}]},
+    {"id":"remote-env","type":"backend","label":"env","sublabel":"SSH 与执行环境","pos":[80,560],"size":[190,76],"sources":[{"path":"packages/env/package.json"}]},
+    {"id":"durable-runtime","type":"backend","label":"durable","sublabel":"持久会话、任务与存储","pos":[390,560],"size":[190,76],"sources":[{"path":"packages/durable/package.json"}]},
+    {"id":"object-runtime","type":"backend","label":"chord","sublabel":"对象宿主、Watch、SQLite","pos":[700,560],"size":[190,76],"sources":[{"path":"packages/chord/package.json"}]},
+    {"id":"telemetry-contract","type":"backend","label":"telemetry","sublabel":"显式遥测契约","pos":[1010,560],"size":[190,76],"sources":[{"path":"packages/telemetry/package.json"}]}
+  ],
+  "connections": [
+    {"id":"product-loop","from":"coding-product","to":"agent-loop","label":"装配 Agent","variant":"emphasis"},
+    {"id":"loop-model","from":"agent-loop","to":"model-api","label":"请求模型","variant":"emphasis"},
+    {"id":"product-ui","from":"coding-product","to":"terminal-ui","label":"终端渲染","fromSide":"top","toSide":"right"},
+    {"id":"product-mcp","from":"coding-product","to":"mcp-client","label":"内置扩展","fromSide":"top","toSide":"bottom","labelAt":[485,250]},
+    {"id":"product-code","from":"coding-product","to":"script-runtime","label":"内置扩展","fromSide":"top","toSide":"left"},
+    {"id":"env-durable","from":"remote-env","to":"durable-runtime","label":"实现环境契约"},
+    {"id":"durable-chord","from":"durable-runtime","to":"object-runtime","label":"复用基础能力"},
+    {"id":"model-telemetry","from":"model-api","to":"telemetry-contract","label":"显式 span","fromSide":"bottom","toSide":"top","labelAt":[1105,480]}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"产品执行主线","items":["coding-agent 装配 Agent，Agent 通过 ai 请求模型","箭头选择主要关系，完整依赖以各包 package.json 为准"]},
+    {"dot":"emerald","title":"持久运行时独立集成","items":["Durable 依赖 ai、chord、codemode、telemetry","当前 CLI 未以 Durable 作为底层；evals 通过开发依赖评测"]},
+    {"dot":"slate","title":"源码基线","items":["LG-Workbench / 136b87e8a，11 个包均为 1.4.0","包含 Unreleased；当前无工作台 apps 与旧服务协议包"]}
+  ]
+}

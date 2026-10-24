@@ -1,0 +1,60 @@
+{
+  "baseline": "3c3c60182a2d290e0ae5d315cf674654604548b4",
+  "courseHash": "2b740482f9f313e7eb54217e465cef1500b92966b0c6bc050dc7665704d6e72f",
+  "decks": [
+    {
+      "stage": "foundations",
+      "filename": "foundations.pptx",
+      "slides": 6,
+      "sha256": "371bd79fa86b25ffd036c3fa914f3e44341450175d126e0d8d376f502a71eab8"
+    },
+    {
+      "stage": "models",
+      "filename": "models.pptx",
+      "slides": 21,
+      "sha256": "7b3fe82fcac36b5aaff6a7c3959a0fd2a44fc7a3c883fe22dcbb72a6a0f06ff6"
+    },
+    {
+      "stage": "conversation",
+      "filename": "conversation.pptx",
+      "slides": 18,
+      "sha256": "f98164ed73477e3d106208938ce9bf23de1998194cf70374011c21005dfd1382"
+    },
+    {
+      "stage": "tools",
+      "filename": "tools.pptx",
+      "slides": 21,
+      "sha256": "ffc95ea7ed3196ca4675166ad80c4ca46e327dd54a5dd67149e790d066d1c9b7"
+    },
+    {
+      "stage": "extensions",
+      "filename": "extensions.pptx",
+      "slides": 15,
+      "sha256": "5f46174812b0b7049a1b2583d94319f533ee4516995ae1015388d2b0c3059359"
+    },
+    {
+      "stage": "durability",
+      "filename": "durability.pptx",
+      "slides": 33,
+      "sha256": "e263bba3dd8a9ee03bfc005dd929ee552c48443fa591fd99612dd4cf10ba7708"
+    },
+    {
+      "stage": "verification",
+      "filename": "verification.pptx",
+      "slides": 9,
+      "sha256": "7b821157fe61d5baf0f83e6e066cad671630af559097c0ca4d10a495da609298"
+    },
+    {
+      "stage": "mastery",
+      "filename": "mastery.pptx",
+      "slides": 9,
+      "sha256": "3c8160cae86c2e7b7956db1ec08f4bc3b55890eea8ed811a9fb759a2311a6d2f"
+    }
+  ],
+  "review": {
+    "from": "6cd9d957a9fd50bc504d45b72834ed9dd85a20b6",
+    "to": "3c3c60182a2d290e0ae5d315cf674654604548b4",
+    "date": "2026-10-17",
+    "reason": "仅 Chord 测试依赖与锁文件变更；逐项核对变更范围、课程及八份课件指纹，教学内容仍适用。未重制课件或声称新增视觉验收。"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\lifecycle.json",
+  "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-lifecycle.html",
+  "specification": {
+    "sha256": "ad7fe54eb18517334bfb894535545c35e211ef5e1dbb6ab991f479d61b0b27aa",
+    "bytes": 2360
+  },
+  "artifact": {
+    "sha256": "115c14d2bdd3c04bba1287354a3a9c0194de037ff66cd9c8f3b27e9409504b67",
+    "bytes": 707292
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

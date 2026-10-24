@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\workflow.json",
+  "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-workflow.html",
+  "specification": {
+    "sha256": "bfa8d287d66d07627064a19ca86c5d94f784d55e14da4163c2e47afbee99b0ee",
+    "bytes": 2902
+  },
+  "artifact": {
+    "sha256": "6c5876ef577db31b9bd618d37a219bd9224d8393ae9221529ac8e6c598463449",
+    "bytes": 712547
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

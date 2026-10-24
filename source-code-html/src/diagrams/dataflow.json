@@ -1,0 +1,33 @@
+{
+  "schema_version":1,
+  "diagram_type":"dataflow",
+  "meta":{"title":"CLI 会话与模型上下文的数据流","locale":"zh-CN","quality_profile":"showcase","viewBox":[1080,720]},
+  "stages":[{"label":"输入"},{"label":"会话树"},{"label":"请求上下文"},{"label":"模型接入"},{"label":"输出"}],
+  "nodes":[
+    {"id":"user-content","type":"frontend","label":"用户内容","sublabel":"文字、图片与附件","stage":0,"row":1},
+    {"id":"active-branch","type":"database","label":"活动分支","sublabel":"id 与 parentId","stage":1,"row":1},
+    {"id":"model-context","type":"backend","label":"模型上下文","sublabel":"messages 与 tools","stage":2,"row":1},
+    {"id":"provider-stream","type":"cloud","label":"提供商请求","sublabel":"统一模型契约","stage":3,"row":1},
+    {"id":"assistant-content","type":"frontend","label":"assistant","sublabel":"文本与工具调用","stage":4,"row":1},
+    {"id":"prompt-resources","type":"backend","label":"提示与资源","sublabel":"系统提示、技能描述","stage":2,"row":0},
+    {"id":"session-jsonl","type":"database","label":"会话 JSONL","sublabel":"持久会话追加日志","stage":1,"row":3},
+    {"id":"tool-output","type":"backend","label":"工具结果","sublabel":"toolResult","stage":4,"row":3},
+    {"id":"compaction-entry","type":"backend","label":"压缩摘要","sublabel":"替代旧上下文片段","stage":2,"row":3}
+  ],
+  "flows":[
+    {"id":"input-entry","from":"user-content","to":"active-branch","label":"用户条目","variant":"emphasis"},
+    {"id":"branch-history","from":"active-branch","to":"model-context","label":"分支历史","variant":"emphasis"},
+    {"id":"request-data","from":"model-context","to":"provider-stream","label":"模型请求","variant":"emphasis"},
+    {"id":"stream-data","from":"provider-stream","to":"assistant-content","label":"流事件","variant":"emphasis"},
+    {"id":"resource-data","from":"prompt-resources","to":"model-context","label":"指令与定义","labelAt":[530,216]},
+    {"id":"tool-data","from":"assistant-content","to":"tool-output","label":"执行调用","labelAt":[960,380]},
+    {"id":"save-data","from":"tool-output","to":"session-jsonl","label":"消息与工具结果追加","variant":"dashed","route":"bottom-channel"},
+    {"id":"reload-data","from":"session-jsonl","to":"active-branch","label":"按父链恢复"},
+    {"id":"summary-data","from":"compaction-entry","to":"model-context","label":"摘要与保留消息"}
+  ],
+  "cards":[
+    {"dot":"cyan","title":"上下文来自活动分支","items":["系统提示、工具定义与分支消息构成请求","技能全文按需读取，扩展可变换上下文"]},
+    {"dot":"emerald","title":"压缩保留原始历史","items":["摘要改变后续模型上下文，原条目仍在树中","fork / clone 创建新会话，不自动恢复 Git 文件"]},
+    {"dot":"slate","title":"源码依据","items":["session-manager.ts、compaction.ts、how-pi-works.md","CLI JSONL 与 Durable Storage 是不同机制；136b87e8a"]}
+  ]
+}

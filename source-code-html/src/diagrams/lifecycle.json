@@ -1,0 +1,25 @@
+{
+  "schema_version":1,
+  "diagram_type":"lifecycle",
+  "meta":{"title":"Durable 任务状态与恢复","locale":"zh-CN","quality_profile":"showcase","viewBox":[1080,660]},
+  "lanes":[{"id":"main","label":"TaskState 主线"},{"id":"task-paused","label":"释放 invocation 后等待"}],
+  "states":[
+    {"id":"task-pending","type":"start","label":"pending","sublabel":"可参与调度","lane":"main","col":1},
+    {"id":"task-running","type":"active","label":"running","sublabel":"执行当前 phase","lane":"main","col":2},
+    {"id":"task-completing","type":"decision","label":"completing","sublabel":"结果已定，等待子任务","lane":"main","col":3},
+    {"id":"task-terminal","type":"neutral","label":"terminal","sublabel":"持久终态回执","lane":"main","col":4},
+    {"id":"task-waiting","type":"waiting","label":"waiting","sublabel":"等待 on 集合结束","lane":"task-paused","col":0},
+    {"id":"task-sleeping","type":"waiting","label":"sleeping","sublabel":"等待时钟到达 until","lane":"task-paused","col":1}
+  ],
+  "transitions":[
+    {"id":"join-tasks","from":"task-running","to":"task-waiting","label":"commit waiting","fromSide":"bottom","toSide":"top","route":"straight","labelAt":[402,230]},
+    {"id":"join-ready","from":"task-waiting","to":"task-running","label":"依赖终态后恢复","fromSide":"left","toSide":"top","variant":"emphasis","via":[[150,307],[150,70],[402,70]]},
+    {"id":"sleep-checkpoint","from":"task-running","to":"task-sleeping","label":"sleepUntil","labelAt":[520,230]},
+    {"id":"sleep-due","from":"task-sleeping","to":"task-running","label":"到期后恢复","variant":"emphasis","fromSide":"right","toSide":"top","via":[[800,307],[800,100],[402,100]],"labelAt":[800,230]}
+  ],
+  "cards":[
+    {"dot":"cyan","title":"状态与结果分别保存","items":["terminal 的 outcome 为 completed、failed、aborted、orphaned 或 faulted","completing 不再执行代码，等待普通 owned work 结束"]},
+    {"dot":"amber","title":"恢复与只读边界","items":["waiting / sleeping 不持有 invocation，按 checkpoint 恢复","restart_limit 是阻塞原因；retryTask 显式重试，readOnly 禁止执行"]},
+    {"dot":"slate","title":"持久提交与源码","items":["Storage 持久化后同步 adopt(seq)，然后完成 commit","durable/src/types.ts、harness/scheduler.ts；136b87e8a"]}
+  ]
+}

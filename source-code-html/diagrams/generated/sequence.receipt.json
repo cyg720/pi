@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\sequence.json",
+  "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-sequence.html",
+  "specification": {
+    "sha256": "7a1fe637cd7ed4080901a80faa388bfee49d42b3bb9fc0562524b4af2c1b6acb",
+    "bytes": 3077
+  },
+  "artifact": {
+    "sha256": "0bd79cf9f61093543d5d0b7e10421ed73721d3f9dd692c0970c33e0c2d8419b4",
+    "bytes": 713098
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}
