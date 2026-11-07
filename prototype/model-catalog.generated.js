@@ -934,6 +934,37 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "au.anthropic.claude-sonnet-5-5",
+      "name": "Claude Sonnet 5.5 (AU)",
+      "reasoning": true,
+      "api": "bedrock-converse-stream",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "ca.amazon.nova-lite-v1:0",
       "name": "Nova Lite (CA)",
       "reasoning": false,
@@ -2259,6 +2290,36 @@ window.WorkbenchModelCatalog = {
     {
       "id": "global.openai.gpt-6.1-sol",
       "name": "GPT-6.1 Sol (Global)",
+      "reasoning": true,
+      "api": "bedrock-converse-stream",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "global.openai.gpt-6.1-terra",
+      "name": "GPT-6.1 Terra (Global)",
       "reasoning": true,
       "api": "bedrock-converse-stream",
       "input": [
@@ -3778,6 +3839,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "openai.gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "bedrock-converse-stream",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
       "id": "openai.gpt-oss-120b",
       "name": "gpt-oss-120b",
       "reasoning": true,
@@ -5171,6 +5262,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "us.openai.gpt-6.1-terra",
+      "name": "GPT-6.1 Terra (US)",
+      "reasoning": true,
+      "api": "bedrock-converse-stream",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
       "id": "us.writer.palmyra-x4-v1:0",
       "name": "Palmyra X4 (US)",
       "reasoning": true,
@@ -6096,6 +6217,35 @@ window.WorkbenchModelCatalog = {
   ],
   "azure": [
     {
+      "id": "chat-latest",
+      "name": "Chat Latest",
+      "reasoning": true,
+      "api": "azure-openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 400000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "gpt-4",
       "name": "GPT-4",
       "reasoning": false,
@@ -6798,6 +6948,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-5.6-cyber",
+      "name": "GPT-5.6 Cyber",
+      "reasoning": true,
+      "api": "azure-openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 400000,
+      "maxTokens": 128000,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "gpt-5.6-luna",
       "name": "GPT-5.6 Luna",
       "reasoning": true,
@@ -6897,7 +7077,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 272000,
+      "contextWindow": 1050000,
       "maxTokens": 128000,
       "levels": [
         "low",
@@ -6926,7 +7106,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 272000,
+      "contextWindow": 1050000,
       "maxTokens": 128000,
       "levels": [
         "off",
@@ -6956,7 +7136,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 272000,
+      "contextWindow": 1050000,
       "maxTokens": 128000,
       "levels": [
         "off",
@@ -6986,7 +7166,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 272000,
+      "contextWindow": 1050000,
       "maxTokens": 128000,
       "levels": [
         "low",
@@ -6997,6 +7177,36 @@ window.WorkbenchModelCatalog = {
       ],
       "clamps": {
         "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "azure-openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
         "minimal": "low",
         "low": "low",
         "medium": "medium",
@@ -7046,35 +7256,6 @@ window.WorkbenchModelCatalog = {
       "budgetControl": false,
       "contextWindow": 400000,
       "maxTokens": 128000,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "gpt-realtime-2.1",
-      "name": "GPT-Realtime-2.1",
-      "reasoning": true,
-      "api": "azure-openai-responses",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 128000,
-      "maxTokens": 32000,
       "levels": [
         "off",
         "minimal",
@@ -7489,8 +7670,37 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "moonshotai/Kimi-K3.1-Pro",
+      "name": "Kimi K3.1 Pro",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 262144,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
-      "name": "Nemotron Ultra",
+      "name": "Nemotron 3 Ultra",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -8212,7 +8422,7 @@ window.WorkbenchModelCatalog = {
     },
     {
       "id": "workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017",
-      "name": "Deepseek V4.1 Flash 1017",
+      "name": "DeepSeek V4.1 Flash 1017",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -9284,6 +9494,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "o3",
       "name": "o3",
       "reasoning": true,
@@ -9419,7 +9659,7 @@ window.WorkbenchModelCatalog = {
     },
     {
       "id": "@cf/deepseek-ai/deepseek-v4.1-flash-1017",
-      "name": "Deepseek V4.1 Flash 1017",
+      "name": "DeepSeek V4.1 Flash 1017",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -10434,24 +10674,23 @@ window.WorkbenchModelCatalog = {
         "text",
         "image"
       ],
-      "budgetControl": true,
+      "budgetControl": false,
       "contextWindow": 262144,
       "maxTokens": 131072,
       "levels": [
         "off",
-        "minimal",
         "low",
         "medium",
-        "high"
+        "xhigh"
       ],
       "clamps": {
         "off": "off",
-        "minimal": "minimal",
+        "minimal": "low",
         "low": "low",
         "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "high": "xhigh",
+        "xhigh": "xhigh",
+        "max": "xhigh"
       }
     },
     {
@@ -11378,6 +11617,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "grok-4.5",
       "name": "Grok 4.5",
       "reasoning": true,
@@ -11720,32 +11989,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "gemini-3.1-flash-lite-image",
-      "name": "Nano Banana 2 Lite",
-      "reasoning": true,
-      "api": "google-generative-ai",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 65536,
-      "maxTokens": 4096,
-      "levels": [
-        "minimal",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "high",
-        "medium": "high",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "gemini-3.1-flash-lite-preview",
       "name": "Gemini 3.1 Flash Lite Preview",
       "reasoning": true,
@@ -11756,34 +11999,6 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 65536,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "gemini-3.1-flash-live-preview",
-      "name": "Gemini 3.1 Flash Live Preview",
-      "reasoning": true,
-      "api": "google-generative-ai",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 131072,
       "maxTokens": 65536,
       "levels": [
         "minimal",
@@ -12104,6 +12319,34 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gemini-robotics-er-2-preview",
+      "name": "Gemini Robotics-ER 2 Preview",
+      "reasoning": true,
+      "api": "google-generative-ai",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 131072,
+      "maxTokens": 65536,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "gemma-4-26b-a4b-it",
       "name": "Gemma 4 26B A4B IT",
       "reasoning": true,
@@ -12295,32 +12538,6 @@ window.WorkbenchModelCatalog = {
         "minimal": "minimal",
         "low": "low",
         "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "gemini-3.1-flash-lite-image",
-      "name": "Nano Banana 2 Lite",
-      "reasoning": true,
-      "api": "google-vertex",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 65536,
-      "maxTokens": 4096,
-      "levels": [
-        "minimal",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "high",
-        "medium": "high",
         "high": "high",
         "xhigh": "high",
         "max": "high"
@@ -13423,6 +13640,35 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "high",
         "max": "high"
+      }
+    },
+    {
+      "id": "MiniMaxAI/MiniMax-M3.1-Flash",
+      "name": "MiniMax-M3.1-Flash",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 512000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
       }
     },
     {
@@ -14876,19 +15122,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 131072,
       "levels": [
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     },
     {
@@ -14904,19 +15149,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 131072,
       "levels": [
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     },
     {
@@ -15435,6 +15679,33 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "deepseek-v4-1-flash-1017",
+      "name": "DeepSeek V4.1 Flash 1017",
+      "reasoning": true,
+      "api": "mistral-conversations",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
       "id": "devstral-2512",
       "name": "Devstral 2",
       "reasoning": false,
@@ -15772,14 +16043,42 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 262144,
       "levels": [
-        "off",
+        "low",
+        "medium",
         "high"
       ],
       "clamps": {
-        "off": "off",
-        "minimal": "high",
-        "low": "high",
-        "medium": "high",
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "mistral-large-4-0-8",
+      "name": "Mistral Large 4.0.8",
+      "reasoning": true,
+      "api": "mistral-conversations",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 262144,
+      "levels": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
         "high": "high",
         "xhigh": "high",
         "max": "high"
@@ -16318,20 +16617,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 1048576,
       "levels": [
-        "off",
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "off",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     },
     {
@@ -16347,20 +16644,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 1048576,
       "levels": [
-        "off",
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "off",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     }
   ],
@@ -16490,20 +16785,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 1048576,
       "levels": [
-        "off",
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "off",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     },
     {
@@ -16519,20 +16812,18 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1048576,
       "maxTokens": 1048576,
       "levels": [
-        "off",
-        "minimal",
         "low",
-        "medium",
-        "high"
+        "high",
+        "max"
       ],
       "clamps": {
-        "off": "off",
-        "minimal": "minimal",
+        "off": "low",
+        "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "high",
-        "max": "high"
+        "xhigh": "max",
+        "max": "max"
       }
     }
   ],
@@ -16630,31 +16921,6 @@ window.WorkbenchModelCatalog = {
       "budgetControl": false,
       "contextWindow": 131072,
       "maxTokens": 16384,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
-      "id": "meta/llama-3.2-11b-vision-instruct",
-      "name": "Llama 3.2 11b Vision Instruct",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 128000,
-      "maxTokens": 4096,
       "levels": [
         "off"
       ],
@@ -17085,34 +17351,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "z-ai/glm-5.3",
-      "name": "GLM-5.3",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 131072,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "z-ai/glm-5.3-flash",
       "name": "GLM-5.3-Flash",
       "reasoning": true,
@@ -17143,6 +17381,35 @@ window.WorkbenchModelCatalog = {
     }
   ],
   "openai": [
+    {
+      "id": "chat-latest",
+      "name": "Chat Latest",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 400000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
     {
       "id": "gpt-4",
       "name": "GPT-4",
@@ -17838,6 +18105,35 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-5.6-cyber",
+      "name": "GPT-5.6 Cyber",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 400000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "gpt-5.6-luna",
       "name": "GPT-5.6 Luna",
       "reasoning": true,
@@ -18046,6 +18342,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 272000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "gpt-daybreak-blue-latest",
       "name": "Daybreak Blue",
       "reasoning": true,
@@ -18103,35 +18429,6 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "xhigh",
         "max": "max"
-      }
-    },
-    {
-      "id": "gpt-realtime-2.1",
-      "name": "GPT-Realtime-2.1",
-      "reasoning": true,
-      "api": "openai-responses",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 128000,
-      "maxTokens": 32000,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high",
-        "xhigh"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "xhigh"
       }
     },
     {
@@ -18511,6 +18808,37 @@ window.WorkbenchModelCatalog = {
         "xhigh": "xhigh",
         "max": "max"
       }
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "openai-codex-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 500000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
     }
   ],
   "opencode": [
@@ -18799,7 +19127,6 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1000000,
       "maxTokens": 128000,
       "levels": [
-        "off",
         "minimal",
         "low",
         "medium",
@@ -18808,7 +19135,7 @@ window.WorkbenchModelCatalog = {
         "max"
       ],
       "clamps": {
-        "off": "off",
+        "off": "minimal",
         "minimal": "minimal",
         "low": "low",
         "medium": "medium",
@@ -18920,7 +19247,6 @@ window.WorkbenchModelCatalog = {
       "contextWindow": 1000000,
       "maxTokens": 128000,
       "levels": [
-        "off",
         "minimal",
         "low",
         "medium",
@@ -18929,7 +19255,7 @@ window.WorkbenchModelCatalog = {
         "max"
       ],
       "clamps": {
-        "off": "off",
+        "off": "minimal",
         "minimal": "minimal",
         "low": "low",
         "medium": "medium",
@@ -19302,32 +19628,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "deepseek-v4-flash",
-      "name": "DeepSeek V4 Flash",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 384000,
-      "levels": [
-        "low",
-        "high",
-        "max"
-      ],
-      "clamps": {
-        "off": "low",
-        "minimal": "low",
-        "low": "low",
-        "medium": "high",
-        "high": "high",
-        "xhigh": "max",
-        "max": "max"
-      }
-    },
-    {
       "id": "deepseek-v4-pro",
       "name": "DeepSeek V4 Pro",
       "reasoning": true,
@@ -19596,6 +19896,64 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "iceman-free",
+      "name": "Iceman Free",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "inkling-2-small-free",
+      "name": "Inkling 2 Small Free",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
       "id": "kimi-k2.5",
       "name": "Kimi K2.5",
       "reasoning": true,
@@ -19850,34 +20208,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "nemotron-3-ultra-free",
-      "name": "Nemotron 3 Ultra Free",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 128000,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "nemotron-3.5-lightning-free",
       "name": "Nemotron 3.5 Lightning Free",
       "reasoning": true,
@@ -19960,6 +20290,36 @@ window.WorkbenchModelCatalog = {
         "high": "xhigh",
         "xhigh": "xhigh",
         "max": "xhigh"
+      }
+    },
+    {
+      "id": "crouton-alpha-free",
+      "name": "Crouton Alpha Free",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 270000,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
       }
     },
     {
@@ -20955,8 +21315,8 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "gemini-4-argon-contributor",
-      "name": "Gemini 4 Argon Contributor",
+      "id": "gemini-4-argon",
+      "name": "Gemini 4 Argon",
       "reasoning": true,
       "api": "google-generative-ai",
       "input": [
@@ -21011,7 +21371,7 @@ window.WorkbenchModelCatalog = {
     },
     {
       "id": "deepseek-v4-pro",
-      "name": "DeepSeek V4 Pro (New)",
+      "name": "DeepSeek V4 Pro",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -21167,6 +21527,32 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "hy4",
+      "name": "Hy4",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "hy4-preview",
       "name": "Hy4 preview",
       "reasoning": true,
@@ -21186,6 +21572,34 @@ window.WorkbenchModelCatalog = {
         "minimal": "high",
         "low": "high",
         "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "iceman-contributor-free",
+      "name": "Iceman Contributor Free",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
         "high": "high",
         "xhigh": "high",
         "max": "high"
@@ -21472,6 +21886,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "crouton-alpha-free",
+      "name": "Crouton Alpha Free",
+      "reasoning": true,
+      "api": "openai-responses",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 270000,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "gpt-5.6-luna",
       "name": "GPT-5.6 Luna",
       "reasoning": true,
@@ -21618,6 +22062,123 @@ window.WorkbenchModelCatalog = {
     }
   ],
   "openrouter": [
+    {
+      "id": "~anthropic/claude-fable-latest",
+      "name": "Anthropic: Claude Fable Latest",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "~anthropic/claude-haiku-latest",
+      "name": "Anthropic: Claude Haiku Latest",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "~anthropic/claude-opus-latest",
+      "name": "Anthropic: Claude Opus Latest",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "~anthropic/claude-sonnet-latest",
+      "name": "Anthropic: Claude Sonnet Latest",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
     {
       "id": "anthropic/claude-fable-5",
       "name": "Anthropic: Claude Fable 5",
@@ -22034,123 +22595,6 @@ window.WorkbenchModelCatalog = {
       "name": "Anthropic: Claude Sonnet 5.5",
       "reasoning": true,
       "api": "anthropic-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 128000,
-      "levels": [
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "clamps": {
-        "off": "low",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "max"
-      }
-    },
-    {
-      "id": "~anthropic/claude-fable-latest",
-      "name": "Anthropic: Claude Fable Latest",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 128000,
-      "levels": [
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "clamps": {
-        "off": "low",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "max"
-      }
-    },
-    {
-      "id": "~anthropic/claude-haiku-latest",
-      "name": "Anthropic: Claude Haiku Latest",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 128000,
-      "levels": [
-        "off",
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "max"
-      }
-    },
-    {
-      "id": "~anthropic/claude-opus-latest",
-      "name": "Anthropic: Claude Opus Latest",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 128000,
-      "levels": [
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "clamps": {
-        "off": "low",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "max"
-      }
-    },
-    {
-      "id": "~anthropic/claude-sonnet-latest",
-      "name": "Anthropic: Claude Sonnet Latest",
-      "reasoning": true,
-      "api": "openai-completions",
       "input": [
         "text",
         "image"
@@ -23294,33 +23738,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "arcee-ai/trinity-large-thinking",
-      "name": "Arcee AI: Trinity Large Thinking",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 80000,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "auto",
       "name": "Auto",
       "reasoning": true,
@@ -23523,6 +23940,30 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "cohere/command-a",
+      "name": "Cohere: Command A",
+      "reasoning": false,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 256000,
+      "maxTokens": 8192,
+      "levels": [
+        "off"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "off",
+        "low": "off",
+        "medium": "off",
+        "high": "off",
+        "xhigh": "off",
+        "max": "off"
+      }
+    },
+    {
       "id": "cohere/command-a-plus",
       "name": "Cohere: Command A+",
       "reasoning": true,
@@ -23600,6 +24041,30 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "cohere/command-r7b-12-2024",
+      "name": "Cohere: Command R7B (12-2024)",
+      "reasoning": false,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 128000,
+      "maxTokens": 4000,
+      "levels": [
+        "off"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "off",
+        "low": "off",
+        "medium": "off",
+        "high": "off",
+        "xhigh": "off",
+        "max": "off"
+      }
+    },
+    {
       "id": "cohere/north-mini-code:free",
       "name": "Cohere: North Mini Code (free)",
       "reasoning": true,
@@ -23636,8 +24101,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 128000,
-      "maxTokens": 16000,
+      "contextWindow": 163840,
+      "maxTokens": 16384,
       "levels": [
         "off"
       ],
@@ -23685,7 +24150,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 163840,
-      "maxTokens": 32768,
+      "maxTokens": 147456,
       "levels": [
         "off",
         "minimal",
@@ -23767,8 +24232,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 131072,
-      "maxTokens": 65536,
+      "contextWindow": 163840,
+      "maxTokens": 147456,
       "levels": [
         "off",
         "minimal",
@@ -23850,7 +24315,34 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 131072,
+      "maxTokens": 943718,
+      "levels": [
+        "off",
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "deepseek/deepseek-v4-flash-0731:batch",
+      "name": "DeepSeek: DeepSeek V4 Flash 0731 (batch)",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 384000,
       "levels": [
         "off",
         "low",
@@ -23877,8 +24369,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 1048576,
-      "maxTokens": 262144,
+      "contextWindow": 1048575,
+      "maxTokens": 943717,
       "levels": [
         "off",
         "low",
@@ -23931,7 +24423,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 393216,
+      "maxTokens": 943718,
       "levels": [
         "off",
         "low",
@@ -24015,7 +24507,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 384000,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "low",
@@ -25172,8 +25664,8 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "inclusionai/ling-3.1-flash",
-      "name": "inclusionAI: Ling 3.1 Flash",
+      "id": "inclusionai/ling-3.0-tiny",
+      "name": "inclusionAI: Ling 3.0 Tiny",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -25181,7 +25673,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 262144,
-      "maxTokens": 235929,
+      "maxTokens": 250000,
       "levels": [
         "off",
         "minimal",
@@ -25191,6 +25683,61 @@ window.WorkbenchModelCatalog = {
       ],
       "clamps": {
         "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "inclusionai/ling-3.1-flash",
+      "name": "inclusionAI: Ling 3.1 Flash",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 262144,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "liquid/lfm-2.5-2.6b",
+      "name": "LiquidAI: LFM2.5-2.6B",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 128000,
+      "maxTokens": 8192,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "minimal",
         "minimal": "minimal",
         "low": "low",
         "medium": "medium",
@@ -25254,6 +25801,60 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "liquid/lfm-3-1.7b",
+      "name": "LiquidAI: LFM3-1.7B",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 8192,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "liquid/lfm-3-1.7b:free",
+      "name": "LiquidAI: LFM3-1.7B (free)",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 8192,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "meituan/longcat-2.0",
       "name": "Meituan: LongCat 2.0",
       "reasoning": true,
@@ -25279,30 +25880,6 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "high",
         "max": "high"
-      }
-    },
-    {
-      "id": "meta-llama/llama-3.1-70b-instruct",
-      "name": "Meta: Llama 3.1 70B Instruct",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 131072,
-      "maxTokens": 16384,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
       }
     },
     {
@@ -25339,7 +25916,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 131072,
-      "maxTokens": 16384,
+      "maxTokens": 32768,
       "levels": [
         "off"
       ],
@@ -25363,8 +25940,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 128000,
-      "maxTokens": 16384,
+      "contextWindow": 524288,
+      "maxTokens": 32768,
       "levels": [
         "off"
       ],
@@ -25406,6 +25983,34 @@ window.WorkbenchModelCatalog = {
     {
       "id": "meta/muse-glimmer-30b",
       "name": "Meta: Muse Glimmer 30B",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 131072,
+      "maxTokens": 16384,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "meta/muse-glimmer-30b:batch",
+      "name": "Meta: Muse Glimmer 30B (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -25665,60 +26270,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "minimax/minimax-m2",
-      "name": "MiniMax: MiniMax M2",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 204800,
-      "maxTokens": 131072,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "minimax/minimax-m2.1",
-      "name": "MiniMax: MiniMax M2.1",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 204800,
-      "maxTokens": 131072,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "minimax/minimax-m2.5",
       "name": "MiniMax: MiniMax M2.5",
       "reasoning": true,
@@ -25727,8 +26278,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 198000,
-      "maxTokens": 32768,
+      "contextWindow": 65536,
+      "maxTokens": 58982,
       "levels": [
         "minimal",
         "low",
@@ -25754,8 +26305,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 204800,
-      "maxTokens": 131072,
+      "contextWindow": 196608,
+      "maxTokens": 176947,
       "levels": [
         "minimal",
         "low",
@@ -25775,6 +26326,35 @@ window.WorkbenchModelCatalog = {
     {
       "id": "minimax/minimax-m3",
       "name": "MiniMax: MiniMax M3",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 524288,
+      "maxTokens": 512000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "minimax/minimax-m3:batch",
+      "name": "MiniMax: MiniMax M3 (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -25833,30 +26413,6 @@ window.WorkbenchModelCatalog = {
     {
       "id": "mistralai/codestral-2508",
       "name": "Mistral: Codestral 2508",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 256000,
-      "maxTokens": 204800,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
-      "id": "mistralai/codestral-2508:batch",
-      "name": "Mistral: Codestral 2508 (batch)",
       "reasoning": false,
       "api": "openai-completions",
       "input": [
@@ -25978,31 +26534,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "mistralai/ministral-8b-2512:batch",
-      "name": "Mistral: Ministral 3 8B 2512 (batch)",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 209715,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
       "id": "mistralai/mistral-large",
       "name": "Mistral Large",
       "reasoning": false,
@@ -26053,31 +26584,6 @@ window.WorkbenchModelCatalog = {
     {
       "id": "mistralai/mistral-large-2512",
       "name": "Mistral: Mistral Large 3 2512",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 209715,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
-      "id": "mistralai/mistral-large-2512:batch",
-      "name": "Mistral: Mistral Large 3 2512 (batch)",
       "reasoning": false,
       "api": "openai-completions",
       "input": [
@@ -26229,31 +26735,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "mistralai/mistral-medium-3.1:batch",
-      "name": "Mistral: Mistral Medium 3.1 (batch)",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 131072,
-      "maxTokens": 104857,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
       "id": "mistralai/mistral-nemo",
       "name": "Mistral: Mistral Nemo",
       "reasoning": false,
@@ -26304,32 +26785,6 @@ window.WorkbenchModelCatalog = {
     {
       "id": "mistralai/mistral-small-2603",
       "name": "Mistral: Mistral Small 4",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 209715,
-      "levels": [
-        "off",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "high",
-        "low": "high",
-        "medium": "high",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "mistralai/mistral-small-2603:batch",
-      "name": "Mistral: Mistral Small 4 (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -26679,7 +27134,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 943718,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "low",
@@ -26790,33 +27245,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 262144,
-      "maxTokens": 235929,
-      "levels": [
-        "off",
-        "low",
-        "medium"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "medium",
-        "xhigh": "medium",
-        "max": "medium"
-      }
-    },
-    {
-      "id": "nvidia/nemotron-3-super-120b-a12b:free",
-      "name": "NVIDIA: Nemotron 3 Super (free)",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 235929,
+      "maxTokens": 16384,
       "levels": [
         "off",
         "low",
@@ -26950,8 +27379,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 235929,
+      "contextWindow": 1048576,
+      "maxTokens": 943718,
       "levels": [
         "off",
         "minimal",
@@ -26996,30 +27425,6 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "high",
         "max": "high"
-      }
-    },
-    {
-      "id": "openai/gpt-3.5-turbo",
-      "name": "OpenAI: GPT-3.5 Turbo",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 16385,
-      "maxTokens": 4096,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
       }
     },
     {
@@ -27071,30 +27476,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "openai/gpt-3.5-turbo:batch",
-      "name": "OpenAI: GPT-3.5 Turbo (batch)",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 16385,
-      "maxTokens": 4096,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
       "id": "openai/gpt-4",
       "name": "OpenAI: GPT-4",
       "reasoning": false,
@@ -27104,31 +27485,6 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 8191,
-      "maxTokens": 4096,
-      "levels": [
-        "off"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "off",
-        "low": "off",
-        "medium": "off",
-        "high": "off",
-        "xhigh": "off",
-        "max": "off"
-      }
-    },
-    {
-      "id": "openai/gpt-4-turbo",
-      "name": "OpenAI: GPT-4 Turbo",
-      "reasoning": false,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 128000,
       "maxTokens": 4096,
       "levels": [
         "off"
@@ -27254,7 +27610,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1047576,
-      "maxTokens": 32768,
+      "maxTokens": 942818,
       "levels": [
         "off"
       ],
@@ -29241,6 +29597,124 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "openai/gpt-6.1-terra",
+      "name": "OpenAI: GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "openai/gpt-6.1-terra-pro",
+      "name": "OpenAI: GPT-6.1 Terra Pro",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "openai/gpt-6.1-terra-pro:batch",
+      "name": "OpenAI: GPT-6.1 Terra Pro (batch)",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
+      "id": "openai/gpt-6.1-terra:batch",
+      "name": "OpenAI: GPT-6.1 Terra (batch)",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "openai/gpt-audio",
       "name": "OpenAI: GPT Audio",
       "reasoning": false,
@@ -29375,7 +29849,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 131072,
-      "maxTokens": 32768,
+      "maxTokens": 117964,
       "levels": [
         "low",
         "medium",
@@ -29445,34 +29919,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "openai/o1",
-      "name": "OpenAI: o1",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 200000,
-      "maxTokens": 100000,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "openai/o3",
       "name": "OpenAI: o3",
       "reasoning": true,
@@ -29495,57 +29941,6 @@ window.WorkbenchModelCatalog = {
         "minimal": "minimal",
         "low": "low",
         "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "openai/o3-mini",
-      "name": "OpenAI: o3 Mini",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 200000,
-      "maxTokens": 100000,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "openai/o3-mini-high",
-      "name": "OpenAI: o3 Mini High",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 200000,
-      "maxTokens": 100000,
-      "levels": [
-        "high"
-      ],
-      "clamps": {
-        "off": "high",
-        "minimal": "high",
-        "low": "high",
-        "medium": "high",
         "high": "high",
         "xhigh": "high",
         "max": "high"
@@ -29635,59 +30030,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "openai/o4-mini",
-      "name": "OpenAI: o4 Mini",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 200000,
-      "maxTokens": 100000,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "openai/o4-mini-high",
-      "name": "OpenAI: o4 Mini High",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 200000,
-      "maxTokens": 100000,
-      "levels": [
-        "high"
-      ],
-      "clamps": {
-        "off": "high",
-        "minimal": "high",
-        "low": "high",
-        "medium": "high",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "openai/o4-mini:batch",
       "name": "OpenAI: o4 Mini (batch)",
       "reasoning": true,
@@ -29755,7 +30097,36 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 2000000,
-      "maxTokens": 4096,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "openrouter/auto-code",
+      "name": "Auto Code",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 2000000,
+      "maxTokens": 65536,
       "levels": [
         "off",
         "minimal",
@@ -29859,6 +30230,37 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "particle-ai/particle-1",
+      "name": "Particle AI: Particle-1",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "perceptron/perceptron-mk1.5",
       "name": "Perceptron: Perceptron Mk1.5",
       "reasoning": true,
@@ -29870,118 +30272,6 @@ window.WorkbenchModelCatalog = {
       "budgetControl": false,
       "contextWindow": 36864,
       "maxTokens": 8192,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "poolside/laguna-s-2.1",
-      "name": "Poolside: Laguna S 2.1",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1048576,
-      "maxTokens": 131072,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "poolside/laguna-s-2.1:free",
-      "name": "Poolside: Laguna S 2.1 (free)",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 32768,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "poolside/laguna-xs-2.1",
-      "name": "Poolside: Laguna XS 2.1",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 32768,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "poolside/laguna-xs-2.1:free",
-      "name": "Poolside: Laguna XS 2.1 (free)",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 32768,
       "levels": [
         "off",
         "minimal",
@@ -30024,6 +30314,35 @@ window.WorkbenchModelCatalog = {
         "high": "xhigh",
         "xhigh": "xhigh",
         "max": "xhigh"
+      }
+    },
+    {
+      "id": "prism-ml/ternary-bonsai-2-9b",
+      "name": "PrismML: Ternary Bonsai 2 9B",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
       }
     },
     {
@@ -30135,8 +30454,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 16384,
+      "contextWindow": 131072,
+      "maxTokens": 117964,
       "levels": [
         "off"
       ],
@@ -30378,33 +30697,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "qwen/qwen3-next-80b-a3b-thinking",
-      "name": "Qwen: Qwen3 Next 80B A3B Thinking",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 262144,
-      "maxTokens": 235929,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "qwen/qwen3-vl-235b-a22b-instruct",
       "name": "Qwen: Qwen3 VL 235B A22B Instruct",
       "reasoning": false,
@@ -30547,7 +30839,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 262144,
-      "maxTokens": 65536,
+      "maxTokens": 81920,
       "levels": [
         "off",
         "minimal",
@@ -30979,8 +31271,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 1010000,
-      "maxTokens": 909000,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
       "levels": [
         "low",
         "medium",
@@ -30999,6 +31291,34 @@ window.WorkbenchModelCatalog = {
     {
       "id": "qwen/qwen3.8-27b",
       "name": "Qwen: Qwen3.8 27B",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 262144,
+      "maxTokens": 235929,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "xhigh",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "qwen/qwen3.8-27b:batch",
+      "name": "Qwen: Qwen3.8 27B (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -31177,7 +31497,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 131072,
+      "maxTokens": 943718,
       "levels": [
         "low",
         "medium",
@@ -31231,6 +31551,30 @@ window.WorkbenchModelCatalog = {
       "budgetControl": false,
       "contextWindow": 256000,
       "maxTokens": 128000,
+      "levels": [
+        "off"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "off",
+        "low": "off",
+        "medium": "off",
+        "high": "off",
+        "xhigh": "off",
+        "max": "off"
+      }
+    },
+    {
+      "id": "ricursiveai/ripple-65b-preview",
+      "name": "Ricursive: Ripple 65B Preview",
+      "reasoning": false,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
       "levels": [
         "off"
       ],
@@ -31349,6 +31693,36 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "high",
         "max": "high"
+      }
+    },
+    {
+      "id": "stealth/crouton-alpha",
+      "name": "Crouton Alpha",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 943718,
+      "levels": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "minimal",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
       }
     },
     {
@@ -31485,6 +31859,33 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "tencent/hy4",
+      "name": "Tencent: Hy4",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "low",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "tencent/hy4-preview",
       "name": "Tencent: Hy4 preview",
       "reasoning": true,
@@ -31571,8 +31972,8 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "thinkingmachines/inkling-small:free",
-      "name": "Thinking Machines: Inkling Small (free)",
+      "id": "thinkingmachines/inkling-small:batch",
+      "name": "Thinking Machines: Inkling Small (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -31580,37 +31981,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 1048576,
-      "maxTokens": 262144,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high",
-        "max"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "max",
-        "max": "max"
-      }
-    },
-    {
-      "id": "thinkingmachines/inkling:free",
-      "name": "Thinking Machines: Inkling (free)",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1048576,
+      "contextWindow": 524288,
       "maxTokens": 262144,
       "levels": [
         "off",
@@ -31737,34 +32108,6 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "xhigh",
         "max": "max"
-      }
-    },
-    {
-      "id": "upstage/solar-pro-3",
-      "name": "Upstage: Solar Pro 3",
-      "reasoning": true,
-      "api": "openai-completions",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 131072,
-      "maxTokens": 117964,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
       }
     },
     {
@@ -31938,8 +32281,64 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "x-ai/grok-4.6:batch",
+      "name": "SpaceXAI: Grok 4.6 (batch)",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 500000,
+      "maxTokens": 450000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
       "id": "x-ai/grok-4.7",
       "name": "SpaceXAI: Grok 4.7",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 500000,
+      "maxTokens": 450000,
+      "levels": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "x-ai/grok-4.7:batch",
+      "name": "SpaceXAI: Grok 4.7 (batch)",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -32003,8 +32402,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 1050000,
-      "maxTokens": 945000,
+      "contextWindow": 1000000,
+      "maxTokens": 65536,
       "levels": [
         "off",
         "minimal",
@@ -32031,8 +32430,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 1050000,
-      "maxTokens": 945000,
+      "contextWindow": 262144,
+      "maxTokens": 235929,
       "levels": [
         "off",
         "minimal",
@@ -32259,7 +32658,7 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 204800,
+      "contextWindow": 202752,
       "maxTokens": 131072,
       "levels": [
         "off",
@@ -32316,7 +32715,7 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 204800,
+      "contextWindow": 202752,
       "maxTokens": 131072,
       "levels": [
         "off",
@@ -32556,6 +32955,33 @@ window.WorkbenchModelCatalog = {
     {
       "id": "z-ai/glm-5.3-flashx",
       "name": "Z.ai: GLM 5.3 FlashX",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
+      "levels": [
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "z-ai/glm-5.3-flashx-legal",
+      "name": "Z.ai: GLM 5.3 FlashX Legal",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -33906,6 +34332,300 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "glm-5.3",
+      "name": "GLM-5.3",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "qwen3.6-flash",
+      "name": "Qwen3.6 Flash",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "qwen3.7-max",
+      "name": "Qwen3.7 Max",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "qwen3.7-plus",
+      "name": "Qwen3.7 Plus",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 65536,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "qwen3.8-flash",
+      "name": "Qwen3.8 Flash",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "low",
+        "medium",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "xhigh",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "qwen3.8-max",
+      "name": "Qwen3.8 Max",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "low",
+        "medium",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "xhigh",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    }
+  ],
+  "qwen-token-plan-individual-cn": [
+    {
+      "id": "deepseek-v4-flash-0731",
+      "name": "DeepSeek V4 Flash 0731",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 384000,
+      "levels": [
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "high",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "name": "DeepSeek V4 Pro",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 384000,
+      "levels": [
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "high",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "deepseek-v4-pro-0813",
+      "name": "DeepSeek V4 Pro 0813",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 384000,
+      "levels": [
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "high",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "glm-5.2",
+      "name": "GLM-5.2",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "high",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "glm-5.3",
+      "name": "GLM-5.3",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
       "id": "qwen3.6-flash",
       "name": "Qwen3.6 Flash",
       "reasoning": true,
@@ -34058,7 +34778,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 131072,
+      "maxTokens": 262144,
       "levels": [
         "low",
         "high",
@@ -34085,7 +34805,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1000000,
-      "maxTokens": 32768,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "low",
@@ -34441,7 +35161,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1000000,
-      "maxTokens": 32768,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "low",
@@ -34459,6 +35179,60 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gemini-3.8-flash",
+      "name": "Gemini 3.8 Flash",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 65536,
+      "levels": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "gemini-4-argon",
+      "name": "Gemini 4 Argon",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 32768,
+      "levels": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "low",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "glm-5.3",
       "name": "GLM-5.3",
       "reasoning": true,
@@ -34467,37 +35241,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 131072,
-      "levels": [
-        "minimal",
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max"
-      ],
-      "clamps": {
-        "off": "minimal",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "max"
-      }
-    },
-    {
-      "id": "glm-5.3-flash",
-      "name": "GLM-5.3 Flash",
-      "reasoning": true,
-      "api": "pi-messages",
-      "input": [
-        "text"
-      ],
-      "budgetControl": false,
-      "contextWindow": 1000000,
-      "maxTokens": 131072,
+      "contextWindow": 1048576,
+      "maxTokens": 128000,
       "levels": [
         "low",
         "high",
@@ -34514,8 +35259,8 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "gpt-5.3-codex",
-      "name": "GPT 5.3 Codex",
+      "id": "glm-5.3-flash",
+      "name": "GLM-5.3 Flash",
       "reasoning": true,
       "api": "pi-messages",
       "input": [
@@ -34523,110 +35268,21 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": false,
-      "contextWindow": 400000,
-      "maxTokens": 128000,
+      "contextWindow": 1048575,
+      "maxTokens": 131072,
       "levels": [
-        "off",
         "low",
-        "medium",
         "high",
-        "xhigh"
+        "max"
       ],
       "clamps": {
-        "off": "off",
+        "off": "low",
         "minimal": "low",
         "low": "low",
-        "medium": "medium",
+        "medium": "high",
         "high": "high",
-        "xhigh": "xhigh",
-        "max": "xhigh"
-      }
-    },
-    {
-      "id": "gpt-5.4",
-      "name": "GPT 5.4",
-      "reasoning": true,
-      "api": "pi-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 272000,
-      "maxTokens": 128000,
-      "levels": [
-        "off",
-        "low",
-        "medium",
-        "high",
-        "xhigh"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "xhigh"
-      }
-    },
-    {
-      "id": "gpt-5.4-mini",
-      "name": "GPT 5.4 Mini",
-      "reasoning": true,
-      "api": "pi-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 400000,
-      "maxTokens": 128000,
-      "levels": [
-        "off",
-        "low",
-        "medium",
-        "high",
-        "xhigh"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "xhigh"
-      }
-    },
-    {
-      "id": "gpt-5.5",
-      "name": "GPT 5.5",
-      "reasoning": true,
-      "api": "pi-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": false,
-      "contextWindow": 272000,
-      "maxTokens": 128000,
-      "levels": [
-        "off",
-        "low",
-        "medium",
-        "high",
-        "xhigh"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "low",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "xhigh",
-        "max": "xhigh"
+        "xhigh": "max",
+        "max": "max"
       }
     },
     {
@@ -34838,6 +35494,36 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "gpt-6.1-terra",
+      "name": "GPT 6.1 Terra",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 272000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "max"
+      }
+    },
+    {
       "id": "grok-4.7",
       "name": "Grok 4.7",
       "reasoning": true,
@@ -34848,7 +35534,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 500000,
-      "maxTokens": 500000,
+      "maxTokens": 450000,
       "levels": [
         "low",
         "medium",
@@ -34876,7 +35562,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": false,
       "contextWindow": 1048576,
-      "maxTokens": 131072,
+      "maxTokens": 262144,
       "levels": [
         "low",
         "high",
@@ -34890,6 +35576,63 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "max",
         "max": "max"
+      }
+    },
+    {
+      "id": "kimi-k3.1-pro",
+      "name": "Kimi K3.1 Pro",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "low",
+        "high",
+        "max"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+        "max": "max"
+      }
+    },
+    {
+      "id": "minimax-m3",
+      "name": "MiniMax M3",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 524288,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
       }
     },
     {
@@ -34919,6 +35662,32 @@ window.WorkbenchModelCatalog = {
         "high": "high",
         "xhigh": "xhigh",
         "max": "max"
+      }
+    },
+    {
+      "id": "mistral-large-4",
+      "name": "Mistral Large 4",
+      "reasoning": true,
+      "api": "pi-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 262144,
+      "levels": [
+        "off",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
       }
     },
     {
@@ -35083,6 +35852,32 @@ window.WorkbenchModelCatalog = {
     {
       "id": "moonshotai/Kimi-K3",
       "name": "Kimi K3",
+      "reasoning": true,
+      "api": "openai-completions",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": false,
+      "contextWindow": 1048576,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "high",
+        "low": "high",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "moonshotai/Kimi-K3.1-Pro",
+      "name": "Kimi K3.1 Pro",
       "reasoning": true,
       "api": "openai-completions",
       "input": [
@@ -35890,8 +36685,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": true,
-      "contextWindow": 1000000,
-      "maxTokens": 131072,
+      "contextWindow": 262144,
+      "maxTokens": 262144,
       "levels": [
         "off",
         "minimal",
@@ -37099,34 +37894,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "arcee-ai/trinity-large-thinking",
-      "name": "Trinity Large Thinking",
-      "reasoning": true,
-      "api": "anthropic-messages",
-      "input": [
-        "text"
-      ],
-      "budgetControl": true,
-      "contextWindow": 262100,
-      "maxTokens": 80000,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "bytedance/seed-1.6",
       "name": "Seed 1.6",
       "reasoning": true,
@@ -37464,8 +38231,8 @@ window.WorkbenchModelCatalog = {
         "text"
       ],
       "budgetControl": true,
-      "contextWindow": 1000000,
-      "maxTokens": 384000,
+      "contextWindow": 1048600,
+      "maxTokens": 1048600,
       "levels": [
         "off",
         "minimal",
@@ -37551,7 +38318,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": true,
       "contextWindow": 1048576,
-      "maxTokens": 1048576,
+      "maxTokens": 262144,
       "levels": [
         "off",
         "minimal",
@@ -37581,6 +38348,35 @@ window.WorkbenchModelCatalog = {
       "budgetControl": true,
       "contextWindow": 1048576,
       "maxTokens": 262144,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "deepseek/deepseek-v4.1-flash-1017-ultrafast",
+      "name": "DeepSeek V4.1 Flash 1017 Ultrafast",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1048576,
+      "maxTokens": 1048576,
       "levels": [
         "off",
         "minimal",
@@ -38034,35 +38830,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "google/gemini-3.5-flash-batch",
-      "name": "Gemini 3.5 Flash (Batch)",
-      "reasoning": true,
-      "api": "anthropic-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": true,
-      "contextWindow": 1000000,
-      "maxTokens": 64000,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "google/gemini-3.5-flash-lite",
       "name": "Gemini 3.5 Flash Lite",
       "reasoning": true,
@@ -38208,35 +38975,6 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "google/gemini-3.7-flash-batch",
-      "name": "Gemini 3.7 Flash (Batch)",
-      "reasoning": true,
-      "api": "anthropic-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": true,
-      "contextWindow": 1000000,
-      "maxTokens": 65535,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
       "id": "google/gemini-3.8-flash",
       "name": "Gemini 3.8 Flash",
       "reasoning": true,
@@ -38335,6 +39073,34 @@ window.WorkbenchModelCatalog = {
       "budgetControl": true,
       "contextWindow": 262144,
       "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "humansand/ampersand-v0.1",
+      "name": "Ampersand v0.1",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1000000,
+      "maxTokens": 32768,
       "levels": [
         "off",
         "minimal",
@@ -38602,6 +39368,34 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "inclusionai/ling-3.1-flash-1019",
+      "name": "Ling 3.1 Flash 1019",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1000000,
+      "maxTokens": 262144,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
       "id": "interfaze/interfaze-beta",
       "name": "Interfaze Beta",
       "reasoning": true,
@@ -38659,8 +39453,8 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "meituan/longcat-2.5-preview",
-      "name": "LongCat 2.5 Preview",
+      "id": "meituan/longcat-2.5",
+      "name": "LongCat 2.5",
       "reasoning": true,
       "api": "anthropic-messages",
       "input": [
@@ -39429,7 +40223,7 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": true,
-      "contextWindow": 524288,
+      "contextWindow": 1048576,
       "maxTokens": 262144,
       "levels": [
         "off",
@@ -39758,8 +40552,8 @@ window.WorkbenchModelCatalog = {
         "image"
       ],
       "budgetControl": true,
-      "contextWindow": 1048576,
-      "maxTokens": 1048576,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "minimal",
@@ -39788,7 +40582,7 @@ window.WorkbenchModelCatalog = {
       ],
       "budgetControl": true,
       "contextWindow": 1048576,
-      "maxTokens": 1048576,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "minimal",
@@ -42079,6 +42873,66 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
+      "id": "openai/gpt-6.1-terra",
+      "name": "GPT-6.1 Terra",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
+      "id": "openai/gpt-6.1-terra-fast",
+      "name": "GPT-6.1 Terra (Fast)",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1050000,
+      "maxTokens": 128000,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "xhigh",
+        "max": "xhigh"
+      }
+    },
+    {
       "id": "openai/gpt-oss-120b",
       "name": "GPT OSS 120B",
       "reasoning": true,
@@ -42364,15 +43218,16 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "poolside/laguna-s-2.1",
-      "name": "Laguna S 2.1",
+      "id": "particle/particle-1",
+      "name": "Particle-1",
       "reasoning": true,
       "api": "anthropic-messages",
       "input": [
-        "text"
+        "text",
+        "image"
       ],
       "budgetControl": true,
-      "contextWindow": 1000000,
+      "contextWindow": 1048576,
       "maxTokens": 131072,
       "levels": [
         "off",
@@ -42392,16 +43247,16 @@ window.WorkbenchModelCatalog = {
       }
     },
     {
-      "id": "poolside/laguna-s-2.1-free",
-      "name": "Laguna S 2.1 Free",
+      "id": "poolside/laguna-s-2.1",
+      "name": "Laguna S 2.1",
       "reasoning": true,
       "api": "anthropic-messages",
       "input": [
         "text"
       ],
       "budgetControl": true,
-      "contextWindow": 256000,
-      "maxTokens": 32768,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
       "levels": [
         "off",
         "minimal",
@@ -43188,7 +44043,7 @@ window.WorkbenchModelCatalog = {
     },
     {
       "id": "tencent/hy3",
-      "name": "Hy3",
+      "name": "Tencent Hy3",
       "reasoning": true,
       "api": "anthropic-messages",
       "input": [
@@ -43197,6 +44052,35 @@ window.WorkbenchModelCatalog = {
       "budgetControl": true,
       "contextWindow": 262144,
       "maxTokens": 262144,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "tencent/hy4",
+      "name": "Tencent Hy4",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1024000,
+      "maxTokens": 64000,
       "levels": [
         "off",
         "minimal",
@@ -43283,63 +44167,6 @@ window.WorkbenchModelCatalog = {
       "budgetControl": true,
       "contextWindow": 1000000,
       "maxTokens": 1000000,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "xiaomi/mimo-v2.5",
-      "name": "MiMo M2.5",
-      "reasoning": true,
-      "api": "anthropic-messages",
-      "input": [
-        "text",
-        "image"
-      ],
-      "budgetControl": true,
-      "contextWindow": 1050000,
-      "maxTokens": 131100,
-      "levels": [
-        "off",
-        "minimal",
-        "low",
-        "medium",
-        "high"
-      ],
-      "clamps": {
-        "off": "off",
-        "minimal": "minimal",
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
-        "xhigh": "high",
-        "max": "high"
-      }
-    },
-    {
-      "id": "xiaomi/mimo-v2.5-pro",
-      "name": "MiMo V2.5 Pro",
-      "reasoning": true,
-      "api": "anthropic-messages",
-      "input": [
-        "text"
-      ],
-      "budgetControl": true,
-      "contextWindow": 1050000,
-      "maxTokens": 131000,
       "levels": [
         "off",
         "minimal",
@@ -43869,6 +44696,35 @@ window.WorkbenchModelCatalog = {
     {
       "id": "zai/glm-5.3-flashx",
       "name": "GLM 5.3 FlashX",
+      "reasoning": true,
+      "api": "anthropic-messages",
+      "input": [
+        "text",
+        "image"
+      ],
+      "budgetControl": true,
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "levels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ],
+      "clamps": {
+        "off": "off",
+        "minimal": "minimal",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "xhigh": "high",
+        "max": "high"
+      }
+    },
+    {
+      "id": "zai/glm-5.3-flashx-legal",
+      "name": "GLM 5.3 FlashX Legal",
       "reasoning": true,
       "api": "anthropic-messages",
       "input": [

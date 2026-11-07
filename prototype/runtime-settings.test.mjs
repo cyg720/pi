@@ -13,8 +13,10 @@ const retry = settings.groups.find(group => group.id === "retry").fields;
 
 test("catalog settings capabilities derive from current source, including Google discrete thinking", () => {
   for (const [provider, entries] of Object.entries(MODELS)) for (const model of Object.values(entries)) {
-    const snapshot = catalog[provider].find(item => item.id === model.id);
+    const snapshot = catalog[provider]?.find(item => item.id === model.id);
+    assert.ok(snapshot, `missing catalog model: ${provider}/${model.id}`);
     assert.equal(snapshot.api, model.api);
+    assert.equal(snapshot.reasoning, model.reasoning);
     assert.deepEqual([...snapshot.input], [...model.input]);
     const expected = model.reasoning && ((model.api === "anthropic-messages" && model.compat?.forceAdaptiveThinking !== true) || (["google-generative-ai", "google-vertex"].includes(model.api) && !usesGoogleThinkingLevel(model)));
     assert.equal(snapshot.budgetControl, expected);

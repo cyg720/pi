@@ -8,10 +8,15 @@ import { getSupportedThinkingLevels, clampThinkingLevel } from "../packages/ai/s
 const context = vm.createContext({ window: {} });
 for (const file of ["model-catalog.generated.js", "models.js", "fixtures.js"]) vm.runInContext(readFileSync(new URL(file, import.meta.url), "utf8"), context);
 const models = context.window.WorkbenchModels;
+test("settings provider entries cover the source catalog without duplicates", () => {
+  const providers = Array.from(context.window.WorkbenchFixtures.providers, provider => provider[0]);
+  assert.equal(new Set(providers).size, providers.length);
+  assert.deepEqual(providers.sort(), Object.keys(MODELS).sort());
+});
 test("all provider/model names and effort options match local pi-ai source", () => {
-  assert.equal(Object.keys(models.catalog).length, 42);
+  assert.deepEqual(Object.keys(models.catalog).sort(), Object.keys(MODELS).sort(), "provider IDs must match the source catalog");
   for (const [provider, entries] of Object.entries(MODELS)) {
-    assert.equal(models.catalog[provider].length, Object.keys(entries).length);
+    assert.deepEqual(Array.from(models.catalog[provider], model => model.id).sort(), Object.keys(entries).sort(), `${provider}: model IDs must match`);
     for (const model of Object.values(entries)) {
       const ref = `${provider}/${model.id}`;
       assert.equal(models.name(ref), model.name || model.id);
@@ -23,6 +28,20 @@ test("all provider/model names and effort options match local pi-ai source", () 
       }
     }
   }
+});
+
+test("catalog refresh exposes new capabilities and preserves removed model references", () => {
+  assert.ok(models.get("qwen-token-plan-individual-cn/qwen3.8-max"));
+  assert.deepEqual([...models.levels("kimi-coding/k3.1-pro")], ["low", "high", "max"]);
+  assert.equal(models.get("azure/gpt-6-sol").contextWindow, 1050000);
+  const record = { model: "openai/gpt-realtime-2.1", thinking: "high", task: "保留草稿", project: "p2", id: "s7" };
+  models.migrate(record);
+  assert.equal(record.model, "openai/gpt-realtime-2.1");
+  assert.equal(models.get(record.model), undefined);
+  assert.equal(models.label(record.model, record.thinking), "能力未知");
+  assert.equal(record.task, "保留草稿");
+  assert.equal(record.project, "p2");
+  assert.equal(record.id, "s7");
 });
 test("switching to a nonreasoning model clears effort; restricted model uses supported fallback", () => {
   assert.equal(models.normalize("openai/gpt-4.1", "max"), "off");

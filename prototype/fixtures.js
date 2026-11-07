@@ -34,6 +34,7 @@ window.WorkbenchFixtures = {
     ["qwen-token-plan", "Qwen Token Plan", "key"],
     ["qwen-token-plan-cn", "Qwen Token Plan 中国", "key"],
     ["qwen-token-plan-individual", "Qwen Token Plan Individual", "key"],
+    ["qwen-token-plan-individual-cn", "Qwen Token Plan Individual CN", "key"],
     ["xiaomi", "小米 MiMo", "key"],
     ["xiaomi-token-plan-ams", "小米 Token Plan · AMS", "key"],
     ["xiaomi-token-plan-cn", "小米 Token Plan · 中国", "key"],
