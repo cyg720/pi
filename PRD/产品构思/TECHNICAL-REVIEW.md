@@ -1,6 +1,8 @@
 # lg-codeing-agent 与 lg-examine 技术实施说明
 
-更新：2026-11-03。主体保留 1.0 技术方案，第 10 节补充 2.0 工作室、项目范围、自进化与会话版本规则。配套 [平台 1.0 方案](./AGENT-EXTENSION-PLAN.md)。源码基线：`de21da3f8dc94578db1d7ce283a7c47e7abf61c5`；详细任务以 [1.0 开发任务](../1.0/02-开发任务.md)为准。原型可点击，产品能力仍待开发。
+本次复核（2026-11-07）仅同步上游合并后的模型目录、恢复、订阅和配置契约；保留 60 项任务、61 组验收及原有产品范围，产品任务仍待实现。
+
+更新：2026-11-07。主体保留 1.0 技术方案，第 10 节补充 2.0 工作室、项目范围、自进化与会话版本规则。配套 [平台 1.0 方案](./AGENT-EXTENSION-PLAN.md)。源码基线：`cf43eea7e741ae899ad4609233084c43ec5274f9`；详细任务以 [1.0 开发任务](../1.0/02-开发任务.md)为准。原型可点击，产品能力仍待开发。
 
 本次同步：灵魂、Skills/MCP 拆分、技能分类卡片与上传；审查改为普通对话，保留独立分支、证据来源和恢复边界。1.0 共 60 项任务、61 组验收；完整工作室与真实技能上传仍为 2.0。产品实现待开发。
 
@@ -67,7 +69,7 @@
 
 ### 全部厂商与模型配置
 
-从公开 `builtinProviders()` 取得当前 **42 个接入项**，用 `createModels`、`setProvider` 注册。页面展示全部项，包括未配置项、支持动态刷新的 Radius（当前也有静态目录）、地区/产品版本和源码中的 legacy 提示。静态 `getBuiltinProviders()` 或 JSON 文件数量不能代替工厂清单。完整名单见 [功能清单](../1.0/01-功能清单.md)。
+从公开 `builtinProviders()` 取得当前 **43 个接入项**，用 `createModels`、`setProvider` 注册。页面展示全部项，包括未配置项、支持动态刷新的 Radius（当前也有静态目录）、地区/产品版本和源码中的 legacy 提示。静态 `getBuiltinProviders()` 或 JSON 文件数量不能代替工厂清单。完整名单见 [功能清单](../1.0/01-功能清单.md)。
 
 | 模块 | 要补的能力 |
 | --- | --- |
@@ -103,17 +105,25 @@ T20 将显示名称与引用分离：新会话、会话切换、默认选择仅�
 
 字段清单与默认值统一见 [功能清单](../1.0/01-功能清单.md)。`packages/ai/src/types.ts` 有请求参数，目录模型有 contextWindow/maxTokens；`packages/coding-agent/src/core/settings-manager.ts` 及 `settings-defaults.ts` 说明 CLI 已有设置，但不会自动应用到新工作台。
 
-`ConversationStreamOptions` 已提供 transport、timeoutMs、maxRetries、maxRetryDelayMs、cacheRetention 等；没有 temperature、maxTokens、thinkingBudgets 或 WebSocket 握手超时。T57 需通过公开 Models/Provider 的请求包装补齐后一组，连同压缩请求验证；不能向 configure 塞未知字段或深层导入 CLI 设置管理器。
+`ConversationStreamOptions` 已提供 transport、timeoutMs、maxRetries、maxRetryDelayMs、cacheRetention、thinkingBudgets、websocketConnectTimeoutMs 等；temperature、maxTokens 仍不在该类型中。T57 只对缺失字段补公开 Models/Provider 请求包装，同时隔离连接和会话参数，连同压缩请求逐适配器验证；不能向 configure 塞未知字段或深层导入 CLI 设置管理器。
 
 上下文覆盖必须真正进入 Durable 读取的模型容量及压缩计算，不能只改进度圆环。T57 先验证版本化 Models 包装：内部模型引用映射到“原 provider/model + 参数版本”，getModel 返回该版本有效容量，streamSimple 转回原模型路由并注入参数；持久保存映射，目录/UI/统计仍展示原引用。使用公开接口，不改 models.generated.ts。先用两个不同上限会话并发验证容量、路由、压缩、重启；做不到不能宣称配置生效，也不能改为每会话一个 Harness。
 
-HarnessSettings 是全局动态读取，回调不接收 conversationId；models 工厂也不提供会话参数。全局重试/恢复/代理等按功能清单的空闲发布规则处理。连接请求参数也按该连接使用者空闲发布，再由模型包装按连接注入；不能把 Harness.stream 误当会话参数。按模型的压缩覆盖需映射到内部版本引用，不能覆盖原模型的全局条目而影响旧会话。T56/T57 是新增适配工作，公开类型存在不等于完整接线已完成。
+HarnessSettings 是全局动态读取，回调不接收 conversationId；models 工厂也不提供会话参数。全局重试/恢复/代理等按功能清单的空闲发布规则处理。连接请求参数也按该连接使用者空闲发布，再由模型包装按连接注入；不能把 Harness.stream 误当会话参数。按模型的压缩覆盖使用 AgentChange.compaction.modelOverrides，键映射到实际内部版本引用；会话模型覆盖优先于 Harness 模型覆盖，再到会话通用字段、Harness 通用策略，会话 enabled=false 可压过 Harness 模型覆盖。显式覆盖保留会话快照，未覆盖字段按全局空闲发布规则继承；不能写入原模型的共享条目影响旧会话。compaction 在 configure 中整体替换，null 清除、undefined 保持，平台先合成完整目标并校验。T56/T57 是新增适配工作，公开类型存在不等于完整接线已完成。
 
 Code Mode 使用 Durable 公开 codemode 子路径；on/only 和 inlineBudget 是编码装配设置。T59 验证嵌套工具仍经 T50 审批，模型不能通过 Code Mode 取得审查未注册工具。图片处理只接编码环境的公开图片能力，不把 coding-agent 的设置对象当 Durable 配置。
 
 移除审查默认限额表单，不移除 T33 的内部有限预算。模型重试按实际尝试记账；审查关闭 SDK 内部重试，避免漏计。自动审批的调用/等待预算保持独立。maxRetryDelayMs 超过服务端建议等待上限则报错，maxAgentDelayMs 用 min 截住外层指数等待，restartLimit 限制无进展重启，三者不能混成“重连间隔”。
 
 设置三页及目录整体最大 1040px 居中；取消项目运行覆盖和单项目并发。连接页取消常驻占用提示，受阻保存给就地错误；上下文提示仅新建会话生效。旧设置路由和成果页签做定向回退，报告历史不删。产品配置服务端落盘，原型内存保存与重置不作为产品验收依据。
+
+### 合并后的运行与订阅边界
+
+`restart_limit` 会结束旧任务：生成记录 runFailure，工具记录错误结果，压缩记录 compactionFailure，其他任务 faulted；不再使用 retryTask。未知副作用的核对标记独立保留，全部收尾后用户用新 requestId 继续，不能把缺定义/版本的 blocked 与重启上限混为一类。
+
+`Submission.wait()` 先于可能存在的 afterRun 收尾完成；waitForIdle 包含普通所属任务，后台压缩及外部进程/归档仍由平台另查。T12/T13/T44 在最终收尾前保持占用和忙时限制，只读查询不触发 resume。
+
+`conversation.watch()` 是有界历史窗口和内置文档，默认最新 50 条、超过 100 条裁回 50 条。复用 ConversationTranscript 的 merge/loadEarlier/fillGap/resume，按 entryId 合并且用 before 识别早期历史，不把窗口裁剪当删除。Chord 的 WatchCall 使用 kind=value/failed，终止使用 WatchEnd.kind，文档退休看 retired。自有文档仍显式订阅；SSE 连接序号不是永久恢复游标。详见功能清单对应契约和 T18/T52—T54 的验收。
 
 ## 5 编码能力的补充工作
 
@@ -186,7 +196,7 @@ T30 保存提交的要求、材料引用及版本；实际取材前取得来源�
 - submit/wait/abort 会开启整个 Harness 调度，启动前扫描全部会话及跨项目资源，重建身份和模型映射；无冲突会话可一起恢复。未知命令影响仍可保守阻止该项目自动恢复，属于异常处理。停止某项只取消对应会话及所属进程，不能整体取消项目。
 - 同一请求重复发送时使用相同 requestId，避免生成两次提交。
 - 编码和审查运行中均默认按 followUp 排队，立即插入改为 steer。恢复先核对执行与未消费队列，禁止刷新自动补发；新材料准备成功才可消费，不能偷换旧证据。
-- 前端进度来自已保存状态，断线重连先读取当前快照。
+- 前端进度可能来自尚未落盘的 deferred commit（默认 persistWithinMs=1000）；watch 不等于持久确认。断线重连刷新暂态进度，累计统计与分支截止点从已落盘记录生成，用 Session.observeCommits 观察持久提交；回调只记录通知，不嵌套 Session API 或等待网络。
 - 消息恢复和文件现场恢复分开：数据库记录恢复，不代表项目文件自动回滚。
 - 审查恢复额外检查材料快照、标准、预算与证据；报告引用的证据纳入备份和保留范围，不能被普通日志清理删除。检查工作副本在无活动或待核对任务后才清理。
 
@@ -389,7 +399,7 @@ T54/T55 新增平台统计契约和只读查询/推送，不假设 Durable 有 w
 | 文件差异 | 新文件、已有改动、外部命令修改 |
 | 项目与智能体 | 无智能体先建项目；同一定义跨项目使用；同项目多智能体参与，入口和记录独立 |
 | 并发 | 编码与快照审查真实重叠执行；目录冲突才阻止；停止一个不影响另一个，恢复不串路由 |
-| 厂商覆盖 | 界面与注册项逐一匹配 builtinProviders 的 42 项，专用字段和认证能力完整 |
+| 厂商覆盖 | 界面与注册项逐一匹配 builtinProviders 的 43 项，专用字段和认证能力完整 |
 | 多家配置 | 多家连接、多模型、默认值重启保留；批量部分失败、旧版本写入、并发刷新不串配置 |
 | 模型认证 | Key、OAuth、AWS、Vertex、Azure、Cloudflare 的模拟交互；取消、过期、重新授权与停用无隐式回退 |
 | 目录与调用 | 静态/动态目录、刷新失败、能力限制、指定模型测试；保存不生成，不自动换模型 |
@@ -400,7 +410,7 @@ T54/T55 新增平台统计契约和只读查询/推送，不假设 Durable 有 w
 
 Durable 采用已确定，这些是产品实现验收，不再作为选型条件。
 
-模型与认证自动化测试隔离真实网络和本机云凭据。42 项界面/配置覆盖必须逐项记录；真实调用另记实际 provider、模型和认证方式，未实连项明确标注，不能用一家成功代替全部验证。详细场景见 [验收用例](../1.0/03-验收用例.md)的 A03、A04、A11、A19、A21、A25。
+模型与认证自动化测试隔离真实网络和本机云凭据。43 项界面/配置覆盖必须逐项记录；真实调用另记实际 provider、模型和认证方式，未实连项明确标注，不能用一家成功代替全部验证。详细场景见 [验收用例](../1.0/03-验收用例.md)的 A03、A04、A11、A19、A21、A25。
 
 lg-examine 用 A26—A35，项目独立关系和并发补 A36—A37。模拟测试验证流程和恢复；T28/A25 用真实模型检查有预期答案的五类材料，人工复核漏报与误报，不能把预设 faux 回复当作审查能力证明。
 
