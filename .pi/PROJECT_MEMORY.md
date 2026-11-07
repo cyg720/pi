@@ -532,3 +532,13 @@ PATH 中首先匹配的 `bash.exe` 位于 WindowsApps，不能据此认定它是
 - prototype 为静态文件，无需构建：直接打开 `prototype/index.html`，或 `python -m http.server 8765 --bind 127.0.0.1 --directory prototype`。定向回归 `node --test prototype/*.test.mjs` 71 项通过（提交后重跑）。
 - `prototype/model-catalog.generated.js` 由 `node prototype/generate-model-catalog.mjs` 从 `packages/ai` 源码与已生成的模型数据导出，不要手改；模型数据准备见“依赖与编译约束”。
 - 根 check 未运行；此前记录的 Windows entry-graphs 路径分隔符问题仍在，不因本次提交改变。
+
+## 2026-11-07：上游合并后的源码导览
+
+- 当前 LG-Workbench HEAD 为 cf43eea7e，合并父提交 e49e3d5e8 / 085c84e98；新增上游可达提交 526。12 个一级包为 1.5.0，另含 Unreleased；新增 apps/p2 0.0.1 与 packages/schema。旧记录中的“11 包、无 apps”不再适用。
+- Chord v2 重构契约、Host、Store、插件与应用层；Durable 改为 Storage.commit(batches, receive, context)，视图可先显示未落盘 partial，watchEvents 和 retryTask 已移除。复用前查当前 README、类型与 CHANGELOG。
+- p2 官方定位为将被替换的实验原型，不能把它当作本地 PRD / prototype 或正式 LG 工作台已完成。服务端 Node >=22.19，TUI >=26.5.1。
+- 模型生成入口已迁到 packages/ai/catalog/generate.ts；hydrate:model-data 通过 --strict --data-only 从在线目录生成数据，旧固定快照水合说明不再适用。生成 JSON 仍被忽略。
+- npm ci --ignore-scripts 同步合并后的依赖、hydrate:model-data 后，完整 npm run check 退出 0；旧 Windows entry-graphs 阻塞已由上游修复。npm 对 min-release-age-exclude 仍有不识别提示，未修改配置或锁文件。
+- 离线导览入口 source-code-html/index.html；本次更新报告 UPSTREAM-UPDATE.md，验证边界 VALIDATION.md。同步 13 个教程、44 条路线、5 图与 8 份 132 页课件。未运行产品 build、真实模型或 p2 服务；未提交。
+- 本轮最终导览回归 75 项通过；离线 Chrome 宽窄屏与五图 browser check 通过，课件正文/备注匹配。验证不代表 p2 或所有业务能力已经运行验收。

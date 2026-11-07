@@ -6,12 +6,14 @@ import { dirname, join, resolve, relative, sep } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
-import { developmentGuide } from './src/development.mjs';
+import { developmentGuide as originalDevelopmentGuide } from './src/development.mjs';
+import { reviseChapters } from './src/upstream-revision.mjs';
 import { produceArtifactSet } from '../scripts/package-artifacts.mjs';
 import { installConsumer, smokeTestNpmConsumer } from '../scripts/local-package-install.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(dir, '..');
+const [developmentGuide] = reviseChapters([originalDevelopmentGuide]);
 const commands = developmentGuide.sections.flatMap(s => s.commands || []);
 function removeFixture(folder) {
   const target = resolve(folder);

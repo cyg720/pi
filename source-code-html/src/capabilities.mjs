@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { createHash } from 'node:crypto';
 import { capabilityBindings, capabilityGroups } from './capability-bindings.mjs';
+import { reviseCapability } from './upstream-revision.mjs';
 
 export const capabilitySource = 'source-code-html/reference/pi-feature-catalog.zh.md';
 
@@ -35,7 +36,7 @@ export function parseCapabilities(markdown) {
       return path;
     }))];
     if (!docs.length) throw new Error(`功能缺少来源: ${id}`);
-    rows.push({ id, title, purpose, entry, status, docs, module: module.id, line: i + 1 });
+    rows.push(reviseCapability({ id, title, purpose, entry, status, docs, module: module.id, line: i + 1 }));
     module.features.push(id);
   }
   if (!rows.length) throw new Error('功能清单为空');

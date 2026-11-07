@@ -1,4 +1,5 @@
 import { versionNotes } from './version-notes.mjs';
+import { upstreamVersionNotes } from './upstream-version-notes.mjs';
 
 const semver = /^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/;
 const categoryNames = {
@@ -93,7 +94,7 @@ export function parseChangelog(text) {
   return releases;
 }
 
-export function buildVersions({paths,read,packages,commits,tags,head,notes=versionNotes}) {
+export function buildVersions({paths,read,packages,commits,tags,head,notes={...versionNotes,...upstreamVersionNotes}}) {
   const sourcePaths = paths.filter(p => /^packages\/[^/]+\/CHANGELOG(?:\.zh)?\.md$/.test(p)).sort();
   const snapshots = Object.fromEntries(sourcePaths.map(path => [path,read(path)]));
   const active = new Map(packages.map(p => [p.path,p]));

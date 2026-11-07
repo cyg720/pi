@@ -7,7 +7,14 @@ const root = new URL('../', import.meta.url);
 const data = JSON.parse(readFileSync(new URL('index.html', import.meta.url), 'utf8').match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 test('工作台四层仅在 checkout 存在对应源码时列为当前功能', () => {
   const currentApps = execFileSync('git', ['ls-files', '-z', '--', 'apps'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
-  if (!currentApps.length) { assert.ok(!data.catalog.modules.some(m => m.id.startsWith('workbench-'))); return; }
+  if (!currentApps.some(path => path.startsWith('apps/agent-web/src/'))) {
+    assert.ok(!data.catalog.modules.some(m => m.id.startsWith('workbench-')));
+    for (const path of currentApps.filter(path => /^apps\/p2\/(?:src|plugins)\//.test(path))) {
+      assert.ok(data.catalog.files[path]?.features.length, path);
+      if (data.catalog.files[path].text) assert.ok(Object.hasOwn(data.sources, path), path);
+    }
+    return;
+  }
   for (const id of ['workbench-web', 'workbench-protocol', 'workbench-server', 'workbench-runtime']) {
     const module = data.catalog.modules.find(m => m.id === id);
     assert.ok(module, id);

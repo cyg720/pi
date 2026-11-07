@@ -1,4 +1,5 @@
 import { masteryStages, masteryGlossary, masteryRoutes } from './mastery-curriculum.mjs';
+import { reviseRoutes } from './upstream-revision.mjs';
 
 // 编号级的延伸实践归属。主线经既有“编号 → 源码专题”映射关联；示例与方案另行标注。
 const supplements = {
@@ -25,7 +26,7 @@ const supplements = {
 const providers = ['openai','openai-codex','anthropic','google','google-vertex','azure','amazon-bedrock','radius','openrouter','vercel-ai-gateway','github-copilot','cloudflare-ai-gateway','cloudflare-workers-ai','typesafe','deepseek','ant-ling','nvidia','mistral','xai','groq','cerebras','together','baseten','fireworks','huggingface','meta','opencode','opencode-go','moonshotai','moonshotai-cn','kimi-coding','minimax','minimax-cn','zai','zai-coding-cn','qwen-token-plan','qwen-token-plan-individual','qwen-token-plan-cn','xiaomi','xiaomi-token-plan-cn','xiaomi-token-plan-ams','xiaomi-token-plan-sgp'];
 const unique = items => [...new Set(items)];
 
-export function buildMastery({ catalog, sources, plan, routes = masteryRoutes }) {
+export function buildMastery({ catalog, sources, plan, routes = reviseRoutes(masteryRoutes) }) {
   const historicalRoutes = routes.filter(r => r.steps.every(s => catalog.retiredFeatures?.includes(s.feature)));
   routes = routes.filter(r => !historicalRoutes.includes(r));
   const byId = new Map(routes.map(r => [r.id, r]));

@@ -6,11 +6,11 @@
   "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\workflow.json",
   "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-workflow.html",
   "specification": {
-    "sha256": "bfa8d287d66d07627064a19ca86c5d94f784d55e14da4163c2e47afbee99b0ee",
-    "bytes": 2902
+    "sha256": "216c115471431f9e7ed7c7d450448b88f5901beca7ca8fcff5dc1164ea9443e2",
+    "bytes": 4044
   },
   "artifact": {
-    "sha256": "6c5876ef577db31b9bd618d37a219bd9224d8393ae9221529ac8e6c598463449",
+    "sha256": "8fdd3157f4ae67933815d3c64e683c57d88053db5a0c3fef3c5a1be2d22ddf82",
     "bytes": 712547
   },
   "validation": {

@@ -26,6 +26,8 @@ export function selectFeatureSpecs(paths) {
   };
   const retired = featureModules.filter(m => !paths.some(p => p.startsWith(m.root)))
     .flatMap(m => (featureSpecs[m.id] || []).map(s => `${m.id}-${s[0]}`));
+  // Removed upstream in b4c2e92ac with the vulnerable sandbox dependency chain.
+  if (!paths.some(p => p.startsWith('packages/coding-agent/examples/extensions/sandbox/'))) retired.push('example-extensions-sandbox');
   const specs = Object.fromEntries(Object.entries(featureSpecs).map(([module, entries]) => [module, entries.filter(s => {
     const id = `${module}-${s[0]}`;
     if (!optional[id] || paths.includes(optional[id])) return true;

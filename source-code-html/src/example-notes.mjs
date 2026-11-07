@@ -80,8 +80,8 @@ export const exampleNotes = {
       "提交问题并打印最终答案，了解无 TUI 的宿主路径。"
     ],
     "18-json.ts": [
-      "JSON 事件与结构操作",
-      "对比 Agent 事件与原始 view operations，支持 SQLite、JSONL 和内存后端。"
+      "JSON 视图与结构操作",
+      "阅读当前会话视图的 JSON 输出与增量操作；旧 watchEvents 已移除。"
     ],
     "19-inbox.ts": [
       "忙碌时队列与撤回",
@@ -89,7 +89,7 @@ export const exampleNotes = {
     ],
     "20-late-join.ts": [
       "中途加入观察",
-      "在运行中附着 view 和事件流，通过快照接上当前状态。"
+      "在运行中附着会话视图，通过当前窗口接上状态。"
     ],
     "21-subagent-foreground.ts": [
       "前台子智能体",
@@ -130,6 +130,13 @@ export const exampleNotes = {
     "30-reload-and-restart.ts": [
       "重载与重启",
       "演练调用执行中更新扩展，以及重启后恢复已存选择。"
-    ]
+    ],
+    "31-transcript.ts": ["历史窗口与缺口补载", "用 ConversationTranscript 合并 watch 窗口，补载缺口与更早记录，断线后按已有位置恢复。"],
+    "32-tests-after-edits.ts": ["运行后检查任务", "afterRun 创建测试子任务；回答已提交后仍等待检查，失败可接纳后续修复输入。"],
+    "33-turn-limit-and-continue.ts": ["轮数预算与继续", "逐会话 turnLimit 限制工具轮数；continue 在不新增用户消息的情况下用新预算继续。"],
+    "34-submit-in-commit.ts": ["事务内接纳输入", "submit(tx, draft) 把应用检查、输入接纳与业务记录放在同一事务；whenIdle 拒绝空闲会话。"],
+    "35-durable-on-the-store.ts": ["Durable 复用 Chord Store", "StoreStorage 与对象表、文档共用 store 提交队列和 ID 分配，可一起导出。"],
+    "36-durable-views.ts": ["持久视图接入 Chord", "self.follow 把 Durable 同步观察转换成 watchable，让同一提交在宿主批次内一致发布。"],
+    "37-harness-registry.ts": ["通过注册表扩展 Harness", "registryReader 读取 Chord 贡献的扩展，self.follow 观察 Harness，关闭后按新贡献恢复。"]
   }
 };

@@ -4,12 +4,12 @@
 
 ## 当前基线
 
-2026-10-24：LG-Workbench / 136b87e8a7f5a3e5186de0289523ba327dc592fc。11 个一级包版本为 1.4.0，同时包含当前 Unreleased 源码；根包 0.0.3 不是 CLI 版本。数量和指纹以 data/manifest.json 及页面为准。
+2026-11-07：LG-Workbench / cf43eea7e741ae899ad4609233084c43ec5274f9。12 个一级包为 1.5.0，另含 Unreleased；新增 apps/p2 0.0.1 实验应用。根包 0.0.3 不是 CLI 版本。
 
-- 当前 checkout 没有 apps、agent-protocol 或 agent-runtime-adapter。旧工作台编号保留为历史资料，退出当前源码、包教程和开发命令；完整旧版见 [2026-10-20 快照](history/workbench-2026-10-20.html)。旧 node-forge 定向修补同样不是当前能力。
-- 更新 Durable 的 Storage.commit(writes, adopt, context)、Watch、readOnly、IndexedDB；修正 Chord 时钟、客户端身份、Evals 导出及 31 个 Durable 示例的编号。
-- 1.4.0 和 Unreleased 分开讲解。当前源码目录、引用图、声明、测试关联及可达 Git 历史重新生成；11 个包教程、17 个开发阶段和 640 个稳定编号保留可导航。
-- 五幅架构图已按当前源码重制，明确普通 CLI 与 Durable 的边界。八份可编辑 PPTX（132 页）与 44 条学习路线同步，更新正文、源码引用和讲者备注，已恢复离线内嵌下载。原图与旧课件保留存档。
+- 合入上游 085c84e98，相对本地父提交新增 526 个可达提交。主要变化、破坏性接口和本地计划影响见 [上游更新说明](UPSTREAM-UPDATE.md)。
+- 同步 Chord v2、pi-schema、p2、AI catalog；更新 Durable 分组提交、延迟进度落盘、会话历史与任务恢复说明。12 个包教程加 1 个 p2 应用教程、17 个开发阶段、38 个 Durable 示例、44 条路线和 640 个稳定编号保持可导航。
+- p2 是上游实验原型；本地 PRD / prototype 和旧 WBW/WBP/WBS/WBR 工作台分别说明。已删除的 sandbox 示例转为历史资料，不伪造当前源码。
+- 五幅图与八份可编辑 PPTX（132 页）同步到当前基线，保留离线内嵌下载。旧图、旧课件和旧验证记录留在 history 或 original。
 
 ## 更新命令
 
@@ -20,7 +20,7 @@ node source-code-html/build.mjs
 node --test --test-isolation=none source-code-html/*.test.mjs
 ~~~
 
-生成需要 Git、Node 和仓库已有 TypeScript 依赖；阅读不需要。生成器不调用模型、在线翻译或 CDN，不修改依赖、锁文件或业务源码。导览代码改动后按 AGENTS.md 运行 npm.cmd run check；该检查不运行产品测试，也不能代替导览回归。当前 Windows 限制见 [验证记录](VALIDATION.md)。
+生成需要 Git、Node 和仓库已有 TypeScript 依赖；阅读不需要。生成器不调用模型、在线翻译或 CDN，不修改依赖、锁文件或业务源码。导览代码改动后按 AGENTS.md 运行 npm.cmd run check；该检查不运行产品测试，也不能代替导览回归。本轮结果与限制见 [验证记录](VALIDATION.md)。
 
 图和课件需先按源码复核再更新，普通 build 不会用旧资产覆盖新版：
 
@@ -41,12 +41,14 @@ PPTX 候选须经结构、版式、字体、重新导入和逐页视觉检查后
 | build.mjs | 从本目录的上一级定位仓库，收集和生成全部产物 |
 | src/content.mjs、development.mjs、package-lessons.mjs | 中文章节、开发步骤、包教程 |
 | src/features.mjs、feature-additions.mjs、current-features.mjs | 当前源码专题及明确路径规则 |
+| src/upstream-revision.mjs | 本次合并的显式教学修订；保留稳定编号原文作为历史对照 |
+| UPSTREAM-UPDATE.md | 已核实的合并范围、主要变化与迁移边界 |
 | src/workbench.mjs | 旧工作台内容；仅对应源码存在时进入当前索引 |
 | reference/pi-feature-catalog.zh.md | 稳定编号原文；已迁移的接口与历史状态在此维护 |
 | reference/legacy/、legacy-manifest.json | 当前 checkout 缺失资料的旧快照及来源清单 |
 | src/capability-bindings.mjs | 稳定编号到源码专题的显式对应 |
 | src/mastery-curriculum.mjs、mastery-plan.json | 学习路线、练习、维护状态与验收边界 |
-| src/version-notes.mjs、history-notes.json | 版本重点与人工中文提交说明 |
+| src/version-notes.mjs、upstream-version-notes.mjs、history-notes.json | 版本重点与人工中文提交说明 |
 | src/directory-notes.json | 持久目录说明与原源码指纹 |
 | src/edition-baseline.json | 2026-09-29 固定差异基准，普通更新不覆盖 |
 | data/ | 功能、版本、课程、目录、历史、指纹等生成数据 |
@@ -72,4 +74,4 @@ Git 时间线只含当前 HEAD 可达的本地历史。人工说明之外是元�
 
 入口包括 #mastery、#development、#packages、#directory、#functions、#versions、#workbench。进度仅保存到当前浏览器，不代表执行过命令或测试。复制失败可手动选择文本；本地存储不可用时仍可阅读。
 
-本轮的测试结果与未完成的视觉验收见 [VALIDATION.md](VALIDATION.md)。历史记录在 history，不计作本轮通过证据。真实模型、SSH、Docker、部署和断点操作不会由离线页面执行。外部参考链接需联网。
+本轮的测试结果与验收边界见 [VALIDATION.md](VALIDATION.md)。历史记录在 history，不计作本轮通过证据。真实模型、SSH、Docker、部署和断点操作不会由离线页面执行。外部参考链接需联网。

@@ -6,11 +6,11 @@
   "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\sequence.json",
   "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-sequence.html",
   "specification": {
-    "sha256": "7a1fe637cd7ed4080901a80faa388bfee49d42b3bb9fc0562524b4af2c1b6acb",
-    "bytes": 3077
+    "sha256": "df573584d97c2ec356f2d90e9b8897a782a1903bbb0bee4b593c136f10572336",
+    "bytes": 4221
   },
   "artifact": {
-    "sha256": "0bd79cf9f61093543d5d0b7e10421ed73721d3f9dd692c0970c33e0c2d8419b4",
+    "sha256": "7fdffd3fef69516f687b02e6e1e1e75607ce25e5b9de50356c3cb1a5e7f1f0a8",
     "bytes": 713098
   },
   "validation": {

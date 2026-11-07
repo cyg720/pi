@@ -14,10 +14,11 @@ import { buildMastery } from './src/mastery.mjs';
 import { buildVersions } from './src/versions.mjs';
 import { verifyDiagram } from './src/media.mjs';
 import { compileDecks } from './src/slides.mjs';
+import { reviseChapters } from './src/upstream-revision.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(dir, '..');
-const chapters = [...learningChapters, developmentGuide];
+const chapters = reviseChapters([...learningChapters, developmentGuide]);
 const read = path => readFileSync(join(root, path), 'utf8');
 const git = args => execFileSync('git', ['-c', 'core.quotepath=false', ...args], { cwd: root, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
 const sha = value => createHash('sha256').update(value).digest('hex');

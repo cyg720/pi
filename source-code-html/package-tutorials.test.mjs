@@ -6,6 +6,7 @@ import { buildPackageTutorials } from './src/package-tutorials.mjs';
 import { packageLessons } from './src/package-lessons.mjs';
 import { chapters } from './src/content.mjs';
 import { developmentGuide } from './src/development.mjs';
+import { reviseChapters, upstreamLessons } from './src/upstream-revision.mjs';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 test('新包缺少教学说明会报错；历史目录不从 dist 或缓存冒充当前包', () => {
@@ -23,10 +24,11 @@ test('所有本地子目录有教程入口，参数索引无截断，来源和�
   const html = read('source-code-html/index.html');
   const data = JSON.parse(html.match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   assert.ok(data.tutorials.length >= data.packages.length);
-  assert.equal(data.tutorials.filter(p => p.manifest).length, data.packages.length);
-  assert.deepEqual(data.chapters, [...chapters, developmentGuide], '章节修改后必须同步离线 HTML');
+  assert.equal(data.tutorials.filter(p => p.manifest).length, data.packages.length + 1);
+  assert.ok(data.tutorials.find(p => p.id === 'p2')?.manifest);
+  assert.deepEqual(data.chapters, reviseChapters([...chapters, developmentGuide]), '章节修改后必须同步离线 HTML');
   for (const p of data.tutorials) {
-    if (p.manifest) assert.deepEqual(p.lesson, packageLessons[p.id], `教程修改后必须同步离线 HTML：${p.id}`);
+    if (p.manifest) assert.deepEqual(p.lesson, upstreamLessons[p.id] || packageLessons[p.id], `教程修改后必须同步离线 HTML：${p.id}`);
     assert.ok(p.lesson.intro && p.lesson.focus.length && p.lesson.mastery.length, p.id);
     for (const path of [...p.docs, ...p.examples, ...p.tests, ...p.schemas]) assert.ok(Object.hasOwn(data.sources, path), path);
     for (const step of p.lesson.flow) assert.ok(data.sources[step.path]?.includes(step.needle), step.path);

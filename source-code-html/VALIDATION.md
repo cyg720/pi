@@ -1,63 +1,55 @@
 # 离线源码导览验证记录
 
-本轮日期：2026-10-24。源码基线：LG-Workbench / 136b87e8a7f5a3e5186de0289523ba327dc592fc；11 个一级包版本 1.4.0，另含当前 Unreleased。以下仅记录本轮结果；之前记录保存在 [历史验证记录](history/2026-10-20-VALIDATION.md)。
+本轮日期：2026-11-07。源码基线：LG-Workbench / cf43eea7e741ae899ad4609233084c43ec5274f9。12 个一级包为 1.5.0，另含 Unreleased；apps/p2 为 0.0.1。前次结果在 [2026-10-24 验证记录](history/2026-10-24-VALIDATION.md)，不计为本轮证据。
 
 ## 更新范围
 
-- 生成器已适配 source-code-html 位于仓库根目录的布局；不再引用缺失的 docs/doc-html 或外部功能清单。
-- 当前包、教程、命令及源码专题按实际 checkout 生成。旧工作台四层、原生设置桥接与工作台工程脚本不混入当前能力；43 个工作台编号及 OTH-90 修补机制保留历史身份和原始资料。
-- 重点复核 Durable Storage.commit 的 adopt 顺序、Watch 观察与结束、只读 Harness、IndexedDB、Chord 时钟和 AI 客户端身份；修正 Evals 不存在的 /workbench 导出及 31 个 Durable 示例的编号、语义对应。
-- 1.4.0 与 Unreleased 分开解释；近期重点绑定真实 changelog 原文。全量源码引用、参考路径与正文定位文本逐项核验，不能用部分路径存在掩盖失效项。
-- 原 index.html 保存在 history/workbench-2026-10-20.html，明确标注旧分支、提交和日期；旧 README、验证记录及课程计划另行归档。缺失的历史资料恢复至 reference/legacy，并记录来源清单。
-- 36 个与旧自动生成依据精确匹配的目录说明同步到当前专题，保留 previousExplanation 和原源码指纹。空说明只在有中文依据时初始化；未复核的源码变化继续标识，不宣称逐文件审计。
-- 五幅主图已按当前源码重制，分别说明 11 包架构、CLI 工作流、单次工具调用时序、会话数据流及 Durable 六种 TaskState。普通 CLI 与 Durable 分开说明；五图的规格、交付字节、离线封装和源码指纹记录在 diagrams/manifest.json。
-- 八份可编辑 PPTX 共 132 页，按同一份课程数据更新正文、输入输出、失败分支、练习、源码路径及讲者备注。旧课件逐字节存档至 history/learning-slides-2026-10-17；当前文件已接入内嵌下载。
+- 按合并父提交核对 526 个新增上游可达提交；具体范围与迁移重点见 [上游更新说明](UPSTREAM-UPDATE.md)。
+- 新增 Schema、p2、p2 插件、AI catalog 和 Chord 示例索引。显式修订 Chord v2 与 Durable 教学正文、稳定编号解释、包教程、学习路线和版本重点；原编号原文保留历史身份。
+- Durable 分组提交、receive 回执、延迟进度落盘、ConversationTranscript、任务失败和逐会话压缩与旧接口区分。38 个编号示例都有对应中文说明。
+- p2 实验应用、本地 PRD / prototype 和旧工作台分别说明。删除的 sandbox 示例退休，旧资料仍可读取。
+- 五图按当前源码绑定指纹；时序图和数据流图调整纵向间距，解决桌面浏览溢出。八份课件的正文、讲者备注、源码路径及基线同步，旧课件存于 history/learning-slides-2026-10-24。
+- 有依据的新目录说明初始化；已有说明和原指纹保留。来源改变仍标为待复核，未知节点保持空白，不宣称逐文件审计。
 
 ## 生成结果
 
 | 项目 | 数量 |
 | --- | --- |
-| 当前包教程 | 11 |
-| 开发阶段 | 17 |
-| 当前源码专题与索引 | 378 |
-| 归属源码文件 | 976 |
-| AST 声明 | 26119 |
-| 稳定功能编号 | 640，其中 44 项标为历史资料 |
-| 学习路线 | 44 |
-| 内嵌源码与资料 | 1899 |
-| 本地可达提交 | 7094 |
+| 当前教程 | 12 个包 + 1 个 p2 应用 |
+| 开发阶段 / 学习路线 | 17 / 44 |
+| 源码专题与索引 | 481，其中 229 项中文能力解说，其余为源码索引 |
+| 归属源码文件 / AST 声明 | 2,152 / 46,040 |
+| 稳定功能编号 | 640，其中 45 项历史资料 |
+| 内嵌源码与资料 | 3,707 |
+| 本地可达 Git 提交 | 7,634 |
+| 架构图 / PPTX | 5 / 8 份，共 132 页 |
 
-index.html 约 54 MiB。源码文件指纹、版本范围、生成时间以 data/manifest.json 及内嵌数据为准。目录树同时包含未跟踪文件，数量随本地文档变动。
+index.html 约 83 MiB（最终值以文件为准）。目录节点和生成时间随本地文档变动，精确指纹见 data/manifest.json。
 
 ## 实际验证
 
-| 命令或检查 | 结果 |
+| 命令或检查 | 本轮结果 |
 | --- | --- |
-| node source-code-html/build.mjs | 通过 |
-| node --test --test-isolation=none source-code-html/*.test.mjs | 73 通过，0 失败、0 跳过 |
-| npm.cmd run check | 未整链通过：check:entry-graphs 在 Windows 误判；此前各步骤通过 |
-| Biome、精确依赖、运行时依赖、相对导入 | 通过；Biome 检查 1546 文件，无修改 |
-| npm.cmd run check:install-lock:coding-agent | 单独执行通过 |
-| .\node_modules\.bin\tsc.cmd --noEmit | 单独执行通过 |
-| npm.cmd run check:browser-smoke | 单独执行通过 |
-| git diff --check | 通过；导览当前为未跟踪目录，不能把此项当成其完整验证 |
-| 五图 Archify deliver / 离线封装后 check | 每图 9/9 showcase，0 错误、0 警告；未运行真实浏览器检查 |
-| 八份 PPTX 结构、字体、尺寸与重新导入 | 全部通过；1280×720、Microsoft YaHei、原生可编辑文字 |
-| PPTX 正文与讲者备注一致性 | 132 页逐项与课程转换结果完全一致 |
-| PPTX 渲染与逐页查看 | 132 页已查看；两处单字/标点孤行修正并重新检查，其余 130 页图像指纹不变 |
+| node source-code-html/build.mjs --initialize-directory | 通过，逐项核对专题路径、文档与定位文字 |
+| node --test --test-isolation=none source-code-html/*.test.mjs | 75 通过，0 失败、0 跳过；源码快照、目录、课程、版本与课件全部通过 |
+| npm.cmd run check | 整链通过，退出 0；Biome 检查 2517 文件，无修改；TypeScript、入口图、安装锁与 browser-smoke 均通过 |
+| git diff --check | 通过；architecture.json 已统一为 LF，并重新生成规格指纹；五图 HTML 字节与已查看的浏览器证据完全一致 |
+| 五图 Archify deliver / 离线封装 check | 每图 9/9 showcase，0 错误、0 警告 |
+| 五图 visual-check | Chrome 明暗主题，1440×900、1600×1000、1920×1080、2048×1320 均通过；五图截图已查看 |
+| PPTX 文件结构、字体、尺寸与重新导入 | 8 份均通过；1280×720、Microsoft YaHei、原生可编辑文字 |
+| PPTX 正文、备注与渲染 | 132 页与课程精确匹配并重新渲染；18 页正文改变逐页查看，其余 114 页正文区域与原版像素一致；最后一处讲者备注修正后的 33 页图像全部不变 |
+| 离线浏览器检查 | Chrome offline，1440×1000 和 390×844；首页、搜索、四个新修订教程、课程翻页、内嵌 PPTX 链接、主题和窄屏检查通过；0 页面异常、0 HTTP/HTTPS 请求 |
 
-本次新增四项资产回归，先确认缺少同步实现时失败，再完成实现和验证。全部 73 项测试覆盖源码与当前磁盘 SHA-256、稳定编号、历史能力隔离、失效规则拒绝、课程先修与覆盖、包教程、命令语法、源码解析器、版本范围、DOM 交互、搜索、深链接、滚动保持及脚本语法；新增检查覆盖图谱来源与封装、课程到正文/备注的转换、课件下载和旧课件字节存档。所有更改过的导览测试均已运行。
+新增两项上游回归先验证旧产物失败，再更新实现。既有测试适配实际的 12 包 + p2、38 个 Durable 示例及修订后的教程；不以忽略失效路径替代更新。浏览器证据见 [结果](validation/browser-result.json)、[桌面](validation/browser-desktop-home.png)、[窄屏](validation/browser-mobile-dark.png)。图谱回执与截图在 diagrams；课件摘要在 learning-slides/validation.json。
 
-根检查的具体失败：packages/ai 的 ./models 被报告必须不引用 index.ts，命中文件为 packages\telemetry\src\index.ts。scripts/check-entry-graphs.mjs 使用 path.relative 得到 Windows 反斜杠路径，但 allow 列表为 packages/telemetry/src/index.ts，导致豁免失配。问题在本轮前已记录，本轮重新复现并检查源码；没有修改业务源码、预算、依赖或锁文件来绕开它。
+导览源码基线允许后续仅修改导览、功能文档和项目记忆的提交，避免导览自身提交改变 HEAD 后被误判为过期。仍验证基线祖先关系、后续改动路径及每份业务源码快照的 SHA-256；业务代码或版本变化必须重新生成。
 
-## 验收限制
+首次根检查因合并后本机依赖与模型数据陈旧失败。随后执行 npm.cmd ci --ignore-scripts（锁文件未变，安装审计 0 vulnerabilities）和 hydrate:model-data，再通过完整检查。当前水合使用 catalog/generate.ts --strict --data-only 访问目录来源，不调用模型。npm 仍提示本机 npm 不识别仓库 min-release-age-exclude 配置；未修改仓库安全配置以消除提示。此前 Windows 入口图分隔符问题在本次上游中已修复，不再是阻塞。
 
-- 浏览器工具自动安全检查拒绝 file:// 协议，只允许 HTTP/HTTPS；没有绕过。未完成真实浏览器宽窄屏、断网打开、剪贴板与图内导出的视觉验收。DOM 测试和 browser-smoke 不替代这些验收。
-- 五幅图已重制并通过确定性检查。Archify 原始字节保存在 diagrams/generated；离线版移除在线字体 link、加入 CSP，重新检查并记录独立指纹。确定性检查不代表浏览器视觉验收。
-- 八份当前 PPTX 已更新、校验并逐页查看，具体摘要见 learning-slides/validation.json。未使用原生 PowerPoint 或 Google Slides 打开验收；工具渲染不等同于目标软件实测。
-- 本轮没有运行产品 build、npm test、全量 Vitest、真实模型、SSH、Docker、部署或 VS Code 实际断点。关联测试用于源码学习，不表示它们已逐项运行。
-- 全部文件归属和编号覆盖是完整性证据，不代表全部业务语义已逐函数审计。自动提交概述和旧资料不应作为当前实现的独立证明。
+## 验收边界
 
-## 可手工复核
-
-断网双击 index.html，查看 1.4.0 和 Unreleased、Durable Watch/只读专题、11 个包教程；搜索旧工作台编号，确认显示历史资料并可进入旧快照。切换明暗主题、缩窄窗口、打开源码并搜索行号，检查菜单滚动和阅读进度。单独复制 HTML 时，所有内嵌内容仍可读；历史完整 HTML 链接需要一起携带 history 目录。
+- 未运行产品 build、npm test、全量 Vitest、真实模型、SSH、Docker、p2 服务或部署；关联测试路径是阅读线索，不代表全部执行过。
+- 未在原生 PowerPoint 或 Google Slides 中打开验收。工具渲染、结构检查与文字比对不等于目标软件实测。
+- 浏览器验证了内嵌课件链接与字节一致性；剪贴板授权、五图所有导出格式和真实用户下载流程未逐项实测。
+- 本次是源码快照和重点教学迁移，不是 526 个提交、46,040 个声明的逐项审计。历史中文文档可能滞后，当前专题与原始源码优先；待复核目录仍保持其标记。
+- 单独复制 index.html 可读取内嵌源码、教程、图和课件；外部链接需要网络，完整历史快照需携带 history 目录。

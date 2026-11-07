@@ -40,7 +40,10 @@ const sources = [
   'packages/coding-agent/docs/how-pi-works.md', 'packages/coding-agent/src/core/sdk.ts',
   'packages/coding-agent/src/core/agent-session.ts', 'packages/coding-agent/src/core/session-manager.ts',
   'packages/agent/src/agent.ts', 'packages/agent/src/agent-loop.ts', 'packages/agent/src/types.ts',
-  'packages/ai/src/models.ts', 'packages/durable/src/types.ts', 'packages/durable/src/harness/scheduler.ts'
+  'packages/ai/src/models.ts', 'packages/durable/src/types.ts', 'packages/durable/src/harness/scheduler.ts',
+  'packages/durable/src/harness/transcript.ts', 'packages/chord/src/host/host.ts',
+  'packages/chord/src/host/reload-cycle.ts', 'packages/schema/src/validator.ts',
+  'apps/p2/package.json', 'apps/p2/README.md', 'apps/p2/src/hosts/server.ts'
 ];
 writeFileSync(join(dir, 'diagrams/manifest.json'), JSON.stringify({
   baseline, sourceHashes: Object.fromEntries(sources.map(path => [path, sha(readFileSync(join(root, path)))])),

@@ -8,6 +8,7 @@ import { test } from 'node:test';
 import { Script } from 'node:vm';
 import { classifyPath, discoverModules } from './src/catalog.mjs';
 import { developmentGuide } from './src/development.mjs';
+import { reviseChapters } from './src/upstream-revision.mjs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(dir, 'index.html'), 'utf8');
@@ -19,7 +20,7 @@ test('生成时源码基线的可达历史完整且每条都有中文概述', ()
   assert.ok(data.commits.every(c => /[\u4e00-\u9fff]/.test(c.zh) && c.subject));
 });
 test('所有教学引用均有离线快照且定位文本存在', () => {
-  assert.deepEqual(data.chapters.find(c => c.id === 'development'), developmentGuide, '开发说明必须随单文件重新生成');
+  assert.deepEqual(data.chapters.find(c => c.id === 'development'), reviseChapters([developmentGuide])[0], '开发说明必须随单文件重新生成');
   for (const c of data.chapters) for (const s of c.sections) for (const [path, needle] of s.refs || []) {
     assert.ok(data.sources[path], `缺少 ${path}`);
     assert.ok(data.sources[path].includes(needle), `定位失效 ${path}: ${needle}`);
@@ -109,7 +110,7 @@ test('文档提交不使源码基线失效，业务源码与版本仍须一致',
   // Accept subsequent guide commits, but require regeneration after other repository changes.
   execFileSync('git', ['merge-base', '--is-ancestor', data.meta.commit, 'HEAD'], { cwd: root });
   const changed = execFileSync('git', ['diff', '--name-only', '-z', data.meta.commit, 'HEAD'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
-  assert.deepEqual(changed.filter(path => !path.startsWith('source-code-html/') && !path.startsWith('docs/功能清单/')), [], '源码基线之后存在非导览改动，请重新生成');
+  assert.deepEqual(changed.filter(path => !path.startsWith('source-code-html/') && !path.startsWith('docs/功能清单/') && path !== '.pi/PROJECT_MEMORY.md'), [], '源码基线之后存在非导览改动，请重新生成');
   for (const [path, expected] of Object.entries(data.sourceHashes)) {
     if (path.startsWith('source-code-html/')) continue;
     assert.equal(createHash('sha256').update(readFileSync(join(root, path))).digest('hex'), expected, `当前文件与离线快照不同: ${path}`);
@@ -125,7 +126,7 @@ test('文档提交不使源码基线失效，业务源码与版本仍须一致',
     assert.ok(f, id);
     assert.equal(f.evidence, '中文能力解说', id);
   }
-  assert.equal(data.catalog.features.filter(f => f.module === 'durable-examples' && f.evidence === '中文能力解说').length, 31);
+  assert.equal(data.catalog.features.filter(f => f.module === 'durable-examples' && f.evidence === '中文能力解说').length, 38);
   assert.ok(data.catalog.features.some(f => f.id === 'agent-examples-mcp-codemode'));
   assert.ok(!data.catalog.features.some(f => ['sqlite','agent-harness','experimental-mini','experimental-micro'].includes(f.id)));
   assert.ok(Object.keys(data.catalog.files).every(p => !p.startsWith('packages/agent/src/harness/') && !p.startsWith('packages/session-backends/sqlite-node/')));

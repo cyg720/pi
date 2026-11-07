@@ -5361,7 +5361,7 @@
         </div>
         <ul>
           <li>&bull; waiting / sleeping 不持有 invocation，按 checkpoint 恢复</li>
-          <li>&bull; restart_limit 是阻塞原因；retryTask 显式重试，readOnly 禁止执行</li>
+          <li>&bull; restart_limit 结束任务并报告失败；readOnly 禁止执行</li>
         </ul>
       </div>
 
@@ -5371,8 +5371,8 @@
           <h3>持久提交与源码</h3>
         </div>
         <ul>
-          <li>&bull; Storage 持久化后同步 adopt(seq)，然后完成 commit</li>
-          <li>&bull; durable/src/types.ts、harness/scheduler.ts；136b87e8a</li>
+          <li>&bull; 批量 commit 用 receive(index, seq) 确认已存提交</li>
+          <li>&bull; durable/src/types.ts、harness/scheduler.ts；cf43eea7e</li>
         </ul>
       </div>
     </div>

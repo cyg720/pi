@@ -10,10 +10,11 @@ const read = path => readFileSync(new URL(path, root), 'utf8');
 const data = JSON.parse(read('source-code-html/index.html').match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 
 test('导览使用当前 checkout，不能把另一分支工作台当成当前实现', () => {
-  const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-  assert.equal(data.meta.commit, head);
+  // A guide cannot embed the hash of the commit that first contains it.
+  // verify.test.mjs separately checks subsequent paths and every source hash.
+  execFileSync('git', ['merge-base', '--is-ancestor', data.meta.commit, 'HEAD'], { cwd: root });
   assert.equal(data.meta.version, JSON.parse(read('packages/coding-agent/package.json')).version);
-  assert.equal(data.packages.length, 11);
+  assert.equal(data.packages.length, 12);
   assert.ok(!data.catalog.modules.some(m => m.id.startsWith('workbench-')));
   assert.ok(!data.catalog.features.some(f => ['coding-native-settings', 'engineering-workbench'].includes(f.id)));
   assert.ok(!data.mastery.routes.some(r => r.id === 'workbench-request'));

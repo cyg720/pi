@@ -1,6 +1,7 @@
 import { additionalFeatures } from './feature-additions.mjs';
 import { workbenchModules, workbenchFeatures } from './workbench.mjs';
 import { currentFeatures } from './current-features.mjs';
+import { upstreamModules, reviseFeatureSpecs } from './upstream-revision.mjs';
 
 // 中文能力地图。paths 是相对于模块 root 的精确文件或目录前缀。
 // 索引器额外列出全部扫描文件，未解释的实现不会伪装成人工说明。
@@ -23,6 +24,7 @@ export const featureModules = [
   ['native', '原生集成 · 平台能力', 'packages/tui/native/', 'Windows、macOS、Linux 原生剪贴板与平台适配。', '平台支撑', 'packages/tui/README.md'],
   ['engineering', '工程 · 构建与维护', 'scripts/', '依赖校验、构建发布、模型目录生成和开发统计。', '开发工具', 'AGENTS.md']
 ].map(([id, title, root, description, status, doc]) => ({ id, title, root, description, status, doc }));
+featureModules.push(...upstreamModules);
 
 // id、中文名、来源文件/目录、作用、入口/场景、处理与边界。
 export const featureSpecs = {
@@ -249,3 +251,4 @@ for (const [module, specs] of Object.entries(additionalFeatures)) {
 for (const [module, specs] of Object.entries(currentFeatures)) {
   featureSpecs[module] = [...(featureSpecs[module] || []), ...specs];
 }
+reviseFeatureSpecs(featureSpecs);

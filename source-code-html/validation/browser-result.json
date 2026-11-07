@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-07",
+  "browser": "Chrome",
+  "offline": true,
+  "viewports": [
+    [
+      1440,
+      1000
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "checks": [
+    "home baseline",
+    "global search",
+    "four package flow links",
+    "course slides",
+    "embedded PPTX",
+    "dark theme",
+    "narrow containment"
+  ],
+  "errors": [],
+  "requests": [],
+  "geometry": {
+    "width": 390,
+    "scrollWidth": 390
+  }
+}
