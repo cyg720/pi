@@ -1,0 +1,23 @@
+/* Shared dropdown appearance for fields, inspector filters and composer. */
+.select-native{display:none!important}
+.select-control{display:block;min-width:0;width:100%}
+.select-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:38px;padding:9px 12px;border:1px solid #dce5df;border-radius:9px;background:#fff;color:#53685b;font-size:11px;line-height:1.5;text-align:left;transition:border-color .15s,box-shadow .15s,background .15s}
+.select-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.select-trigger svg{width:14px;height:14px;flex:none;fill:none;stroke:#8b9b90;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.select-trigger:hover:not(:disabled){border-color:#a7c4b3;background:#fbfdfb}
+.select-trigger:focus-visible,.select-trigger[aria-expanded="true"]{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px #216c5414}
+.select-trigger[aria-expanded="true"] svg{transform:rotate(180deg);stroke:var(--accent)}
+.select-menu{position:fixed;inset:auto;margin:0;padding:6px;border:1px solid #dce5df;border-radius:12px;background:#fff;color:#64756a;box-shadow:0 12px 32px #203d2920,0 2px 6px #203d2908;overflow-y:auto;overscroll-behavior:contain;z-index:1000;scrollbar-width:thin;scrollbar-color:#cddbd1 transparent;font:12px/1.5 Inter,"Segoe UI","Microsoft YaHei",sans-serif}
+.select-menu::backdrop{background:transparent}
+.select-menu-option{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0;padding:10px 12px;min-height:38px;border-radius:7px;cursor:pointer;overflow-wrap:anywhere}
+.select-menu-option:hover,.select-menu-option.is-active{background:#f0f5f1;color:#3f5e4b}
+.select-menu-option[aria-selected="true"]{background:#e7f1eb;color:#216c54;font-weight:600}
+.select-menu-option[aria-disabled="true"]{color:#a0aba4;background:transparent;cursor:not-allowed}
+.select-check{width:15px;flex:none;color:var(--accent);font-size:13px}
+.inspector .select-control{margin-bottom:12px}
+.composer-toolbar .select-control{width:auto;max-width:220px}
+.composer-toolbar .select-trigger{min-height:29px;padding:5px 9px;border-color:#e7ece7;border-radius:7px;background:#f5f8f5;font-size:10px}
+.new-conversation-options .select-trigger{border:0;background:transparent;box-shadow:none;padding:5px 3px;gap:5px;border-radius:3px}
+.new-conversation-options .select-trigger:hover:not(:disabled),.new-conversation-options .select-trigger[aria-expanded="true"]{border:0;background:transparent;box-shadow:none;color:var(--accent)}
+.new-conversation-options .select-trigger:focus-visible{box-shadow:none;outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.select-trigger,.select-trigger svg{transition:none}}

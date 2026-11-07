@@ -1,0 +1,32 @@
+.workbench-panes{display:grid;grid-template-columns:minmax(0,1fr);flex:1;min-height:0;min-width:0}
+.workbench-panes.with-viewer{grid-template-columns:minmax(260px,28%) minmax(0,1fr)}
+.conversation-pane,.file-viewer{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.file-viewer{border-left:1px solid var(--line);background:white}
+.viewer-toolbar{display:flex;align-items:center;border-bottom:1px solid var(--line);min-height:42px;background:#fafcf9;flex-shrink:0;min-width:0}
+.viewer-tabs{display:flex;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.viewer-tabs::-webkit-scrollbar{display:none}
+.viewer-tab{display:flex;align-items:center;max-width:250px;flex-shrink:0;border-right:1px solid var(--line);border-bottom:2px solid transparent;color:var(--muted)}
+.viewer-tab.active{background:white;border-bottom-color:var(--accent);color:var(--accent)}
+.viewer-tab-name{display:flex;align-items:center;gap:7px;padding:12px 8px 10px 13px;min-width:0;font-size:11px;text-align:left}
+.viewer-tab-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer-tab-name .icon{width:14px;height:14px}
+.viewer-tab-name small{font-size:9px;white-space:nowrap;color:#8c998e}
+.viewer-tab>.icon-button{width:23px;height:25px;margin-right:5px;flex-shrink:0}
+.viewer-hide{flex-shrink:0;margin:0 9px}
+.file-viewer .preview-header{padding:14px 20px;flex-shrink:0}
+.file-viewer .preview-header h2{font:11px var(--mono);overflow-wrap:anywhere;color:#64786b}
+.file-viewer .preview-code{padding:22px 18px;font-size:12px;min-width:max-content;white-space:pre}
+.file-viewer .content-scroll{overflow:auto}
+.with-viewer .chat-scroll,.with-viewer .review-page{padding:23px 17px}
+.with-viewer .composer-wrap{padding:10px 12px 15px}
+.with-viewer .composer-toolbar{flex-wrap:wrap}
+.with-viewer .composer-footnote{flex-wrap:wrap;line-height:1.6}
+.with-viewer .message{gap:8px}
+.with-viewer .message-text{overflow-wrap:anywhere}
+.with-viewer .tool-step{flex-wrap:wrap;padding:9px}
+.with-viewer .tool-group summary{gap:6px;flex-wrap:wrap;padding:10px}
+.with-viewer .steps{flex-wrap:wrap;justify-content:flex-start;gap:9px}
+.with-viewer .spread{flex-wrap:wrap}
+.with-viewer .page{padding:22px 17px}
+.with-viewer .project-stats{gap:18px;flex-wrap:wrap}
+@media(max-width:800px){.workbench-panes.with-viewer{grid-template-columns:minmax(200px,40%) minmax(0,1fr)}.viewer-tab{max-width:180px}}

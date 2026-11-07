@@ -1,0 +1,20 @@
+/* Focus changes the existing edge; text-only selectors remain text-only. */
+:root{--focus-border:#70a9d0}
+html[data-theme="dark"]{--focus-border:#8bc4ed}
+html[data-theme] :is(input,textarea,select):focus,
+html[data-theme] :is(input,textarea,select):focus-visible,
+html[data-theme] body :is(.field input,.field textarea,.field select,.search-path input):focus,
+html[data-theme] body .select-trigger:enabled:focus-visible,
+html[data-theme] body .select-trigger:enabled[aria-expanded="true"]{
+  outline:none;box-shadow:none;border-color:var(--focus-border)
+}
+html[data-theme] .search-box:focus-within,
+html[data-theme] body .project-search .search-box:focus-within,
+html[data-theme] .composer:has(textarea:focus){border-color:var(--focus-border)}
+html[data-theme] body .new-conversation-options .select-trigger:enabled:focus-visible,
+html[data-theme] body .new-conversation-options .select-trigger:enabled[aria-expanded="true"],
+html[data-theme] .composer-tools button[aria-haspopup]:focus-visible,
+html[data-theme] .composer-tools button[aria-expanded="true"]{
+  outline:none;box-shadow:none;border:0;background:transparent;
+  color:var(--focus-border);text-decoration:underline;text-underline-offset:4px
+}
