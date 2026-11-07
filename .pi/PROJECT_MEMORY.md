@@ -7,7 +7,7 @@
 - 审查准备、执行和报告页统一 1100px 上限并居中，与项目总览一致；底部配置/输入区同宽，智能体、模型、思考等级左侧横排。文件分栏按可用空间收缩。
 - 浏览器验证三类页 1100px、报告分栏 340px 无横向溢出；语法通过，无浏览器 error。根 check 仍停在既有入口依赖图错误。仅原型及说明变更。
 
-用于后续任务的项目导航、依赖准备和验证。最后核实：2026-11-07，工作目录 `D:\code\CYG\pi`，分支 `LG-Workbench`，最新提交以 `git log -1` 为准。本文件记录事实，不替代根目录 [AGENTS.md](../AGENTS.md)；分支、工具版本和安装状态需在后续任务中重新确认。当前依赖已安装、模型数据已生成，根目录完整构建及构建后 CLI 启动检查已通过。
+用于后续任务的项目导航、依赖准备和验证。最后核实：2026-11-07 18:45（上游 1.5.0 合并后），工作目录 `D:\code\CYG\pi`，分支 `LG-Workbench`，HEAD `012e0b6d8`，领先 origin 1 个提交。本文件记录事实，不替代根目录 [AGENTS.md](../AGENTS.md)；分支、工具版本和安装状态需在后续任务中重新确认。当前依赖已安装、模型数据已生成，根目录完整构建及构建后 CLI 启动检查已通过。
 
 ## 工作约定
 
@@ -542,3 +542,23 @@ PATH 中首先匹配的 `bash.exe` 位于 WindowsApps，不能据此认定它是
 - npm ci --ignore-scripts 同步合并后的依赖、hydrate:model-data 后，完整 npm run check 退出 0；旧 Windows entry-graphs 阻塞已由上游修复。npm 对 min-release-age-exclude 仍有不识别提示，未修改配置或锁文件。
 - 离线导览入口 source-code-html/index.html；本次更新报告 UPSTREAM-UPDATE.md，验证边界 VALIDATION.md。同步 13 个教程、44 条路线、5 图与 8 份 132 页课件。未运行产品 build、真实模型或 p2 服务；未提交。
 - 本轮最终导览回归 75 项通过；离线 Chrome 宽窄屏与五图 browser check 通过，课件正文/备注匹配。验证不代表 p2 或所有业务能力已经运行验收。
+
+## 2026-11-07：模型原型修复与上游契约同步
+
+- 用户明确本轮修复 prototype、同步 PRD 并验证，先不提交、不推送。开始时 LG-Workbench HEAD 为 012e0b6d8（离线导览提交），业务源码基线 cf43eea7e；本次不更新已提交导览快照。
+- 复用 prototype/generate-model-catalog.mjs 离线生成 43 个接入项、1627 个聊天模型；补 fixtures 的 qwen-token-plan-individual-cn 与页面动态厂商数量。原有两项失败由旧目录造成；测试逐项对照 provider/model ID、能力与预算标记，并检查页面入口覆盖及下架模型保留原引用。
+- 五份 PRD 保留 60 项任务、61 组验收，纠正 restart_limit 已结束而非可 retryTask、afterRun 收尾仍忙、有界历史窗口/ConversationTranscript、WatchCall/retired、实时未落盘进度与 observeCommits 持久观察边界。思考预算、WebSocket 握手超时已原生支持；temperature/maxTokens 仍需请求包装；压缩用 AgentChange.compaction 会话覆盖，注意四层优先级和整体替换。
+- 73 项原型测试、独立 8769 浏览器厂商/模型/引用/刷新检查通过；五份 PRD 的任务依赖、61 组编号、165 个本地链接、表格及 43 工厂清单检查通过。完整 npm.cmd run check 退出 0，保留已知 npm min-release-age-exclude 配置识别提示，未改依赖。产品恢复/订阅接线与 p2 运行未验收，不能以原型通过替代。
+- p2 为可运行但计划被替换的实验应用：Chord v2 server/session worker、每会话 Durable Harness 与 StoreStorage、server/worker/web/tui 插件分面；其 owner 全工具权限、远程环境、共享和多智能体编排不等于 LG 的审查隔离及证据契约。可研究实现，稳定业务继续依赖 packages 的公开接口。
+
+## 2026-11-07 18:45：合并 1.5.0 后的环境依赖复核
+
+- 基线：LG-Workbench HEAD `012e0b6d8`（领先 origin 1 个提交），业务源码为 `cf43eea7e` 合并上游 1.5.0 后的状态；12 个一级包 1.5.0，新增 `packages/schema` 与 `apps/p2`（0.0.1）。工作区另有其他会话未提交改动（PRD 五份、prototype 若干文件、本记忆），不要清理或提交。
+- 依赖：`npm.cmd install --ignore-scripts --dry-run` 报告 up to date，node_modules 与 `package-lock.json` 同步；本机 Node v24.18.0、npm 11.16.0。`.npmrc` 新增 `min-release-age-exclude[]=@earendil-works/*`，npm 11.16 报 Unknown project/env config 警告，功能未受阻，未改配置。
+- 模型数据：`npm.cmd run check:model-data` 通过，`packages/ai/src/providers/data/` 有 44 个 JSON + manifest；生成入口为 `packages/ai/catalog/generate.ts`，旧 `scripts/generate-models.ts` 说明不再适用。
+- 构建：`npm.cmd run build:offline` 退出 0，为 telemetry/schema/chord/tui/codemode/mcp/ai/durable/env/agent/coding-agent 生成 1.5.0 dist；ai 的 dist 含 44 个 provider JSON；CLI bundle 84 文件、9.2 MiB，`node packages/coding-agent/dist/cli.js --version` 与 bundle 版本均为 1.5.0。使用 offline 构建避免在线重生成 `models.generated.ts`；未运行在线 `npm run build`。
+- 根检查：`npm.cmd run check` 退出 0。Biome 2517 文件无修复；pinned-deps、runtime-deps、ts-imports、entry-graphs、install-lock 通过；根 tsc 与 `packages/coding-agent/examples` tsc 通过；browser-smoke 通过。旧 Windows entry-graphs 路径分隔符问题已由 1.5.0 上游修复。
+- 测试抽查：Durable `test/memory-storage.test.ts` 34 项通过（验证 dist 与 pi-ai 构建产物可用）；p2 `npm run check` 通过（Biome 715 文件 + tsc）；p2 单测 `test/p2/health.test.ts` 在 Node 24 通过（约 8s）。
+- 已知 Windows 限制：`npm.cmd run test:scripts` 60/61 通过，仍失败于 `scripts/local-package-install.test.mjs` 用裸 `npm` spawn（`spawnSync npm ENOENT`）；`packages/durable` test 脚本含 POSIX `VAR=value` 赋值，Windows npm 默认 cmd.exe 不能直接执行。`./test.sh`、`npm test` 未运行。
+- p2 环境缺口：TUI/沙箱测试需要 Node >=26.5.1，本机只有 Node v24.18.0，未找到 node26（`E:\software` 仅 node-v24.18.0-win-x64）；浏览器测试需要 `CHROMIUM_BIN`，本机有 Chrome 157.0.8103.38（`C:\Program Files\Google\Chrome\Application\chrome.exe`）但环境变量未设置。因此 p2 全量 `npm test` 当前不能端到端通过；服务端 Node 22.19+ 部分可运行。
+- AGENTS 新增要求：需要 `dist` 的测试/基准先运行 `npm run build`；`apps/p2` 不在根 check/测试范围，p2 改动后另跑其 check/test；Chord v2 代码风格与切片文档在 `packages/chord/docs/`；模型目录定义在 `packages/ai/catalog/`。以上结论均为本机 2026-11-07 实测，换机器需重核。
