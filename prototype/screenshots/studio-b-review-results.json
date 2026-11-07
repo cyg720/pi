@@ -1,0 +1,15 @@
+{
+  "passed": [
+    "common scope empty",
+    "explicit project required",
+    "scope refresh",
+    "project traces isolated",
+    "corrupt cache no overwrite",
+    "removed version rejected",
+    "cross-tab project removal preserves input",
+    "missing project refresh",
+    "corrupt definition refresh",
+    "invalid agent returns directory"
+  ],
+  "errors": []
+}
