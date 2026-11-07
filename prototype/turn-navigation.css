@@ -1,0 +1,18 @@
+.conversation-pane{position:relative}
+.turn-navigation{position:absolute;left:4px;top:18%;bottom:24%;width:24px;z-index:6;display:flex;flex-direction:column;justify-content:center;pointer-events:none}
+.turn-ticks{overflow-y:auto;overflow-x:hidden;max-height:100%;scrollbar-width:none;pointer-events:auto}
+.turn-tick{display:flex;align-items:center;justify-content:center;width:24px;height:19px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.turn-tick::before{content:"";width:9px;height:2px;background:currentColor;opacity:.55;transition:width .12s}
+.turn-tick[aria-current=true],.turn-tick:hover,.turn-tick:focus-visible{color:var(--accent)}
+.turn-tick[aria-current=true]::before,.turn-tick:hover::before,.turn-tick:focus-visible::before{width:20px;opacity:1}
+.turn-tick:focus-visible{outline:1px solid var(--accent);outline-offset:-1px;border-radius:3px}
+.turn-preview{display:none;position:absolute;left:30px;top:50%;transform:translateY(-50%);width:min(310px,calc(100vw - 110px));max-height:210px;overflow:hidden;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 10px 30px #0003;color:var(--ink);pointer-events:none;font-size:12px;line-height:1.7}
+.turn-preview strong,.turn-preview p{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.turn-preview strong{-webkit-line-clamp:2}.turn-preview p{-webkit-line-clamp:3;margin:6px 0 0;color:var(--muted)}
+.turn-navigation:has(.turn-tick:hover) .turn-preview,.turn-navigation:focus-within .turn-preview{display:block}
+.round-switcher{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:18px;font-size:12px;color:var(--muted)}
+.round-switcher button{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:6px;padding:5px 9px;cursor:pointer}
+.round-switcher button[aria-pressed=true]{color:var(--accent);background:var(--panel);border-color:var(--line)}
+.round-switcher button:focus-visible{outline:2px solid var(--accent)}
+.chat-scroll .message[data-turn]{scroll-margin-top:24px}
+.with-viewer .turn-navigation{left:0;width:18px}.with-viewer .turn-tick{width:18px}.with-viewer .turn-preview{max-width:calc(100vw - 110px)}

@@ -1,0 +1,24 @@
+/* Text selectors beside send; allow wrapping in the narrow conversation pane. */
+.composer-toolbar{flex-wrap:wrap}
+.composer-send-options{margin-left:auto;justify-content:flex-end;flex-wrap:wrap;min-width:0;max-width:100%}
+.session-options{justify-content:flex-end;gap:5px}
+.session-options .select-control{max-width:180px}
+.session-config-bar{display:flex;justify-content:flex-end;padding:12px 28px;border-top:1px solid var(--line);flex-shrink:0}
+.branch-origin{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-bottom:14px}
+.branch-origin>span{overflow-wrap:anywhere}
+.branch-messages{padding:0 14px 14px;max-height:300px;overflow:auto}
+.branch-messages article{padding:12px 0;border-top:1px solid var(--line)}
+.branch-messages strong{font-size:11px;color:var(--muted)}
+.branch-messages .message-text{margin-top:6px}
+.review-layout{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
+.review-layout .review-page{padding:0}
+.review-content{width:100%;max-width:1100px;margin:0 auto;padding:25px 40px}
+.review-layout .session-config-bar,.review-layout .composer-wrap{width:100%;max-width:1100px;margin:0 auto;padding:12px 40px;box-sizing:border-box}
+.review-layout .session-config-bar{justify-content:flex-start;border-top:0}
+.review-layout .session-options{justify-content:flex-end;flex-wrap:wrap;min-width:0}
+.review-layout .session-options .select-control{width:auto;max-width:180px}
+.review-layout .composer-send-options{margin-left:auto;justify-content:flex-end;width:auto}
+.review-layout .session-config-bar .session-options{justify-content:flex-start}
+.with-viewer .review-content{padding:23px 17px}
+.with-viewer .review-layout .session-config-bar,.with-viewer .review-layout .composer-wrap{padding:12px 17px}
+@media(max-width:700px){.review-content{padding:20px 16px}.review-layout .session-config-bar,.review-layout .composer-wrap{padding:12px 16px}}
