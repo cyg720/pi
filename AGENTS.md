@@ -1,5 +1,11 @@
 # Development Rules
 
+## Project Memory
+
+- Read [.pi/PROJECT_MEMORY.md](.pi/PROJECT_MEMORY.md) when starting work in this repository.
+- Treat its environment and validation records as dated observations; recheck relevant facts before using them.
+- Update it when a task establishes lasting project knowledge. Keep credentials and unverified assumptions out of it.
+
 ## Conversational Style
 
 - Keep answers short and concise
