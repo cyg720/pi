@@ -43,7 +43,9 @@ const sources = [
   'packages/ai/src/models.ts', 'packages/durable/src/types.ts', 'packages/durable/src/harness/scheduler.ts',
   'packages/durable/src/harness/transcript.ts', 'packages/chord/src/host/host.ts',
   'packages/chord/src/host/reload-cycle.ts', 'packages/schema/src/validator.ts',
-  'apps/p2/package.json', 'apps/p2/README.md', 'apps/p2/src/hosts/server.ts'
+  'packages/durable/src/signals.ts', 'packages/durable/src/harness/parks.ts',
+  'apps/p2/package.json', 'apps/p2/README.md', 'apps/p2/src/hosts/server.ts',
+  'apps/p2-mac/README.md', 'apps/p3/README.md', 'apps/p3/package.json'
 ];
 writeFileSync(join(dir, 'diagrams/manifest.json'), JSON.stringify({
   baseline, sourceHashes: Object.fromEntries(sources.map(path => [path, sha(readFileSync(join(root, path)))])),

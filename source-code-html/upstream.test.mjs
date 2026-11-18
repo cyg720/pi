@@ -6,9 +6,9 @@ const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const data = JSON.parse(read('./index.html').match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 
 test('上游 1.5 合并包含 p2、Schema、Chord v2 与 Durable 新提交契约', () => {
-  assert.equal(data.meta.version, '1.5.0');
-  for (const id of ['schema', 'p2']) assert.ok(data.tutorials.find(item => item.id === id)?.lesson.flow.length >= 3, id);
-  for (const path of ['apps/p2/plugins/sessions/server.ts', 'packages/ai/catalog/generate.ts', 'packages/chord/src/host/host.ts']) {
+  assert.equal(data.meta.version, '1.5.2');
+  for (const id of ['schema', 'p2', 'p3', 'p2-mac']) assert.ok(data.tutorials.find(item => item.id === id)?.lesson.flow.length >= 3, id);
+  for (const path of ['apps/p2/plugins/sessions/server.ts', 'apps/p3/src/app.ts', 'apps/p2-mac/Sources/P2Mac/main.swift', 'packages/durable/src/signals.ts', 'packages/ai/catalog/generate.ts', 'packages/chord/src/host/host.ts']) {
     assert.ok(data.catalog.files[path], path);
     assert.ok(data.sources[path], path);
   }
@@ -17,11 +17,12 @@ test('上游 1.5 合并包含 p2、Schema、Chord v2 与 Durable 新提交契约
   assert.match(text, /commit\(batches, receive, context\)/);
   assert.match(text, /ConversationTranscript/);
   assert.match(text, /实验原型/);
+  assert.match(text, /ToolPark/);
 });
 
 test('上游更新报告使用合并父提交，区分版本与 Unreleased', () => {
   const report = data.sources['source-code-html/UPSTREAM-UPDATE.md'];
   assert.ok(report);
-  for (const term of ['526', 'e49e3d5e8', '085c84e98', 'Unreleased', 'p2', 'pi-schema']) assert.ok(report.includes(term), term);
+  for (const term of ['437', '6a3a30122', '05fd3fbda', 'Unreleased', 'p2-mac', 'p3', 'ToolPark']) assert.ok(report.includes(term), term);
   assert.ok(data.chapters.find(item => item.id === 'start').sections.some(item => item.refs?.some(([path]) => path.endsWith('UPSTREAM-UPDATE.md'))));
 });

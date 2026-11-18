@@ -7,7 +7,7 @@ import { exampleNotes } from './example-notes.mjs';
 
 const scriptFile = /\.(?:[cm]?ts|tsx|[cm]?js|jsx)$/;
 const testFile = /(?:\/test[s]?\/|\.(?:test|spec)\.[^.]+$)/;
-const textFile = /\.(?:[cm]?[jt]sx?|json|css|html|md|txt|sh|ps1|py|c|h|m|grit|yaml|yml|toml)$/;
+const textFile = /\.(?:[cm]?[jt]sx?|json|css|html|md|txt|sh|ps1|py|c|h|m|swift|grit|yaml|yml|toml)$/;
 
 function featureRelativePath(path, module) {
   return module.id === 'engineering' ? path.replace(/^packages\/[^/]+\/scripts\//, '').replace(/^scripts\//, '') : path.slice(module.root.length);

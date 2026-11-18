@@ -1,47 +1,52 @@
 {
-  "baseline": "cf43eea7e741ae899ad4609233084c43ec5274f9",
+  "baseline": "dbc6ee9c53115c3788a4343c8c4c24d55c6fa768",
   "sourceHashes": {
-    "packages/agent/package.json": "f602103f403398a90628258f4359099aa76ebc75b530fd5867c29c1d8ec791d0",
-    "packages/ai/package.json": "597f73ee2734e7701c841a7adfcd5e05d81864c09f4c863cb4121c1621986453",
-    "packages/chord/package.json": "907e325c761fd4fb8ced9b63b66ed36b2c5b6076285cae165eac4e7025dd099e",
-    "packages/codemode/package.json": "afcb00a94e443af214e383989af8cdebd72bfbcb3c777846d6b0afe40bd22eab",
-    "packages/coding-agent/package.json": "e9c967b05f1135093ae1475813ffcc87ac8d33a01f4b49c4744c364d8b4314b3",
-    "packages/durable/package.json": "63f2c3f3af7795aed20b6bf427917324db16129898c918fd6e7074c3df252d1b",
-    "packages/env/package.json": "ab91596238c31fb0f1bc400dbb4e0b6942372d4875de4c7509390a97e3752b14",
-    "packages/evals/package.json": "91664e80fd574b5905f49126fef95658c5c8751784599e905d9d940131e57f05",
-    "packages/mcp/package.json": "3957c9b5b12aa77cf79ca56d1071c125c0bbf6734daf37566d34e5ad8d9ca62a",
-    "packages/schema/package.json": "48d14ec4c8ca986caf9928e226c9239002c45786fbed0abc1369cf119789f05e",
-    "packages/telemetry/package.json": "6e9dbd90ae345976c464f9b8b4540b117d4c05aa670202b53a732e06af737ef6",
-    "packages/tui/package.json": "396da9b4632e2f43a5cf17299298cbb7618c891c5c693a049df952ee9ccf03d7",
+    "packages/agent/package.json": "95152a1095f4677284afde73dcf7a8a1525f46be0831177611526c14cea2ccec",
+    "packages/ai/package.json": "a9cb95da4a7d5d7c2df2118c1d4db81cada3f1acbf877c4f7d893a785d091ad9",
+    "packages/chord/package.json": "6047644a15e10fbd99b37d8be2dabb755c6ba929a5d751560234801766536937",
+    "packages/codemode/package.json": "5fef26332a79610bc737db5e84dd85dd0b8c77fa90a19b6c83707447ba18d9a1",
+    "packages/coding-agent/package.json": "f9029d8fd01153b40055628f743369a0a149947811f1a40515f5604132360d4f",
+    "packages/durable/package.json": "91b92c9b4a83152b138fe5a79a545344966c7187ead8230d6c9961c195a39239",
+    "packages/env/package.json": "f4156c38c13b78745d5eeb412c2f29b888672a77f1d96cf063fc3b861307867e",
+    "packages/evals/package.json": "d15d6699345c381e412d7eb548c51ed0c52fca38112143c6909c9c10ce2970af",
+    "packages/mcp/package.json": "25acfdf6beb2375a79e9edd3652e4849725cf553a3062c188238110db7221bb4",
+    "packages/schema/package.json": "b0297552afe555ceb41c87632e3b43aa73a68cf8b8a8847a9383587567b09401",
+    "packages/telemetry/package.json": "bf7908d77cf617b4cdc0277b10edd69ad837980fd1db5e2824a903dfe20a53a7",
+    "packages/tui/package.json": "a69278408dbc23c0c6efe4079c99b012c14cf2bea78167b72334cdbe319ad4ec",
     "packages/coding-agent/docs/how-pi-works.md": "7d43ab8e2b886cd1047dcee503588a1c828b92333dd4f177526b89e6db8aaa8b",
     "packages/coding-agent/src/core/sdk.ts": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-    "packages/coding-agent/src/core/agent-session.ts": "dea73f4df16b15c927a4cb6b35ad7a3f9738232acb2d48473f0497f360fda6fe",
-    "packages/coding-agent/src/core/session-manager.ts": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
+    "packages/coding-agent/src/core/agent-session.ts": "3a5ab80a136bebd9a17c1726f416e28b02dd7c78aacd96dc86059d6de03d011f",
+    "packages/coding-agent/src/core/session-manager.ts": "4c95253a50b3a7f3dd3d4320c5e535c9556e88140d81a426089c455c2ca2ed93",
     "packages/agent/src/agent.ts": "6d0e56bf4443f0cfc5c6a82ce31a3b99f15ff816075bed36403dfa0c95a609c6",
-    "packages/agent/src/agent-loop.ts": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
+    "packages/agent/src/agent-loop.ts": "a2c7dc92644bae8655a263e1f5b6ecca6a0d3057002f978e709ed27ec8dd5a92",
     "packages/agent/src/types.ts": "6ad1a3e1ea6cfa0770421aca9a23726061d8d31fdeb5c17c8acd5d7cea0e74b1",
-    "packages/ai/src/models.ts": "cfb64041dafd1b997fd679e1ad6d4822a6f310e6aca579d247ba12ce0338c100",
-    "packages/durable/src/types.ts": "7fa5d80183a7878d6f3e315fe79c0cdfb4b95abf0a915c8d451d538183bddf1c",
-    "packages/durable/src/harness/scheduler.ts": "f05813bc3a18196d69df383fb0168f0c79fffdc5b3b6bbddff9d50a11c025cd0",
+    "packages/ai/src/models.ts": "b7e5445c517af3e96f2c7aab733ebdd2beef165a4a78e77aff7100862645ae15",
+    "packages/durable/src/types.ts": "d9233152bb681deaad6b0481ad7165309c03c5932272243f3524ec51027408a9",
+    "packages/durable/src/harness/scheduler.ts": "2fbc1348572879fb6ec7054dfde9b23b65f5c0d9aa3c78221ccccf750b84e30e",
     "packages/durable/src/harness/transcript.ts": "7089f5a5b4c71711a1eda1614ff75590d3aa56f0d08904cef57f2fa5c9bd3d1a",
-    "packages/chord/src/host/host.ts": "73546b9f03f6549aa82ceaa62992b53417d67433ee46bd6e9475c7d035d37c0a",
+    "packages/chord/src/host/host.ts": "7d5e75806ca939318df0b62904ffed2f7cd3243454f181ded926ef58c0a63ee0",
     "packages/chord/src/host/reload-cycle.ts": "152ca42798d83b2799c08149cf8abe0f3d6983608c7fd4acff4ec09b2526246f",
     "packages/schema/src/validator.ts": "173734355e3c770dad137503635e87e2438fc2769f37800470cb0b555ea182cd",
-    "apps/p2/package.json": "b8ffcb77eb6c21a8a3a5dbcfaa3dd4d1cda0d1526061d87fd910b8cd947f01f5",
-    "apps/p2/README.md": "d643b14d2a0bd58a8a9310291d6e531d54986d0876cc50ecf7e150911b6e1bc3",
-    "apps/p2/src/hosts/server.ts": "e1d786b65ad1798a70f362ee8a26f2e9adde99e06799dfb114687a144ecd3e87"
+    "packages/durable/src/signals.ts": "ffd91c21769dd43769b6bb56170bc515e73ec4f1adce998a5d894e230ffe2486",
+    "packages/durable/src/harness/parks.ts": "14039bdf176c118dd454b7090522d95b58aa1dba82a42ca0eee5e20f55c014e9",
+    "apps/p2/package.json": "734f5e8c9a7cd9fbe96198730e466d2eb7db753dac459053151d580e95319431",
+    "apps/p2/README.md": "14e2f764041ade2e6681e3df03efcdfede1a6be130777591e03e944fe8206011",
+    "apps/p2/src/hosts/server.ts": "14762824ef2bf85efd24bf5da89ca5805d0a4eaf09c33db66b4cd815dc0ba893",
+    "apps/p2-mac/README.md": "8f46c58d2c7ef51d4666af972dff79335359fd784c642ea226a9e962fc251228",
+    "apps/p3/README.md": "62cbe02dd908113a182dfc0902e053324935c63a7343ddbaae3e43ec05c265ae",
+    "apps/p3/package.json": "341d64ee677e7b0a4f4635c728a204478add8fc71630eed6bfcfa56b7af7a0a4"
   },
   "diagrams": [
     {
       "type": "architecture",
       "file": "pi-system-architecture.html",
       "specification": {
-        "sha256": "959dcf0498fb026c531acfa682d525062ec80e50434aca8b056399b88ae0348e",
-        "bytes": 6979
+        "sha256": "f131d48691b434c4baa5297c8dd12a9550a5376c2ed0f10a7adb1d19af1efd7c",
+        "bytes": 7004
       },
       "artifact": {
-        "sha256": "8830872df736ecee4476b0c0ba00064043d2491ef85537b354cc1b7e1e34abbe",
-        "bytes": 718728
+        "sha256": "46261ea10787200228fce4a63ff219df173e22c737f486abd61c06f3e28e3fc4",
+        "bytes": 718753
       },
       "validation": {
         "checksPassed": 9,
@@ -51,17 +56,17 @@
         "errors": 0,
         "warnings": 0
       },
-      "offlineSha256": "a1ab1e5616f6d2098eb0d56db3db31d17fcc11c00d583204f79d041b9f90b2be"
+      "offlineSha256": "08ae09f95f079c5cc74c45bcc84ae3ae6dafcd04d1ae375e8afbf6be699fce7b"
     },
     {
       "type": "workflow",
       "file": "pi-task-workflow.html",
       "specification": {
-        "sha256": "216c115471431f9e7ed7c7d450448b88f5901beca7ca8fcff5dc1164ea9443e2",
+        "sha256": "4de9732350f54b865536b1fc3b095142eba486da6a67df3227dbeec1ffd09124",
         "bytes": 4044
       },
       "artifact": {
-        "sha256": "8fdd3157f4ae67933815d3c64e683c57d88053db5a0c3fef3c5a1be2d22ddf82",
+        "sha256": "0ea5d2ba5a017508df62dc69f1ff073cc5ef802b5f845d404bf870a8b7ef3860",
         "bytes": 712547
       },
       "validation": {
@@ -72,17 +77,17 @@
         "errors": 0,
         "warnings": 0
       },
-      "offlineSha256": "f7eb20a7654588ed2ed14aacde03992a2ff4025732b58033f0169722e1d57d34"
+      "offlineSha256": "10f257a775463814bc512c719b21f81ecf5c54e0f89547bcb599fe20d8d0502d"
     },
     {
       "type": "sequence",
       "file": "pi-task-sequence.html",
       "specification": {
-        "sha256": "df573584d97c2ec356f2d90e9b8897a782a1903bbb0bee4b593c136f10572336",
+        "sha256": "4ebbfe8c7187f2e7b60d33b8a7372295ef18510db77a634b0ee7f1b6ca439e37",
         "bytes": 4221
       },
       "artifact": {
-        "sha256": "7fdffd3fef69516f687b02e6e1e1e75607ce25e5b9de50356c3cb1a5e7f1f0a8",
+        "sha256": "a72ac3f463062611b8fbf08816acc7f17958c47320237151e1d4a33f5a03fc9e",
         "bytes": 713098
       },
       "validation": {
@@ -93,17 +98,17 @@
         "errors": 0,
         "warnings": 0
       },
-      "offlineSha256": "031ef6c249d519d46f8fb547d5cd5c481d843378d1b980b357db27ea30b0a451"
+      "offlineSha256": "b5be1d508282a5a635d33a1dc1ae11164a0430969f61d239c178fbcc9de6e09f"
     },
     {
       "type": "dataflow",
       "file": "pi-task-dataflow.html",
       "specification": {
-        "sha256": "98ce68aee87e2b9f073127a89a71a147bbc018f71544b8f71e83e0c91cadec1e",
+        "sha256": "947e0179a6026d3c70b3b19326797452d88754ec0f7ed3e9cb17e25c2bcf5b04",
         "bytes": 4273
       },
       "artifact": {
-        "sha256": "1b85fd858675f18462322035f01af25c41252b630acf0f9c9fc2d0c482a76ddb",
+        "sha256": "245639015b3f5ffb4f09c753d273865d76e792cbfccff948983f802bbc3251cf",
         "bytes": 714265
       },
       "validation": {
@@ -114,18 +119,18 @@
         "errors": 0,
         "warnings": 0
       },
-      "offlineSha256": "0bd492d5613310ed6639658214a2c4c467ac6bf8ee99202c7c2bfa9eb195aeed"
+      "offlineSha256": "60ae7c33d8c5c5a5e2451c816a208d931669140e8dc75b5072dc135fb61c4618"
     },
     {
       "type": "lifecycle",
       "file": "pi-task-lifecycle.html",
       "specification": {
-        "sha256": "20b76092ddf8d11aba4b7660ec01a9122ccccba590ad722612be6ff24476b06e",
-        "bytes": 3521
+        "sha256": "0b95eafecff218d3d3351565b45341244c2fc814d8e16d59d000a385e738146a",
+        "bytes": 3528
       },
       "artifact": {
-        "sha256": "81470ae40a808655f53ccf12a3f5d3158e409ea8e77512dcdf5129745989d13d",
-        "bytes": 707276
+        "sha256": "82dde9d06c1501f4ace41bafecb899d722659eb8cdb0ea165e7c3dd0e94e9610",
+        "bytes": 707302
       },
       "validation": {
         "checksPassed": 9,
@@ -135,14 +140,14 @@
         "errors": 0,
         "warnings": 0
       },
-      "offlineSha256": "696da52a88f1d625371c20e1cf999f79d131a058e11fdab8673f4c19a53e9add"
+      "offlineSha256": "c8273f790b74fd913e0b7c573f37fddac8b3192d7feb728c7a88751bee2fedd0"
     }
   ],
   "review": {
-    "date": "2026-11-07",
+    "date": "2026-11-18",
     "scope": "当前包关系、CLI 主线、单次工具调用、会话上下文及 Durable TaskState",
-    "browserEvidence": "5 visual-check receipts: Chrome, light/dark, 1440x900, 1600x1000, 1920x1080, 2048x1320; artifact hashes unchanged after LF normalization",
-    "visualReview": "passed: all five diagrams reviewed in light/dark screenshots",
+    "browserEvidence": "not-run",
+    "visualReview": "pending",
     "offlinePackaging": "移除在线字体 link 并加入 CSP；原始交付字节另存 generated。"
   }
 }

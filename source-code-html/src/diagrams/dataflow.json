@@ -193,7 +193,7 @@
       "title": "源码依据",
       "items": [
         "session-manager.ts、compaction.ts、how-pi-works.md",
-        "CLI JSONL 与 Durable Storage 是不同机制；cf43eea7e"
+        "CLI JSONL 与 Durable Storage 是不同机制；dbc6ee9c5"
       ]
     }
   ]

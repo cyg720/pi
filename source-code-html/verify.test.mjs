@@ -107,10 +107,11 @@ test('功能详情有来源、用途、入口、边界和有效双向归属', ()
 test('文档提交不使源码基线失效，业务源码与版本仍须一致', () => {
   const root = join(dir, '..');
   // The generated artifact cannot include the hash of the commit that will contain it.
-  // Accept subsequent guide commits, but require regeneration after other repository changes.
+  // Prototype files do not move the product source baseline.
+  // Embedded prototype files still have to match their snapshot hashes below.
   execFileSync('git', ['merge-base', '--is-ancestor', data.meta.commit, 'HEAD'], { cwd: root });
   const changed = execFileSync('git', ['diff', '--name-only', '-z', data.meta.commit, 'HEAD'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
-  assert.deepEqual(changed.filter(path => !path.startsWith('source-code-html/') && !path.startsWith('docs/功能清单/') && path !== '.pi/PROJECT_MEMORY.md'), [], '源码基线之后存在非导览改动，请重新生成');
+  assert.deepEqual(changed.filter(path => !path.startsWith('source-code-html/') && !path.startsWith('prototype/') && !path.startsWith('docs/功能清单/') && path !== '.pi/PROJECT_MEMORY.md'), [], '源码基线之后存在业务源码改动，请重新生成');
   for (const [path, expected] of Object.entries(data.sourceHashes)) {
     if (path.startsWith('source-code-html/')) continue;
     assert.equal(createHash('sha256').update(readFileSync(join(root, path))).digest('hex'), expected, `当前文件与离线快照不同: ${path}`);
@@ -126,7 +127,7 @@ test('文档提交不使源码基线失效，业务源码与版本仍须一致',
     assert.ok(f, id);
     assert.equal(f.evidence, '中文能力解说', id);
   }
-  assert.equal(data.catalog.features.filter(f => f.module === 'durable-examples' && f.evidence === '中文能力解说').length, 38);
+  assert.equal(data.catalog.features.filter(f => f.module === 'durable-examples' && f.evidence === '中文能力解说').length, 48);
   assert.ok(data.catalog.features.some(f => f.id === 'agent-examples-mcp-codemode'));
   assert.ok(!data.catalog.features.some(f => ['sqlite','agent-harness','experimental-mini','experimental-micro'].includes(f.id)));
   assert.ok(Object.keys(data.catalog.files).every(p => !p.startsWith('packages/agent/src/harness/') && !p.startsWith('packages/session-backends/sqlite-node/')));

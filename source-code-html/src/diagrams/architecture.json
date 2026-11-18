@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/cyg720/pi",
-      "revision": "cf43eea7e741ae899ad4609233084c43ec5274f9"
+      "revision": "dbc6ee9c53115c3788a4343c8c4c24d55c6fa768"
     }
   },
   "components": [
@@ -360,8 +360,8 @@
       "dot": "slate",
       "title": "源码基线",
       "items": [
-        "LG-Workbench / cf43eea7e，12 个核心包为 1.5.0",
-        "另有 p2 0.0.1 实验原型；包含 Unreleased"
+        "LG-Workbench / dbc6ee9c5，12 个核心包为 1.5.2",
+        "p3 已有无界面服务与会话 worker；p2 / p2-mac 仍是实验应用"
       ]
     }
   ]

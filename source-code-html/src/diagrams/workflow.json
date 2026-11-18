@@ -181,7 +181,7 @@
       "title": "源码依据",
       "items": [
         "core/agent-session.ts 与 agent/agent-loop.ts",
-        "how-pi-works.md；基线 cf43eea7e"
+        "how-pi-works.md；基线 dbc6ee9c5"
       ]
     }
   ]

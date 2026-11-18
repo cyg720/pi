@@ -4,11 +4,11 @@
 
 ## 当前基线
 
-2026-11-07：LG-Workbench / cf43eea7e741ae899ad4609233084c43ec5274f9。12 个一级包为 1.5.0，另含 Unreleased；新增 apps/p2 0.0.1 实验应用。根包 0.0.3 不是 CLI 版本。
+2026-11-18，LG-Workbench / dbc6ee9c53115c3788a4343c8c4c24d55c6fa768。12 个一级包为 1.5.2，另外包含 Unreleased。
 
-- 合入上游 085c84e98，相对本地父提交新增 526 个可达提交。主要变化、破坏性接口和本地计划影响见 [上游更新说明](UPSTREAM-UPDATE.md)。
-- 同步 Chord v2、pi-schema、p2、AI catalog；更新 Durable 分组提交、延迟进度落盘、会话历史与任务恢复说明。12 个包教程加 1 个 p2 应用教程、17 个开发阶段、38 个 Durable 示例、44 条路线和 640 个稳定编号保持可导航。
-- p2 是上游实验原型；本地 PRD / prototype 和旧 WBW/WBP/WBS/WBR 工作台分别说明。已删除的 sandbox 示例转为历史资料，不伪造当前源码。
+- 合入 main 05fd3fbda，共 437 个新增可达提交。主要变化与接口迁移见 [main 更新说明](UPSTREAM-UPDATE.md)。
+- 增加 p3 与 p2-mac 教程，更新 Chord 查询及准入、Durable 持久等待和审批、模型版本说明。12 个包和 3 个应用教程、17 个开发阶段、48 个 Durable 示例、44 条路线与 640 个稳定编号可导航。
+- p3 当前是无界面的后继服务，p2 和 p2-mac 是上游实验应用。本地 PRD、静态原型和历史工作台可分别查看。
 - 五幅图与八份可编辑 PPTX（132 页）同步到当前基线，保留离线内嵌下载。旧图、旧课件和旧验证记录留在 history 或 original。
 
 ## 更新命令

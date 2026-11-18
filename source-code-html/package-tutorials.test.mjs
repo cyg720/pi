@@ -24,11 +24,13 @@ test('所有本地子目录有教程入口，参数索引无截断，来源和�
   const html = read('source-code-html/index.html');
   const data = JSON.parse(html.match(/<script id="doc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   assert.ok(data.tutorials.length >= data.packages.length);
-  assert.equal(data.tutorials.filter(p => p.manifest).length, data.packages.length + 1);
+  assert.equal(data.tutorials.filter(p => p.manifest).length, data.packages.length + 2);
   assert.ok(data.tutorials.find(p => p.id === 'p2')?.manifest);
+  assert.ok(data.tutorials.find(p => p.id === 'p3')?.manifest);
+  assert.ok(data.tutorials.find(p => p.id === 'p2-mac')?.sourceFiles.includes('apps/p2-mac/Sources/P2Mac/main.swift'));
   assert.deepEqual(data.chapters, reviseChapters([...chapters, developmentGuide]), '章节修改后必须同步离线 HTML');
   for (const p of data.tutorials) {
-    if (p.manifest) assert.deepEqual(p.lesson, upstreamLessons[p.id] || packageLessons[p.id], `教程修改后必须同步离线 HTML：${p.id}`);
+    if (p.manifest || p.id === 'p2-mac') assert.deepEqual(p.lesson, upstreamLessons[p.id] || packageLessons[p.id], `教程修改后必须同步离线 HTML：${p.id}`);
     assert.ok(p.lesson.intro && p.lesson.focus.length && p.lesson.mastery.length, p.id);
     for (const path of [...p.docs, ...p.examples, ...p.tests, ...p.schemas]) assert.ok(Object.hasOwn(data.sources, path), path);
     for (const step of p.lesson.flow) assert.ok(data.sources[step.path]?.includes(step.needle), step.path);

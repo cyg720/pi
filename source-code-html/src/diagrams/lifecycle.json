@@ -57,7 +57,7 @@
       "id": "task-waiting",
       "type": "waiting",
       "label": "waiting",
-      "sublabel": "等待 on 集合结束",
+      "sublabel": "等待任一或全部任务",
       "lane": "task-paused",
       "col": 0
     },
@@ -65,7 +65,7 @@
       "id": "task-sleeping",
       "type": "waiting",
       "label": "sleeping",
-      "sublabel": "等待时钟到达 until",
+      "sublabel": "等待信号或到期",
       "lane": "task-paused",
       "col": 1
     }
@@ -111,7 +111,7 @@
       "id": "sleep-checkpoint",
       "from": "task-running",
       "to": "task-sleeping",
-      "label": "sleepUntil",
+      "label": "commit sleeping",
       "labelAt": [
         520,
         230
@@ -121,7 +121,7 @@
       "id": "sleep-due",
       "from": "task-sleeping",
       "to": "task-running",
-      "label": "到期后恢复",
+      "label": "唤醒后恢复",
       "variant": "emphasis",
       "fromSide": "right",
       "toSide": "top",
@@ -167,7 +167,7 @@
       "title": "持久提交与源码",
       "items": [
         "批量 commit 用 receive(index, seq) 确认已存提交",
-        "durable/src/types.ts、harness/scheduler.ts；cf43eea7e"
+        "durable/src/types.ts、harness/scheduler.ts；dbc6ee9c5"
       ]
     }
   ]

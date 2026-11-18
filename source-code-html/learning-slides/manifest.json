@@ -1,61 +1,61 @@
 {
-  "baseline": "cf43eea7e741ae899ad4609233084c43ec5274f9",
-  "courseHash": "42354fe306aa4b524b32a8e1f5a952c91eb1f38af472e0af62f0d611bfec8c84",
-  "contentHash": "871e8af0691325ff856db4aec859b5a3f33ace814277ee295f6e9fc274113aa2",
+  "baseline": "dbc6ee9c53115c3788a4343c8c4c24d55c6fa768",
+  "courseHash": "5285dc4262c7239cee8d7454ca9840cb1231ea2c1d54236083fc69312da8fb19",
+  "contentHash": "ad6c7fc0b823ee327c9b5b11f5f4731da8b3a1ec78a91746effa879d4985d6a1",
   "decks": [
     {
       "stage": "foundations",
       "filename": "foundations.pptx",
       "slides": 6,
-      "sha256": "0bf5091b45cd4ca51ee0d4decd872aa3c2323ccd0c5dde18cb784726ead6ef35"
+      "sha256": "13480d83010ee62677c4bce256b8455c1883e1aefe8c1bbf6fb73b5c16c0eb8f"
     },
     {
       "stage": "models",
       "filename": "models.pptx",
       "slides": 21,
-      "sha256": "81f3f8e07d79d4ce004e0e7d5df654c6627f522b93dc54b022cbf7386066d45f"
+      "sha256": "113eb2dfc936b9ded805dd4ef8e32bfa14663695b03f26ec432e94e924be1b2b"
     },
     {
       "stage": "conversation",
       "filename": "conversation.pptx",
       "slides": 18,
-      "sha256": "fa8f37a12abb9ed7ab1611fa94495409cba23a7d0cb7070d85a7e9ee710b252d"
+      "sha256": "6076ea19a020795e75bc057b638e17c29dd26d6a355e04a8bdeeb5e5ab91f3a6"
     },
     {
       "stage": "tools",
       "filename": "tools.pptx",
       "slides": 21,
-      "sha256": "6f4cec0916dabbfe3446f6f71fbf09aeace6e342b0ec13988e16996c1194a03c"
+      "sha256": "ebe34fff5fae90b87d7e9432b69c394f184960a31feb7205f6991744a28f6abc"
     },
     {
       "stage": "extensions",
       "filename": "extensions.pptx",
       "slides": 15,
-      "sha256": "310ecae418aadf432e4815dde382c38234627cf8f5bca41ecaa85c231b6d0f82"
+      "sha256": "5b0c3a96d6099e6839f7191ba08ba2de15751916248101557fdfd25c41819486"
     },
     {
       "stage": "durability",
       "filename": "durability.pptx",
       "slides": 33,
-      "sha256": "ffc7d19e7f0ea7f9b93632a26260364c8329c33cb35208bcdba4126b087acffb"
+      "sha256": "f0a1b9a96980321191ed2400dbdc2d06902a22c8806492d584796ab952491b6e"
     },
     {
       "stage": "verification",
       "filename": "verification.pptx",
       "slides": 9,
-      "sha256": "7d691890634fa1f2adf8a283e6c245d8dfc7f47d857f4d869c707b810bc93270"
+      "sha256": "705ea74f149a9142e055699321d250dcbb99806f7f228a7143349ba786ac5c5e"
     },
     {
       "stage": "mastery",
       "filename": "mastery.pptx",
       "slides": 9,
-      "sha256": "b3e88260c9b69c984bd5ed778e0187852074d7d2defcfd0271073759c9a40020"
+      "sha256": "00e71c816650cb1353357fb5d54a6383c5c53911b4d10c0ecdb8d0e5212794ab"
     }
   ],
   "review": {
-    "date": "2026-11-07",
-    "method": "132 页最终文件重新导入、正文与备注精确匹配并渲染；18 页正文变化逐页查看，114 页正文区域与原版像素一致。所有页脚更新基线。未在原生 PowerPoint 验收。",
-    "archive": "history/learning-slides-2026-10-24",
-    "validationSha256": "53b16c051f125e1dcfe9b400d915a1152fa9967d25ceb72a40f2dab5cd254916"
+    "date": "2026-11-18",
+    "method": "比对导出正文、讲者备注与渲染结果。未在原生 PowerPoint 验收。",
+    "archive": "history/learning-slides-2026-11-07",
+    "validationSha256": "dc12a1f99fb46e29c90d8b731a4965140033a0ffa4bb0637c8d553d4e008a25b"
   }
 }

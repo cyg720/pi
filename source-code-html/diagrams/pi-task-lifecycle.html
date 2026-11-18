@@ -5042,8 +5042,8 @@
         <!-- Transition paths -->
         <path data-edge-from="task-running" data-edge-to="task-waiting" data-edge-label="commit waiting" data-edge-key="0" data-edge-id="join-tasks" data-composition-points="402,188;402,278" d="M 402 188 L 402 278" class="a-default" stroke-width="1.1" marker-end="url(#arrowhead)"/>
         <path data-edge-from="task-waiting" data-edge-to="task-running" data-edge-label="依赖终态后恢复" data-edge-key="1" data-edge-id="join-ready" data-composition-points="339,307;150,307;150,70;402,70;402,126" d="M 339 307 L 160 307 Q 150 307 150 297 L 150 80 Q 150 70 160 70 L 392 70 Q 402 70 402 80 L 402 126" class="a-emphasis" stroke-width="2" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="task-running" data-edge-to="task-sleeping" data-edge-label="sleepUntil" data-edge-key="2" data-edge-id="sleep-checkpoint" data-composition-points="461,157;477,157;477,307;493,307" d="M 461 157 L 469 157 Q 477 157 477 165 L 477 299 Q 477 307 485 307 L 493 307" class="a-default" stroke-width="1.1" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="task-sleeping" data-edge-to="task-running" data-edge-label="到期后恢复" data-edge-key="3" data-edge-id="sleep-due" data-composition-points="619,307;800,307;800,100;402,100;402,126" d="M 619 307 L 790 307 Q 800 307 800 297 L 800 110 Q 800 100 790 100 L 412 100 Q 402 100 402 110 L 402 126" class="a-emphasis" stroke-width="2" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="task-running" data-edge-to="task-sleeping" data-edge-label="commit sleeping" data-edge-key="2" data-edge-id="sleep-checkpoint" data-composition-points="461,157;477,157;477,307;493,307" d="M 461 157 L 469 157 Q 477 157 477 165 L 477 299 Q 477 307 485 307 L 493 307" class="a-default" stroke-width="1.1" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="task-sleeping" data-edge-to="task-running" data-edge-label="唤醒后恢复" data-edge-key="3" data-edge-id="sleep-due" data-composition-points="619,307;800,307;800,100;402,100;402,126" d="M 619 307 L 790 307 Q 800 307 800 297 L 800 110 Q 800 100 790 100 L 412 100 Q 402 100 402 110 L 402 126" class="a-emphasis" stroke-width="2" marker-end="url(#arrowhead-emphasis)"/>
 
         <!-- States -->
         <g id="node-task-pending" data-node-id="task-pending" data-node-label="pending" tabindex="0" role="button" aria-label="聚焦pending，可参与调度, TaskState 主线" aria-pressed="false" data-node-kind="start" data-node-sublabel="可参与调度" data-node-context="TaskState 主线">
@@ -5093,26 +5093,26 @@
           <text data-detail="context" x="710" y="163" class="t-muted" font-size="7" text-anchor="middle">持久终态回执</text>
         </g>
 
-        <g id="node-task-waiting" data-node-id="task-waiting" data-node-label="waiting" tabindex="0" role="button" aria-label="聚焦waiting，等待 on 集合结束, 释放 invocation 后等待" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="等待 on 集合结束" data-node-context="释放 invocation 后等待">
-          <title>waiting · 等待 on 集合结束 · 释放 invocation 后等待</title>
+        <g id="node-task-waiting" data-node-id="task-waiting" data-node-label="waiting" tabindex="0" role="button" aria-label="聚焦waiting，等待任一或全部任务, 释放 invocation 后等待" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="等待任一或全部任务" data-node-context="释放 invocation 后等待">
+          <title>waiting · 等待任一或全部任务 · 释放 invocation 后等待</title>
           <rect x="339" y="278" width="126" height="58" rx="7" class="c-mask"/>
           <rect x="339" y="278" width="126" height="58" rx="7" class="c-cloud" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="waiting" class="semantic-sigil s-cloud" transform="translate(448 284) scale(0.6875)">
             <path d="M4 2.5h8M4 13.5h8M5 3c0 2.8 2 3.2 3 5-1 1.8-3 2.2-3 5M11 3c0 2.8-2 3.2-3 5 1 1.8 3 2.2 3 5"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="402" y="299" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">waiting</text>
-          <text data-detail="context" x="402" y="315" class="t-muted" font-size="7" text-anchor="middle">等待 on 集合结束</text>
+          <text data-detail="context" x="402" y="315" class="t-muted" font-size="7" text-anchor="middle">等待任一或全部任务</text>
         </g>
 
-        <g id="node-task-sleeping" data-node-id="task-sleeping" data-node-label="sleeping" tabindex="0" role="button" aria-label="聚焦sleeping，等待时钟到达 until, 释放 invocation 后等待" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="等待时钟到达 until" data-node-context="释放 invocation 后等待">
-          <title>sleeping · 等待时钟到达 until · 释放 invocation 后等待</title>
+        <g id="node-task-sleeping" data-node-id="task-sleeping" data-node-label="sleeping" tabindex="0" role="button" aria-label="聚焦sleeping，等待信号或到期, 释放 invocation 后等待" aria-pressed="false" data-node-kind="waiting" data-node-sublabel="等待信号或到期" data-node-context="释放 invocation 后等待">
+          <title>sleeping · 等待信号或到期 · 释放 invocation 后等待</title>
           <rect x="493" y="278" width="126" height="58" rx="7" class="c-mask"/>
           <rect x="493" y="278" width="126" height="58" rx="7" class="c-cloud" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="waiting" class="semantic-sigil s-cloud" transform="translate(602 284) scale(0.6875)">
             <path d="M4 2.5h8M4 13.5h8M5 3c0 2.8 2 3.2 3 5-1 1.8-3 2.2-3 5M11 3c0 2.8-2 3.2-3 5 1 1.8 3 2.2 3 5"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="556" y="299" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">sleeping</text>
-          <text data-detail="context" x="556" y="315" class="t-muted" font-size="7" text-anchor="middle">等待时钟到达 until</text>
+          <text data-detail="context" x="556" y="315" class="t-muted" font-size="7" text-anchor="middle">等待信号或到期</text>
         </g>
 
         <!-- Transition labels -->
@@ -5124,13 +5124,13 @@
           <rect x="109.69999999999999" y="167.5" width="80.60000000000001" height="16" rx="4" class="c-mask"/>
           <text x="150" y="178.5" class="t-backend" font-size="8" text-anchor="middle">依赖终态后恢复</text>
         </g>
-        <g data-detail="context" data-edge-from="task-running" data-edge-to="task-sleeping" data-edge-label="sleepUntil" data-edge-key="2" data-edge-id="sleep-checkpoint">
-          <rect x="489.5" y="219" width="61" height="16" rx="4" class="c-mask"/>
-          <text x="520" y="230" class="t-muted" font-size="8" text-anchor="middle">sleepUntil</text>
+        <g data-detail="context" data-edge-from="task-running" data-edge-to="task-sleeping" data-edge-label="commit sleeping" data-edge-key="2" data-edge-id="sleep-checkpoint">
+          <rect x="477.25" y="219" width="85.5" height="16" rx="4" class="c-mask"/>
+          <text x="520" y="230" class="t-muted" font-size="8" text-anchor="middle">commit sleeping</text>
         </g>
-        <g data-detail="context" data-edge-from="task-sleeping" data-edge-to="task-running" data-edge-label="到期后恢复" data-edge-key="3" data-edge-id="sleep-due">
+        <g data-detail="context" data-edge-from="task-sleeping" data-edge-to="task-running" data-edge-label="唤醒后恢复" data-edge-key="3" data-edge-id="sleep-due">
           <rect x="769.5" y="219" width="61" height="16" rx="4" class="c-mask"/>
-          <text x="800" y="230" class="t-backend" font-size="8" text-anchor="middle">到期后恢复</text>
+          <text x="800" y="230" class="t-backend" font-size="8" text-anchor="middle">唤醒后恢复</text>
         </g>
 
         <!-- Legend -->
@@ -5372,7 +5372,7 @@
         </div>
         <ul>
           <li>&bull; 批量 commit 用 receive(index, seq) 确认已存提交</li>
-          <li>&bull; durable/src/types.ts、harness/scheduler.ts；cf43eea7e</li>
+          <li>&bull; durable/src/types.ts、harness/scheduler.ts；dbc6ee9c5</li>
         </ul>
       </div>
     </div>

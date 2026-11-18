@@ -137,6 +137,16 @@ export const exampleNotes = {
     "34-submit-in-commit.ts": ["事务内接纳输入", "submit(tx, draft) 把应用检查、输入接纳与业务记录放在同一事务；whenIdle 拒绝空闲会话。"],
     "35-durable-on-the-store.ts": ["Durable 复用 Chord Store", "StoreStorage 与对象表、文档共用 store 提交队列和 ID 分配，可一起导出。"],
     "36-durable-views.ts": ["持久视图接入 Chord", "self.follow 把 Durable 同步观察转换成 watchable，让同一提交在宿主批次内一致发布。"],
-    "37-harness-registry.ts": ["通过注册表扩展 Harness", "registryReader 读取 Chord 贡献的扩展，self.follow 观察 Harness，关闭后按新贡献恢复。"]
+    "37-harness-registry.ts": ["通过注册表扩展 Harness", "registryReader 读取 Chord 贡献的扩展，self.follow 观察 Harness，关闭后按新贡献恢复。"],
+    "38-signals.ts": ["持久信号", "等待外部信号并读取唤醒原因。"],
+    "39-ask-a-person.ts": ["等待用户答复", "工具停放后接收并读取用户答复。"],
+    "40-tool-waits-for-webhook.ts": ["工具等待回调", "通过外部信号唤醒工具。"],
+    "41-tool-polls.ts": ["工具定时轮询", "按检查点分段执行，等待到期时不占用调用。"],
+    "42-parallel-children.ts": ["等待并行子任务", "保留子调用标识并等待子任务完成。"],
+    "43-subagent-waits.ts": ["等待子智能体", "工具等待子会话并接收结果。"],
+    "44-approval-gate.ts": ["工具审批门", "beforeTool 等待外部同意后重新判断才执行。"],
+    "45-review-on-yield.ts": ["回复交出前复核", "onYield 派生任务，根据结果决定是否继续生成。"],
+    "46-after-tools-terminate.ts": ["工具结束后的运行控制", "afterTools 派生任务可请求结束当前运行。"],
+    "47-fit-images.ts": ["图片适配", "将图片处理为模型可接受的输入。"]
   }
 };

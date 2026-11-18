@@ -1,9 +1,12 @@
 // Reviewed teaching changes for the 2026-11-07 upstream merge. Historical source tables stay available.
-export const upstreamBaseline = 'cf43eea7e741ae899ad4609233084c43ec5274f9';
+export const upstreamBaseline = 'dbc6ee9c53115c3788a4343c8c4c24d55c6fa768';
 
 export const upstreamModules = [
   ['schema', 'Schema · JSON Schema 构造与校验', 'packages/schema/src/', '无 eval 的 JSON Schema 构造、编译、校验与参数转换。', '库能力', 'packages/schema/README.md'],
   ['p2', 'p2 · 实验应用宿主', 'apps/p2/src/', 'Chord v2 插件装配、Web/TUI 入口与会话 worker；官方声明将被替换的实验原型。', '实验原型', 'apps/p2/README.md'],
+  ['p3', 'p3 · 服务与会话 worker', 'apps/p3/src/', 'Chord v2 上的下一代服务、进程管理与插件 API，当前无界面。', '开发中', 'apps/p3/README.md'],
+  ['p3-plugins', 'p3 · 原生插件', 'apps/p3/plugins/', '会话等功能按宿主分面实现。', '开发中', 'apps/p3/README.md'],
+  ['p2-mac', 'p2-mac · macOS 封装实验', 'apps/p2-mac/Sources/', 'Swift 原生外壳和本机 p2 服务连接。', '实验原型', 'apps/p2-mac/README.md'],
   ['p2-plugins', 'p2 · 应用插件', 'apps/p2/plugins/', '会话、模型、MCP、环境、终端、文件与子智能体插件。', '实验原型', 'apps/p2/README.md'],
   ['ai-catalog', 'AI · 模型目录生成定义', 'packages/ai/catalog/', 'models.dev v2 等来源、逐 provider 定义、模型家族规则与生成顺序。', '开发工具', 'packages/ai/catalog/README.md'],
   ['chord-examples', '示例 · Chord v2', 'packages/chord/test/examples/', '按层提供对象、持久状态、插件与应用示例。', '示例', 'packages/chord/README.md']
@@ -11,6 +14,8 @@ export const upstreamModules = [
 
 export const upstreamFeatures = {
   chord: [
+    ['named-queries', '命名查询、列集合与实时列表', ['contracts/', 'store/', 'host/'], '所有者声明查询，其他对象按参数读取实时结果、数量或分页。', 'queries / self.liveQuery / self.list / defineColumns', '列表用书签维持分页，跨插件按公开列集合查询。'],
+    ['admission', '远程对象与路由准入', ['contracts/', 'host/', 'node/workers/'], '调用者在进入远程对象或启动 worker 之前接受准入判断。', 'host.serve / host.route / createWorkers', '准入可以带类型化数据，拒绝或撤销影响引用与调用。'],
     ['contracts', 'Chord v2 对象契约与宿主地址', ['contracts/'], '以 pi-schema 定义 params、members、variants 与版本。', 'local / remote / method / hostKind', 'remote 使用 hostAddress 决定宿主地址；提供远程对象的 host 必须有 address 和 principal。'],
     ['host', 'Facet 声明、Host 激活与引用', ['host/'], '工厂只声明对象，Host 负责激活、失败重试、持有与释放。', 'createHost / defineFacet / host.load / host.get / host.hold / host.root', 'get 等待 live 且状态已就绪；hold 立即给引用，最后释放与调用、job 等持有共同决定存活。'],
     ['state', '持久文档、派生状态与原生资源', ['state/', 'documents/'], 'defineState 声明文档，self.state 取得状态，self.tx 在事务内修改。', 'defineState / self.state / self.derive / self.open / self.on', 'self.open 管理原生资源；watchable 发布失败与恢复。旧版本的命名 cell 迁移接口不能直接复用。'],
@@ -31,7 +36,9 @@ export const upstreamFeatures = {
     ['read-only', '只读 Harness 与批量提交接收', ['harness/harness.ts', 'harness/types.ts', 'session/session.ts', 'types.ts'], '只读查看会话；批量存储逐项确认已耐久的提交。', 'HarnessOptions.readOnly / Storage.commit(batches, receive, context)', 'receive(index, seq) 对每个已存批次调用一次；返回 stored/refused。I/O 失败是结果未知，不是业务拒绝；已收到的回执仍有效。'],
     ['crash-guard', '无进展重启上限与运行失败', ['harness/scheduler.ts', 'harness/task-graph.ts', 'harness/harness.ts'], '重启连续到达 restartLimit 后结束任务，公开失败原因。', 'restartLimit / runFailure / compactionFailure', '默认上限 5；任务不再停放，旧 retryTask 已移除。工具返回 restart_limit，重新执行需提交新的工作。'],
     ['group-commit', '分组提交与延迟进度落盘', ['session/session.ts', 'types.ts', 'storage/'], '多个会话共享存储往返；partial 可以先展示再合并落盘。', 'Storage.commit(batches, receive, context) / observeCommits / progress.persistWithinMs', '默认进度最长延迟 1000ms 落盘；崩溃可丢失该窗口的 partial。观察视图不等于耐久回执，observeCommits 只观察已存提交。'],
-    ['conversation-control', '继续、轮数上限与运行后任务', ['harness/submissions.ts', 'harness/types.ts', 'harness/generation.ts'], '提供 continue、turnLimit、事务内 submit、afterRun 与逐会话压缩设置。', 'submit(tx, draft) / whenIdle / afterRun / configure({ compaction })', '输入接纳与应用记录可在一个事务内完成；回答已提交后 afterRun 子任务仍可使会话保持忙碌，不能把 Submission.wait 等同于完全 idle。']
+    ['conversation-control', '继续、轮数上限与运行后任务', ['harness/submissions.ts', 'harness/types.ts', 'harness/generation.ts'], '提供 continue、turnLimit、事务内 submit、afterRun 与逐会话压缩设置。', 'submit(tx, draft) / whenIdle / afterRun / configure({ compaction })', '输入接纳与应用记录可在一个事务内完成；回答已提交后 afterRun 子任务仍可使会话保持忙碌，不能把 Submission.wait 等同于完全 idle。'],
+    ['signals', '持久信号与工具等待', ['signals.ts', 'harness/parks.ts', 'harness/tool.ts'], '任务可等待外部信号、时间或子任务，并在唤醒后继续。', 'defineSignal / harness.signal / tx.signal / ToolPark', '等待时释放运行调用，信号可先到达。工具恢复读取 checkpoint 和 wake，外部副作用仍需幂等或核对。'],
+    ['hook-tasks', '审批门与生成钩子任务', ['harness/types.ts', 'harness/generation.ts', 'harness/tool.ts'], 'beforeTool 可在执行前等待，afterTools 与 onYield 可启动子任务。', 'beforeTool / hookTask / afterTools / onYield', '唤醒会重跑调用前判断，应用负责审批及取消规则。runEndTask 已改名 hookTask。']
   ],
   schema: [
     ['builders', 'JSON Schema 构造与静态类型', ['builders.ts', 'types.ts', 'index.ts'], '构建普通 JSON Schema 并推导 Static 类型。', 'obj / str / num / opt / Static', 'obj 默认拒绝额外字段，open: true 才开放；TypeBox 常用类型可推导，不等于支持所有非 JSON Schema 扩展。'],
@@ -39,6 +46,15 @@ export const upstreamFeatures = {
   ],
   p2: [
     ['hosts', 'Server、会话 worker 与客户端入口', ['hosts/'], '在多个进程中装配 Chord 与 Durable。', 'apps/p2/src/hosts/', 'p2 是上游实验原型，不等于本分支 prototype 或计划中的正式工作台。']
+  ],
+  p3: [
+    ['service', '服务装配、准入与会话进程', ['app.ts', 'kit/', 'api/v1/', 'session-route.ts'], '为每个数据目录装配独立服务，按会话路由 worker。', 'p3 server / @earendil-works/p3/v1', '当前 README 明确无页面，后续切片见 docs。']
+  ],
+  'p3-plugins': [
+    ['sessions', '会话插件与工作进程', ['sessions/'], '会话能力按 Chord server 和 worker 分面装配。', 'plugins/sessions/server.ts / worker.ts', '对照实际切片代码与测试，不把全部规划当作交付。']
+  ],
+  'p2-mac': [
+    ['shell', 'macOS 原生外壳', ['P2Mac/'], 'Swift 外壳通过 WebKit 显示 p2，并管理本机连接与窗口。', 'apps/p2-mac/README.md', '依赖 macOS，当前是独立实验。']
   ],
   'p2-plugins': [
     ['sessions', '项目、会话树与分支', ['sessions/'], '组织项目、会话、分支与 Web/TUI 会话视图。', 'Sessions / SessionTree / /tree / /move', '会话在其 worker 和 store 中运行；前端根据状态观察展示。'],
@@ -84,6 +100,24 @@ export function reviseCapability(row) {
 
 const step = (title, path, needle, text) => ({ title, path, needle, text });
 export const upstreamLessons = {
+  'p2-mac': {
+    intro: 'Swift 和 WebKit 实验外壳，可连接一个或多个 p2 服务。',
+    focus: ['各窗口的界面来自 p2，原生层负责窗口与本机服务。'],
+    usage: ['构建与试跑条件见 p2-mac README。'],
+    config: [['平台', 'macOS 与 Swift 工具链。']],
+    flow: [step('入口', 'apps/p2-mac/Sources/P2Mac/main.swift', '', '查看应用入口。'), step('窗口', 'apps/p2-mac/Sources/P2Mac/BrainPage.swift', '', '查看页面嵌入。'), step('服务', 'apps/p2-mac/Sources/P2Mac/ServerController.swift', '', '查看本机服务管理。')],
+    extend: ['从 README 的 How it works 进入。'],
+    mastery: ['区分 Swift 外壳、Web 页面与 p2 服务。']
+  },
+  p3: {
+    intro: 'p3 是 p2 的后继项目。当前实现命令行、无界面的服务和每会话 worker，规划中的页面与后续切片另见设计。',
+    focus: ['每个数据目录有独立会话、登录与本地设置。', 'Node 24.4 起可运行，插件使用 p3/v1、v1/server 或 v1/worker 接口。'],
+    usage: ['先看 README 的命令与本地发布流程，再读 docs/slices/README.md 对照切片。'],
+    config: [['启动', '默认数据目录 ~/.pi/p3，默认端口 8789。可用 --pi、--dir 和 --port 指定。']],
+    flow: [step('命令入口', 'apps/p3/bin.ts', '', '观察服务启动与管理命令。'), step('应用装配', 'apps/p3/src/app.ts', '', '查看平台与会话路由装配。'), step('会话 worker', 'apps/p3/plugins/sessions/worker.ts', '', '查看会话插件在 worker 中的实现。')],
+    extend: ['发布构建与版本化插件入口分别看 scripts/build-release.ts 和 src/api/v1。'],
+    mastery: ['区分已实现的进程与会话骨架、p2 仍在运行的界面，以及切片中尚在规划的功能。']
+  },
   chord: {
     intro: 'Chord v2 是已替换旧实现的对象与插件运行时。server、worker、浏览器和终端通过同一对象契约交互；持久状态在 store 中，插件可以按宿主重载。',
     focus: ['对象契约使用 pi-schema 的 params、members、variants 和 hostAddress；principal 与地址参与远程对象定位和权限边界。', '工厂只声明，host 激活；get 等待 live，hold 立即给引用。self.open 管理原生资源，self.state + self.tx 管理持久文档。', '重载重启受影响对象，旧工作使用旧代码收尾。状态恢复依赖 store，而不是旧版 cell 的 version/migrate。'],
@@ -140,16 +174,18 @@ export function reviseChapters(chapters) {
   return reviseReferences(chapters).map(chapter => {
     if (chapter.id === 'development') return { ...chapter, sections: chapter.sections.map((section, index) => index === 0 ? { ...section, text: '当前 checkout 包含 12 个一级包及 apps/p2 实验应用。01–17 阶段介绍 CLI / SDK 的源码开发；p2 的启动、运行时要求和独立检查见其包教程。旧工作台命令仅保留在历史快照。源码开发先跑 .ts，交付时再构建 dist；命令块只提供复制，不会在阅读器中执行。' } : index === 3 ? { ...section, text: 'providers/data 是 Git 忽略的生成资料，包加载时需要读取它。先运行 check:model-data；缺失或陈旧时运行 hydrate:model-data，当前命令调用 catalog/generate.ts --strict --data-only 从在线目录生成数据，再复查一致性。它不是下载旧版本的固定快照，也不执行模型推理。' } : section) };
     if (chapter.id === 'start') return { ...chapter, sections: [...chapter.sections.filter(s => !['这一版对应哪份源码？', '阅读边界'].includes(s.title)),
-      { title: '本次上游合并：1.5.0 + Unreleased', text: '2026-11-07，LG-Workbench / cf43eea7e。合并上游 085c84e98，新增 526 个可达提交。12 个一级包为 1.5.0，apps/p2 为 0.0.1；根包 0.0.3 不是 CLI 版本。', refs: [['source-code-html/UPSTREAM-UPDATE.md', '#'], ['packages/coding-agent/package.json', '"version"']] },
-      { title: '阅读边界', text: '当前有 apps/p2 实验原型、Chord v2 和 pi-schema；旧工作台 WBW/WBP/WBS/WBR 仍是另一套历史实现。PRD 与 prototype 属于本地产品计划和静态演示。本导览更新源码快照、中文专题及迁移重点，不声称逐函数审计或已运行各产品。' }] };
+      { title: '本次 main 合并：1.5.2 + Unreleased', text: '2026-11-18，LG-Workbench / dbc6ee9c5。合并 main 05fd3fbda，纳入 437 个可达提交。重点为 p2、p3、Chord 查询与准入，以及 Durable 的持久等待。', refs: [['source-code-html/UPSTREAM-UPDATE.md', '#'], ['packages/coding-agent/package.json', '"version"']] },
+      { title: '阅读边界', text: 'p2 和 p2-mac 为实验应用，p3 当前为无界面服务。PRD 与 prototype 属于本地 LG 产品计划和静态演示，旧工作台 WBW/WBP/WBS/WBR 属于历史资料。' }] };
     if (chapter.id === 'workbench') return { ...chapter, title: 'p2、原型与历史工作台边界', intro: '按实际文件区分三套不同来源的界面。', sections: [
-      { title: 'p2：上游实验原型', text: upstreamLessons.p2.intro, refs: [['apps/p2/README.md', '# p2'], ['apps/p2/src/hosts/server.ts', '']] },
+      { title: 'p2：上游实验原型', text: upstreamLessons.p2.intro, refs: [['apps/p2/README.md', '# p2'], ['apps/p2/src/hosts/server.ts', ''], ['apps/p2-mac/README.md', '# p2-mac']] },
+      { title: 'p3：后继服务', text: upstreamLessons.p3.intro, refs: [['apps/p3/README.md', '# p3'], ['apps/p3/docs/slices/README.md', '']] },
       { title: '本分支 PRD 与 prototype', text: 'PRD 保存 LG 产品需求，prototype 是静态演示；它们已在合并前分批提交，不属于本次上游新增实现。p2 的出现不自动改变这些需求或完成其中的任务。', refs: [['prototype/README.md', '']] },
       { title: '旧工作台历史', text: 'WBW/WBP/WBS/WBR 对应旧 agent-web/server 等实现，不能映射成 p2 已实现功能。', external: [{ title: '2026-10-20 历史快照', url: 'history/workbench-2026-10-20.html' }] }
     ] };
     if (chapter.id === 'advanced') return { ...chapter, intro: '从 Chord v2、Schema 与持久提交边界理解当前架构。', sections: [
       { title: 'Chord v2：对象、地址与插件', text: upstreamLessons.chord.focus.join(' '), refs: upstreamLessons.chord.flow.map(s => [s.path, s.needle]) },
       { title: 'Durable：可见进度与已存结果', text: upstreamLessons.durable.focus.join(' '), refs: [['packages/durable/src/types.ts', 'CommitResult'], ['packages/durable/docs/group-commit.md', '']] },
+      { title: 'Durable：信号等待和工具审批', text: '工具可以保存检查点后等待信号、时间或子任务。审批门在实际工具调用前等待，唤醒仍重新检查。afterTools 与 onYield 可以启动持久子任务，原来的 runEndTask 改为 hookTask。', refs: [['packages/durable/docs/suspendable/spec.md', ''], ['packages/durable/src/signals.ts', 'defineSignal'], ['packages/durable/src/harness/parks.ts', '']] },
       { title: '观察、历史和模型上下文', text: upstreamFeatures.durable[0].slice(3, 6).join(' '), refs: [['packages/durable/src/harness/transcript.ts', 'ConversationTranscript'], ['packages/durable/CHANGELOG.md', 'Removed `watchEvents()`']] },
       { title: '崩溃上限不再停放任务', text: upstreamFeatures.durable[3].slice(3, 6).join(' '), refs: [['packages/durable/src/harness/scheduler.ts', 'restartLimit']] },
       { title: 'Schema 与模型目录迁移', text: '工具参数统一使用 pi-schema；旧 TypeBox 非 JSON Schema 扩展不能假定有效。模型生成入口迁到 packages/ai/catalog/generate.ts，provider、family 与 source 分层维护。', refs: [['packages/schema/README.md', '## Usage'], ['packages/ai/catalog/README.md', '## Build order']] },
@@ -168,7 +204,8 @@ export function reviseRoutes(routes) {
     if (route.id === 'chord-state') return { ...route, title: '持久文档、delta 与 Watch', failure: 'Watch 可以合并中间值；视图不是无损审计流。需要已存提交时使用对应持久观察接口。', steps: route.steps.map((s, i) => i === 3 ? { ...s, title: '观察状态与失败', feature: 'chord-watch', explain: upstreamFeatures.chord.find(f => f[0] === 'watch')[5] } : s) };
     if (route.id === 'chord-links-reload') return { ...route, scenario: '插件变化后重启受影响对象，持久状态保留，旧调用沿旧代码收尾。', failure: '断线后的引用可重新绑定，但不能推断远端副作用未发生；基础代码变化需要重启 server。', exercise: '沿 reload-cycle 和 worker README 区分对象重启、插件变化与基础代码重启。', answer: '旧工作在旧代码上收尾；新对象重新激活；store 持久数据与基础 bundle 有不同生命周期。', steps: route.steps.map((s, i) => ({ ...s, title: ['跨宿主路由', '注册表组合', '启动地址 worker', '重启受影响对象'][i], explain: upstreamFeatures.chord.find(f => f[0] === ['links', 'registry', 'manager', 'reload'][i])[5] })) };
     if (route.id === 'durable-storage') return { ...route, steps: route.steps.map((s, i) => i === 0 ? { ...s, feature: 'durable-group-commit', explain: upstreamLessons.durable.focus[1] } : s), extra: [...route.extra, 'durable-conversation-control'] };
-    if (route.id === 'read-map') return { ...route, extra: [...route.extra, 'schema-builders', 'schema-validation', 'p2-hosts', 'p2-plugins-sessions', 'p2-plugins-capabilities', 'ai-catalog-generation', 'chord-store', 'chord-app-kit', 'chord-sync'] };
+    if (route.id === 'durable-tool-recovery') return { ...route, extra: [...route.extra, 'durable-signals', 'durable-hook-tasks'], answer: `${route.answer} ToolPark 可持久等待，唤醒后用原检查点继续。审批门重查决定，外部写入仍需核对。` };
+    if (route.id === 'read-map') return { ...route, extra: [...route.extra, 'schema-builders', 'schema-validation', 'p2-hosts', 'p2-plugins-sessions', 'p2-plugins-capabilities', 'p3-service', 'p2-mac-shell', 'ai-catalog-generation', 'chord-store', 'chord-app-kit', 'chord-sync', 'chord-named-queries', 'chord-admission'] };
     return route;
   });
 }

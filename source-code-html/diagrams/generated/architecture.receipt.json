@@ -6,12 +6,12 @@
   "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\architecture.json",
   "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-system-architecture.html",
   "specification": {
-    "sha256": "959dcf0498fb026c531acfa682d525062ec80e50434aca8b056399b88ae0348e",
-    "bytes": 6979
+    "sha256": "f131d48691b434c4baa5297c8dd12a9550a5376c2ed0f10a7adb1d19af1efd7c",
+    "bytes": 7004
   },
   "artifact": {
-    "sha256": "8830872df736ecee4476b0c0ba00064043d2491ef85537b354cc1b7e1e34abbe",
-    "bytes": 718728
+    "sha256": "46261ea10787200228fce4a63ff219df173e22c737f486abd61c06f3e28e3fc4",
+    "bytes": 718753
   },
   "validation": {
     "checksPassed": 9,
@@ -24,7 +24,7 @@
   "evidence": {
     "verified": true,
     "repository": "https://github.com/cyg720/pi",
-    "revision": "cf43eea7e741ae899ad4609233084c43ec5274f9",
+    "revision": "dbc6ee9c53115c3788a4343c8c4c24d55c6fa768",
     "references": 13
   }
 }

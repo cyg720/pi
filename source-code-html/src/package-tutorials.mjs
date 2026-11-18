@@ -7,7 +7,7 @@ export function buildPackageTutorials({ paths, directories, read, catalog }) {
   const snapshots = {};
   const names = [...new Set([...directories, ...paths.map(p => /^(?:packages|apps)\/([^/]+)\//.exec(p)?.[1]).filter(Boolean)])].sort();
   const tutorials = names.map(id => {
-    const root = paths.includes(`apps/${id}/package.json`) ? `apps/${id}` : `packages/${id}`;
+    const root = paths.some(p => p.startsWith(`apps/${id}/`)) ? `apps/${id}` : `packages/${id}`;
     const prefix = `${root}/`;
     const owned = paths.filter(p => p.startsWith(prefix));
     const manifestPath = `${prefix}package.json`;
@@ -17,11 +17,11 @@ export function buildPackageTutorials({ paths, directories, read, catalog }) {
     const examples = manifest ? owned.filter(p => /\/(?:examples|evals)\//.test(p) && /\.(?:ts|tsx|js|mjs|md|json|jsonc)$/.test(p)) : [];
     const tests = manifest ? owned.filter(p => /\/tests?\//.test(p) && !/\/examples\//.test(p) && /\.(?:test|spec)\.[cm]?[jt]s$/.test(p)) : [];
     const schemas = manifest ? owned.filter(p => /\/schemas\/.*\.json$/.test(p)) : [];
-    const sourceFiles = Object.keys(catalog.files).filter(p => p.startsWith(`${prefix}src/`));
+    const sourceFiles = Object.keys(catalog.files).filter(p => p.startsWith(`${prefix}src/`) || p.startsWith(`${prefix}Sources/`));
     const sourceTexts = sourceFiles.filter(p => catalog.files[p].text);
     const symbols = sourceFiles.flatMap(path => catalog.files[path].symbols.map((s, index) => [path, index]));
     const environment = [];
-    const lesson = manifest ? currentLessons[id] : historicalLesson(id, docs.length > 0);
+    const lesson = currentLessons[id] && (manifest || root.startsWith('apps/')) ? currentLessons[id] : historicalLesson(id, docs.length > 0);
     for (const path of new Set([...docs, ...examples, ...tests, ...schemas, ...sourceTexts, ...(manifest ? [manifestPath] : []), ...lesson.flow.map(s => s.path), ...owned.filter(p => /\/daemon\/.*\.(?:rs|toml)$/.test(p))])) snapshots[path] = read(path);
     for (const path of sourceTexts) snapshots[path].split('\n').forEach((line, i) => {
       // Keep exact source evidence, including computed access; no invented variable names/defaults.
@@ -29,7 +29,7 @@ export function buildPackageTutorials({ paths, directories, read, catalog }) {
     });
     for (const s of lesson.flow) if (!snapshots[s.path]?.includes(s.needle)) throw new Error(`教程流程引用失效: ${id}: ${s.path} :: ${s.needle}`);
     const features = catalog.features.filter(f => f.files.some(p => p.startsWith(`${prefix}src/`))).map(f => f.id);
-    return { id, root, manifest, manifestPath: manifest ? manifestPath : null, status: manifest ? manifest.private ? '私有工作区包' : id === 'durable' ? '实验性包' : '当前源码包' : docs.length ? '历史资料' : '无当前源码', lesson, docs, examples, tests, schemas, sourceFiles, symbols, environment, features };
+    return { id, root, manifest, manifestPath: manifest ? manifestPath : null, status: manifest ? manifest.private ? '私有工作区包' : id === 'durable' ? '实验性包' : '当前源码包' : root.startsWith('apps/') ? '原生实验应用' : docs.length ? '历史资料' : '无当前源码', lesson, docs, examples, tests, schemas, sourceFiles, symbols, environment, features };
   });
   return { tutorials, snapshots };
 }

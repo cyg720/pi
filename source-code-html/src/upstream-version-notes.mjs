@@ -1,15 +1,14 @@
 // Claims are matched against the English changelog section, not inferred from commit titles.
 export const upstreamVersionNotes = {
   Unreleased: {
-    title: '1.5.0 之后：请求续接、会话配置与工具修复',
-    intro: '当前核心包版本 1.5.0，合并 HEAD 还包含这些未发布条目。完整合并范围另见首页的上游更新说明。',
-    audience: '模型网关、CLI 工具与 Durable 应用维护者。',
+    title: '1.5.2 之后：任务等待、实时查询与模型更新',
+    intro: '当前核心包版本为 1.5.2。以下是合入源码中的未发布变化，完整范围见首页更新说明。',
+    audience: 'Durable 应用、Chord 插件、CLI 扩展与模型网关维护者。',
     points: [
-      { package: 'ai', needle: 'requiresToolsWithToolHistory', title: '历史工具消息不再强制空 tools 数组', before: '无当前工具、但历史含工具调用时仍发送空数组。', after: '默认省略 tools；旧网关可显式开启兼容选项。', why: '避免 vLLM 等端点拒绝空数组。', action: '核对网关要求，验证有工具历史而当前禁用工具的请求。' },
-      { package: 'ai', needle: 'message threads', title: 'Anthropic 消息线程续接', before: '每次发送整个对话。', after: '适用时从上次响应继续，只发送新增消息；历史变化或服务端不能继续时回退完整请求。', why: '减少重复请求内容，缓存与 token 计数仍由提供商契约决定。', action: '结束会话清理资源；预热等重复请求使用 disableContinuation。' },
-      { package: 'durable', needle: 'Per-conversation compaction settings', title: '逐会话压缩策略', before: '压缩主要由 Harness 策略控制。', after: '会话配置 compaction 并被子会话与分叉继承。', why: '不同会话可使用不同阈值和禁用策略。', action: '核对模型覆盖与会话 enabled:false 的优先级。' },
-      { package: 'coding-agent', needle: 'streams the file', title: '大文件读取改为流式', before: '先把整个文件读入内存再截取。', after: '流式读取，只保留返回窗口；自定义 ReadOperations 可提供 createReadStream。', why: 'offset/limit 不再需要加载整个文件。', action: '验证大文件、偏移、行数限制和取消。' },
-      { package: 'coding-agent', needle: 'computed before writing', title: '编辑先计算局部差异', before: '大文件可能写完后才因差异计算失败。', after: '保留未修改行的换行格式，在写入前计算变动附近的差异。', why: '减少内存并避免写入成功但 diff 失败的混淆。', action: '核对混合 CRLF/LF 与大文件编辑。' }
+      { package: 'durable', needle: 'defineSignal', title: '信号和工具等待', before: '工具执行只返回结果。', after: '工具可以落盘等待，以信号、到期或子任务唤醒。', why: '等待可以跨重启，期间释放调用。', action: '适配 ToolPark、可省略的 until 与新的钩子类型。' },
+      { package: 'chord', needle: 'Named queries', title: '声明命名查询与实时列表', before: '主要按表和普通观察器组织读模型。', after: '新增命名实时查询、列表书签和跨插件列集合。', why: '列表加载更多时保持已加载结果实时更新。', action: '阅读 Chord 第 14 切片和相应示例。' },
+      { package: 'tui', needle: 'readonly string[]', title: '渲染结果只读并复用', before: '扩展可能原地修改子组件返回内容。', after: 'Container 可返回缓存的只读数组。', why: '长记录滚动减少重复渲染与复制。', action: '需要修改结果时先复制数组。' },
+      { package: 'ai', needle: 'GPT-6.2 Astra', title: '新模型与推理档位', before: '上版目录默认模型为 GPT-6.1 Sol。', after: '新增 GPT-6.2 Astra 和 Sol，模型窗口和档位按接入项区分。', why: '同名模型经不同 API 提供时能力可能不同。', action: '从实际 provider 和模型 ID 查询属性。' }
     ]
   },
   '1.5.0': {

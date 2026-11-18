@@ -6,12 +6,12 @@
   "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\lifecycle.json",
   "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-lifecycle.html",
   "specification": {
-    "sha256": "20b76092ddf8d11aba4b7660ec01a9122ccccba590ad722612be6ff24476b06e",
-    "bytes": 3521
+    "sha256": "0b95eafecff218d3d3351565b45341244c2fc814d8e16d59d000a385e738146a",
+    "bytes": 3528
   },
   "artifact": {
-    "sha256": "81470ae40a808655f53ccf12a3f5d3158e409ea8e77512dcdf5129745989d13d",
-    "bytes": 707276
+    "sha256": "82dde9d06c1501f4ace41bafecb899d722659eb8cdb0ea165e7c3dd0e94e9610",
+    "bytes": 707302
   },
   "validation": {
     "checksPassed": 9,

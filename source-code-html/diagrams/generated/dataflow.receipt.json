@@ -6,11 +6,11 @@
   "input": "D:\\code\\CYG\\pi\\source-code-html\\src\\diagrams\\dataflow.json",
   "output": "D:\\code\\CYG\\pi\\source-code-html\\diagrams\\generated\\pi-task-dataflow.html",
   "specification": {
-    "sha256": "98ce68aee87e2b9f073127a89a71a147bbc018f71544b8f71e83e0c91cadec1e",
+    "sha256": "947e0179a6026d3c70b3b19326797452d88754ec0f7ed3e9cb17e25c2bcf5b04",
     "bytes": 4273
   },
   "artifact": {
-    "sha256": "1b85fd858675f18462322035f01af25c41252b630acf0f9c9fc2d0c482a76ddb",
+    "sha256": "245639015b3f5ffb4f09c753d273865d76e792cbfccff948983f802bbc3251cf",
     "bytes": 714265
   },
   "validation": {

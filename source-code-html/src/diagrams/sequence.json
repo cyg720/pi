@@ -180,7 +180,7 @@
       "title": "源码依据",
       "items": [
         "agent-loop.ts、core/agent-session.ts、session-manager.ts",
-        "取消、并行工具与扩展钩子另见源码；cf43eea7e"
+        "取消、并行工具与扩展钩子另见源码；dbc6ee9c5"
       ]
     }
   ]
